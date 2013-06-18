@@ -1,10 +1,10 @@
 __all__ = ['Network', 'Variable', 'Station', 'History', 'Obs']
 
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData
+from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 
-Base = declarative_base()
+Base = declarative_base(cls=DeferredReflection)
 
 class Network(Base):
     __tablename__ = 'meta_network'
@@ -91,6 +91,25 @@ class NativeFlag(Base):
     discard = Column(Boolean)    
 
 #class PcicFlag(Base):
+
+class CrmpNetworkGeoserver(Base):
+    __tablename__ = 'crmp_network_geoserver'
+    network_name = Column(String)
+    native_id = Column(String)
+    station_name = Column(String)
+    elevation = Column('elev', Float)
+    min_obs_time = Column(DateTime(timezone=True))
+    max_obs_time = Column(DateTime(timezone=True))
+    freq = Column(String)
+    province = Column(String)
+    station_id = Column(Integer)
+    history_id = Column(Integer)
+    country = Column(String)
+    comments = Column(String)
+    network_id = Column(Integer)
+    col_hex = Column(String)
+    vars = Column(String)
+    display_names = Column(String)
 
 def foo():
     from sqlalchemy import create_engine
