@@ -1,10 +1,10 @@
-__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs']
+__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory']
 
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 
-Base = declarative_base(cls=DeferredReflection)
+Base = declarative_base()
 
 class Network(Base):
     __tablename__ = 'meta_network'
@@ -91,8 +91,9 @@ class NativeFlag(Base):
     discard = Column(Boolean)    
 
 #class PcicFlag(Base):
+DeferredBase = declarative_base(cls=DeferredReflection)
 
-class CrmpNetworkGeoserver(Base):
+class CrmpNetworkGeoserver(DeferredBase):
     __tablename__ = 'crmp_network_geoserver'
     network_name = Column(String)
     native_id = Column(String)
@@ -102,8 +103,8 @@ class CrmpNetworkGeoserver(Base):
     max_obs_time = Column(DateTime(timezone=True))
     freq = Column(String)
     province = Column(String)
-    station_id = Column(Integer)
-    history_id = Column(Integer)
+    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     country = Column(String)
     comments = Column(String)
     network_id = Column(Integer)
@@ -111,6 +112,23 @@ class CrmpNetworkGeoserver(Base):
     vars = Column(String)
     display_names = Column(String)
 
+class ObsCountPerMonthHistory(DeferredBase):
+    __tablename__ = 'obs_count_per_month_history_mv'
+    count = Column(Integer)
+    date_trunc = Column(DateTime(timezone=True))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    history = relationship("History")
+
+class ClimoObsCount(DeferredBase):
+    __tablename__ = 'climo_obs_count_mv'
+    count = Column(BigInteger)
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+
+class VarsPerHistory(Base):
+    __tablename__ = 'vars_per_history_mv'
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
+    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'), primary_key=True)
+    
 def foo():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
