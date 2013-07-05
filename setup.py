@@ -1,7 +1,7 @@
 import string
 from setuptools import setup
 
-__version__ = (0, 0, 2)
+__version__ = (0, 0, 3)
 
 setup(
     name="PyCDS",
@@ -12,10 +12,8 @@ setup(
     url="http://www.pacificclimate.org/",
     author="James Hiebert",
     author_email="hiebert@uvic.ca",
-#    namespace_packages=['pydap', 'pydap.handlers'],
-#    entry_points='''
-#                 ''',
-#    install_requires=['pydap.handlers.sql'],
+    package_data={'pycds': ['data/*.sqlite']},
+    include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py'],
     install_requires = ['sqlalchemy', 'psycopg2'],
