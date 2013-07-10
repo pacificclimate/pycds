@@ -1,6 +1,6 @@
 import os.path
 
-__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'test_dsn']
+__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'test_dsn']
 
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
