@@ -130,6 +130,24 @@ class VarsPerHistory(Base):
     __tablename__ = 'vars_per_history_mv'
     history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'), primary_key=True)
+
+class ObsWithFlags(Base):
+    __tablename__ = 'obs_with_flags'
+    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
+    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
+    unit = Column(String)
+    standard_name = Column(String)
+    cell_method = Column(String)
+    net_var_name = Column(String)
+    obs_raw_id = Column(Integer, ForeignKey('obs_raw.obs_raw_id'), primary_key=True)
+    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
+    obs_time = Column(DateTime(timezone=True))
+    mod_time = Column(DateTime(timezone=True))
+    datum = Column(Float)
+    native_flag_id = Column(Integer, ForeignKey('obs_raw_native_flags.native_flag_id'))
+    flag_name = Column(String)
+    description = Column(String)
+    flag_value = Column(String)
     
 def foo():
     from sqlalchemy import create_engine
