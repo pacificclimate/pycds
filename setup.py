@@ -1,7 +1,7 @@
 import string
 from setuptools import setup
 
-__version__ = (0, 0, 5)
+__version__ = (0, 0, 6)
 
 setup(
     name="PyCDS",
@@ -16,7 +16,7 @@ setup(
     include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py'],
-    install_requires = ['sqlalchemy', 'psycopg2'],
+    install_requires = ['sqlalchemy>=0.8.3', 'psycopg2'],
         classifiers='''Development Status :: 2 - Pre-Alpha
 Environment :: Console
 Intended Audience :: Developers

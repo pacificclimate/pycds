@@ -1,10 +1,18 @@
+import re
 import os.path
 
-__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'test_dsn']
+__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn']
 
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData
+from sqlalchemy.types import DateTime
+from sqlalchemy.dialects.sqlite import DATETIME
+from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
+
+MyDateTime = DateTime(timezone=True).with_variant(
+    DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
+             regexp=r"(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)",
+             ), "sqlite")
 
 Base = declarative_base()
 
@@ -57,7 +65,7 @@ association_table = Table('obs_raw_native_flags', Base.metadata,
 class Obs(Base):
     __tablename__ = 'obs_raw'
     id = Column('obs_raw_id', BigInteger, primary_key=True)
-    time = Column('obs_time', DateTime(timezone=True))
+    time = Column('obs_time', MyDateTime)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
@@ -101,8 +109,8 @@ class CrmpNetworkGeoserver(DeferredBase):
     native_id = Column(String)
     station_name = Column(String)
     elevation = Column('elev', Float)
-    min_obs_time = Column(DateTime(timezone=True))
-    max_obs_time = Column(DateTime(timezone=True))
+    min_obs_time = Column(MyDateTime)
+    max_obs_time = Column(MyDateTime)
     freq = Column(String)
     province = Column(String)
     station_id = Column(Integer, ForeignKey('meta_station.station_id'))
@@ -117,7 +125,7 @@ class CrmpNetworkGeoserver(DeferredBase):
 class ObsCountPerMonthHistory(DeferredBase):
     __tablename__ = 'obs_count_per_month_history_mv'
     count = Column(Integer)
-    date_trunc = Column(DateTime(timezone=True))
+    date_trunc = Column(MyDateTime)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     history = relationship("History")
 
@@ -141,8 +149,8 @@ class ObsWithFlags(Base):
     net_var_name = Column(String)
     obs_raw_id = Column(Integer, ForeignKey('obs_raw.obs_raw_id'), primary_key=True)
     station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    obs_time = Column(DateTime(timezone=True))
-    mod_time = Column(DateTime(timezone=True))
+    obs_time = Column(MyDateTime)
+    mod_time = Column(MyDateTime)
     datum = Column(Float)
     native_flag_id = Column(Integer, ForeignKey('obs_raw_native_flags.native_flag_id'))
     flag_name = Column(String)
