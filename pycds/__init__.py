@@ -1,6 +1,6 @@
 import re
 import os.path
-from package_resources import resource_filename
+from pkg_resources import resource_filename
 
 __all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn']
 
