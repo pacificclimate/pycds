@@ -53,6 +53,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
+    #    the_geom = GeometryColumn(Point())
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -121,6 +122,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
+    #    the_geom = GeometryColumn(Point())
 
 class ObsCountPerMonthHistory(DeferredBase):
     __tablename__ = 'obs_count_per_month_history_mv'

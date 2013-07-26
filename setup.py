@@ -1,7 +1,7 @@
 import string
 from setuptools import setup
 
-__version__ = (0, 0, 7)
+__version__ = (0, 0, 8)
 
 setup(
     name="PyCDS",
@@ -16,8 +16,8 @@ setup(
     include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py'],
-    install_requires = ['sqlalchemy==0.8.3', 'psycopg2'],
-    dependency_links = ['https://bitbucket.org/zzzeek/sqlalchemy/get/rel_0_8.tar.gz#egg=sqlalchemy-0.8.3'],
+    install_requires = ['SQLAlchemy==0.8.3dev', 'psycopg2'],
+    dependency_links = ['https://bitbucket.org/zzzeek/sqlalchemy/get/rel_0_8.tar.gz#egg=SQLAlchemy-0.8.3dev'],
 
     classifiers='''Development Status :: 2 - Pre-Alpha
 Environment :: Console
