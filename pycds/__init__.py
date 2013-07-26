@@ -167,4 +167,4 @@ def foo():
     session = Session()
     return session
 
-test_dsn = os.path.join(os.path.dirname(__file__), 'data','crmp.sqlite')
+test_dsn = 'sqlite+pysqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
