@@ -2,13 +2,19 @@ import re
 import os.path
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn']
+__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
 from sqlalchemy.dialects.sqlite import DATETIME
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
+from geoalchemy import GeometryColumn, Point
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from pysqlite2 import dbapi2 as sqlite
+
 
 MyDateTime = DateTime(timezone=True).with_variant(
     DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
@@ -54,7 +60,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
-    #    the_geom = GeometryColumn(Point())
+    the_geom = GeometryColumn(Point())
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -123,7 +129,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
-    #    the_geom = GeometryColumn(Point())
+    the_geom = GeometryColumn(Point())
 
 class ObsCountPerMonthHistory(DeferredBase):
     __tablename__ = 'obs_count_per_month_history_mv'
@@ -160,12 +166,14 @@ class ObsWithFlags(Base):
     description = Column(String)
     flag_value = Column(String)
     
-def foo():
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    engine = create_engine('postgresql://hiebert@windy.pcic.uvic.ca/crmp?sslmode=require', echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return session
-
 test_dsn = 'sqlite+pysqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
+
+def test_session():
+    dsn = 'sqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
+    engine = create_engine(dsn, module=sqlite, echo=True)
+    engine.echo = True
+    Session = sessionmaker(bind=engine)
+    sesh = Session()
+    sesh.connection().connection.enable_load_extension(True)
+    sesh.execute("select load_extension('libspatialite.so')")
+    return sesh

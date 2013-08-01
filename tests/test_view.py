@@ -1,15 +1,8 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import pycds
 
-def test_crmp_network_geoserver():
-    connection_string = 'postgresql://hiebert@monsoon.pcic.uvic.ca/crmp?sslmode=require'
-    engine = create_engine(connection_string, echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
+def test_crmp_network_geoserver(test_session):
     cng = pycds.CrmpNetworkGeoserver.network_name
-    q = session.query(cng)
+    q = test_session.query(cng)
     rv = q.all()
 
     # Test that the number of rows is not zero
