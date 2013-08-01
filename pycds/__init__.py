@@ -13,7 +13,6 @@ from geoalchemy import GeometryColumn, Point
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from pysqlite2 import dbapi2 as sqlite
 
 
 MyDateTime = DateTime(timezone=True).with_variant(
@@ -169,6 +168,7 @@ class ObsWithFlags(Base):
 test_dsn = 'sqlite+pysqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
 
 def test_session():
+    from pysqlite2 import dbapi2 as sqlite
     dsn = 'sqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
     engine = create_engine(dsn, module=sqlite, echo=True)
     engine.echo = True

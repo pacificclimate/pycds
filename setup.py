@@ -2,8 +2,9 @@ import sys
 import string
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
+from pkg_resources import resource_filename
 import ctypes
-
+import warnings
 __version__ = (0, 0, 13)
 
 class PyTest(TestCommand):
@@ -20,14 +21,29 @@ class PyTest(TestCommand):
         errno = pytest.main(self.test_args)
         sys.exit(errno)
 
-try:
-    ctypes.cdll.LoadLibrary('libspatialite.so')
-    HAVE_SPATIALITE = True
-except OSError:
-    import warnings
-    warnings.warn("libspatialite must be installed if you want to run the tests")
-    HAVE_SPATIALITE = False
-        
+def check_for_spatialite():
+    try:
+        ctypes.cdll.LoadLibrary('libspatialite.so')
+    except OSError:
+        warnings.warn("libspatialite must be installed if you want to run the tests")
+        return False
+    
+    from sqlalchemy import create_engine
+    from pysqlite2 import dbapi2
+    engine = create_engine('sqlite:///{0}'.format('pycds/data/crmp.sqlite'), module=dbapi2, echo=True)
+    con = engine.raw_connection().connection
+    if not hasattr(con, 'enable_load_extension'):
+        msg = '''The pysqlite2 package has been built without extension loading support.
+Unfortunately, for using sqlite for testing geographic functionality, you need to manually install pysqlite2 according to the instructions here: http://www.geoalchemy.org/usagenotes.html#notes-for-spatialite
+Otherwise, you will not be able to run any of the unit tests for this package for any packages which depend upon it.
+'''
+        warnings.warn(msg)
+        return False
+    else:
+        return True
+
+HAVE_SPATIALITE = check_for_spatialite()
+    
 setup(
     name="PyCDS",
     description="An ORM representation of the PCDS and CRMP database",
