@@ -30,6 +30,7 @@ class Network(Base):
     name = Column('network_name', String)
     long_name = Column('description', String)
     color = Column('col_hex', String)
+    contact_id = Column(Integer, ForeignKey('meta_contact.contact_id'))
 
     stations = relationship("Station", backref=backref('meta_network', order_by=id))
     variables = relationship("Variable", backref=backref('meta_network', order_by=id))
@@ -37,7 +38,19 @@ class Network(Base):
     def __str__(self):
         return '<CRMP Network %s>' % self.name
 
+class Contact(Base):
+    '''This class maps to the table which represents contact people and representatives for the networks of the Climate Related Monitoring Program.
+    '''
+    __tablename__ = 'meta_contact'
+    id = Column('contact_id', Integer, primary_key=True)
+    name = Column('name', String)
+    title = Column('title', String)
+    organization = Column('organization', String)
+    email = Column('email', String)
+    phone = Column('phone', String)
 
+    networks = relationship("Network", backref=backref('meta_contact', order_by=id))
+    
 class Station(Base):
     '''This class maps to the table which represents a single weather station. One weather station can potentially have multiple physical locations (though, few do in practice) and periods of operation
     '''
