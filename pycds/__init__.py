@@ -2,18 +2,20 @@ import re
 import os.path
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
-from sqlalchemy.dialects.sqlite import DATETIME
+from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from geoalchemy import GeometryColumn, Point
+from geoalchemy import Geometry
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+MyGeometry = Geometry('POINT').with_variant(VARCHAR(), 'sqlite')
 
 MyDateTime = DateTime(timezone=True).with_variant(
     DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
@@ -78,7 +80,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
-    the_geom = GeometryColumn(Point())
+    the_geom = Column(MyGeometry)
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -155,7 +157,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
-    the_geom = GeometryColumn(Point())
+    the_geom = Column(MyGeometry)
 
 class ObsCountPerMonthHistory(DeferredBase):
     '''This class maps to a materialized view that is required for web app performance. It is used for approximating the number of observations which will be returned by station selection criteria.

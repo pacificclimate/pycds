@@ -61,9 +61,8 @@ setup(
     package_data={'pycds': ['data/*.sqlite']},
     include_package_data=True,
     zip_safe=True,
-    scripts = ['scripts/demo.py'],
+    scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
     install_requires = ['SQLAlchemy >=0.8.3', 'geoalchemy', 'psycopg2'],
-    #dependency_links = ['https://bitbucket.org/zzzeek/sqlalchemy/get/rel_0_8.tar.gz#egg=SQLAlchemy-0.8.3dev'],
     tests_require=['pytest', 'pysqlite'],
     cmdclass = {'test': PyTest},
 

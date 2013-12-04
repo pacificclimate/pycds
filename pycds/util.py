@@ -1,6 +1,12 @@
-from sqlalchemy import not_, and_, or_
+from collections import namedtuple
+from datetime import datetime
 
-from pycds import ObsWithFlags
+from sqlalchemy import not_, and_, or_, Integer, Column
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.schema import MetaData
+
+from pycds import *
+
 
 # from http://stackoverflow.com/questions/5631078/sqlalchemy-print-the-actual-query
 def compile_query(statement, bind=None):
@@ -78,4 +84,118 @@ def orm_station_table(sesh, stn_id, raw=True):
     #return join_query
 
 def sql_station_table(sesh, stn_id):
-    return compile_query(orm_station_table(sesh, stn_id))    
+    return compile_query(orm_station_table(sesh, stn_id))
+
+TestContact = namedtuple('TestContact', 'name title organization email phone')
+TestNetwork = namedtuple('TestNetwork', 'name long_name color')
+TestStation = namedtuple('TestStation', 'native_id network histories')
+TestHistory = namedtuple('TestHistory', 'station_name elevation sdate edate province country freq')
+TestVariable = namedtuple('TestVariable', 'name unit standard_name cell_method precision description display_name short_name network')
+                         
+def create_test_database(write_engine):
+    meta = MetaData(bind=write_engine)
+    for table in [Network, Contact, Variable, Station, History, Obs, CrmpNetworkGeoserver, ObsCountPerMonthHistory, VarsPerHistory]:
+        table.__table__.tometadata(meta)
+    meta.create_all()
+
+# This is fragile, fragile code
+# Kind of assumes a postgres read_engine and an sqlite write_engine
+def create_reflected_test_database(read_engine, write_engine):
+    meta = MetaData(bind=write_engine)
+    meta.reflect(bind=read_engine)
+    
+    for tablename in ('matviews', 'stats_station_var'):
+        meta.remove(meta.tables[tablename])
+
+    logger.info("Overriding PG types that are unknown to sqlite")
+    meta.tables['meta_history'].columns['tz_offset'].type = Integer()
+    meta.tables['obs_raw'].columns['mod_time'].server_default = None
+    meta.tables['meta_history'].columns['the_geom'].type = Integer()
+    # These are all BIGINT in postgres
+    meta.tables['obs_raw'].columns['obs_raw_id'].type = Integer() 
+    meta.tables['obs_raw_native_flags'].columns['obs_raw_id'].type = Integer()
+    meta.tables['obs_raw_pcic_flags'].columns['obs_raw_id'].type = Integer()
+    
+    logger.info("Unsetting all of the sequence defaults")
+    for tablename, table in meta.tables.iteritems():
+        if hasattr(table, 'primary_key'):
+            for column in table.primary_key.columns.values():
+                if column.server_default:
+                    column.server_default = None
+
+    logger.info("Creating a subset of the tables")
+    to_create = [ table for tablename, table in meta.tables.iteritems() if tablename in ['obs_raw', 'meta_history', 'meta_station', 'meta_network', 'meta_vars', 'meta_contact'] ]
+    # Don't have contact in the postgres database yet 2013.12.04
+    meta.tables['meta_network'].append_column(Column('contact_id', Integer))
+    meta.create_all(tables=to_create)
+        
+def create_test_data(write_engine):
+    sesh = sessionmaker(bind=write_engine)()
+
+    moti = Network(**TestNetwork('MOTI', 'Ministry of Transportation and Infrastructure', '000000')._asdict())
+    moe = Network(**TestNetwork('MOTI', 'Ministry of Transportation and Infrastructure', '000000')._asdict())
+    sesh.add_all([moti, moe])
+
+    simon = Contact(**TestContact('Simon', 'Avalanche Guy', 'MOTI', 'simon@moti.bc.gov.ca', '250-555-1212')._asdict())
+    simon.networks = [ moti ]
+    ted = Contact(**TestContact('Ted', 'Air Quailty Guy', 'MOE', 'ted@moti.bc.gov.ca', '250-555-2121')._asdict())
+    ted.networks = [ moe ]
+    sesh.add_all([simon, ted])
+
+    histories = [ TestHistory('Brandywine', 496, datetime(2001, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Stewart', 15, datetime(2004, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Cayoosh Summit', 1350, datetime(1997, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Boston Bar RCMP Station', 180, datetime(1999, 01, 22, 13), datetime(2002, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Prince Rupert', 35, datetime(1990, 01, 22, 13), datetime(1996, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Prince Rupert', 36, datetime(1997, 01, 22, 13), None, 'BC', 'Canada', '1-hourly'),
+                  ]
+    histories = [ History(**hist._asdict()) for hist in histories ]
+    sesh.add_all(histories)
+    
+    stations = [TestStation('11091', moti, [ histories[0] ]),
+                TestStation('51129', moti, [ histories[1] ]),
+                TestStation('26224', moti, [ histories[2] ]),
+                TestStation('E238240', moe, [ histories[3] ]),
+                TestStation('M106037', moe, histories[4:6])
+                ]
+
+    for station in stations:
+        sesh.add(Station(**station._asdict()))
+
+    variables = [TestVariable('air-temperature', 'degC', 'air_temperature', 'time: point', None, 'Instantaneous air temperature', 'Temperature (Point)', '', moti),
+                 TestVariable('average-direction', 'km/h', 'wind_from_direction', 'time: mean', None, 'Hourly average wind direction', 'Wind Direction (Mean)', '', moti),
+                 TestVariable('dew-point', 'degC', 'dew_point_temperature', 'time: point', None, '', 'Dew Point Temperature (Mean)', '', moti),
+                 TestVariable('BAR_PRESS_HOUR', 'millibar', 'air_pressure', 'time:point', None, 'Instantaneous air pressure', 'Air Pressure (Point)', '', moe),
+#                 TestVariable(name unit standard_name cell_method precision description display_name short_name)
+                 ]
+
+    for variable in variables:
+        sesh.add(Variable(**variable._asdict()))
+
+    sesh.commit()
+
+def create_test_data_from_reflection(read_engine, write_engine):
+    rSession = sessionmaker(bind=read_engine)()
+    wSession = sessionmaker(bind=write_engine)()
+
+    q = rSession.query(Variable)
+    for var in q.all():
+        merged_object = wSession.merge(var)
+        wSession.add(merged_object)
+
+    logger.info("Querying the networks")
+    q = rSession.query(Network.name, Network.long_name, Network.color)
+    for name, long_name, color in q.all():
+        new_object = Network(name=name, long_name=long_name, color=color)
+        wSession.add(new_object)
+
+    q = rSession.query(Station)
+    for station in q.all():
+        merged_object = wSession.merge(station)
+        wSession.add(merged_object)
+        for hist in station.histories:
+            new_hist = wSession.merge(hist)
+            wSession.add(new_hist)
+        
+    wSession.commit()
+
