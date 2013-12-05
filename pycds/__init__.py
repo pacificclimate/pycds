@@ -5,7 +5,7 @@ from pkg_resources import resource_filename
 __all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
-from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR
+from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
@@ -15,8 +15,8 @@ from geoalchemy import Geometry
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+MyBigInteger = BigInteger().with_variant(INTEGER(), 'sqlite')
 MyGeometry = Geometry('POINT').with_variant(VARCHAR(), 'sqlite')
-
 MyDateTime = DateTime(timezone=True).with_variant(
     DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
              regexp=r"(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)",
@@ -94,7 +94,7 @@ class Obs(Base):
     '''This class maps to the table which records the details of weather observations. Each row is one single data point for one single quantity.
     '''
     __tablename__ = 'obs_raw'
-    id = Column('obs_raw_id', BigInteger, primary_key=True)
+    id = Column('obs_raw_id', MyBigInteger, primary_key=True)
     time = Column('obs_time', MyDateTime)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
