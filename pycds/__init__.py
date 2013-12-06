@@ -2,13 +2,14 @@ import re
 import os.path
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'NativeFlag', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
 from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import UniqueConstraint
 from geoalchemy import GeometryColumn, Point
 from geoalchemy import Geometry
 
@@ -87,8 +88,9 @@ class History(Base):
 
 association_table = Table('obs_raw_native_flags', Base.metadata,
                           Column('obs_raw_id', BigInteger, ForeignKey('obs_raw.obs_raw_id')),
-                          Column('native_flag_id', Integer, ForeignKey('meta_native_flag.native_flag_id'))
-                          )
+                          Column('native_flag_id', Integer, ForeignKey('meta_native_flag.native_flag_id')),
+                          UniqueConstraint('obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
+)
 
 class Obs(Base):
     '''This class maps to the table which records the details of weather observations. Each row is one single data point for one single quantity.
@@ -105,6 +107,11 @@ class Obs(Base):
     variable = relationship("Variable", backref=backref('obs_raw', order_by=id))
     flags = relationship("NativeFlag", secondary=association_table, backref="flagged_obs")
 
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('obs_time', 'history_id', 'vars_id', name='time_place_variable_unique'),
+    )
+    
 class Variable(Base):
     '''This class maps to the table which records the details of the physical quantities which are recorded by the weather stations.
     '''
@@ -130,10 +137,17 @@ class NativeFlag(Base):
     id = Column('native_flag_id', Integer, primary_key=True)
     name = Column('flag_name', String)
     description = Column(String)
-    #network_id
+    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
     value = Column(String)
-    discard = Column(Boolean)    
+    discard = Column(Boolean)
 
+    network = relationship("Network", backref=backref('meta_native_flag', order_by=id))
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('network_id', 'value', name='meta_native_flag_unique'),
+    )
+    
 #class PcicFlag(Base):
 DeferredBase = declarative_base(cls=DeferredReflection)
 
