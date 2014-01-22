@@ -10,10 +10,18 @@ import pytest
 
 @pytest.fixture(scope='function')
 def test_db_session():
-    engine = create_engine('sqlite://')
+    from pysqlite2 import dbapi2 as sqlite
+    engine = create_engine('sqlite://', module=sqlite)
+
+    Session = sessionmaker(bind=engine)
+    sesh = Session()
+
+    sesh.connection().connection.enable_load_extension(True)
+    sesh.execute("select load_extension('libspatialite.so')")
+
     create_test_database(engine)
     create_test_data(engine)
-    return sessionmaker(bind=engine)()
+    return sesh
 
 def test_obs_raw_unique(test_db_session):
     # Find any variable and history to link to

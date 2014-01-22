@@ -11,13 +11,11 @@ from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
 from geoalchemy import GeometryColumn, Point
-from geoalchemy import Geometry
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 MyBigInteger = BigInteger().with_variant(INTEGER(), 'sqlite')
-MyGeometry = Geometry('POINT').with_variant(VARCHAR(), 'sqlite')
 MyDateTime = DateTime(timezone=True).with_variant(
     DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
              regexp=r"(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)",
@@ -81,7 +79,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
-    the_geom = Column(MyGeometry)
+    the_geom = GeometryColumn(Point())
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -171,7 +169,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
-    the_geom = Column(MyGeometry)
+    the_geom = GeometryColumn(Point())
 
 class ObsCountPerMonthHistory(DeferredBase):
     '''This class maps to a materialized view that is required for web app performance. It is used for approximating the number of observations which will be returned by station selection criteria.
