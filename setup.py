@@ -62,7 +62,7 @@ setup(
     include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
-    install_requires = ['SQLAlchemy >=0.8.3', 'geoalchemy', 'psycopg2'],
+    install_requires = ['SQLAlchemy >=0.8.3,<0.9.0', 'geoalchemy', 'psycopg2'],
     tests_require=['pytest', 'pysqlite'],
     cmdclass = {'test': PyTest},
 
