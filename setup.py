@@ -15,8 +15,7 @@ class PyTest(TestCommand):
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
         import pytest
-        global HAVE_SPATIALITE
-        if not HAVE_SPATIALITE:
+        if not check_for_spatialite():
             raise Exception("Cannot run without libspatialite, which is not installed")
         errno = pytest.main(self.test_args)
         sys.exit(errno)
@@ -47,8 +46,6 @@ Otherwise, you will not be able to run any of the unit tests for this package fo
     else:
         return True
 
-HAVE_SPATIALITE = check_for_spatialite()
-    
 setup(
     name="PyCDS",
     description="An ORM representation of the PCDS and CRMP database",
