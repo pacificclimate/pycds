@@ -2,15 +2,15 @@ from pycds import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import and_, or_
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option('-c', '--connection_string', dest='connection_string', help='PostgreSQL connection string')
-    parser.set_defaults(connection_string='postgresql://httpd@monsoon.pcic.uvic.ca/crmp?sslmode=require',)
-    (opts, args) = parser.parse_args()
+    parser = ArgumentParser()
+    parser.add_argument('-c', '--connection_string', required=True,
+                        help='PostgreSQL connection string of form:\n\tdialect+driver://username:password@host:port/database\nExamples:\n\tpostgresql://scott:tiger@localhost/mydatabase\n\tpostgresql+psycopg2://scott:tiger@localhost/mydatabase\n\tpostgresql+pg8000://scott:tiger@localhost/mydatabase')
+    args = parser.parse_args()
 
-    engine = create_engine(opts.connection_string, echo=True)
+    engine = create_engine(args.connection_string, echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
 
