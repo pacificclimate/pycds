@@ -10,7 +10,7 @@ __version__ = (0, 0, 16)
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
-        self.test_args = ['-v']
+        self.test_args = ['-v', '--tb=no', 'tests']
         self.test_suite = True
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
@@ -59,6 +59,7 @@ setup(
     include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
+    dependency_links = ['https://github.com/pacificclimate/pysqlite/tarball/master#egg=pysqlite'],
     install_requires = ['SQLAlchemy >=0.8.3,<0.9.0', 'geoalchemy', 'psycopg2'],
     tests_require=['pytest', 'pysqlite'],
     cmdclass = {'test': PyTest},
