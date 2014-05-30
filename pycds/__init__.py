@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
 from geoalchemy import GeometryColumn, Point
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 MyBigInteger = BigInteger().with_variant(INTEGER(), 'sqlite')
@@ -220,11 +220,18 @@ def test_session():
     '''This creates a testing database session that can be used as a test fixture. It uses a subset testing sqlite database and loads the spatialite extension for use of the geometry functionality.
     '''
     from pysqlite2 import dbapi2 as sqlite
+
     dsn = 'sqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
     engine = create_engine(dsn, module=sqlite, echo=True)
     engine.echo = True
+
+    # Make sure spatial extensions are loaded for each connection, not just the current session
+    # https://groups.google.com/d/msg/sqlalchemy/eDpJ-yZEnqU/_XJ4Pmd712QJ
+    @event.listens_for(engine, "connect")
+    def connect(dbapi_connection, connection_rec):
+        dbapi_connection.enable_load_extension(True)
+        dbapi_connection.execute("select load_extension('libspatialite.so')")
+
     Session = sessionmaker(bind=engine)
     sesh = Session()
-    sesh.connection().connection.enable_load_extension(True)
-    sesh.execute("select load_extension('libspatialite.so')")
     return sesh
