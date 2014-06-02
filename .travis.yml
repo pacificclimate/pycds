@@ -5,6 +5,7 @@ python:
 before_install:
   - sudo apt-get install -qq libspatialite-dev
 install:
-  - python setup.py install
+  - pip install -r test_requirements.txt
+  - pip install -e .
 # command to run tests
-script: python setup.py -q test
+script: py.test -v
