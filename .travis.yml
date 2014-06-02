@@ -6,6 +6,6 @@ before_install:
   - sudo apt-get install -qq libspatialite-dev
 install:
   - pip install -r test_requirements.txt -i http://tools.pacificclimate.org/pypiserver/
-  - pip install -e .
+  - pip install -i http://tools.pacificclimate.org/pypiserver/ .
 # command to run tests
-script: py.test -v
+script: python setup.py test
