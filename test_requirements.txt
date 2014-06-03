@@ -1,3 +1,2 @@
--r requirements.txt
 pytest
--e git://github.com/pacificclimate/pysqlite.git#egg=pysqlite
+pysqlite==2.6.3
