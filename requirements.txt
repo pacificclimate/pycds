@@ -1,4 +1,4 @@
 # GeoAlchemy with support for SqlAlchmey >= 0.9
--e git://github.com/chokoswitch/geoalchemy.git@d5b5af1d7ed#egg=GeoAlchemy
+geoalchemy==0.7.3 #0.7.3 only exists on pcic pypi server
 SQLAlchemy >=0.8.6
 psycopg2==2.5.2
