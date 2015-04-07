@@ -2,7 +2,7 @@ import re
 import os.path
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'NativeFlag', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
 from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
@@ -89,6 +89,7 @@ association_table = Table('obs_raw_native_flags', Base.metadata,
                           Column('native_flag_id', Integer, ForeignKey('meta_native_flag.native_flag_id')),
                           UniqueConstraint('obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
+ObsRawNativeFlags = association_table
 
 class Obs(Base):
     '''This class maps to the table which records the details of weather observations. Each row is one single data point for one single quantity.

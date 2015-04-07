@@ -94,8 +94,9 @@ TestVariable = namedtuple('TestVariable', 'name unit standard_name cell_method p
                          
 def create_test_database(write_engine):
     meta = MetaData(bind=write_engine)
-    for table in [Network, Contact, Variable, Station, History, Obs, CrmpNetworkGeoserver, ObsCountPerMonthHistory, VarsPerHistory, NativeFlag]:
+    for table in [Network, Contact, Variable, Station, History, Obs, CrmpNetworkGeoserver, ObsCountPerMonthHistory, VarsPerHistory, NativeFlag, ObsWithFlags]:
         table.__table__.tometadata(meta)
+    ObsRawNativeFlags.tometadata(meta)
     meta.create_all()
 
 # This is fragile, fragile code
