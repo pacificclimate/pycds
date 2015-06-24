@@ -60,7 +60,7 @@ setup(
     zip_safe=True,
     scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
     dependency_links = ['https://github.com/pacificclimate/pysqlite/tarball/master#egg=pysqlite'],
-    install_requires = ['SQLAlchemy >=0.8.6', 'geoalchemy==0.7.3', 'psycopg2'],
+    install_requires = ['SQLAlchemy >=0.8.6, <=0.9.9', 'geoalchemy==0.7.3', 'psycopg2'],
     tests_require=['pytest', 'pysqlite'],
     cmdclass = {'test': PyTest},
 

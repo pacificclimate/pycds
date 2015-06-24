@@ -1,4 +1,4 @@
 # GeoAlchemy with support for SqlAlchmey >= 0.9
 geoalchemy==0.7.3 #0.7.3 only exists on pcic pypi server
-SQLAlchemy >=0.8.6
+SQLAlchemy ==0.9.9
 psycopg2==2.5.2
