@@ -210,7 +210,7 @@ class ObsWithFlags(Base):
     obs_time = Column(MyDateTime)
     mod_time = Column(MyDateTime)
     datum = Column(Float)
-    native_flag_id = Column(Integer, ForeignKey('obs_raw_native_flags.native_flag_id'))
+    native_flag_id = Column(Integer, ForeignKey('meta_native_flag.native_flag_id'))
     flag_name = Column(String)
     description = Column(String)
     flag_value = Column(String)
