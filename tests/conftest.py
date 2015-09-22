@@ -13,6 +13,15 @@ def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 @pytest.yield_fixture(scope='function')
+def blank_postgis_session():
+    with testing.postgresql.Postgresql() as pg:
+        engine = create_engine(pg.url())
+        sesh = sessionmaker(bind=engine)()
+        sesh.execute("create extension postgis")
+
+        yield sesh
+
+@pytest.yield_fixture(scope='function')
 def test_session():
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 
