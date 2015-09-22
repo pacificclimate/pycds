@@ -10,7 +10,7 @@ from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, 
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
-from geoalchemy import GeometryColumn, Point
+from geoalchemy2 import Geometry
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -79,7 +79,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
-    the_geom = GeometryColumn(Point())
+    the_geom = Column(Geometry('POINT'))
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -170,7 +170,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
-    the_geom = GeometryColumn(Point())
+    the_geom = Column(Geometry('POINT'))
 
 class ObsCountPerMonthHistory(DeferredBase):
     '''This class maps to a materialized view that is required for web app performance. It is used for approximating the number of observations which will be returned by station selection criteria.

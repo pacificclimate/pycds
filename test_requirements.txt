@@ -1,2 +1,2 @@
 pytest
-pysqlite==2.6.3
+testing.postgresql

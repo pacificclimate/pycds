@@ -1,5 +1,9 @@
 from pycds import History
 
+def test_can_use_geo_functions(test_session):
+    res = session.execute("SELECT ST_AsBinary(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))',4326))")
+    print res.fetchall()[0][0]
+
 def test_can_use_spatial_tables(test_session):
     res = test_session.execute('SELECT ST_X(the_geom) AS lon FROM meta_history ORDER BY lon')
     lons = [ lon for lon, in res ]
