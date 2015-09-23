@@ -16,8 +16,8 @@ def pytest_runtest_setup():
 def blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
         sesh = sessionmaker(bind=engine)()
-        sesh.execute("create extension postgis")
 
         yield sesh
 
