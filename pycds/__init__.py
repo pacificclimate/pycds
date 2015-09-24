@@ -22,6 +22,7 @@ MyDateTime = DateTime(timezone=True).with_variant(
              ), "sqlite")
 
 Base = declarative_base()
+metadata = Base.metadata
 
 class Network(Base):
     '''This class maps to the table which represents various `networks` of data for the Climate Related Monitoring Program. There is one network row for each data provider, typically a BC Ministry, crown corporation or private company.
@@ -79,7 +80,7 @@ class History(Base):
     province = Column(String)
     country = Column(String)
     freq = Column(String)
-    the_geom = Column(Geometry('POINT'))
+    the_geom = Column(Geometry('GEOMETRY', 4326))
 
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
@@ -147,8 +148,14 @@ class NativeFlag(Base):
         UniqueConstraint('network_id', 'value', name='meta_native_flag_unique'),
     )
     
-#class PcicFlag(Base):
-DeferredBase = declarative_base(cls=DeferredReflection)
+# The DeferredBase is currently used for views.
+# When testing, not using proper views may create issues
+# TODO: Implement proper views like
+# http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
+# or https://gist.github.com/techniq/5174412
+
+DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
+deferred_metadata = DeferredBase.metadata
 
 class CrmpNetworkGeoserver(DeferredBase):
     '''This table maps to a convenience view that is used by geoserver for mapping.
@@ -170,7 +177,7 @@ class CrmpNetworkGeoserver(DeferredBase):
     col_hex = Column(String)
     vars = Column(String)
     display_names = Column(String)
-    the_geom = Column(Geometry('POINT'))
+    the_geom = Column(Geometry('GEOMETRY', 4326))
 
 class ObsCountPerMonthHistory(DeferredBase):
     '''This class maps to a materialized view that is required for web app performance. It is used for approximating the number of observations which will be returned by station selection criteria.
