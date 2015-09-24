@@ -24,19 +24,6 @@ CREATE TABLE subset.meta_station AS
 
 -- SELECT * FROM subset.meta_station;
 
-CREATE TABLE subset.meta_alias AS 
-(
-	SELECT *
-	FROM crmp.meta_alias
-	WHERE station_id IN 
-	(
-		SELECT station_id 
-		FROM subset.meta_station
-	)
-);
-
--- SELECT * FROM subset.meta_alias;
-
 CREATE TABLE subset.meta_network AS 
 (
 	SELECT *
@@ -196,18 +183,6 @@ CREATE TABLE subset.obs_raw_pcic_flags AS
 
 -- SELECT * FROM subset.obs_raw_pcic_flags;
 
-CREATE TABLE subset.time_bounds AS 
-(
-	SELECT *
-	FROM crmp.time_bounds
-	WHERE obs_raw_id IN 
-	(
-		SELECT obs_raw_id 
-		FROM subset.obs_raw
-	)
-);
-
--- SELECT * FROM subset.time_bounds;
 
 CREATE TABLE subset.meta_pcic_flag AS 
 (
@@ -252,29 +227,6 @@ CREATE TABLE subset.climo_obs_count_mv AS
 
 -- SELECT * FROM subset.climo_obs_count_mv;
 
-CREATE TABLE subset.collapsed_vars_mv AS 
-(
-    SELECT vars_per_history_mv.history_id,
-        array_to_string(array_agg(meta_vars.standard_name::text || regexp_replace(meta_vars.cell_method::text, 'time: '::text, '_'::text, 'g'::text)), ', '::text) AS vars,
-        array_to_string(array_agg(meta_vars.display_name), '|'::text) AS display_names
-    FROM subset.vars_per_history_mv
-    NATURAL JOIN subset.meta_vars
-    GROUP BY vars_per_history_mv.history_id
-);
-
--- CREATE TABLE subset.collapsed_vars_mv AS 
--- (
--- 	SELECT *
--- 	FROM crmp.collapsed_vars_mv
--- 	WHERE history_id IN 
--- 	(
--- 		SELECT history_id 
--- 		FROM subset.meta_history
--- 	)
--- );
-
--- SELECT * FROM subset.collapsed_vars_mv;
-
 SELECT 'CREATING obs_count_per_month_history_mv';
     
 CREATE TABLE subset.obs_count_per_month_history_mv AS 
@@ -300,35 +252,6 @@ GROUP BY date_trunc('month'::text, obs_raw.obs_time), obs_raw.history_id
 
 -- SELECT * FROM subset.obs_count_per_month_history_mv;
 
-SELECT 'CREATING station_obs_stats_mv';
-    
-CREATE TABLE subset.station_obs_stats_mv AS 
-(
-SELECT meta_history.station_id, foo.history_id, foo.min_obs_time, foo.max_obs_time, foo.obs_count
-    FROM
-    (
-        SELECT  min(obs_raw.obs_time) AS min_obs_time,
-                max(obs_raw.obs_time) AS max_obs_time,
-                obs_raw.history_id,
-                count(DISTINCT obs_raw.obs_time) AS obs_count
-        FROM subset.obs_raw
-        GROUP BY obs_raw.history_id
-    ) foo
-NATURAL JOIN subset.meta_history
-);
-
--- CREATE TABLE subset.station_obs_stats_mv AS 
--- (    SELECT *
--- 	FROM crmp.station_obs_stats_mv
--- 	WHERE history_id IN 
--- 	(
--- 		SELECT history_id 
--- 		FROM subset.meta_history
--- 	)
--- );
-
--- SELECT * FROM subset.station_obs_stats_mv;
-
 CREATE TABLE subset.obs_with_flags AS 
 (
 	SELECT *
@@ -341,32 +264,6 @@ CREATE TABLE subset.obs_with_flags AS
 );
 
 -- SELECT * FROM subset.obs_with_flags;
-
-CREATE TABLE subset.stats_station_var AS 
-(
-	SELECT *
-	FROM crmp.stats_station_var
-	WHERE station_id IN 
-	(
-		SELECT station_id 
-		FROM subset.meta_station
-	)
-);
-
--- SELECT * FROM subset.stats_station_var;
-
-CREATE TABLE subset.meta_climo_attrs AS 
-(
-	SELECT *
-	FROM crmp.meta_climo_attrs
-	WHERE station_id IN 
-	(
-		SELECT station_id 
-		FROM subset.meta_station
-	)
-);
-
--- SELECT * FROM subset.meta_climo_attrs;
 
 CREATE TABLE subset.meta_sensor AS 
 (
