@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from pycds.util import create_test_database, create_test_data
 from pycds import Contact
 
-def test_can_create_test_db():
-    engine = create_engine('sqlite://')
+def test_can_create_test_db(blank_postgis_session):
+    engine = blank_postgis_session.get_bind()
     create_test_database(engine)
     create_test_data(engine)
     # Get some data
