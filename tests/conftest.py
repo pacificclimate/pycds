@@ -24,8 +24,10 @@ def blank_postgis_session():
 
 @pytest.yield_fixture(scope='function')
 def test_session(blank_postgis_session):
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
+    pycds.DeferredBase.metadata.create_all(bind=engine)
 
     moti = Network(name='MoTIe')
     ec = Network(name='EC')
@@ -38,9 +40,9 @@ def test_session(blank_postgis_session):
     blank_postgis_session.add_all([simon, eric, pat])
 
     stations = [
-        Station(native_id='11091', network=moti, histories=[History(station_name='Brandywine')]),
-        Station(native_id='1029', network=wmb, histories=[History(station_name='FIVE MILE')]),
-        Station(native_id='2100160', network=ec, histories=[History(station_name='Beaver Creek Airport')])
+        Station(native_id='11091', network=moti, histories=[History(station_name='Brandywine', the_geom='SRID=4326;POINT(-123.11806 50.05417)')]),
+        Station(native_id='1029', network=wmb, histories=[History(station_name='FIVE MILE', the_geom='SRID=4326;POINT(-122.68889 50.91089)')]),
+        Station(native_id='2100160', network=ec, histories=[History(station_name='Beaver Creek Airport', the_geom='SRID=4326;POINT(-140.866667 62.416667)')])
         ]
     blank_postgis_session.add_all(stations)
 
