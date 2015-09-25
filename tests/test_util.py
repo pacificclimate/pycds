@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pycds.util import orm_station_table
 
-@pytest.mark.skipif(1) # Tests should check the validity of the model (relationships, table), not the test data itself.
+@pytest.mark.skipif(1, reason="Broken") # Tests should check the validity of the model (relationships, table), not the test data itself.
 def test_station_table(test_session):
     table = orm_station_table(test_session, 5534)
     values = [ x for x in table ]

@@ -9,6 +9,7 @@ import pytest
 
 import pycds
 from pycds import Network, Contact, Station, History, Variable
+from pycds.util import insert_test_data
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -51,6 +52,22 @@ def test_session(blank_postgis_session):
                  Variable(name='relative_humidity', unit='percent', network=wmb)
                  ]
     blank_postgis_session.add_all(variables)
+
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
+
+    yield blank_postgis_session
+
+@pytest.yield_fixture(scope='function')
+def large_test_session(blank_postgis_session):
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+    engine = blank_postgis_session.get_bind()
+    pycds.Base.metadata.create_all(bind=engine)
+    pycds.DeferredBase.metadata.create_all(bind=engine)
+
+    with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
+        sql = f.read()
+    blank_postgis_session.execute(sql)
+    blank_postgis_session
 
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 

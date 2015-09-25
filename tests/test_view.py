@@ -1,8 +1,7 @@
-import pycds
+from pycds import CrmpNetworkGeoserver
 
-def test_crmp_network_geoserver(test_session):
-    cng = pycds.CrmpNetworkGeoserver.network_name
-    q = test_session.query(cng)
+def test_crmp_network_geoserver(large_test_session):
+    q = large_test_session.query(CrmpNetworkGeoserver.network_name)
     rv = q.all()
 
     # Test that the number of rows is not zero
@@ -19,8 +18,8 @@ def test_crmp_network_geoserver(test_session):
     assert filtered_nrows < nrows
     nrows = filtered_nrows
 
-    # Select all rows where max_obs_time is before 2000
-    where_clause = "max_obs_time < '2000-01-01'"
+    # Select all rows where max_obs_time is before 2005
+    where_clause = "max_obs_time < '2005-01-01'"
 
     # Assert that number of rows is less
     rv = q.filter(where_clause).all()

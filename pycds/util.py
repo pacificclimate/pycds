@@ -1,5 +1,6 @@
 from collections import namedtuple
 from datetime import datetime
+from pkg_resources import resource_filename
 
 from sqlalchemy import not_, and_, or_, Integer, Column
 from sqlalchemy.orm import sessionmaker
@@ -174,6 +175,14 @@ def create_test_data(write_engine):
         sesh.add(Variable(**variable._asdict()))
 
     sesh.commit()
+
+def insert_test_data(engine):
+    sesh = sessionmaker(bind=engine)()
+
+    with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
+        data = f.read()
+
+    engine.execute(data)
 
 def create_test_data_from_reflection(read_engine, write_engine):
     rSession = sessionmaker(bind=read_engine)()
