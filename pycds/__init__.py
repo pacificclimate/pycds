@@ -1,16 +1,17 @@
 import re
 import os.path
+import datetime
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
 from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData
+from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
-from geoalchemy import GeometryColumn, Point
+from geoalchemy2 import Geometry
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +23,7 @@ MyDateTime = DateTime(timezone=True).with_variant(
              ), "sqlite")
 
 Base = declarative_base()
+metadata = Base.metadata
 
 class Network(Base):
     '''This class maps to the table which represents various `networks` of data for the Climate Related Monitoring Program. There is one network row for each data provider, typically a BC Ministry, crown corporation or private company.
@@ -30,6 +32,8 @@ class Network(Base):
     id = Column('network_id', Integer, primary_key=True)
     name = Column('network_name', String)
     long_name = Column('description', String)
+    virtual = Column(String(255))
+    publish = Column(Boolean)
     color = Column('col_hex', String)
     contact_id = Column(Integer, ForeignKey('meta_contact.contact_id'))
 
@@ -38,6 +42,13 @@ class Network(Base):
 
     def __str__(self):
         return '<CRMP Network %s>' % self.name
+
+class MetaNetworkGeoserver(Network):
+    __tablename__ = 'meta_network_geoserver'
+
+    network_id = Column(ForeignKey('meta_network.network_id'), primary_key=True)
+    network_name = Column(String(255))
+    col_hex = Column(String(7))
 
 class Contact(Base):
     '''This class maps to the table which represents contact people and representatives for the networks of the Climate Related Monitoring Program.
@@ -59,6 +70,8 @@ class Station(Base):
     id = Column('station_id', Integer, primary_key=True)
     native_id = Column(String)
     network_id = Column(Integer, ForeignKey('meta_network.network_id'))
+    min_obs_time = Column(DateTime)
+    max_obs_time = Column(DateTime)
 
     network = relationship("Network", backref=backref('meta_station', order_by=id))
     histories = relationship("History", backref=backref('meta_station', order_by=id))
@@ -73,14 +86,20 @@ class History(Base):
     id = Column('history_id', Integer, primary_key=True)
     station_id = Column('station_id', Integer, ForeignKey('meta_station.station_id'))
     station_name = Column(String)
+    lon = Column(Numeric)
+    lat = Column(Numeric)
     elevation = Column('elev', Float)
     sdate = Column(Date)
     edate = Column(Date)
+    tz_offset = Column(Interval)
     province = Column(String)
     country = Column(String)
+    comments = Column(String(255))
     freq = Column(String)
-    the_geom = GeometryColumn(Point())
+    sensor_id = Column(ForeignKey(u'meta_sensor.sensor_id'))
+    the_geom = Column(Geometry('GEOMETRY', 4326))
 
+    sensor = relationship("MetaSensor")
     station = relationship("Station", backref=backref('meta_history', order_by=id))
     observations = relationship("Obs", backref=backref('meta_history', order_by=id))
 
@@ -91,12 +110,19 @@ association_table = Table('obs_raw_native_flags', Base.metadata,
 )
 ObsRawNativeFlags = association_table
 
+class MetaSensor(Base):
+    __tablename__ = 'meta_sensor'
+
+    id = Column('sensor_id', Integer, primary_key=True)
+    name = Column(String(255))
+
 class Obs(Base):
     '''This class maps to the table which records the details of weather observations. Each row is one single data point for one single quantity.
     '''
     __tablename__ = 'obs_raw'
     id = Column('obs_raw_id', MyBigInteger, primary_key=True)
     time = Column('obs_time', MyDateTime)
+    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
@@ -147,8 +173,14 @@ class NativeFlag(Base):
         UniqueConstraint('network_id', 'value', name='meta_native_flag_unique'),
     )
     
-#class PcicFlag(Base):
-DeferredBase = declarative_base(cls=DeferredReflection)
+# The DeferredBase is currently used for views.
+# When testing, not using proper views may create issues
+# TODO: Implement proper views like
+# http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
+# or https://gist.github.com/techniq/5174412
+
+DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
+deferred_metadata = DeferredBase.metadata
 
 class CrmpNetworkGeoserver(DeferredBase):
     '''This table maps to a convenience view that is used by geoserver for mapping.
@@ -157,20 +189,25 @@ class CrmpNetworkGeoserver(DeferredBase):
     network_name = Column(String)
     native_id = Column(String)
     station_name = Column(String)
+    lon = Column(Numeric)
+    lat = Column(Numeric)
     elevation = Column('elev', Float)
     min_obs_time = Column(MyDateTime)
     max_obs_time = Column(MyDateTime)
     freq = Column(String)
+    tz_offset = Column(Interval)
     province = Column(String)
     station_id = Column(Integer, ForeignKey('meta_station.station_id'))
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     country = Column(String)
     comments = Column(String)
+    sensor_id = Column(Integer)
+    description = Column(String(255))
     network_id = Column(Integer)
-    col_hex = Column(String)
+    col_hex = Column(String(7))
     vars = Column(String)
     display_names = Column(String)
-    the_geom = GeometryColumn(Point())
+    the_geom = Column(Geometry('GEOMETRY', 4326))
 
 class ObsCountPerMonthHistory(DeferredBase):
     '''This class maps to a materialized view that is required for web app performance. It is used for approximating the number of observations which will be returned by station selection criteria.

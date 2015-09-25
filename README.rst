@@ -34,3 +34,13 @@ Climate Related Monitoring Program
 
 The Climate Related Monitoring Program (CRMP) is a collaborative effort between several BC ministries, crown corporations, and PCIC. Its purpose is to opportunistically leverage weather observations that are being collected for operational uses and utilize them for long-term climate monitoring. More information on the program can be found `here <http://www.env.gov.bc.ca/epd/wamr/crmp.htm>`_.
 
+------------
+Testing Data
+------------
+
+Some testing data was sourced from a production database. The steps to produce this were:
+
+1. As database superuser, run CREATE SCHEMA subset AUTHRIZATION <username>;
+2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp. This insert a selection of data into the `subset` schema.
+3. Then, `pg_dump -h <db_host> -d crmp --schema=subset --data-only --no-owner --no-privileges --no-tablespaces --column-inserts -f pycds/data/crmp_subset_data.sql`
+4. Edit this file removing the `SET search_path...` line, and re-ordering the data inserts to respect foreign key constraints. Default sort is alphabetical and the only changes that should need to be made are ordering meta_network, meta_station, and meta_history first and leaving the remaining inserts ordered as is.
