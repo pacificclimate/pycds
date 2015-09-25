@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData
 
 from pycds import *
+from pycds import Base, DeferredBase
 
 
 # from http://stackoverflow.com/questions/5631078/sqlalchemy-print-the-actual-query
@@ -93,12 +94,9 @@ TestStation = namedtuple('TestStation', 'native_id network histories')
 TestHistory = namedtuple('TestHistory', 'station_name elevation sdate edate province country freq')
 TestVariable = namedtuple('TestVariable', 'name unit standard_name cell_method precision description display_name short_name network')
                          
-def create_test_database(write_engine):
-    meta = MetaData(bind=write_engine)
-    for table in [Network, Contact, Variable, Station, History, MetaSensor, Obs, CrmpNetworkGeoserver, ObsCountPerMonthHistory, VarsPerHistory, NativeFlag, ObsWithFlags]:
-        table.__table__.tometadata(meta)
-    ObsRawNativeFlags.tometadata(meta)
-    meta.create_all()
+def create_test_database(engine):
+    Base.metadata.create_all(bind=engine)
+    DeferredBase.metadata.create_all(bind=engine)
 
 # This is fragile, fragile code
 # Kind of assumes a postgres read_engine and an sqlite write_engine
@@ -176,13 +174,11 @@ def create_test_data(write_engine):
 
     sesh.commit()
 
-def insert_test_data(engine):
-    sesh = sessionmaker(bind=engine)()
-
+def insert_crmp_data(sesh):
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
         data = f.read()
 
-    engine.execute(data)
+    sesh.execute(data)
 
 def create_test_data_from_reflection(read_engine, write_engine):
     rSession = sessionmaker(bind=read_engine)()
