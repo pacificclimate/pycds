@@ -55,7 +55,7 @@ setup(
     url="http://www.pacificclimate.org/",
     author="James Hiebert",
     author_email="hiebert@uvic.ca",
-    package_data={'pycds': ['data/*.sqlite']},
+    package_data={'pycds': ['data/*.sqlite', 'data/crmp_subset_data.sql']},
     include_package_data=True,
     zip_safe=True,
     scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
