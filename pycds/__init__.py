@@ -3,7 +3,7 @@ import os.path
 import datetime
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor', 'test_dsn', 'test_session']
 
 from sqlalchemy.types import DateTime
 from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
