@@ -1,4 +1,4 @@
 include requirements.txt
 include test_requirements.txt
 include tox.ini
-include pycds/data/crmp.sqlite
+include pycds/data/crmp_subset_data.sql

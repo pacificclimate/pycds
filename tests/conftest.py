@@ -70,7 +70,3 @@ def large_test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 
     yield blank_postgis_session
-
-@pytest.fixture(scope="module")
-def conn_params():
-    return 'sqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))

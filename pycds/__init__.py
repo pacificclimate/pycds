@@ -3,11 +3,9 @@ import os.path
 import datetime
 from pkg_resources import resource_filename
 
-__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor', 'test_dsn', 'test_session']
+__all__ = ['Network', 'Contact', 'Variable', 'Station', 'History', 'Obs', 'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory', 'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor']
 
-from sqlalchemy.types import DateTime
-from sqlalchemy.dialects.sqlite import DATETIME, VARCHAR, INTEGER
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Boolean, ForeignKey, MetaData, Numeric, Interval
+from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
@@ -15,12 +13,6 @@ from geoalchemy2 import Geometry
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-
-MyBigInteger = BigInteger().with_variant(INTEGER(), 'sqlite')
-MyDateTime = DateTime(timezone=True).with_variant(
-    DATETIME(storage_format="%(year)04d-%(month)02d-%(day)02dT%(hour)02d:%(minute)02d:%(second)02d",
-             regexp=r"(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)",
-             ), "sqlite")
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -120,8 +112,8 @@ class Obs(Base):
     '''This class maps to the table which records the details of weather observations. Each row is one single data point for one single quantity.
     '''
     __tablename__ = 'obs_raw'
-    id = Column('obs_raw_id', MyBigInteger, primary_key=True)
-    time = Column('obs_time', MyDateTime)
+    id = Column('obs_raw_id', BigInteger, primary_key=True)
+    time = Column('obs_time', DateTime)
     mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
@@ -192,8 +184,8 @@ class CrmpNetworkGeoserver(DeferredBase):
     lon = Column(Numeric)
     lat = Column(Numeric)
     elevation = Column('elev', Float)
-    min_obs_time = Column(MyDateTime)
-    max_obs_time = Column(MyDateTime)
+    min_obs_time = Column(DateTime)
+    max_obs_time = Column(DateTime)
     freq = Column(String)
     tz_offset = Column(Interval)
     province = Column(String)
@@ -214,7 +206,7 @@ class ObsCountPerMonthHistory(DeferredBase):
     '''
     __tablename__ = 'obs_count_per_month_history_mv'
     count = Column(Integer)
-    date_trunc = Column(MyDateTime)
+    date_trunc = Column(DateTime)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     history = relationship("History")
 
@@ -244,32 +236,10 @@ class ObsWithFlags(Base):
     net_var_name = Column(String)
     obs_raw_id = Column(Integer, ForeignKey('obs_raw.obs_raw_id'), primary_key=True)
     station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    obs_time = Column(MyDateTime)
-    mod_time = Column(MyDateTime)
+    obs_time = Column(DateTime)
+    mod_time = Column(DateTime)
     datum = Column(Float)
     native_flag_id = Column(Integer, ForeignKey('meta_native_flag.native_flag_id'))
     flag_name = Column(String)
     description = Column(String)
     flag_value = Column(String)
-    
-test_dsn = 'sqlite+pysqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
-
-def test_session():
-    '''This creates a testing database session that can be used as a test fixture. It uses a subset testing sqlite database and loads the spatialite extension for use of the geometry functionality.
-    '''
-    from pysqlite2 import dbapi2 as sqlite
-
-    dsn = 'sqlite:///{0}'.format(resource_filename('pycds', 'data/crmp.sqlite'))
-    engine = create_engine(dsn, module=sqlite, echo=True)
-    engine.echo = True
-
-    # Make sure spatial extensions are loaded for each connection, not just the current session
-    # https://groups.google.com/d/msg/sqlalchemy/eDpJ-yZEnqU/_XJ4Pmd712QJ
-    @event.listens_for(engine, "connect")
-    def connect(dbapi_connection, connection_rec):
-        dbapi_connection.enable_load_extension(True)
-        dbapi_connection.execute("select load_extension('libspatialite.so')")
-
-    Session = sessionmaker(bind=engine)
-    sesh = Session()
-    return sesh
