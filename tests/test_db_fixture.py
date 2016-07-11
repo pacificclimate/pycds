@@ -1,6 +1,6 @@
 def test_can_create_postgis_db(blank_postgis_session):
     res = blank_postgis_session.execute("SELECT PostGIS_full_version()")
-    assert 'POSTGIS="2.1' in res.fetchall()[0][0]
+    assert 'POSTGIS="2.' in res.fetchall()[0][0]
 
 def test_can_create_postgis_geometry_table_model(blank_postgis_session):
     from sqlalchemy.ext.declarative import declarative_base
