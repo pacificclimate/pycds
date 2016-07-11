@@ -142,12 +142,12 @@ def create_test_data(write_engine):
     ted.networks = [ moe ]
     sesh.add_all([simon, ted])
 
-    histories = [ TestHistory('Brandywine', 496, datetime(2001, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
-                  TestHistory('Stewart', 15, datetime(2004, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
-                  TestHistory('Cayoosh Summit', 1350, datetime(1997, 01, 22, 13), datetime(2011, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
-                  TestHistory('Boston Bar RCMP Station', 180, datetime(1999, 01, 22, 13), datetime(2002, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
-                  TestHistory('Prince Rupert', 35, datetime(1990, 01, 22, 13), datetime(1996, 04, 06, 11), 'BC', 'Canada', '1-hourly'),
-                  TestHistory('Prince Rupert', 36, datetime(1997, 01, 22, 13), None, 'BC', 'Canada', '1-hourly'),
+    histories = [ TestHistory('Brandywine', 496, datetime(2001, 1, 22, 13), datetime(2011, 4, 6, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Stewart', 15, datetime(2004, 1, 22, 13), datetime(2011, 4, 6, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Cayoosh Summit', 1350, datetime(1997, 1, 22, 13), datetime(2011, 4, 6, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Boston Bar RCMP Station', 180, datetime(1999, 1, 22, 13), datetime(2002, 4, 6, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Prince Rupert', 35, datetime(1990, 1, 22, 13), datetime(1996, 4, 6, 11), 'BC', 'Canada', '1-hourly'),
+                  TestHistory('Prince Rupert', 36, datetime(1997, 1, 22, 13), None, 'BC', 'Canada', '1-hourly'),
                   ]
     histories = [ History(**hist._asdict()) for hist in histories ]
     sesh.add_all(histories)
