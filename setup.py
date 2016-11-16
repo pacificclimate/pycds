@@ -1,20 +1,19 @@
 import sys
-import string
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-from pkg_resources import resource_filename
-import ctypes
-import warnings
 
 __version__ = (2, 0, 0)
 
+
 class PyTest(TestCommand):
+
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = ['-v', 'tests']
         self.test_suite = True
+
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
+        # import here, cause outside the eggs aren't loaded
         import pytest
         errno = pytest.main(self.test_args)
         sys.exit(errno)
@@ -31,12 +30,12 @@ setup(
     package_data={'pycds': ['data/crmp_subset_data.sql']},
     include_package_data=True,
     zip_safe=True,
-    scripts = ['scripts/demo.py', 'scripts/mktestdb.py'],
-    install_requires = ['SQLAlchemy', 'geoalchemy2', 'psycopg2'],
+    scripts=['scripts/demo.py', 'scripts/mktestdb.py'],
+    install_requires=['SQLAlchemy', 'geoalchemy2', 'psycopg2'],
     tests_require=['pytest'],
-    cmdclass = {'test': PyTest},
+    cmdclass={'test': PyTest},
 
-    classifiers='''Development Status :: 3 - Alpha
+    classifiers='''Development Status :: 5 - Production/Stable
 Environment :: Console
 Intended Audience :: Developers
 Intended Audience :: Science/Research
