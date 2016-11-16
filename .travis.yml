@@ -7,5 +7,5 @@ addons:
   postgresql: "9.3"
 install:
   - pip install -i https://pypi.pacificclimate.org/simple/ -r requirements.txt -r test_requirements.txt
-  - pip install -e .
+  - pip install -i https://pypi.pacificclimate.org/simple/ .
 script: py.test -v --tb=short tests
