@@ -11,8 +11,10 @@ from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.sql import text, column
 from geoalchemy2 import Geometry
 
+from pycds.view_helpers import create_view
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -211,11 +213,197 @@ class NativeFlag(Base):
                          name='meta_native_flag_unique'),
     )
 
-# The DeferredBase is currently used for views.
+# "Proper" views - defined using view functionality within SQLAlchemy using tools in pycds.view_helpers
+
+# View: Daily maximum temperature
+# View: Daily minimum temperature
+#   - These views support views that deliver monthly average of daily max/min temperature.
+#   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+#   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
+#      in a day. The computation is correct for a given day if and only if the observation frequency does not change
+#      during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
+#      fatal to distinguishing adequate coverage.
+#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+#       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
+class DailyMaxTemperature(Base):
+    __table__ = create_view(
+        'daily_max_temperature_v',
+        metadata,
+        text('''
+            SELECT
+                hx.station_id AS station_id,
+                obs.vars_id AS vars_id,
+                date_trunc('day', obs_time) AS obs_day,
+                max(datum) AS statistic,
+                sum(
+                    CASE hx.freq
+                    WHEN 'daily' THEN 1.0
+                    WHEN '1-hourly' THEN 1.0 / 24.0
+                    END
+                ) AS data_coverage
+            FROM
+                obs_raw AS obs
+                INNER JOIN meta_vars AS vars USING (vars_id)
+                INNER JOIN meta_history AS hx USING (history_id)
+                LEFT JOIN obs_raw_native_flags USING (obs_raw_id)
+                LEFT JOIN meta_native_flag AS mnf USING (native_flag_id)
+                -- LEFT JOIN obs_raw_pcic_flags USING (obs_raw_id)
+                -- LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
+            WHERE
+                mnf.discard IS NOT TRUE
+                -- AND mpf.discard IS NOT TRUE
+                AND vars.standard_name = 'air_temperature'
+                AND vars.cell_method IN ('time: maximum', 'time: point') -- possibly include time: mean
+                AND hx.freq IN ('1-hourly', 'daily')
+            GROUP BY
+                obs_day, station_id, vars_id
+
+        ''').columns(
+                column('station_id'),
+                column('vars_id'),
+                column('obs_day'),
+                column('statistic'),
+                column('data_coverage')
+        )
+    )
+    __mapper_args__ = {
+        'primary_key': [__table__.c.station_id, __table__.c.vars_id, __table__.c.obs_day]
+    }
+
+# class DailyMinTemperature(Base):
+#     __table__ = create_view(
+#             'daily_min_temperature_v',
+#             metadata,
+#             text('''
+#                 SELECT
+#                     hx.station_id AS station_id,
+#                     obs.vars_id AS vars_id,
+#                     date_trunc('day', obs_time) AS obs_day,
+#                     min(datum) AS statistic,
+#                     sum(
+#                         CASE hx.freq
+#                         WHEN 'daily' THEN 1.0
+#                         WHEN '1-hourly' THEN 1.0 / 24.0
+#                         END
+#                     ) AS data_coverage
+#                 FROM
+#                     obs_raw AS obs
+#                     INNER JOIN meta_vars AS vars USING (vars_id)
+#                     INNER JOIN meta_history AS hx USING (history_id)
+#                     LEFT JOIN obs_raw_native_flags USING (obs_raw_id)
+#                     LEFT JOIN meta_native_flag AS mnf USING (native_flag_id)
+#                     LEFT JOIN obs_raw_pcic_flags USING (obs_raw_id)
+#                     LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
+#                 WHERE
+#                     mnf.discard IS NOT TRUE
+#                     AND mpf.discard IS NOT TRUE
+#                     AND vars.standard_name = 'air_temperature'
+#                     AND vars.cell_method IN ('time: minimum', 'time: point') -- possibly include time: mean
+#                     AND hx.freq IN ('1-hourly', 'daily')
+#                 GROUP BY
+#                     obs_day, station_id, vars_id
+#             ''')
+#     )
+
+# # Materialized View: Monthly average of daily maximum temperature
+# # Materialized View: Monthly average of daily minimum temperature
+# #   - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
+# #       in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
+# #       daily data coverage above).
+# #   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+# #       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+# #       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#
+# class MonthlyAverageOfDailyMaxTemperature(Base):
+#     __table__ = create_materialized_view(
+#             'monthly_average_of_daily_max_temperature_mv',
+#             metadata,
+#             text('''
+#                 SELECT
+#                     station_id,
+#                     vars_id,
+#                     date_trunc('month', obs_day) AS obs_month,
+#                     avg(statistic) as statistic,
+#                     sum(data_coverage) / DaysInMonth(obs_month)::real AS data_coverage
+#                 FROM
+#                     daily_max_temperature_v
+#                 GROUP BY
+#                     obs_month, station_id, vars_id
+#             ''')
+#     )
+#
+# class MonthlyAverageOfDailyMinTemperature(Base):
+#     __table__ = create_materialized_view(
+#             'monthly_average_of_daily_max_temperature_mv',
+#             metadata,
+#             text('''
+#                 SELECT
+#                     station_id,
+#                     vars_id,
+#                     date_trunc('month', obs_day) AS obs_month,
+#                     avg(statistic) as statistic,
+#                     sum(data_coverage) / DaysInMonth(obs_month)::real AS data_coverage
+#                 FROM
+#                     daily_min_temperature_v
+#                 GROUP BY
+#                     obs_month, station_id, vars_id
+#             ''')
+#     )
+#
+# # Materialized View: Monthly total precipitation
+# #   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+# #   - data_coverage is the fraction of observations actually available in a month relative to those potentially
+# #      available in a month. This computation is correct if and only if the observation frequency does not change
+# #      during any one day in the month. It remains approximately correct if such days are rare, and remains valid
+# #      for the purpose of distinguishing adequate coverage.
+# #   - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+# #       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+# #       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+# class MonthlyTotalPrecipitation(Base):
+#     __table__ = create_materialized_view(
+#             'monthly_total_precipitation_mv',
+#             metadata,
+#             text('''
+#                 SELECT
+#                     obs.station_id,
+#                     obs.vars_id,
+#                     date_trunc('month', obs_time) AS obs_month,
+#                     sum(datum) AS statistic,
+#                     sum(
+#                         CASE hx.freq
+#                         WHEN 'daily' THEN 1.0 / DaysInMonth(obs_time)
+#                         WHEN '1-hourly' THEN 1.0 / (DaysInMonth(obs_time) * 24.0)
+#                         END
+#                     ) AS data_coverage
+#                 FROM
+#                     obs_raw AS obs,
+#                     INNER JOIN meta_vars AS vars USING (vars_id),
+#                     INNER JOIN meta_history AS hx USING (history_id),
+#                     LEFT JOIN meta_native_flag AS mnf USING (native_flag_id)
+#                     LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
+#                 WHERE
+#                     mnf.discard IS NOT TRUE
+#                     AND mpf.discard IS NOT TRUE
+#                     AND vars.standard_name IN (
+#                         'lwe_thickness_of_precipitation_amount',
+#                         'thickness_of_rainfall_amount',
+#                         'thickness_of_snowfall_amount'  -- verify that this is rainfall equiv!
+#                     )
+#                     AND vars.cell_method = 'time:sum'
+#                     AND hx.freq IN ('1-hourly', 'daily')
+#                 GROUP BY
+#                     obs_month, station_id, vars_id
+#             '''),
+#             True
+#     )
+
+
+# "Improper" views - defined in crmp repo, and accessed in ORM by referring to them as tables.
+# DeferredBase is currently used for these views.
 # When testing, not using proper views may create issues
-# TODO: Implement proper views like
-# http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
-# or https://gist.github.com/techniq/5174412
+# TODO: Implement as proper views as above
 
 DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
 deferred_metadata = DeferredBase.metadata
