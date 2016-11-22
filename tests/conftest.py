@@ -13,9 +13,31 @@ from pycds import Network, Contact, Station, History, Variable
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
+# TODO: Remove print statements and other cruft
+@pytest.fixture(scope='module')
+def mod_blank_postgis_session():
+    with testing.postgresql.Postgresql() as pg:
+        print('\n#### mod_blank_postgis_session: setup')
+        engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
+        sesh = sessionmaker(bind=engine)()
+        yield sesh
+        print('\n#### mod_blank_postgis_session: teardown')
+
+# TODO: Remove print statements and other cruft
+@pytest.fixture(scope='module')
+def mod_empty_database_session(mod_blank_postgis_session):
+    print('\n#### mod_empty_database_session: setup')
+    sesh = mod_blank_postgis_session
+    engine = sesh.get_bind()
+    pycds.Base.metadata.create_all(bind=engine)
+    yield sesh
+    print('\n#### mod_empty_database_session: teardown')
+
 @pytest.yield_fixture(scope='function')
 def blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
+        print('blank_postgis_session')
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
         sesh = sessionmaker(bind=engine)()
