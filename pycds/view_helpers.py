@@ -23,7 +23,7 @@ class DropView(DDLElement):
 
 @compiler.compiles(CreateView)
 def compile(element, compiler, **kw):
-    return "CREATE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
+    return "CREATE OR REPLACE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
 
 @compiler.compiles(DropView)
 def compile(element, compiler, **kw):
