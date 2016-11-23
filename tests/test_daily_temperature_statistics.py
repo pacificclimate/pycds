@@ -3,7 +3,13 @@ import pytest
 from pycds import Network, Station, History, Variable, Obs
 from pycds import DailyMaxTemperature
 
-# TODO: Remove print statements and other cruft
+# To maintain database consistency, objects must be added (and flushed) in this order:
+#   Network
+#   Station, History
+#   Variable
+#   Observation
+#
+# This imposes an order on the definition of session fixtures, and on the nesting of describe blocks that use them.
 
 @pytest.fixture
 def network1():
@@ -67,78 +73,67 @@ def var_foo(network1):
 def vars_many(var_temp_point, var_temp_max, var_temp_min, var_foo):
     return [var_temp_point, var_temp_max, var_temp_min, var_foo]
 
-
-
-# To maintain database consistency, objects must be added (and flushed) in this order:
-#   Network
-#   Station, History
-#   Variable
-#   Observation
+# All session fixtures follow a common pattern, abstracted in this generator function.
+# To use it correctly, i.e., so that the teardown after the yield is also performed,
+# a fixture must yield the first result of next(), then call next() again. This can be done two ways:
 #
-# This imposes an order on the definition of fixtures, and on the nesting of describe blocks that use them.
+#   gs = generic_sesh(...)
+#   yield next(gs)
+#   next(gs)
+#
+# or, slightly shorter:
+#
+#   for sesh in generic_sesh(...):
+#       yield sesh
+#
+# The shorter method is used throughout.
+def generic_sesh(sesh, sa_class, sa_objects):
+    sesh.add_all(sa_objects)
+    sesh.flush()
+    yield sesh
+    sesh.query(sa_class).delete()
+    sesh.flush()
 
 def describe_DailyMaxTemperature():
     def describe_with_1_network():
 
         @pytest.fixture
         def network_sesh(mod_empty_database_session, network1):
-            sesh = mod_empty_database_session
-            sesh.add(network1)
-            sesh.flush()
-            yield sesh
-            sesh.query(Network).delete()
-            sesh.flush()
+            for sesh in generic_sesh(mod_empty_database_session, Network, [network1]):
+                yield sesh
 
         def describe_with_1_station():
 
             @pytest.fixture
             def station_sesh(network_sesh, station1):
-                sesh = network_sesh
-                sesh.add(station1)
-                sesh.flush()
-                yield sesh
-                sesh.query(Station).delete()
-                sesh.flush()
+                for sesh in generic_sesh(network_sesh, Station, [station1]):
+                    yield sesh
 
             def describe_with_1_history_hourly():
 
                 @pytest.fixture
                 def history_sesh(station_sesh, history_stn1_hourly):
-                    sesh = station_sesh
-                    sesh.add(history_stn1_hourly)
-                    sesh.flush()
-                    yield sesh
-                    sesh.query(History).delete()
-                    sesh.flush()
+                    for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly]):
+                        yield sesh
 
                 def describe_with_1_variable():
 
                     @pytest.fixture
                     def variable_sesh(history_sesh, var_temp_point):
-                        sesh = history_sesh
-                        sesh.add(var_temp_point)
-                        sesh.flush()
-                        yield sesh
-                        sesh.query(Variable).delete()
-                        sesh.flush()
+                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
+                            yield sesh
 
                     def describe_with_many_observations_in_one_day():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
-                            sesh = variable_sesh
-                            sesh.add_all([
-                                (Obs(id=1, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 12), datum=1.0)),
-                                (Obs(id=2, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 13), datum=2.0)),
-                                (Obs(id=3, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 14), datum=3.0))
-                            ])
-                            sesh.flush()
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            observations = [
+                                Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                    time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
+                                for i in range(1, 4)
+                            ]
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -163,27 +158,22 @@ def describe_DailyMaxTemperature():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
-                            sesh = variable_sesh
-                            sesh.add_all([
-                                (Obs(id=1, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 12), datum=1.0)),
-                                (Obs(id=2, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 13), datum=2.0)),
-                                (Obs(id=3, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 1, 14), datum=3.0)),
-                                (Obs(id=4, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 2, 12), datum=4.0)),
-                                (Obs(id=5, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 2, 13), datum=5.0)),
-                                (Obs(id=6, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 2, 14), datum=6.0)),
-                                (Obs(id=7, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                     time=datetime.datetime(2000, 1, 2, 15), datum=7.0))
-                            ])
-                            sesh.flush()
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            observations = [(Obs(id=1, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                             time=datetime.datetime(2000, 1, 1, 12), datum=1.0)), (
+                                        Obs(id=2, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 1, 13), datum=2.0)), (
+                                        Obs(id=3, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 1, 14), datum=3.0)), (
+                                        Obs(id=4, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 2, 12), datum=4.0)), (
+                                        Obs(id=5, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 2, 13), datum=5.0)), (
+                                        Obs(id=6, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 2, 14), datum=6.0)), (
+                                        Obs(id=7, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                            time=datetime.datetime(2000, 1, 2, 15), datum=7.0))]
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -210,28 +200,22 @@ def describe_DailyMaxTemperature():
 
                     @pytest.fixture
                     def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_foo):
-                        sesh = history_sesh
-                        sesh.add_all([var_temp_point, var_temp_max, var_temp_min, var_foo])
-                        sesh.flush()
-                        yield sesh
-                        sesh.query(Variable).delete()
-                        sesh.flush()
+                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_max, var_temp_min, var_foo]):
+                            yield sesh
 
                     def describe_with_many_observations_per_variable():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, history_stn1_hourly, var_temp_point, var_temp_max, var_temp_min, var_foo):
-                            sesh = variable_sesh
+                            observations = []
                             id = 0
                             for var in [var_temp_point, var_temp_max, var_temp_min, var_foo]:
                                 for i in range(0,2):
                                     id += 1
-                                    sesh.add(Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
+                                    observations.append(Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
                                                  time=datetime.datetime(2000, 1, 1, 12, id), datum=float(id)))
-                            sesh.flush()
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -244,23 +228,15 @@ def describe_DailyMaxTemperature():
 
                 @pytest.fixture
                 def history_sesh(station_sesh, history_stn1_daily):
-                    sesh = station_sesh
-                    sesh.add(history_stn1_daily)
-                    sesh.flush()
-                    yield sesh
-                    sesh.query(History).delete()
-                    sesh.flush()
+                    for sesh in generic_sesh(station_sesh, History, [history_stn1_daily]):
+                        yield sesh
 
                 def describe_with_1_variable():
 
                     @pytest.fixture
                     def variable_sesh(history_sesh, var_temp_point):
-                        sesh = history_sesh
-                        sesh.add(var_temp_point)
-                        sesh.flush()
-                        yield sesh
-                        sesh.query(Variable).delete()
-                        sesh.flush()
+                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
+                            yield sesh
 
                     def describe_with_many_observations_on_different_days():
 
@@ -268,16 +244,13 @@ def describe_DailyMaxTemperature():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_daily):
-                            sesh = variable_sesh
-                            sesh.add_all(
-                                [(Obs(id=i+100, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
-                                      time=datetime.datetime(2000, 1, i+10, 12), datum=float(i+10)))
-                                 for i in range(0,n_days)]
-                            )
-                            sesh.flush()
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            observations = [
+                                Obs(id=i + 100, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
+                                      time=datetime.datetime(2000, 1, i+10, 12), datum=float(i+10))
+                                 for i in range(0,n_days)
+                                ]
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -297,23 +270,15 @@ def describe_DailyMaxTemperature():
 
                 @pytest.fixture
                 def history_sesh(station_sesh, history_stn1_hourly, history_stn1_daily):
-                    sesh = station_sesh
-                    sesh.add_all([history_stn1_hourly, history_stn1_daily])
-                    sesh.flush()
-                    yield sesh
-                    sesh.query(History).delete()
-                    sesh.flush()
+                    for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn1_daily]):
+                        yield sesh
 
                 def describe_with_1_variable():
 
                     @pytest.fixture
                     def variable_sesh(history_sesh, var_temp_point):
-                        sesh = history_sesh
-                        sesh.add(var_temp_point)
-                        sesh.flush()
-                        yield sesh
-                        sesh.query(Variable).delete()
-                        sesh.flush()
+                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
+                            yield sesh
 
                     def describe_with_observations_in_both_histories():
 
@@ -321,20 +286,17 @@ def describe_DailyMaxTemperature():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, history_stn1_daily):
-                            sesh = variable_sesh
                             # hourly observations
-                            sesh.add_all(
-                                    [Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                            observations = [
+                                Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                           time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
-                                     for i in range(0,n_hours)]
-                            )
+                                     for i in range(0,n_hours)
+                                ]
                             # daily observations
-                            sesh.add(Obs(id=99, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
+                            observations.append(Obs(id=99, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
                                          time=datetime.datetime(2000, 1, 2, 12), datum=10.0))
-                            sesh.flush()
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -350,45 +312,29 @@ def describe_DailyMaxTemperature():
 
         @pytest.fixture
         def network_sesh(mod_empty_database_session, network1, network2):
-            sesh = mod_empty_database_session
-            sesh.add_all([network1, network2])
-            sesh.flush()
-            yield sesh
-            sesh.query(Network).delete()
-            sesh.flush()
+            for sesh in generic_sesh(mod_empty_database_session, Network, [network1, network2]):
+                yield sesh
 
         def describe_with_1_station_per_network():
 
             @pytest.fixture
             def station_sesh(network_sesh, station1, station2):
-                sesh = network_sesh
-                sesh.add_all([station1, station2])
-                sesh.flush()
-                yield sesh
-                sesh.query(Station).delete()
-                sesh.flush()
+                for sesh in generic_sesh(network_sesh, Station, [station1, station2]):
+                    yield sesh
 
             def describe_with_1_history_hourly_per_station():
 
                 @pytest.fixture
                 def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
-                    sesh = station_sesh
-                    sesh.add_all([history_stn1_hourly, history_stn2_hourly])
-                    sesh.flush()
-                    yield sesh
-                    sesh.query(History).delete()
-                    sesh.flush()
+                    for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn2_hourly]):
+                        yield sesh
 
                 def describe_with_1_variable_per_network(): # temp: point
 
                     @pytest.fixture
                     def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
-                        sesh = history_sesh
-                        sesh.add_all([var_temp_point, var_temp_point2])
-                        sesh.flush()
-                        yield sesh
-                        sesh.query(Variable).delete()
-                        sesh.flush()
+                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_point2]):
+                            yield sesh
 
                     def describe_with_observations_for_each_station_variable():
 
@@ -397,23 +343,18 @@ def describe_DailyMaxTemperature():
 
                         @pytest.fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
-                            sesh = variable_sesh
+                            observations = []
                             id = 0
                             for (var, hx) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]:
                                 for day in range(1, n_days+1):
                                     for hour in range(0, n_hours):
                                         id += 1
-                                        sesh.add(
+                                        observations.append(
                                             Obs(id=id, vars_id=var.id, history_id=hx.id,
                                                   time=datetime.datetime(2000, 1, day, 12+hour), datum=float(id))
                                         )
-                            sesh.flush()
-                            print()
-                            for obs in sesh.query(Obs):
-                                print('### obs (id, var, hx, time): ', obs.id, obs.vars_id, obs.history_id, obs.time)
-                            yield sesh
-                            sesh.query(Obs).delete()
-                            sesh.flush()
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
 
                         @pytest.fixture
                         def results(obs_sesh):
@@ -424,6 +365,3 @@ def describe_DailyMaxTemperature():
                                    set([(stn.id, var.id, datetime.datetime(2000, 1, day))
                                         for (var, stn) in [(var_temp_point, station1), (var_temp_point2, station2)]
                                         for day in range(1, n_days+1)]))
-
-
-
