@@ -1,6 +1,7 @@
 import datetime
 import pytest
-from pycds import Network, Station, History, Variable, Obs
+from pytest import approx
+from pycds import Network, Station, History, Variable, Obs, NativeFlag
 from pycds import DailyMaxTemperature
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
@@ -70,8 +71,13 @@ def var_foo(network1):
                     standard_name='foo', cell_method='time: point')
 
 @pytest.fixture
-def vars_many(var_temp_point, var_temp_max, var_temp_min, var_foo):
-    return [var_temp_point, var_temp_max, var_temp_min, var_foo]
+def native_flag_discard():
+    return NativeFlag(id=1, discard=True)
+
+@pytest.fixture
+def native_flag_non_discard():
+    return NativeFlag(id=2, discard=False)
+
 
 # All session fixtures follow a common pattern, abstracted in this generator function.
 # To use it correctly, i.e., so that the teardown after the yield is also performed,
@@ -152,7 +158,7 @@ def describe_DailyMaxTemperature():
                             assert(results.first().statistic == 3.0)
 
                         def it_returns_the_expected_data_coverage(results):
-                            assert(float(results.first().data_coverage) == 3.0 / 24.0)
+                            assert(results.first().data_coverage == approx(3.0 / 24.0))
 
                     def describe_with_many_observations_on_two_different_days():
 
@@ -194,7 +200,68 @@ def describe_DailyMaxTemperature():
                             assert([r.statistic for r in results] == [3.0, 7.0])
 
                         def it_returns_the_expected_data_coverages(results):
-                            assert([float(r.data_coverage) for r in results] == [3.0/24.0, 4.0/24.0])
+                            assert([r.data_coverage for r in results] == approx([3.0/24.0, 4.0/24.0]))
+
+                    def describe_with_many_observations_in_one_day_bis():
+                        '''Set up observations for native flag tests'''
+
+                        @pytest.fixture
+                        def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
+                            observations = [
+                                Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                                    time=datetime.datetime(2000, 1, 1, i), datum=float(i))
+                                for i in range(0, 24)
+                                ]
+                            for sesh in generic_sesh(variable_sesh, Obs, observations):
+                                yield sesh
+
+                        def describe_with_native_flags():
+                            '''2 native flags, 1 discard, 1 not discard'''
+
+                            @pytest.fixture
+                            def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard):
+                                for sesh in generic_sesh(obs_sesh, NativeFlag, [native_flag_discard, native_flag_non_discard]):
+                                    yield sesh
+
+                            def describe_with_native_flag_associations():
+                                '''m < n associations of discard native flag to observations;
+                                k < n associations of not discard native flag to observations'''
+
+                                @pytest.fixture
+                                def flag_assoc_sesh(flag_sesh, native_flag_discard, native_flag_non_discard):
+                                    sesh = flag_sesh
+                                    obs = sesh.query(Obs)
+                                    for id in range(0, 12):
+                                        obs.filter_by(id=id).first().flags.append(native_flag_discard)
+                                    for id in range(6, 18):
+                                        obs.filter_by(id=id).first().flags.append(native_flag_non_discard)
+                                    sesh.commit()
+                                    sesh.flush()
+                                    yield sesh
+                                    for id in range(0, 24):
+                                        obs.filter_by(id=id).first().flags = []
+                                    sesh.commit()
+                                    sesh.flush()
+
+                                @pytest.fixture
+                                def results(flag_assoc_sesh):
+                                    return flag_assoc_sesh.query(DailyMaxTemperature)
+
+                                def setup_is_correct(flag_assoc_sesh):
+                                    obs = flag_assoc_sesh.query(Obs)
+                                    assert(obs.count() == 24)
+
+                                def setup_is_correct2(flag_assoc_sesh):
+                                    obs = flag_assoc_sesh.query(Obs)
+                                    obs_flagged_discard = obs.filter(Obs.flags.any(NativeFlag.discard == True))
+                                    assert(obs_flagged_discard.count() == 12)
+                                    obs_flagged_not_discard = obs.filter(Obs.flags.any(NativeFlag.discard == False))
+                                    assert(obs_flagged_not_discard.count() == 12)
+
+                                def it_excludes_all_and_only_discarded_observations(results):
+                                    assert(results.count() == 1)
+                                    result = results.first()
+                                    assert(result.data_coverage == approx(0.5))
 
                 def describe_with_many_variables():
 
@@ -222,7 +289,7 @@ def describe_DailyMaxTemperature():
                             return obs_sesh.query(DailyMaxTemperature)
 
                         def it_returns_exactly_the_expected_variables(results, var_temp_point, var_temp_max):
-                            assert([r.vars_id for r in results].sort() == [var_temp_point.id, var_temp_max.id].sort())
+                            assert(set([r.vars_id for r in results]) == set([var_temp_point.id, var_temp_max.id]))
 
             def describe_with_1_history_daily():
 
@@ -264,7 +331,7 @@ def describe_DailyMaxTemperature():
                                    set([datetime.datetime(2000, 1, i+10) for i in range(0,n_days)]))
 
                         def it_returns_the_expected_coverage(results):
-                            assert(all(map(lambda r: r.data_coverage == 1.0, results)))
+                            assert(all(map(lambda r: r.data_coverage == approx(1.0), results)))
 
             def describe_with_1_history_hourly_1_history_daily():
 
@@ -305,8 +372,8 @@ def describe_DailyMaxTemperature():
                         def it_returns_the_expected_coverage(results):
                             # This tests in a mixed-history case that the correct history record is used for each
                             # observation, and that the correct coverage computation is done based on history
-                            assert([float(r.data_coverage) for r in results.order_by(DailyMaxTemperature.obs_day)] ==
-                                   [n_hours/24.0, 1.0])
+                            assert([r.data_coverage for r in results.order_by(DailyMaxTemperature.obs_day)]
+                                   == approx([n_hours/24.0, 1.0]))
 
     def describe_with_2_networks():
 
