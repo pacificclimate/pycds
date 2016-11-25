@@ -287,7 +287,60 @@ class DailyMaxTemperature(Base):
                         AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
                 )
                 AND vars.standard_name = 'air_temperature'
-                AND vars.cell_method IN ('time: maximum', 'time: point') -- possibly include time: mean
+                AND vars.cell_method IN ('time: maximum', 'time: point', 'time: mean')
+                AND hx.freq IN ('1-hourly', 'daily')
+            GROUP BY
+                hx.history_id, vars_id, obs_day
+        ''').columns(
+                column('history_id'),
+                column('vars_id'),
+                column('obs_day'),
+                column('statistic'),
+                column('data_coverage')
+        )
+    )
+    __mapper_args__ = {
+        'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_day]
+    }
+
+class DailyMinTemperature(Base):
+    __table__ = create_view(
+        'daily_min_temperature_v',
+        metadata,
+        text('''
+            SELECT
+                hx.history_id AS history_id,
+                obs.vars_id AS vars_id,
+                date_trunc('day', obs.obs_time) AS obs_day,
+                min(obs.datum) AS statistic,
+                sum(
+                    CASE hx.freq
+                    WHEN 'daily' THEN 1.0::float
+                    WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                    END
+                ) AS data_coverage
+            FROM
+                obs_raw AS obs
+                INNER JOIN meta_vars AS vars USING (vars_id)
+                INNER JOIN meta_history AS hx USING (history_id)
+            WHERE
+                obs.obs_raw_id IN (
+                    -- Return id of each observation without any associated discard flags;
+                    -- in other words, exclude observations marked discard, and don't be fooled by
+                    -- additional flags that don't discard (hence the aggregate BOOL_OR's).
+                    SELECT obs.obs_raw_id
+                    FROM
+                        obs_raw AS obs
+                        LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
+                        LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
+                        LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
+                        LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
+                    GROUP BY obs.obs_raw_id
+                    HAVING
+                        BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
+                        AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
+                )
+                AND vars.standard_name = 'air_temperature'
                 AND vars.cell_method IN ('time: minimum', 'time: point', 'time: mean')
                 AND hx.freq IN ('1-hourly', 'daily')
             GROUP BY

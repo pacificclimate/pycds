@@ -1,7 +1,7 @@
 import datetime
-from pytest import fixture, approx
+from pytest import fixture, mark, approx
 from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
-from pycds import DailyMaxTemperature
+from pycds import DailyMaxTemperature, DailyMinTemperature
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
 #   Network
@@ -155,23 +155,29 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_a_single_row(results):
-                            assert(results.count() == 1)
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_a_single_row(query, DailyExtremeTemperature):
+                            assert(query(DailyExtremeTemperature).count() == 1)
 
-                        def it_returns_the_expected_station_variable_and_day(results, history_stn1_hourly, var_temp_point):
-                            result = results.first()
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_station_variable_and_day(query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
+                            result = query(DailyExtremeTemperature).first()
                             assert(result.history_id == history_stn1_hourly.id)
                             assert(result.vars_id == var_temp_point.id)
                             assert(result.obs_day == datetime.datetime(2000, 1, 1))
 
-                        def it_returns_the_expected_maximum_value(results):
-                            assert(results.first().statistic == 3.0)
+                        @mark.parametrize('DailyExtremeTemperature, statistic', [
+                            (DailyMaxTemperature, 3.0), (DailyMinTemperature, 1.0)
+                        ])
+                        def it_returns_the_expected_maximum_value(query, DailyExtremeTemperature, statistic):
+                            assert(query(DailyExtremeTemperature).first().statistic == statistic)
 
-                        def it_returns_the_expected_data_coverage(results):
-                            assert(results.first().data_coverage == approx(3.0 / 24.0))
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_data_coverage(query, DailyExtremeTemperature):
+                            assert(query(DailyExtremeTemperature).first().data_coverage == approx(3.0 / 24.0))
 
                     def describe_with_many_observations_on_two_different_days():
 
@@ -195,24 +201,35 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature).order_by(DailyMaxTemperature.obs_day)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_two_rows(results):
-                            assert(results.count() == 2)
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_two_rows(query, DailyExtremeTemperature):
+                            assert(query(DailyExtremeTemperature).count() == 2)
 
-                        def it_returns_the_expected_station_variables(results, history_stn1_hourly, var_temp_point):
-                            for result in results:
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_station_variables(query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
+                            for result in query(DailyExtremeTemperature):
                                 assert(result.history_id == history_stn1_hourly.id)
                                 assert(result.vars_id == var_temp_point.id)
 
-                        def it_returns_the_expected_days(results):
-                            assert([r.obs_day for r in results] == [datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 2)])
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_days(query, DailyExtremeTemperature):
+                            assert(set([r.obs_day for r in query(DailyExtremeTemperature)]) ==
+                                   set([datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 2)]))
 
-                        def it_returns_the_expected_max_values(results):
-                            assert([r.statistic for r in results] == [3.0, 7.0])
+                        @mark.parametrize('DailyExtremeTemperature, statistics', [
+                            (DailyMaxTemperature, [3.0, 7.0]),
+                            (DailyMinTemperature, [1.0, 4.0])
+                        ])
+                        def it_returns_the_expected_max_values(query, DailyExtremeTemperature, statistics):
+                            results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
+                            assert([r.statistic for r in results] == statistics)
 
-                        def it_returns_the_expected_data_coverages(results):
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_data_coverages(query, DailyExtremeTemperature):
+                            results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
                             assert([r.data_coverage for r in results] == approx([3.0/24.0, 4.0/24.0]))
 
                     def describe_with_many_observations_in_one_day_bis():
@@ -258,8 +275,8 @@ def describe_DailyMaxTemperature():
                                     sesh.flush()
 
                                 @fixture
-                                def results(flag_assoc_sesh):
-                                    return flag_assoc_sesh.query(DailyMaxTemperature)
+                                def query(flag_assoc_sesh):
+                                    return flag_assoc_sesh.query
 
                                 def setup_is_correct(flag_assoc_sesh):
                                     obs = flag_assoc_sesh.query(Obs)
@@ -268,7 +285,9 @@ def describe_DailyMaxTemperature():
                                     obs_flagged_not_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == False))
                                     assert(obs_flagged_not_discard.count() == 12)
 
-                                def it_excludes_all_and_only_discarded_observations(results):
+                                @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                                def it_excludes_all_and_only_discarded_observations(query, DailyExtremeTemperature):
+                                    results = query(DailyExtremeTemperature)
                                     assert(results.count() == 1)
                                     result = results.first()
                                     assert(result.data_coverage == approx(0.5))
@@ -300,8 +319,8 @@ def describe_DailyMaxTemperature():
                                     sesh.flush()
 
                                 @fixture
-                                def results(flag_assoc_sesh):
-                                    return flag_assoc_sesh.query(DailyMaxTemperature)
+                                def query(flag_assoc_sesh):
+                                    return flag_assoc_sesh.query
 
                                 def setup_is_correct(flag_assoc_sesh):
                                     obs = flag_assoc_sesh.query(Obs)
@@ -310,7 +329,9 @@ def describe_DailyMaxTemperature():
                                     obs_flagged_not_discard = obs.filter(Obs.pcic_flags.any(PCICFlag.discard == False))
                                     assert(obs_flagged_not_discard.count() == 12)
 
-                                def it_excludes_all_and_only_discarded_observations(results):
+                                @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                                def it_excludes_all_and_only_discarded_observations(query, DailyExtremeTemperature):
+                                    results = query(DailyExtremeTemperature)
                                     assert(results.count() == 1)
                                     result = results.first()
                                     assert(result.data_coverage == approx(0.5))
@@ -339,12 +360,20 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_exactly_the_expected_variables(results, var_temp_point, var_temp_max, var_temp_mean):
-                            assert(set([r.vars_id for r in results]) ==
-                                   set([var_temp_point.id, var_temp_max.id, var_temp_mean.id]))
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_exactly_the_expected_variables(
+                                query, DailyExtremeTemperature,
+                                var_temp_point, var_temp_max, var_temp_min, var_temp_mean
+                        ):
+                            expected_variables = {
+                                DailyMaxTemperature: {var_temp_point.id, var_temp_max.id, var_temp_mean.id},
+                                DailyMinTemperature: {var_temp_point.id, var_temp_min.id, var_temp_mean.id},
+                            }
+                            assert(set([r.vars_id for r in query(DailyExtremeTemperature)]) ==
+                                   expected_variables[DailyExtremeTemperature])
 
             def describe_with_1_history_daily():
 
@@ -375,18 +404,21 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_the_expected_number_of_rows(results):
-                            assert(results.count() == n_days)
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_number_of_rows(query, DailyExtremeTemperature):
+                            assert(query(DailyExtremeTemperature).count() == n_days)
 
-                        def it_returns_the_expected_days(results):
-                            assert(set([r.obs_day for r in results]) ==
-                                   set([datetime.datetime(2000, 1, i+10) for i in range(0,n_days)]))
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_days(query, DailyExtremeTemperature):
+                            assert(set([r.obs_day for r in query(DailyExtremeTemperature)]) ==
+                                   set([datetime.datetime(2000, 1, i+10) for i in range(0, n_days)]))
 
-                        def it_returns_the_expected_coverage(results):
-                            assert(all(map(lambda r: r.data_coverage == approx(1.0), results)))
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_coverage(query, DailyExtremeTemperature):
+                            assert(all(map(lambda r: r.data_coverage == approx(1.0), query(DailyExtremeTemperature))))
 
             def describe_with_1_history_hourly_1_history_daily():
 
@@ -412,7 +444,7 @@ def describe_DailyMaxTemperature():
                             observations = [
                                 Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                           time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
-                                     for i in range(0,n_hours)
+                                     for i in range(0, n_hours)
                                 ]
                             # daily observation
                             observations.append(Obs(id=99, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
@@ -421,15 +453,18 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_one_result_per_history(results, history_stn1_hourly, history_stn1_daily):
-                            assert(results.count() == 2)
-                            assert(set([r.history_id for r in results]) == set([history_stn1_hourly.id, history_stn1_daily.id]))
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_one_result_per_history(query, DailyExtremeTemperature, history_stn1_hourly, history_stn1_daily):
+                            assert(query(DailyExtremeTemperature).count() == 2)
+                            assert(set([r.history_id for r in query(DailyExtremeTemperature)]) ==
+                                   {history_stn1_hourly.id, history_stn1_daily.id})
 
-                        def it_returns_the_expected_coverage(results):
-                            assert([r.data_coverage for r in results.order_by(DailyMaxTemperature.obs_day)]
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_the_expected_coverage(query, DailyExtremeTemperature):
+                            assert([r.data_coverage for r in query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)]
                                    == approx([n_hours/24.0, 1.0]))
 
     def describe_with_2_networks():
@@ -481,11 +516,13 @@ def describe_DailyMaxTemperature():
                                 yield sesh
 
                         @fixture
-                        def results(obs_sesh):
-                            return obs_sesh.query(DailyMaxTemperature)
+                        def query(obs_sesh):
+                            return obs_sesh.query
 
-                        def it_returns_one_row_per_unique_combo_hx_var_day(results, var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
-                            assert(set([(r.history_id, r.vars_id, r.obs_day) for r in results]) ==
+                        @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                        def it_returns_one_row_per_unique_combo_hx_var_day(query, DailyExtremeTemperature,
+                                   var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
+                            assert(set([(r.history_id, r.vars_id, r.obs_day) for r in query(DailyExtremeTemperature)]) ==
                                    set([(stn.id, var.id, datetime.datetime(2000, 1, day))
                                         for (var, stn) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]
                                         for day in range(1, n_days+1)]))
