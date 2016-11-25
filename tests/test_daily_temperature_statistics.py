@@ -79,21 +79,22 @@ def native_flag_non_discard():
     return NativeFlag(id=2, discard=False)
 
 
-# All session fixtures follow a common pattern, abstracted in this generator function.
-# To use it correctly, i.e., so that the teardown after the yield is also performed,
-# a fixture must yield the first result of next(), then call next() again. This can be done two ways:
-#
-#   gs = generic_sesh(...)
-#   yield next(gs)
-#   next(gs)
-#
-# or, slightly shorter:
-#
-#   for sesh in generic_sesh(...):
-#       yield sesh
-#
-# The shorter method is used throughout.
 def generic_sesh(sesh, sa_class, sa_objects):
+    '''All session fixtures follow a common pattern, abstracted in this generator function.
+    To use it correctly, i.e., so that the teardown after the yield is also performed,
+    a fixture must yield the first result of next(), then call next() again. This can be done two ways:
+
+      gs = generic_sesh(...)
+      yield next(gs)
+      next(gs)
+
+    or, slightly shorter:
+
+      for sesh in generic_sesh(...):
+          yield sesh
+
+    The shorter method is used throughout.
+    '''
     sesh.add_all(sa_objects)
     sesh.flush()
     yield sesh
@@ -148,9 +149,9 @@ def describe_DailyMaxTemperature():
                         def it_returns_a_single_row(results):
                             assert(results.count() == 1)
 
-                        def it_returns_the_expected_station_variable_and_day(results, station1, var_temp_point):
+                        def it_returns_the_expected_station_variable_and_day(results, history_stn1_hourly, var_temp_point):
                             result = results.first()
-                            assert(result.station_id == station1.id)
+                            assert(result.history_id == history_stn1_hourly.id)
                             assert(result.vars_id == var_temp_point.id)
                             assert(result.obs_day == datetime.datetime(2000, 1, 1))
 
@@ -188,10 +189,10 @@ def describe_DailyMaxTemperature():
                         def it_returns_two_rows(results):
                             assert(results.count() == 2)
 
-                        def it_returns_the_expected_station_variables(results, station1, var_temp_point):
+                        def it_returns_the_expected_station_variables(results, history_stn1_hourly, var_temp_point):
                             for result in results:
-                                assert(result.station_id == station1.id)
-                            assert(result.vars_id == var_temp_point.id)
+                                assert(result.history_id == history_stn1_hourly.id)
+                                assert(result.vars_id == var_temp_point.id)
 
                         def it_returns_the_expected_days(results):
                             assert([r.obs_day for r in results] == [datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 2)])
@@ -235,12 +236,12 @@ def describe_DailyMaxTemperature():
                                         obs.filter_by(id=id).first().flags.append(native_flag_discard)
                                     for id in range(6, 18):
                                         obs.filter_by(id=id).first().flags.append(native_flag_non_discard)
-                                    sesh.commit()
+                                    sesh.commit()  # TODO: is this necessary?
                                     sesh.flush()
                                     yield sesh
                                     for id in range(0, 24):
                                         obs.filter_by(id=id).first().flags = []
-                                    sesh.commit()
+                                    sesh.commit()  # TODO: is this necessary?
                                     sesh.flush()
 
                                 @pytest.fixture
@@ -359,7 +360,7 @@ def describe_DailyMaxTemperature():
                                           time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
                                      for i in range(0,n_hours)
                                 ]
-                            # daily observations
+                            # daily observation
                             observations.append(Obs(id=99, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
                                          time=datetime.datetime(2000, 1, 2, 12), datum=10.0))
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
@@ -369,9 +370,11 @@ def describe_DailyMaxTemperature():
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
+                        def it_returns_one_result_per_history(results, history_stn1_hourly, history_stn1_daily):
+                            assert(results.count() == 2)
+                            assert(set([r.history_id for r in results]) == set([history_stn1_hourly.id, history_stn1_daily.id]))
+
                         def it_returns_the_expected_coverage(results):
-                            # This tests in a mixed-history case that the correct history record is used for each
-                            # observation, and that the correct coverage computation is done based on history
                             assert([r.data_coverage for r in results.order_by(DailyMaxTemperature.obs_day)]
                                    == approx([n_hours/24.0, 1.0]))
 
@@ -427,8 +430,8 @@ def describe_DailyMaxTemperature():
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
-                        def it_returns_one_row_per_unique_combo_stn_var_day(results, var_temp_point, station1, var_temp_point2, station2):
-                            assert(set([(r.station_id, r.vars_id, r.obs_day) for r in results]) ==
+                        def it_returns_one_row_per_unique_combo_hx_var_day(results, var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
+                            assert(set([(r.history_id, r.vars_id, r.obs_day) for r in results]) ==
                                    set([(stn.id, var.id, datetime.datetime(2000, 1, day))
-                                        for (var, stn) in [(var_temp_point, station1), (var_temp_point2, station2)]
+                                        for (var, stn) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]
                                         for day in range(1, n_days+1)]))

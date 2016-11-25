@@ -233,7 +233,7 @@ class DailyMaxTemperature(Base):
         metadata,
         text('''
             SELECT
-                hx.station_id AS station_id,
+                hx.history_id AS history_id,
                 obs.vars_id AS vars_id,
                 date_trunc('day', obs.obs_time) AS obs_day,
                 max(obs.datum) AS statistic,
@@ -268,9 +268,9 @@ class DailyMaxTemperature(Base):
                 AND vars.cell_method IN ('time: maximum', 'time: point') -- possibly include time: mean
                 AND hx.freq IN ('1-hourly', 'daily')
             GROUP BY
-                obs_day, station_id, vars_id
+                hx.history_id, vars_id, obs_day
         ''').columns(
-                column('station_id'),
+                column('history_id'),
                 column('vars_id'),
                 column('obs_day'),
                 column('statistic'),
@@ -278,7 +278,7 @@ class DailyMaxTemperature(Base):
         )
     )
     __mapper_args__ = {
-        'primary_key': [__table__.c.station_id, __table__.c.vars_id, __table__.c.obs_day]
+        'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_day]
     }
 
 # class DailyMinTemperature(Base):
