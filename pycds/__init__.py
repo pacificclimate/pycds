@@ -123,7 +123,8 @@ class History(Base):
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
 
-association_table = Table(
+# Association table for Obs *--* NativeFLag
+obs_raw_native_flags_t = Table(
     'obs_raw_native_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
            ForeignKey('obs_raw.obs_raw_id')),
@@ -132,7 +133,19 @@ association_table = Table(
     UniqueConstraint(
         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
-ObsRawNativeFlags = association_table
+ObsRawNativeFlags = obs_raw_native_flags_t
+
+# Association table for Obs *--* PCICFLag
+obs_raw_pcic_flags_t = Table(
+    'obs_raw_pcic_flags', Base.metadata,
+    Column('obs_raw_id', BigInteger,
+           ForeignKey('obs_raw.obs_raw_id')),
+    Column('pcic_flag_id', Integer, ForeignKey(
+        'meta_pcic_flag.pcic_flag_id')),
+    UniqueConstraint(
+        'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique')
+)
+ObsRawPCICFlags = obs_raw_pcic_flags_t
 
 
 class MetaSensor(Base):
@@ -160,8 +173,10 @@ class Obs(Base):
     history = relationship("History", backref=backref('obs_raw', order_by=id))
     variable = relationship(
         "Variable", backref=backref('obs_raw', order_by=id))
-    flags = relationship(
-        "NativeFlag", secondary=association_table, backref="flagged_obs")
+    flags = relationship("NativeFlag", secondary=obs_raw_native_flags_t, backref="flagged_obs")
+    # better named alias for 'flags'; don't repeat backref
+    native_flags = relationship("NativeFlag", secondary=obs_raw_native_flags_t)
+    pcic_flags = relationship("PCICFlag", secondary=obs_raw_pcic_flags_t, backref="flagged_obs")
 
     # Constraints
     __table_args__ = (
@@ -204,14 +219,21 @@ class NativeFlag(Base):
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship("Network", backref=backref(
-        'meta_native_flag', order_by=id))
+    network = relationship("Network", backref=backref('meta_native_flag', order_by=id))
 
     # Constraints
     __table_args__ = (
         UniqueConstraint('network_id', 'value',
                          name='meta_native_flag_unique'),
     )
+
+class PCICFlag(Base):
+    __tablename__ = 'meta_pcic_flag'
+    id = Column('pcic_flag_id', Integer, primary_key=True)
+    name = Column('flag_name', String)
+    discard = Column(Boolean)
+
+    # TODO: Constraints?
 
 # "Proper" views - defined using view functionality within SQLAlchemy using tools in pycds.view_helpers
 
@@ -248,21 +270,21 @@ class DailyMaxTemperature(Base):
                 INNER JOIN meta_vars AS vars USING (vars_id)
                 INNER JOIN meta_history AS hx USING (history_id)
             WHERE
-                -- Return id of each observation without any associated discard flags;
-                -- in other words, exclude observations marked discard, and don't be fooled by
-                -- additional flags that don't discard (hence the aggregate BOOL_OR's).
                 obs.obs_raw_id IN (
+                    -- Return id of each observation without any associated discard flags;
+                    -- in other words, exclude observations marked discard, and don't be fooled by
+                    -- additional flags that don't discard (hence the aggregate BOOL_OR's).
                     SELECT obs.obs_raw_id
                     FROM
                         obs_raw AS obs
-                        LEFT JOIN obs_raw_native_flags AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
-                        LEFT JOIN meta_native_flag AS mnf ON (ornf.native_flag_id = mnf.native_flag_id)
-                        -- LEFT JOIN obs_raw_pcic_flags USING (obs_raw_id)
-                        -- LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
+                        LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
+                        LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
+                        LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
+                        LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
                     GROUP BY obs.obs_raw_id
                     HAVING
                         BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
-                        -- AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
+                        AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
                 )
                 AND vars.standard_name = 'air_temperature'
                 AND vars.cell_method IN ('time: maximum', 'time: point') -- possibly include time: mean

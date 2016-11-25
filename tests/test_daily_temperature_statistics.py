@@ -1,7 +1,6 @@
 import datetime
-import pytest
-from pytest import approx
-from pycds import Network, Station, History, Variable, Obs, NativeFlag
+from pytest import fixture, approx
+from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
 from pycds import DailyMaxTemperature
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
@@ -12,77 +11,85 @@ from pycds import DailyMaxTemperature
 #
 # This imposes an order on the definition of session fixtures, and on the nesting of describe blocks that use them.
 
-@pytest.fixture
+@fixture
 def network1():
     return Network(id=1, name='Network 1')
 
-@pytest.fixture
+@fixture
 def network2():
     return Network(id=2, name='Network 2')
 
-@pytest.fixture
+@fixture
 def station1(network1):
     return Station(id=1, network_id=network1.id)
 
-@pytest.fixture
+@fixture
 def station2(network2):
     return Station(id=2, network_id=network2.id)
 
 history_transition_date = datetime.datetime(2010, 1, 1)
 
-@pytest.fixture
+@fixture
 def history_stn1_hourly(station1):
     return History(id=1, station_id=station1.id, station_name='Station 1',
                    sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
 
-@pytest.fixture
+@fixture
 def history_stn1_daily(station1):
     return History(id=2, station_id=station1.id, station_name='Station 1',
                    sdate=history_transition_date, edate=None, freq='daily')
 
-@pytest.fixture
+@fixture
 def history_stn2_hourly(station2):
     return History(id=3, station_id=station2.id, station_name='Station 2',
                    sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
 
-@pytest.fixture
+@fixture
 def var_temp_point(network1): 
     return Variable(id=10, network_id=network1.id,
                     standard_name='air_temperature', cell_method='time: point')
 
-@pytest.fixture
+@fixture
 def var_temp_point2(network2):
     return Variable(id=11, network_id=network2.id,
                     standard_name='air_temperature', cell_method='time: point')
 
-@pytest.fixture
+@fixture
 def var_temp_max(network1):
     return Variable(id=20, network_id=network1.id,
                     standard_name='air_temperature', cell_method='time: maximum')
 
-@pytest.fixture
+@fixture
 def var_temp_min(network1):
     return Variable(id=30, network_id=network1.id,
                     standard_name='air_temperature', cell_method='time: minimum')
 
-@pytest.fixture
+@fixture
 def var_foo(network1):
     return Variable(id=40, network_id=network1.id,
                     standard_name='foo', cell_method='time: point')
 
-@pytest.fixture
+@fixture
 def native_flag_discard():
     return NativeFlag(id=1, discard=True)
 
-@pytest.fixture
+@fixture
 def native_flag_non_discard():
     return NativeFlag(id=2, discard=False)
+
+@fixture
+def pcic_flag_discard():
+    return PCICFlag(id=1, discard=True)
+
+@fixture
+def pcic_flag_non_discard():
+    return PCICFlag(id=2, discard=False)
 
 
 def generic_sesh(sesh, sa_class, sa_objects):
     '''All session fixtures follow a common pattern, abstracted in this generator function.
-    To use it correctly, i.e., so that the teardown after the yield is also performed,
-    a fixture must yield the first result of next(), then call next() again. This can be done two ways:
+    To use the generator correctly, i.e., so that the teardown after the yield is also performed,
+    a fixture must first yield the result of next(g), then call next(g) again. This can be done two ways:
 
       gs = generic_sesh(...)
       yield next(gs)
@@ -104,35 +111,35 @@ def generic_sesh(sesh, sa_class, sa_objects):
 def describe_DailyMaxTemperature():
     def describe_with_1_network():
 
-        @pytest.fixture
+        @fixture
         def network_sesh(mod_empty_database_session, network1):
             for sesh in generic_sesh(mod_empty_database_session, Network, [network1]):
                 yield sesh
 
         def describe_with_1_station():
 
-            @pytest.fixture
+            @fixture
             def station_sesh(network_sesh, station1):
                 for sesh in generic_sesh(network_sesh, Station, [station1]):
                     yield sesh
 
             def describe_with_1_history_hourly():
 
-                @pytest.fixture
+                @fixture
                 def history_sesh(station_sesh, history_stn1_hourly):
                     for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly]):
                         yield sesh
 
                 def describe_with_1_variable():
 
-                    @pytest.fixture
+                    @fixture
                     def variable_sesh(history_sesh, var_temp_point):
                         for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
                             yield sesh
 
                     def describe_with_many_observations_in_one_day():
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                             observations = [
                                 Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
@@ -142,7 +149,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
@@ -163,7 +170,7 @@ def describe_DailyMaxTemperature():
 
                     def describe_with_many_observations_on_two_different_days():
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                             observations = [(Obs(id=1, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                              time=datetime.datetime(2000, 1, 1, 12), datum=1.0)), (
@@ -182,7 +189,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature).order_by(DailyMaxTemperature.obs_day)
 
@@ -206,7 +213,7 @@ def describe_DailyMaxTemperature():
                     def describe_with_many_observations_in_one_day_bis():
                         '''Set up observations for native flag tests'''
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                             observations = [
                                 Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
@@ -216,10 +223,13 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
+                        # It would be better to DRY up describe_with_native_flags and describe_with_pcic_flags by
+                        # parametrizing, but pytest doesn't yet support parameterization over fixtures:
+                        # see https://github.com/pytest-dev/pytest/issues/349
                         def describe_with_native_flags():
                             '''2 native flags, 1 discard, 1 not discard'''
 
-                            @pytest.fixture
+                            @fixture
                             def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard):
                                 for sesh in generic_sesh(obs_sesh, NativeFlag, [native_flag_discard, native_flag_non_discard]):
                                     yield sesh
@@ -228,35 +238,71 @@ def describe_DailyMaxTemperature():
                                 '''m < n associations of discard native flag to observations;
                                 k < n associations of not discard native flag to observations'''
 
-                                @pytest.fixture
+                                @fixture
                                 def flag_assoc_sesh(flag_sesh, native_flag_discard, native_flag_non_discard):
                                     sesh = flag_sesh
                                     obs = sesh.query(Obs)
                                     for id in range(0, 12):
-                                        obs.filter_by(id=id).first().flags.append(native_flag_discard)
+                                        obs.filter_by(id=id).first().native_flags.append(native_flag_discard)
                                     for id in range(6, 18):
-                                        obs.filter_by(id=id).first().flags.append(native_flag_non_discard)
-                                    sesh.commit()  # TODO: is this necessary?
+                                        obs.filter_by(id=id).first().native_flags.append(native_flag_non_discard)
                                     sesh.flush()
                                     yield sesh
                                     for id in range(0, 24):
-                                        obs.filter_by(id=id).first().flags = []
-                                    sesh.commit()  # TODO: is this necessary?
+                                        obs.filter_by(id=id).first().native_flags = []
                                     sesh.flush()
 
-                                @pytest.fixture
+                                @fixture
                                 def results(flag_assoc_sesh):
                                     return flag_assoc_sesh.query(DailyMaxTemperature)
 
                                 def setup_is_correct(flag_assoc_sesh):
                                     obs = flag_assoc_sesh.query(Obs)
-                                    assert(obs.count() == 24)
-
-                                def setup_is_correct2(flag_assoc_sesh):
-                                    obs = flag_assoc_sesh.query(Obs)
-                                    obs_flagged_discard = obs.filter(Obs.flags.any(NativeFlag.discard == True))
+                                    obs_flagged_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == True))
                                     assert(obs_flagged_discard.count() == 12)
-                                    obs_flagged_not_discard = obs.filter(Obs.flags.any(NativeFlag.discard == False))
+                                    obs_flagged_not_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == False))
+                                    assert(obs_flagged_not_discard.count() == 12)
+
+                                def it_excludes_all_and_only_discarded_observations(results):
+                                    assert(results.count() == 1)
+                                    result = results.first()
+                                    assert(result.data_coverage == approx(0.5))
+
+                        def describe_with_pcic_flags():
+                            '''2 pcic flags, 1 discard, 1 not discard'''
+
+                            @fixture
+                            def flag_sesh(obs_sesh, pcic_flag_discard, pcic_flag_non_discard):
+                                for sesh in generic_sesh(obs_sesh, PCICFlag, [pcic_flag_discard, pcic_flag_non_discard]):
+                                    yield sesh
+
+                            def describe_with_pcic_flag_associations():
+                                '''m < n associations of discard pcic flag to observations;
+                                k < n associations of not discard pcic flag to observations'''
+
+                                @fixture
+                                def flag_assoc_sesh(flag_sesh, pcic_flag_discard, pcic_flag_non_discard):
+                                    sesh = flag_sesh
+                                    obs = sesh.query(Obs)
+                                    for id in range(0, 12):
+                                        obs.filter_by(id=id).first().pcic_flags.append(pcic_flag_discard)
+                                    for id in range(6, 18):
+                                        obs.filter_by(id=id).first().pcic_flags.append(pcic_flag_non_discard)
+                                    sesh.flush()
+                                    yield sesh
+                                    for id in range(0, 24):
+                                        obs.filter_by(id=id).first().pcic_flags = []
+                                    sesh.flush()
+
+                                @fixture
+                                def results(flag_assoc_sesh):
+                                    return flag_assoc_sesh.query(DailyMaxTemperature)
+
+                                def setup_is_correct(flag_assoc_sesh):
+                                    obs = flag_assoc_sesh.query(Obs)
+                                    obs_flagged_discard = obs.filter(Obs.pcic_flags.any(PCICFlag.discard == True))
+                                    assert(obs_flagged_discard.count() == 12)
+                                    obs_flagged_not_discard = obs.filter(Obs.pcic_flags.any(PCICFlag.discard == False))
                                     assert(obs_flagged_not_discard.count() == 12)
 
                                 def it_excludes_all_and_only_discarded_observations(results):
@@ -266,14 +312,14 @@ def describe_DailyMaxTemperature():
 
                 def describe_with_many_variables():
 
-                    @pytest.fixture
+                    @fixture
                     def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_foo):
                         for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_max, var_temp_min, var_foo]):
                             yield sesh
 
                     def describe_with_many_observations_per_variable():
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, history_stn1_hourly, var_temp_point, var_temp_max, var_temp_min, var_foo):
                             observations = []
                             id = 0
@@ -285,7 +331,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
@@ -294,14 +340,14 @@ def describe_DailyMaxTemperature():
 
             def describe_with_1_history_daily():
 
-                @pytest.fixture
+                @fixture
                 def history_sesh(station_sesh, history_stn1_daily):
                     for sesh in generic_sesh(station_sesh, History, [history_stn1_daily]):
                         yield sesh
 
                 def describe_with_1_variable():
 
-                    @pytest.fixture
+                    @fixture
                     def variable_sesh(history_sesh, var_temp_point):
                         for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
                             yield sesh
@@ -310,7 +356,7 @@ def describe_DailyMaxTemperature():
 
                         n_days = 3
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_daily):
                             observations = [
                                 Obs(id=i + 100, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
@@ -320,7 +366,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
@@ -336,14 +382,14 @@ def describe_DailyMaxTemperature():
 
             def describe_with_1_history_hourly_1_history_daily():
 
-                @pytest.fixture
+                @fixture
                 def history_sesh(station_sesh, history_stn1_hourly, history_stn1_daily):
                     for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn1_daily]):
                         yield sesh
 
                 def describe_with_1_variable():
 
-                    @pytest.fixture
+                    @fixture
                     def variable_sesh(history_sesh, var_temp_point):
                         for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
                             yield sesh
@@ -352,7 +398,7 @@ def describe_DailyMaxTemperature():
 
                         n_hours = 4
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, history_stn1_daily):
                             # hourly observations
                             observations = [
@@ -366,7 +412,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
@@ -380,28 +426,28 @@ def describe_DailyMaxTemperature():
 
     def describe_with_2_networks():
 
-        @pytest.fixture
+        @fixture
         def network_sesh(mod_empty_database_session, network1, network2):
             for sesh in generic_sesh(mod_empty_database_session, Network, [network1, network2]):
                 yield sesh
 
         def describe_with_1_station_per_network():
 
-            @pytest.fixture
+            @fixture
             def station_sesh(network_sesh, station1, station2):
                 for sesh in generic_sesh(network_sesh, Station, [station1, station2]):
                     yield sesh
 
             def describe_with_1_history_hourly_per_station():
 
-                @pytest.fixture
+                @fixture
                 def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
                     for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn2_hourly]):
                         yield sesh
 
                 def describe_with_1_variable_per_network(): # temp: point
 
-                    @pytest.fixture
+                    @fixture
                     def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
                         for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_point2]):
                             yield sesh
@@ -411,7 +457,7 @@ def describe_DailyMaxTemperature():
                         n_days = 3
                         n_hours = 4
 
-                        @pytest.fixture
+                        @fixture
                         def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
                             observations = []
                             id = 0
@@ -426,7 +472,7 @@ def describe_DailyMaxTemperature():
                             for sesh in generic_sesh(variable_sesh, Obs, observations):
                                 yield sesh
 
-                        @pytest.fixture
+                        @fixture
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
