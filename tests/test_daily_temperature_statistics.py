@@ -65,8 +65,13 @@ def var_temp_min(network1):
                     standard_name='air_temperature', cell_method='time: minimum')
 
 @fixture
-def var_foo(network1):
+def var_temp_mean(network1):
     return Variable(id=40, network_id=network1.id,
+                    standard_name='air_temperature', cell_method='time: mean')
+
+@fixture
+def var_foo(network1):
+    return Variable(id=50, network_id=network1.id,
                     standard_name='foo', cell_method='time: point')
 
 @fixture
@@ -313,17 +318,19 @@ def describe_DailyMaxTemperature():
                 def describe_with_many_variables():
 
                     @fixture
-                    def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_foo):
-                        for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_max, var_temp_min, var_foo]):
+                    def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo):
+                        for sesh in generic_sesh(history_sesh, Variable,
+                                                 [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]):
                             yield sesh
 
                     def describe_with_many_observations_per_variable():
 
                         @fixture
-                        def obs_sesh(variable_sesh, history_stn1_hourly, var_temp_point, var_temp_max, var_temp_min, var_foo):
+                        def obs_sesh(variable_sesh, history_stn1_hourly, var_temp_point, var_temp_max, var_temp_min,
+                                     var_temp_mean, var_foo):
                             observations = []
                             id = 0
-                            for var in [var_temp_point, var_temp_max, var_temp_min, var_foo]:
+                            for var in [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]:
                                 for i in range(0,2):
                                     id += 1
                                     observations.append(Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
@@ -335,8 +342,9 @@ def describe_DailyMaxTemperature():
                         def results(obs_sesh):
                             return obs_sesh.query(DailyMaxTemperature)
 
-                        def it_returns_exactly_the_expected_variables(results, var_temp_point, var_temp_max):
-                            assert(set([r.vars_id for r in results]) == set([var_temp_point.id, var_temp_max.id]))
+                        def it_returns_exactly_the_expected_variables(results, var_temp_point, var_temp_max, var_temp_mean):
+                            assert(set([r.vars_id for r in results]) ==
+                                   set([var_temp_point.id, var_temp_max.id, var_temp_mean.id]))
 
             def describe_with_1_history_daily():
 

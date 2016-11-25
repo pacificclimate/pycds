@@ -288,6 +288,7 @@ class DailyMaxTemperature(Base):
                 )
                 AND vars.standard_name = 'air_temperature'
                 AND vars.cell_method IN ('time: maximum', 'time: point') -- possibly include time: mean
+                AND vars.cell_method IN ('time: minimum', 'time: point', 'time: mean')
                 AND hx.freq IN ('1-hourly', 'daily')
             GROUP BY
                 hx.history_id, vars_id, obs_day
