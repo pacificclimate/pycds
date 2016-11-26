@@ -231,9 +231,8 @@ class PCICFlag(Base):
     __tablename__ = 'meta_pcic_flag'
     id = Column('pcic_flag_id', Integer, primary_key=True)
     name = Column('flag_name', String)
+    description = Column(String)
     discard = Column(Boolean)
-
-    # TODO: Constraints?
 
 # "Proper" views - defined using view functionality within SQLAlchemy using tools in pycds.view_helpers
 
