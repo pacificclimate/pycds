@@ -6,11 +6,12 @@ __all__ = [
     'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor'
 ]
 
+import sqlalchemy
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.schema import DDL, UniqueConstraint
 from sqlalchemy.sql import text, column
 from geoalchemy2 import Geometry
 
@@ -235,9 +236,10 @@ class PCICFlag(Base):
     discard = Column(Boolean)
 
 # "Proper" views - defined using view functionality within SQLAlchemy using tools in pycds.view_helpers
+# TODO: Get materialized views working and apply them to all weather anomaly views
 
-# View: Daily maximum temperature
-# View: Daily minimum temperature
+# Materialized view: Daily maximum temperature
+# Materialized view: Daily minimum temperature
 #   - These views support views that deliver monthly average of daily max/min temperature.
 #   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
 #   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
@@ -246,7 +248,12 @@ class PCICFlag(Base):
 #      fatal to distinguishing adequate coverage.
 #   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
 #       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-#       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#       unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#       This decision subject to revision.
+
+# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
+# TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
+# and by cell_method
 
 class DailyMaxTemperature(Base):
     __table__ = create_view(
@@ -356,86 +363,88 @@ class DailyMinTemperature(Base):
         'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_day]
     }
 
-# class DailyMinTemperature(Base):
-#     __table__ = create_view(
-#             'daily_min_temperature_v',
-#             metadata,
-#             text('''
-#                 SELECT
-#                     hx.station_id AS station_id,
-#                     obs.vars_id AS vars_id,
-#                     date_trunc('day', obs_time) AS obs_day,
-#                     min(datum) AS statistic,
-#                     sum(
-#                         CASE hx.freq
-#                         WHEN 'daily' THEN 1.0
-#                         WHEN '1-hourly' THEN 1.0 / 24.0
-#                         END
-#                     ) AS data_coverage
-#                 FROM
-#                     obs_raw AS obs
-#                     INNER JOIN meta_vars AS vars USING (vars_id)
-#                     INNER JOIN meta_history AS hx USING (history_id)
-#                     LEFT JOIN obs_raw_native_flags USING (obs_raw_id)
-#                     LEFT JOIN meta_native_flag AS mnf USING (native_flag_id)
-#                     LEFT JOIN obs_raw_pcic_flags USING (obs_raw_id)
-#                     LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
-#                 WHERE
-#                     mnf.discard IS NOT TRUE
-#                     AND mpf.discard IS NOT TRUE
-#                     AND vars.standard_name = 'air_temperature'
-#                     AND vars.cell_method IN ('time: minimum', 'time: point') -- possibly include time: mean
-#                     AND hx.freq IN ('1-hourly', 'daily')
-#                 GROUP BY
-#                     obs_day, station_id, vars_id
-#             ''')
-#     )
+# Materialized View: Monthly average of daily maximum temperature
+# Materialized View: Monthly average of daily minimum temperature
+#   - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
+#       in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
+#       daily data coverage above).
+#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+#       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#
+# TODO: Factor out common query structure into a defined function (parameterized by daily extreme temp view)?
 
-# # Materialized View: Monthly average of daily maximum temperature
-# # Materialized View: Monthly average of daily minimum temperature
-# #   - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
-# #       in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
-# #       daily data coverage above).
-# #   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-# #       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-# #       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-#
-# class MonthlyAverageOfDailyMaxTemperature(Base):
-#     __table__ = create_materialized_view(
-#             'monthly_average_of_daily_max_temperature_mv',
-#             metadata,
-#             text('''
-#                 SELECT
-#                     station_id,
-#                     vars_id,
-#                     date_trunc('month', obs_day) AS obs_month,
-#                     avg(statistic) as statistic,
-#                     sum(data_coverage) / DaysInMonth(obs_month)::real AS data_coverage
-#                 FROM
-#                     daily_max_temperature_v
-#                 GROUP BY
-#                     obs_month, station_id, vars_id
-#             ''')
-#     )
-#
-# class MonthlyAverageOfDailyMinTemperature(Base):
-#     __table__ = create_materialized_view(
-#             'monthly_average_of_daily_max_temperature_mv',
-#             metadata,
-#             text('''
-#                 SELECT
-#                     station_id,
-#                     vars_id,
-#                     date_trunc('month', obs_day) AS obs_month,
-#                     avg(statistic) as statistic,
-#                     sum(data_coverage) / DaysInMonth(obs_month)::real AS data_coverage
-#                 FROM
-#                     daily_min_temperature_v
-#                 GROUP BY
-#                     obs_month, station_id, vars_id
-#             ''')
-#     )
-#
+class MonthlyAverageOfDailyMaxTemperature(Base):
+    __table__ = create_view(
+            'monthly_average_of_daily_max_temperature_mv',
+            metadata,
+            text('''
+                SELECT
+                    history_id,
+                    vars_id,
+                    obs_month,
+                    statistic,
+                    total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+                FROM (
+                    SELECT
+                        history_id,
+                        vars_id,
+                        date_trunc('month', obs_day) AS obs_month,
+                        avg(statistic) AS statistic,
+                        sum(data_coverage) AS total_data_coverage
+                    FROM
+                        daily_max_temperature_v
+                    GROUP BY
+                        history_id, vars_id, obs_month
+                ) AS temp
+            ''').columns(
+                column('history_id'),
+                column('vars_id'),
+                column('obs_month'),
+                column('statistic'),
+                column('data_coverage')
+            )
+    )
+    __mapper_args__ = {
+        'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_month]
+    }
+
+class MonthlyAverageOfDailyMinTemperature(Base):
+    __table__ = create_view(
+        'monthly_average_of_daily_min_temperature_mv',
+        metadata,
+        text('''
+                SELECT
+                    history_id,
+                    vars_id,
+                    obs_month,
+                    statistic,
+                    total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+                FROM (
+                    SELECT
+                        history_id,
+                        vars_id,
+                        date_trunc('month', obs_day) AS obs_month,
+                        avg(statistic) AS statistic,
+                        sum(data_coverage) AS total_data_coverage
+                    FROM
+                        daily_min_temperature_v
+                    GROUP BY
+                        history_id, vars_id, obs_month
+                ) AS temp
+            ''').columns(
+            column('history_id'),
+            column('vars_id'),
+            column('obs_month'),
+            column('statistic'),
+            column('data_coverage')
+        )
+    )
+    __mapper_args__ = {
+        'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_month]
+    }
+
+
 # # Materialized View: Monthly total precipitation
 # #   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
 # #   - data_coverage is the fraction of observations actually available in a month relative to those potentially
@@ -583,3 +592,14 @@ class ObsWithFlags(Base):
     flag_name = Column(String)
     description = Column(String)
     flag_value = Column(String)
+
+sqlalchemy.event.listen(
+    metadata, 'before_create',
+    DDL('''
+        CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
+        $$
+            SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
+            as timestamp));
+        $$ LANGUAGE sql;
+    ''')
+)
