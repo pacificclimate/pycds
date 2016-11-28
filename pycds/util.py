@@ -264,3 +264,27 @@ def create_test_data_from_reflection(read_engine, write_engine):
             wSession.add(new_hist)
 
     wSession.commit()
+
+
+def generic_sesh(sesh, sa_class, sa_objects):
+    '''All session fixtures follow a common pattern, abstracted in this generator function.
+    To use the generator correctly, i.e., so that the teardown after the yield is also performed,
+    a fixture must first yield the result of next(g), then call next(g) again. This can be done two ways:
+
+      gs = generic_sesh(...)
+      yield next(gs)
+      next(gs)
+
+    or, slightly shorter:
+
+      for sesh in generic_sesh(...):
+          yield sesh
+
+    The shorter method is used throughout.
+    '''
+    sesh.add_all(sa_objects)
+    sesh.flush()
+    yield sesh
+    sesh.query(sa_class).delete()
+    sesh.flush()
+
