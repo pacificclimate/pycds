@@ -414,25 +414,25 @@ class MonthlyAverageOfDailyMinTemperature(Base):
         'monthly_average_of_daily_min_temperature_mv',
         metadata,
         text('''
+            SELECT
+                history_id,
+                vars_id,
+                obs_month,
+                statistic,
+                total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+            FROM (
                 SELECT
                     history_id,
                     vars_id,
-                    obs_month,
-                    statistic,
-                    total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
-                FROM (
-                    SELECT
-                        history_id,
-                        vars_id,
-                        date_trunc('month', obs_day) AS obs_month,
-                        avg(statistic) AS statistic,
-                        sum(data_coverage) AS total_data_coverage
-                    FROM
-                        daily_min_temperature_v
-                    GROUP BY
-                        history_id, vars_id, obs_month
-                ) AS temp
-            ''').columns(
+                    date_trunc('month', obs_day) AS obs_month,
+                    avg(statistic) AS statistic,
+                    sum(data_coverage) AS total_data_coverage
+                FROM
+                    daily_min_temperature_v
+                GROUP BY
+                    history_id, vars_id, obs_month
+            ) AS temp
+        ''').columns(
             column('history_id'),
             column('vars_id'),
             column('obs_month'),
@@ -445,52 +445,83 @@ class MonthlyAverageOfDailyMinTemperature(Base):
     }
 
 
-# # Materialized View: Monthly total precipitation
-# #   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
-# #   - data_coverage is the fraction of observations actually available in a month relative to those potentially
-# #      available in a month. This computation is correct if and only if the observation frequency does not change
-# #      during any one day in the month. It remains approximately correct if such days are rare, and remains valid
-# #      for the purpose of distinguishing adequate coverage.
-# #   - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-# #       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-# #       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-# class MonthlyTotalPrecipitation(Base):
-#     __table__ = create_materialized_view(
-#             'monthly_total_precipitation_mv',
-#             metadata,
-#             text('''
-#                 SELECT
-#                     obs.station_id,
-#                     obs.vars_id,
-#                     date_trunc('month', obs_time) AS obs_month,
-#                     sum(datum) AS statistic,
-#                     sum(
-#                         CASE hx.freq
-#                         WHEN 'daily' THEN 1.0 / DaysInMonth(obs_time)
-#                         WHEN '1-hourly' THEN 1.0 / (DaysInMonth(obs_time) * 24.0)
-#                         END
-#                     ) AS data_coverage
-#                 FROM
-#                     obs_raw AS obs,
-#                     INNER JOIN meta_vars AS vars USING (vars_id),
-#                     INNER JOIN meta_history AS hx USING (history_id),
-#                     LEFT JOIN meta_native_flag AS mnf USING (native_flag_id)
-#                     LEFT JOIN meta_pcic_flag AS mpf USING (pcic_flag_id)
-#                 WHERE
-#                     mnf.discard IS NOT TRUE
-#                     AND mpf.discard IS NOT TRUE
-#                     AND vars.standard_name IN (
-#                         'lwe_thickness_of_precipitation_amount',
-#                         'thickness_of_rainfall_amount',
-#                         'thickness_of_snowfall_amount'  -- verify that this is rainfall equiv!
-#                     )
-#                     AND vars.cell_method = 'time:sum'
-#                     AND hx.freq IN ('1-hourly', 'daily')
-#                 GROUP BY
-#                     obs_month, station_id, vars_id
-#             '''),
-#             True
-#     )
+# Materialized View: Monthly total precipitation
+#   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+#   - data_coverage is the fraction of observations actually available in a month relative to those potentially
+#      available in a month. This computation is correct if and only if the observation frequency does not change
+#      during any one day in the month. It remains approximately correct if such days are rare, and remains valid
+#      for the purpose of distinguishing adequate coverage.
+#   - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+#       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
+# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
+
+class MonthlyTotalPrecipitation(Base):
+    __table__ = create_view(
+        'monthly_total_precipitation_mv',
+        metadata,
+        text('''
+            SELECT
+                history_id,
+                vars_id,
+                obs_month,
+                statistic,
+                total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+            FROM (
+                SELECT
+                    hx.history_id,
+                    obs.vars_id,
+                    date_trunc('month', obs_time) AS obs_month,
+                    sum(datum) AS statistic,
+                    sum(
+                        CASE hx.freq
+                        WHEN 'daily' THEN 1.0::float
+                        WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                        END
+                    ) AS total_data_coverage
+                FROM
+                    obs_raw AS obs
+                    INNER JOIN meta_vars AS vars USING (vars_id)
+                    INNER JOIN meta_history AS hx USING (history_id)
+                WHERE
+                    obs.obs_raw_id IN (
+                        -- Return id of each observation without any associated discard flags;
+                        -- in other words, exclude observations marked discard, and don't be fooled by
+                        -- additional flags that don't discard (hence the aggregate BOOL_OR's).
+                        SELECT obs.obs_raw_id
+                        FROM
+                            obs_raw AS obs
+                            LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
+                            LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
+                            LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
+                            LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
+                        GROUP BY obs.obs_raw_id
+                        HAVING
+                            BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
+                            AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
+                    )
+                    AND vars.standard_name IN (
+                        'lwe_thickness_of_precipitation_amount',
+                        'thickness_of_rainfall_amount',
+                        'thickness_of_snowfall_amount'  -- verify that this is rainfall equiv!
+                    )
+                    AND vars.cell_method = 'time: sum'
+                    AND hx.freq IN ('1-hourly', 'daily')
+                GROUP BY
+                    hx.history_id, vars_id, obs_month
+            ) AS temp
+        ''').columns(
+            column('history_id'),
+            column('vars_id'),
+            column('obs_month'),
+            column('statistic'),
+            column('data_coverage')
+        )
+    )
+    __mapper_args__ = {
+        'primary_key': [__table__.c.history_id, __table__.c.vars_id, __table__.c.obs_month]
+    }
 
 
 # "Improper" views - defined in crmp repo, and accessed in ORM by referring to them as tables.

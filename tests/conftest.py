@@ -162,6 +162,21 @@ def var_foo(network1):
                     standard_name='foo', cell_method='time: point')
 
 @fixture
+def var_precip_net1_1(network1):
+    return Variable(id=60, network_id=network1.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
+def var_precip_net1_2(network1):
+    return Variable(id=61, network_id=network1.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
+def var_precip_net2_1(network2):
+    return Variable(id=63, network_id=network2.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
 def native_flag_discard():
     return NativeFlag(id=1, discard=True)
 
