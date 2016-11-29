@@ -65,7 +65,7 @@ def describe_with_1_network():
                     @mark.parametrize('DailyExtremeTemperature, statistic', [
                         (DailyMaxTemperature, 3.0), (DailyMinTemperature, 1.0)
                     ])
-                    def it_returns_the_expected_maximum_value(query, DailyExtremeTemperature, statistic):
+                    def it_returns_the_expected_extreme_value(query, DailyExtremeTemperature, statistic):
                         assert query(DailyExtremeTemperature).first().statistic == statistic
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -116,7 +116,7 @@ def describe_with_1_network():
                         (DailyMaxTemperature, [3.0, 7.0]),
                         (DailyMinTemperature, [1.0, 4.0])
                     ])
-                    def it_returns_the_expected_max_values(query, DailyExtremeTemperature, statistics):
+                    def it_returns_the_expected_extreme_values(query, DailyExtremeTemperature, statistics):
                         results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
                         assert [r.statistic for r in results] == statistics
 

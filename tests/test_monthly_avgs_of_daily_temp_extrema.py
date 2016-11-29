@@ -37,12 +37,15 @@ def describe_with_1_network():
 
                 def describe_with_a_full_set_of_observations_for_one_month():
 
+                    days = range(1, 32)
+                    hours = range(1, 24)
+
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = []
                         id = 0
-                        for day in range(1, 32):  # every day
-                            for hour in range(0, 24):  # every hour
+                        for day in days:
+                            for hour in hours:
                                 id += 1
                                 observations.append(
                                     Obs(id=id, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
@@ -72,17 +75,18 @@ def describe_with_1_network():
                         assert result.obs_month == datetime.datetime(2000, 1, 1)
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature, statistic', [
-                        (MonthlyAverageOfDailyMaxTemperature, 23.0),
-                        (MonthlyAverageOfDailyMinTemperature, 0.0)
+                        (MonthlyAverageOfDailyMaxTemperature, max(hours)),
+                        (MonthlyAverageOfDailyMinTemperature, min(hours))
                     ])
-                    def it_returns_the_expected_maximum_value(query, MonthlyAvgOfDailyExtremeTemperature, statistic):
+                    def it_returns_the_expected_extreme_value(query, MonthlyAvgOfDailyExtremeTemperature, statistic):
                         assert query(MonthlyAvgOfDailyExtremeTemperature).first().statistic == statistic
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
                         MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature
                     ])
                     def it_returns_the_expected_data_coverage(query, MonthlyAvgOfDailyExtremeTemperature):
-                        assert query(MonthlyAvgOfDailyExtremeTemperature).first().data_coverage == approx(1.0)
+                        assert query(MonthlyAvgOfDailyExtremeTemperature).first().data_coverage == \
+                               approx(len(hours)/24.0 * len(days)/31.0)
 
                 def describe_with_a_partial_set_of_observations_for_one_month():
 
@@ -111,7 +115,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMaxTemperature, max(hours)),
                         (MonthlyAverageOfDailyMinTemperature, min(hours))
                     ])
-                    def it_returns_the_expected_maximum_value(query, MonthlyAvgOfDailyExtremeTemperature, statistic):
+                    def it_returns_the_expected_extreme_value(query, MonthlyAvgOfDailyExtremeTemperature, statistic):
                         assert query(MonthlyAvgOfDailyExtremeTemperature).first().statistic == statistic
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
