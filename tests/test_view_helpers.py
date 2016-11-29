@@ -1,9 +1,11 @@
 import pytest
+from pytest import fixture
 
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import select, text, literal_column
 
+from pycds.util import generic_sesh
 from pycds.view_helpers import create_view
 
 # Define some simple objects (and their tables) to test view helpers against
@@ -58,39 +60,33 @@ class ThingWithDescription(Base):
     def __repr__(self):
         return '<ThingWithDescription(id=%d, name=%s, desc=%s)>' % (self.id, self.name, self.desc)
 
-def create_db(sesh):
+
+
+@fixture(scope="module")
+def mod_empty_test_db_session(mod_blank_postgis_session):
+    sesh = mod_blank_postgis_session
     engine = sesh.get_bind()
     Base.metadata.create_all(bind=engine)
+    yield sesh
 
-def add_Things(sesh):
-    sesh.add_all([
-        Thing(id=1, name='one', description_id=1),
-        Thing(id=2, name='two', description_id=2),
-        Thing(id=3, name='three', description_id=3),
-        Thing(id=4, name='four', description_id=2),
-        Thing(id=5, name='five', description_id=1),
-    ])
+@fixture
+def view_test_session(mod_empty_test_db_session):
+    for sesh in generic_sesh(mod_empty_test_db_session, [Thing, Description], [
+        [
+            Description(id=1, desc='alpha'),
+            Description(id=2, desc='beta'),
+            Description(id=3, desc='gamma'),
+        ],
+        [
+            Thing(id=1, name='one', description_id=1),
+            Thing(id=2, name='two', description_id=2),
+            Thing(id=3, name='three', description_id=3),
+            Thing(id=4, name='four', description_id=2),
+            Thing(id=5, name='five', description_id=1),
+        ]
 
-def add_Descriptions(sesh):
-    sesh.add_all([
-        Description(id=1, desc='alpha'),
-        Description(id=2, desc='beta'),
-        Description(id=3, desc='gamma'),
-    ])
-
-@pytest.fixture(scope='function')
-def view_test_session(blank_postgis_session):
-    sesh = blank_postgis_session
-    create_db(sesh)
-    add_Descriptions(sesh)
-    # flush() here is required to force the creation of the descriptions table before the things table.
-    # If not, a race condition occurs and if the things table is created first, IntegrityError
-    # is raised. Output of SQLAlchemy says: "raised as a result of Query-invoked autoflush; consider using a
-    # session.no_autoflush block if this flush is occurring prematurely", so there may be a better way to
-    # handle this problem.
-    sesh.flush()
-    add_Things(sesh)
-    return sesh
+    ]):
+        yield sesh
 
 def test_simple_view(view_test_session):
     sesh = view_test_session
@@ -99,12 +95,12 @@ def test_simple_view(view_test_session):
     assert(things.count() == 5)
 
     view_things = sesh.query(SimpleThingView)
-    assert(view_things.count() == 3)
+    assert [t.id for t in view_things.order_by(SimpleThingView.id)] == [1, 2, 3]
 
 
 def test_complex_view(view_test_session):
     sesh = view_test_session
 
     things = sesh.query(ThingWithDescription)
-    assert(things.count() == 5)
-    assert(things.filter_by(id=1).first().desc == 'alpha')
+    assert [t.desc for t in things.order_by(ThingWithDescription.id)] \
+           == ['alpha', 'beta', 'gamma', 'beta', 'alpha']
