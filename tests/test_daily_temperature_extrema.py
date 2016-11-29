@@ -120,7 +120,7 @@ def describe_with_1_network():
                         results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
                         assert [r.statistic for r in results] == statistics
 
-                    @mark.parametrize('DailyExtremeTemperature', [DailyMaxTDefaultemperature, DailyMinTemperature])
+                    @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
                     def it_returns_the_expected_data_coverages(query, DailyExtremeTemperature):
                         results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
                         assert [r.data_coverage for r in results] == approx([3.0/24.0, 4.0/24.0])
