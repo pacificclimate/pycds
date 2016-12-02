@@ -46,6 +46,7 @@ def compile(element, compiler, **kw):
     return "REFRESH MATERIALIZED VIEW %s %s" % \
            (('CONCURRENTLY' if element.concurrently else ''), element.name)
 
+# TODO: Remove
 def create_materialized_view(name, metadata, selectable):
     temp_metadata = MetaData()
     t = Table(name, temp_metadata)
@@ -62,9 +63,6 @@ def create_materialized_view(name, metadata, selectable):
     DropMaterializedView(name).execute_at('before-drop', metadata)
 
     return t
-
-def refresh_materialized_view(sesh, object, concurrently=False):
-    sesh.execute(RefreshMaterializedView(object.__table__.fullname, concurrently))
 
 
 class MaterializedViewMixin(object):
@@ -84,7 +82,19 @@ class MaterializedViewMixin(object):
 
     @declared_attr
     def __table__(cls):
-        return create_materialized_view(cls.viewname(), cls.metadata, cls.__selectable__)
+        temp_metadata = MetaData()
+        t = Table(cls.viewname(), temp_metadata)
+        for c in cls.__selectable__.c:
+            t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
+
+        # Not sure if this will work, but it reproduces the setting above ...
+        @event.listens_for(cls.metadata, "after_create")
+        def create_indexes(target, connection, **kw):
+            for idx in t.indexes:
+                idx.create(connection)
+
+        return t
+        # return create_materialized_view(cls.viewname(), cls.metadata, cls.__selectable__)
 
     @declared_attr
     def __mapper_args__(cls):
@@ -99,6 +109,13 @@ class MaterializedViewMixin(object):
         return snake_case(cls.__name__) + '_mv'
 
     @classmethod
+    def create(cls, sesh):
+        sesh.execute(CreateMaterializedView(cls.viewname(), cls.__selectable__))
+
+    @classmethod
+    def drop(cls, sesh):
+        sesh.execute(DropMaterializedView(cls.viewname()))
+
+    @classmethod
     def refresh(cls, sesh, concurrently=False):
-        # TODO: Can we do without passing in sesh?
         sesh.execute(RefreshMaterializedView(cls.viewname(), concurrently))

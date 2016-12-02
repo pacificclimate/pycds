@@ -84,7 +84,12 @@ def mod_empty_test_db_session(mod_blank_postgis_session):
     sesh = mod_blank_postgis_session
     engine = sesh.get_bind()
     Base.metadata.create_all(bind=engine)
+    views = [SimpleThing, ThingWithDescription, ThingCount]
+    for view in views:
+        view.create(sesh)
     yield sesh
+    for view in reversed(views):
+        view.drop(sesh)
 
 @fixture
 def view_test_session(mod_empty_test_db_session):

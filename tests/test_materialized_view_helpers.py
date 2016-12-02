@@ -9,7 +9,7 @@ from sqlalchemy.sql import select, text, literal_column
 from sqlalchemy.sql import column
 
 from pycds.util import generic_sesh
-from pycds.materialized_view_helpers import MaterializedViewMixin, refresh_materialized_view
+from pycds.materialized_view_helpers import MaterializedViewMixin
 
 # Define some simple objects (and their tables) to test view helpers against
 
@@ -87,7 +87,12 @@ def mod_empty_test_db_session(mod_blank_postgis_session):
     sesh = mod_blank_postgis_session
     engine = sesh.get_bind()
     Base.metadata.create_all(bind=engine)
+    views = [SimpleThing, ThingWithDescription, ThingCount]
+    for view in views:
+        view.create(sesh)
     yield sesh
+    for view in reversed(views):
+        view.drop(sesh)
 
 @fixture
 def view_test_session(mod_empty_test_db_session):
@@ -119,11 +124,11 @@ def test_viewname():
 
 def test_simple_view(view_test_session):
     sesh = view_test_session
-    SimpleThing.refresh(sesh)
 
     things = sesh.query(Thing)
     assert things.count() == 5
 
+    SimpleThing.refresh(sesh)
     view_things = sesh.query(SimpleThing)
     assert [t.id for t in view_things.order_by(SimpleThing.id)] == [1, 2, 3]
 
@@ -131,7 +136,6 @@ def test_simple_view(view_test_session):
 def test_complex_view(view_test_session):
     sesh = view_test_session
     ThingWithDescription.refresh(sesh)
-
     things = sesh.query(ThingWithDescription)
     assert [t.desc for t in things.order_by(ThingWithDescription.id)] \
            == ['alpha', 'beta', 'gamma', 'beta', 'alpha']

@@ -25,22 +25,11 @@ class DropView(DDLElement):
 
 @compiler.compiles(CreateView)
 def compile(element, compiler, **kw):
-    return "CREATE OR REPLACE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
+    return "CREATE VIEW %s AS %s" % (element.name, compiler.sql_compiler.process(element.selectable))
 
 @compiler.compiles(DropView)
 def compile(element, compiler, **kw):
     return "DROP VIEW %s" % (element.name)
-
-def create_view(name, metadata, selectable):
-    t = table(name)
-
-    for c in selectable.c:
-        c._make_proxy(t)
-
-    CreateView(name, selectable).execute_at('after-create', metadata)
-    DropView(name).execute_at('before-drop', metadata)
-
-    return t
 
 def snake_case(ident):
     """Return a snake-case version of a camel-case identifier, e.g., MyBigDeal -> my_big_deal.
@@ -66,7 +55,10 @@ class ViewMixin(object):
 
     @declared_attr
     def __table__(cls):
-        return create_view(cls.viewname(), cls.metadata, cls.__selectable__)
+        t = table(cls.viewname())
+        for c in cls.__selectable__.c:
+            c._make_proxy(t)
+        return t
 
     @declared_attr
     def __mapper_args__(cls):
@@ -79,3 +71,11 @@ class ViewMixin(object):
     @classmethod
     def viewname(cls):
         return snake_case(cls.__name__) + '_v'
+
+    @classmethod
+    def create(cls, sesh):
+        sesh.execute(CreateView(cls.viewname(), cls.__selectable__))
+
+    @classmethod
+    def drop(cls, sesh):
+        sesh.execute(DropView(cls.viewname()))

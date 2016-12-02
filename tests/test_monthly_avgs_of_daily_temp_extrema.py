@@ -3,15 +3,28 @@ import datetime
 from pytest import fixture, mark, approx
 
 from pycds.util import generic_sesh
-from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
+from pycds import Network, Station, History, Variable, Obs
+from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 from pycds.weather_anomaly import MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature
+
+
+@fixture(scope='module')
+def with_views_sesh(mod_empty_database_session):
+    sesh = mod_empty_database_session
+    views = [DailyMaxTemperature, DailyMinTemperature,
+             MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature]
+    for view in views:
+        view.create(sesh)
+    yield sesh
+    for view in reversed(views):
+        view.drop(sesh)
 
 
 def describe_with_1_network():
 
     @fixture
-    def network_sesh(mod_empty_database_session, network1):
-        for sesh in generic_sesh(mod_empty_database_session, Network, [network1]):
+    def network_sesh(with_views_sesh, network1):
+        for sesh in generic_sesh(with_views_sesh, Network, [network1]):
             yield sesh
 
     def describe_with_1_station():
@@ -232,8 +245,8 @@ def describe_with_1_network():
 def describe_with_2_networks():
 
     @fixture
-    def network_sesh(mod_empty_database_session, network1, network2):
-        for sesh in generic_sesh(mod_empty_database_session, Network, [network1, network2]):
+    def network_sesh(with_views_sesh, network1, network2):
+        for sesh in generic_sesh(with_views_sesh, Network, [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
