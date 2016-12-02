@@ -2,7 +2,8 @@ from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
 from sqlalchemy import event
 from sqlalchemy import Table, Column, MetaData
-from sqlalchemy.sql import table
+from sqlalchemy.ext.declarative import declared_attr
+from pycds.view_helpers import snake_case
 
 # Materialized view creation tools
 #
@@ -15,7 +16,6 @@ from sqlalchemy.sql import table
 # For an explanation of why we use `append_column` instead of `_make_proxy`, see. This is the core stuff
 # for materialized views in SQLAlchemy, from its author:
 #   https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
-# TODO: Integrate with non-materialized view classes and methods (add argument `materialized`)?
 
 class CreateMaterializedView(DDLElement):
     def __init__(self, name, selectable):
@@ -65,3 +65,40 @@ def create_materialized_view(name, metadata, selectable):
 
 def refresh_materialized_view(sesh, object, concurrently=False):
     sesh.execute(RefreshMaterializedView(object.__table__.fullname, concurrently))
+
+
+class MaterializedViewMixin(object):
+    """Mixin for ORM classes that are materialized views. Defines the two key attributes of an ORM class,
+    __table__ and __mapper_args__, based on the values of class attributes __selectable__ and __primary_key__.
+
+    Usage:
+
+    class Thing(Base, MaterializedViewMixin):
+        __selectable__ = <SQLAlchemy selectable>
+        __primary_key__ = ['primary', 'key', 'columns']
+
+    __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
+    It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+
+    """
+
+    @declared_attr
+    def __table__(cls):
+        return create_materialized_view(cls.viewname(), cls.metadata, cls.__selectable__)
+
+    @declared_attr
+    def __mapper_args__(cls):
+        # the return value should instead be merged into other __mapper_args__ declared for the class ...
+        try:
+            return {'primary_key': [cls.__table__.c[col] for col in cls.__primary_key__]}
+        except AttributeError:
+            return {}
+
+    @classmethod
+    def viewname(cls):
+        return snake_case(cls.__name__) + '_mv'
+
+    @classmethod
+    def refresh(cls, sesh, concurrently=False):
+        # TODO: Can we do without passing in sesh?
+        sesh.execute(RefreshMaterializedView(cls.viewname(), concurrently))
