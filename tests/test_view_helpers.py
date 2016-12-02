@@ -1,17 +1,18 @@
-import pytest
 from pytest import fixture
 
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, DateTime, Boolean, ForeignKey, MetaData, Numeric, Interval
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import select, text, literal_column
+from sqlalchemy.sql import column
 
 from pycds.util import generic_sesh
-from pycds.view_helpers import create_view
+from pycds.view_helpers import ViewMixin
 
-# Define some simple objects (and their tables) to test view helpers against
+# Define some simple ORM objects (and their tables) to test view helpers against
 
 Base = declarative_base()
 metadata = Base.metadata
+
 
 class Thing(Base):
     __tablename__ = 'things'
@@ -22,6 +23,7 @@ class Thing(Base):
     def __repr__(self):
         return '<Thing(id=%d, name=%s, desc_id=%d)>' % (self.id, self.name, self.description_id)
 
+
 class Description(Base):
     __tablename__ = 'descriptions'
     id = Column(Integer, primary_key=True)
@@ -30,32 +32,47 @@ class Description(Base):
     def __repr__(self):
         return '<Description(id=%d, desc=%s)>' % (self.id, self.desc)
 
-class SimpleThingView(Base):
-    _t = Thing.__table__
-    __table__ = create_view(
-            'simple_things_v',
-            metadata,
-            text('''
-                SELECT *
-                FROM things
-                WHERE id <= 3
-            ''').columns(_t.c.id, _t.c.name, _t.c.description_id)
-    )
+
+class SimpleThing(Base, ViewMixin):
+    # __selectable__ = select([Thing]).where(Thing.id <= literal_column('3'))  # deeelightful
+
+    # less delightful but applicable to cases where we use text queries for selectable:
+    __selectable__ = text("""
+        SELECT *
+        FROM things
+        WHERE things.id <= 3
+    """).columns(Thing.id, Thing.name, Thing.description_id)
 
     def __repr__(self):
-        return '<SimpleThingView(id=%d, desc=%s)>' % (self.id, self.name)
+        return '<SimpleThing(id=%d, desc=%s)>' % (self.id, self.name)
 
-class ThingWithDescription(Base):
-    _t = Thing.__table__
-    _d = Description.__table__
-    __table__ = create_view(
-            'things_with_description_v',
-            metadata,
-            text('''
-                SELECT things.id, things.name, descriptions.desc
-                FROM things JOIN descriptions ON (things.description_id = descriptions.id)
-            ''').columns(_t.c.id, _t.c.name, _d.c.desc)
-    )
+
+class ThingWithDescription(Base, ViewMixin):
+    # this works:
+    # __selectable__ = select([Thing.id, Thing.name, Description.desc])\
+    #     .select_from(Thing.__table__.join(Description.__table__, Thing.description_id == Description.id))
+
+    # this works:
+    # __selectable__ = text('''
+    #     SELECT things.id, things.name, descriptions.desc
+    #     FROM things JOIN descriptions ON (things.description_id = descriptions.id)
+    # ''').columns(Thing.id, Thing.name, Description.desc)
+
+    # so does this! which is essential for text-defined queries with new columns
+    __selectable__ = text('''
+        SELECT things.id, things.name, descriptions.desc
+        FROM things JOIN descriptions ON (things.description_id = descriptions.id)
+    ''').columns(column('id'), column('name'), column('desc'))
+    __primary_key__ = ['id']
+
+
+class ThingCount(Base, ViewMixin):
+    __selectable__ = text("""
+        SELECT d.desc as desc, count(things.id) as num
+        FROM things JOIN descriptions as d ON (things.description_id = d.id)
+        GROUP BY d.desc
+    """).columns(column('desc'), column('num'))
+    __primary_key__ = ['desc']
 
     def __repr__(self):
         return '<ThingWithDescription(id=%d, name=%s, desc=%s)>' % (self.id, self.name, self.desc)
@@ -88,14 +105,17 @@ def view_test_session(mod_empty_test_db_session):
     ]):
         yield sesh
 
+def test_viewname(view_test_session):
+    assert SimpleThing.viewname() == 'simple_thing_v'
+
 def test_simple_view(view_test_session):
     sesh = view_test_session
 
     things = sesh.query(Thing)
     assert(things.count() == 5)
 
-    view_things = sesh.query(SimpleThingView)
-    assert [t.id for t in view_things.order_by(SimpleThingView.id)] == [1, 2, 3]
+    view_things = sesh.query(SimpleThing)
+    assert [t.id for t in view_things.order_by(SimpleThing.id)] == [1, 2, 3]
 
 
 def test_complex_view(view_test_session):
@@ -104,3 +124,9 @@ def test_complex_view(view_test_session):
     things = sesh.query(ThingWithDescription)
     assert [t.desc for t in things.order_by(ThingWithDescription.id)] \
            == ['alpha', 'beta', 'gamma', 'beta', 'alpha']
+
+def test_counts(view_test_session):
+    sesh = view_test_session
+    counts = sesh.query(ThingCount)
+    assert [(c.desc, c.num) for c in counts.order_by(ThingCount.desc)] == \
+           [('alpha', 2), ('beta', 2), ('gamma', 1), ]

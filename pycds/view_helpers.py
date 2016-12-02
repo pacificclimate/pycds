@@ -1,6 +1,8 @@
+import re
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
+from sqlalchemy.ext.declarative import declared_attr
 
 # View creation tools
 #
@@ -40,3 +42,40 @@ def create_view(name, metadata, selectable):
 
     return t
 
+def snake_case(ident):
+    """Return a snake-case version of a camel-case identifier, e.g., MyBigDeal -> my_big_deal.
+    Courtesy of http://stackoverflow.com/a/12867228"""
+    a = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
+    return a.sub(r'_\1', ident).lower()
+
+
+class ViewMixin(object):
+    """Mixin for ORM classes that are views. Defines the two key attributes of an ORM class,
+    __table__ and __mapper_args__, based on the values of class attributes __selectable__ and __primary_key__.
+
+    Usage:
+
+    class Thing(Base, ViewMixin):
+        __selectable__ = <SQLAlchemy selectable>
+        __primary_key__ = ['primary', 'key', 'columns']
+
+    __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
+    It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+
+    """
+
+    @declared_attr
+    def __table__(cls):
+        return create_view(cls.viewname(), cls.metadata, cls.__selectable__)
+
+    @declared_attr
+    def __mapper_args__(cls):
+        # the return value should instead be merged into other __mapper_args__ declared for the class ...
+        try:
+            return {'primary_key': [cls.__table__.c[col] for col in cls.__primary_key__]}
+        except AttributeError:
+            return {}
+
+    @classmethod
+    def viewname(cls):
+        return snake_case(cls.__name__) + '_v'
