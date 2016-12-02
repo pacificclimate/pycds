@@ -4,7 +4,7 @@ from pytest import fixture, mark, approx
 
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
-from pycds import DailyMaxTemperature, DailyMinTemperature
+from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 
 def describe_with_1_network():

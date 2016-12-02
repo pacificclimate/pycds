@@ -11,6 +11,7 @@ import pytest
 from pytest import fixture
 
 import pycds
+import pycds.weather_anomaly
 from pycds import Contact, Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
 
 def pytest_runtest_setup():
@@ -29,6 +30,7 @@ def mod_empty_database_session(mod_blank_postgis_session):
     sesh = mod_blank_postgis_session
     engine = sesh.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
     yield sesh
 
 @pytest.yield_fixture(scope='function')
