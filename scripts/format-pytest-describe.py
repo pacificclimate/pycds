@@ -8,11 +8,14 @@ import sys
 import re
 
 
+test_regex = re.compile(r'(.+) (\w+)$')
+
 def is_test(string):
-    return  ' ' in string
+    return re.match(test_regex, string)
 
 def test_parts(string):
-    return re.split('\s+', string) # name, state
+    return re.match(test_regex, string).group(1, 2) # name, state
+
 
 state_glyphs = {
     'PASSED': '-',
@@ -44,20 +47,24 @@ class Describe:
         component[0] is first child'''
         first = components.pop(0)
         if is_test(first):
-            self.add_test(Test(*(test_parts(first)[:2])))
+            self.add_test(Test(*(test_parts(first))))
         else:
-            description = next( (d for d in self.describes if d.name == first), None )
-            if not description:
-                description = Describe(first)
-                self.add_describe(description)
-            description.add_components(components)
+            describe = next( (d for d in self.describes if d.name == first), None )
+            if not describe:
+                describe = Describe(first)
+                self.add_describe(describe)
+            describe.add_components(components)
 
     def rep(self):
-        parts = self.name.split('_')
-        if parts[0] == 'describe':
-            return ' '.join(parts[1:])
-        else:
-            return self.name
+        result = self.name
+        for pattern, replace in [
+            (r'^describe_', r''),
+            (r'__', r'*'),
+            (r'_', r' '),
+            (r'\*', r'_'),
+        ]:
+            result = re.sub(pattern, replace, result)
+        return result
 
     def lines(self, indent):
         result = [ self.rep() ]
@@ -72,8 +79,14 @@ class Test:
         self.state = state
 
     def rep(self):
-        parts = self.name.split('_')
-        return '%s %s (%s)' % (state_glyph(self.state), ' '.join(parts), self.state)
+        result = self.name
+        for pattern, replace in [
+            (r'__', r'*'),
+            (r'_', r' '),
+            (r'\*', r'_'),
+        ]:
+            result = re.sub(pattern, replace, result)
+        return '%s %s (%s)' % (state_glyph(self.state), result, self.state)
 
     def lines(self, indent):
         return [ self.rep() ]
