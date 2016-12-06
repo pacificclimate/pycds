@@ -1,5 +1,7 @@
+import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
+from sqlalchemy.schema import DDL
 
 from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
@@ -27,17 +29,45 @@ metadata = Base.metadata
 # TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
 # and by cell_method
 
+# This defined function returns the day that should be used (the effective day) for computing daily Tmax.
+# The effective day depends on the observation frequency (and, technically, the network, but for now it seems
+# that 12-hour frequency is only for a single network). Nominal reporting times are 0700 and 1600 local; it is therefore
+# sufficient to use noon (1200) to divide morning from afternoon reports. Hence:
+#   For 12-hour frequency: for any given day, the period over which the max should be taken is from noon the day
+#       before to noon of the given day.
+#   For 1-hour and daily frequency: for any given day, the period is midnight to midnight of that day.
+sqlalchemy.event.listen(
+    metadata, 'before_create',
+    DDL('''
+        CREATE OR REPLACE FUNCTION effective_day_for_Tmax(obs_time timestamp without time zone, freq varchar)
+        RETURNS timestamp without time zone AS $$
+        DECLARE
+          offs INTERVAL; -- 'offset' is a reserved word
+          hour INTEGER;
+        BEGIN
+          offs := '0'::INTERVAL;
+          hour := date_part('hour', obs_time);
+          IF freq = '12-hourly' AND hour >= 12 THEN
+            offs = '1 day'::INTERVAL;
+          END IF;
+          RETURN date_trunc('day', obs_time) + offs;
+        END;
+        $$ LANGUAGE plpgsql;
+    ''')
+)
+
 class DailyMaxTemperature(Base, ViewMixin):
     __selectable__ = text('''
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            date_trunc('day', obs.obs_time) AS obs_day,
+            effective_day_for_Tmax(obs.obs_time, hx.freq) AS obs_day,
             max(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
                 WHEN 'daily' THEN 1.0::float
-                WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                WHEN '1-hourly' THEN (1/24.0)::float
+                WHEN '12-hourly' THEN 0.5::float
                 END
             ) AS data_coverage
         FROM
@@ -63,7 +93,7 @@ class DailyMaxTemperature(Base, ViewMixin):
             )
             AND vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: maximum', 'time: point', 'time: mean')
-            AND hx.freq IN ('1-hourly', 'daily')
+            AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
     ''').columns(
@@ -86,6 +116,7 @@ class DailyMinTemperature(Base, ViewMixin):
                 CASE hx.freq
                 WHEN 'daily' THEN 1.0::float
                 WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                WHEN '12-hourly' THEN 0.5::float
                 END
             ) AS data_coverage
         FROM
@@ -111,7 +142,7 @@ class DailyMinTemperature(Base, ViewMixin):
             )
             AND vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: minimum', 'time: point', 'time: mean')
-            AND hx.freq IN ('1-hourly', 'daily')
+            AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
     ''').columns(

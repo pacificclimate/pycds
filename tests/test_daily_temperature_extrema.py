@@ -1,10 +1,29 @@
 import datetime
 
 from pytest import fixture, mark, approx
+from sqlalchemy.sql import text
 
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
+
+
+def describe_function_effective__day__for__Tmax():
+    @mark.parametrize('tod, obs_time', [
+        ('morning', '2000-01-01 07:23'),
+        ('afternoon', '2000-01-01 16:18')
+    ])
+    @mark.parametrize('freq, expected_day', [
+        ('1-hourly', {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 1)}),
+        ('12-hourly', {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 2)})
+    ])
+    def it_returns_the_expected_day_of_observation(mod_empty_database_session, tod, obs_time, freq, expected_day):
+        result = mod_empty_database_session.execute(
+            text('SELECT effective_day_for_Tmax(:obs_time, :freq) AS eday'),
+            {'obs_time': obs_time, 'freq': freq}
+        ).fetchall()
+        assert len(result) == 1
+        assert result[0]['eday'] == expected_day[tod]
 
 
 @fixture(scope='module')
@@ -370,6 +389,77 @@ def describe_with_1_network():
                     def it_returns_the_expected_coverage(query, DailyExtremeTemperature):
                         assert [r.data_coverage for r in query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)] \
                                 == approx([n_hours/24.0, 1.0])
+
+        def describe_with_12_hourly_history():
+
+            @fixture
+            def history_sesh(station_sesh, history_stn1_12_hourly):
+                for sesh in generic_sesh(station_sesh, History, [history_stn1_12_hourly]):
+                    yield sesh
+
+            def describe_with_Tmax_and_Tmin_variables():
+
+                @fixture
+                def variable_sesh(history_sesh, var_temp_max, var_temp_min):
+                    for sesh in generic_sesh(history_sesh, Variable, [var_temp_max, var_temp_min]):
+                        yield sesh
+
+                def describe_with_observations_for_both_variables():
+
+                    # max and min temperature observations, by day, then hour
+                    tmax = {
+                        11: { 7:  0, 16:  5 },
+                        12: { 7: 10, 16: 15 },
+                        13: { 7: 11, 16: 20 },  # afternoon obs applies to day 14
+                    }
+                    tmin = {
+                        11: { 7: -5, 16:   0 },
+                        12: { 7:  0, 16:  10 },
+                        13: { 7:  4, 16: -10 },
+                    }
+
+                    @fixture
+                    def obs_sesh(variable_sesh, var_temp_max, var_temp_min, history_stn1_12_hourly):
+                        observations = []
+                        id = 0
+                        for day, hours in tmax.iteritems():
+                            for hour, temp in hours.iteritems():
+                                id += 1
+                                observations.append(
+                                    Obs(id=id, vars_id=var_temp_max.id, history_id=history_stn1_12_hourly.id,
+                                        time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
+                                )
+                        for day, hours in tmin.iteritems():
+                            for hour, temp in hours.iteritems():
+                                id += 1
+                                observations.append(
+                                    Obs(id=id, vars_id=var_temp_min.id, history_id=history_stn1_12_hourly.id,
+                                        time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
+                                )
+                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                            yield sesh
+
+                    @fixture
+                    def query(obs_sesh):
+                        return obs_sesh.query
+
+                    @mark.parametrize('DailyExtremeTemperature, expected', [
+                        # expected is (obs_day, statistic, data_coverage)
+                        (DailyMaxTemperature, [
+                            (datetime.datetime(2000, 1, 11),  0.0, 0.5),
+                            (datetime.datetime(2000, 1, 12), 10.0, 1.0),
+                            (datetime.datetime(2000, 1, 13), 15.0, 1.0),
+                            (datetime.datetime(2000, 1, 14), 20.0, 0.5),
+                        ]),
+                        (DailyMinTemperature, [
+                            (datetime.datetime(2000, 1, 11),  -5.0, 1.0),
+                            (datetime.datetime(2000, 1, 12),   0.0, 1.0),
+                            (datetime.datetime(2000, 1, 13), -10.0, 1.0),
+                        ]),
+                    ])
+                    def it_returns_the_expected_days_and_temperature_extrema(query, DailyExtremeTemperature, expected):
+                        results = query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
+                        assert [(r.obs_day, r.statistic, r.data_coverage) for r in results] == expected
 
 def describe_with_2_networks():
 

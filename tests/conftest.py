@@ -124,13 +124,18 @@ def history_stn1_hourly(station1):
                    sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
 
 @fixture
-def history_stn1_daily(station1):
+def history_stn1_12_hourly(station1):
     return History(id=2, station_id=station1.id, station_name='Station 1',
+                   sdate=datetime.datetime.min, edate=history_transition_date, freq='12-hourly')
+
+@fixture
+def history_stn1_daily(station1):
+    return History(id=3, station_id=station1.id, station_name='Station 1',
                    sdate=history_transition_date, edate=None, freq='daily')
 
 @fixture
 def history_stn2_hourly(station2):
-    return History(id=3, station_id=station2.id, station_name='Station 2',
+    return History(id=4, station_id=station2.id, station_name='Station 2',
                    sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
 
 @fixture
