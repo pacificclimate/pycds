@@ -195,4 +195,4 @@ class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
 
 class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('min')
-    __primary_key__ = 'history_id vars_id obs_month'.split()
+    __primary_key__ = 'history_id vars_id obs_day'.split()
