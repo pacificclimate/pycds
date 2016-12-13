@@ -1,3 +1,5 @@
+import datetime
+
 from pkg_resources import resource_filename
 import logging, logging.config
 import sys
@@ -9,7 +11,8 @@ import pytest
 from pytest import fixture
 
 import pycds
-from pycds import Network, Contact, Station, History, Variable
+import pycds.weather_anomaly
+from pycds import Contact, Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -87,3 +90,110 @@ def large_test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 
     yield blank_postgis_session
+
+# To maintain database consistency, objects must be added (and flushed) in this order:
+#   Network
+#   Station, History
+#   Variable
+#   Observation
+#
+# This imposes an order on the definition of session fixtures, and on the nesting of describe blocks that use them.
+
+@fixture
+def network1():
+    return Network(id=1, name='Network 1')
+
+@fixture
+def network2():
+    return Network(id=2, name='Network 2')
+
+@fixture
+def station1(network1):
+    return Station(id=1, network_id=network1.id)
+
+@fixture
+def station2(network2):
+    return Station(id=2, network_id=network2.id)
+
+history_transition_date = datetime.datetime(2010, 1, 1)
+
+@fixture
+def history_stn1_hourly(station1):
+    return History(id=1, station_id=station1.id, station_name='Station 1',
+                   sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
+
+@fixture
+def history_stn1_12_hourly(station1):
+    return History(id=2, station_id=station1.id, station_name='Station 1',
+                   sdate=datetime.datetime.min, edate=history_transition_date, freq='12-hourly')
+
+@fixture
+def history_stn1_daily(station1):
+    return History(id=3, station_id=station1.id, station_name='Station 1',
+                   sdate=history_transition_date, edate=None, freq='daily')
+
+@fixture
+def history_stn2_hourly(station2):
+    return History(id=4, station_id=station2.id, station_name='Station 2',
+                   sdate=datetime.datetime.min, edate=history_transition_date, freq='1-hourly')
+
+@fixture
+def var_temp_point(network1):
+    return Variable(id=10, network_id=network1.id,
+                    standard_name='air_temperature', cell_method='time: point')
+
+@fixture
+def var_temp_point2(network2):
+    return Variable(id=11, network_id=network2.id,
+                    standard_name='air_temperature', cell_method='time: point')
+
+@fixture
+def var_temp_max(network1):
+    return Variable(id=20, network_id=network1.id,
+                    standard_name='air_temperature', cell_method='time: maximum')
+
+@fixture
+def var_temp_min(network1):
+    return Variable(id=30, network_id=network1.id,
+                    standard_name='air_temperature', cell_method='time: minimum')
+
+@fixture
+def var_temp_mean(network1):
+    return Variable(id=40, network_id=network1.id,
+                    standard_name='air_temperature', cell_method='time: mean')
+
+@fixture
+def var_foo(network1):
+    return Variable(id=50, network_id=network1.id,
+                    standard_name='foo', cell_method='time: point')
+
+@fixture
+def var_precip_net1_1(network1):
+    return Variable(id=60, network_id=network1.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
+def var_precip_net1_2(network1):
+    return Variable(id=61, network_id=network1.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
+def var_precip_net2_1(network2):
+    return Variable(id=63, network_id=network2.id,
+                    standard_name='thickness_of_rainfall_amount', cell_method='time: sum')
+
+@fixture
+def native_flag_discard():
+    return NativeFlag(id=1, discard=True)
+
+@fixture
+def native_flag_non_discard():
+    return NativeFlag(id=2, discard=False)
+
+@fixture
+def pcic_flag_discard():
+    return PCICFlag(id=1, discard=True)
+
+@fixture
+def pcic_flag_non_discard():
+    return PCICFlag(id=2, discard=False)
