@@ -123,6 +123,7 @@ class History(Base):
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
 
+
 # Association table for Obs *--* NativeFLag
 ObsRawNativeFlags = Table(
     'obs_raw_native_flags', Base.metadata,
@@ -133,6 +134,7 @@ ObsRawNativeFlags = Table(
     UniqueConstraint(
         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
+
 
 # Association table for Obs *--* PCICFLag
 ObsRawPCICFlags = Table(
@@ -224,6 +226,7 @@ class NativeFlag(Base):
         UniqueConstraint('network_id', 'value',
                          name='meta_native_flag_unique'),
     )
+
 
 class PCICFlag(Base):
     '''This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
