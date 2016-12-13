@@ -154,3 +154,72 @@ class DailyMinTemperature(Base, ViewMixin):
         column('data_coverage')
     )
     __primary_key__ = 'history_id vars_id obs_day'.split()
+
+# Materialized View: Monthly average of daily maximum temperature
+# Materialized View: Monthly average of daily minimum temperature
+#   - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
+#       in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
+#       daily data coverage above).
+#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+#       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#
+# TODO: Factor out common query structure into a defined function (parameterized by daily extreme temp view)?
+
+class MonthlyAverageOfDailyMaxTemperature(Base, ViewMixin):
+    __selectable__ = text('''
+        SELECT
+            history_id,
+            vars_id,
+            obs_month,
+            statistic,
+            total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+        FROM (
+            SELECT
+                history_id,
+                vars_id,
+                date_trunc('month', obs_day) AS obs_month,
+                avg(statistic) AS statistic,
+                sum(data_coverage) AS total_data_coverage
+            FROM
+                daily_max_temperature_v
+            GROUP BY
+                history_id, vars_id, obs_month
+        ) AS temp
+    ''').columns(
+        column('history_id'),
+        column('vars_id'),
+        column('obs_month'),
+        column('statistic'),
+        column('data_coverage')
+    )
+    __primary_key__ = 'history_id vars_id obs_month'.split()
+
+class MonthlyAverageOfDailyMinTemperature(Base, ViewMixin):
+    __selectable__ = text('''
+        SELECT
+            history_id,
+            vars_id,
+            obs_month,
+            statistic,
+            total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+        FROM (
+            SELECT
+                history_id,
+                vars_id,
+                date_trunc('month', obs_day) AS obs_month,
+                avg(statistic) AS statistic,
+                sum(data_coverage) AS total_data_coverage
+            FROM
+                daily_min_temperature_v
+            GROUP BY
+                history_id, vars_id, obs_month
+        ) AS temp
+    ''').columns(
+        column('history_id'),
+        column('vars_id'),
+        column('obs_month'),
+        column('statistic'),
+        column('data_coverage')
+    )
+    __primary_key__ = 'history_id vars_id obs_month'.split()
