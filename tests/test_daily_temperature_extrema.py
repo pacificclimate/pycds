@@ -422,15 +422,15 @@ def describe_with_1_network():
                     def obs_sesh(variable_sesh, var_temp_max, var_temp_min, history_stn1_12_hourly):
                         observations = []
                         id = 0
-                        for day, hours in tmax.iteritems():
-                            for hour, temp in hours.iteritems():
+                        for day, hours in iter(tmax.items()):
+                            for hour, temp in iter(hours.items()):
                                 id += 1
                                 observations.append(
                                     Obs(id=id, vars_id=var_temp_max.id, history_id=history_stn1_12_hourly.id,
                                         time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
                                 )
-                        for day, hours in tmin.iteritems():
-                            for hour, temp in hours.iteritems():
+                        for day, hours in iter(tmin.items()):
+                            for hour, temp in iter(hours.items()):
                                 id += 1
                                 observations.append(
                                     Obs(id=id, vars_id=var_temp_min.id, history_id=history_stn1_12_hourly.id,
