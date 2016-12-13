@@ -113,12 +113,6 @@ def view_test_session(mod_empty_test_db_session):
     ]):
         yield sesh
 
-def query_and_print(sesh, title, query):
-    print title
-    result = sesh.execute(query)
-    for row in result:
-        print row
-
 def test_viewname():
     assert SimpleThing.viewname() == 'simple_thing_mv'
 
