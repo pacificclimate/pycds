@@ -23,6 +23,17 @@ Materialized View: Monthly average of daily minimum temperature (MonthlyAverageO
   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
+Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
+  - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+  - data_coverage is the fraction of observations actually available in a month relative to those potentially
+     available in a month. This computation is correct if and only if the observation frequency does not change
+     during any one day in the month. It remains approximately correct if such days are rare, and remains valid
+     for the purpose of distinguishing adequate coverage.
+  - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+      excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
 """
 
 import sqlalchemy
@@ -193,6 +204,70 @@ class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('max')
     __primary_key__ = 'history_id vars_id obs_month'.split()
 
+
 class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('min')
     __primary_key__ = 'history_id vars_id obs_day'.split()
+
+
+# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
+
+class MonthlyTotalPrecipitation(Base, ViewMixin):
+    __selectable__ = text('''
+        SELECT
+            history_id,
+            vars_id,
+            obs_month,
+            statistic,
+            total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+        FROM (
+            SELECT
+                hx.history_id,
+                obs.vars_id,
+                date_trunc('month', obs_time) AS obs_month,
+                sum(datum) AS statistic,
+                sum(
+                    CASE hx.freq
+                    WHEN 'daily' THEN 1.0::float
+                    WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                    END
+                ) AS total_data_coverage
+            FROM
+                obs_raw AS obs
+                INNER JOIN meta_vars AS vars USING (vars_id)
+                INNER JOIN meta_history AS hx USING (history_id)
+            WHERE
+                obs.obs_raw_id IN (
+                    -- Return id of each observation without any associated discard flags;
+                    -- in other words, exclude observations marked discard, and don't be fooled by
+                    -- additional flags that don't discard (hence the aggregate BOOL_OR's).
+                    SELECT obs.obs_raw_id
+                    FROM
+                        obs_raw AS obs
+                        LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
+                        LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
+                        LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
+                        LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
+                    GROUP BY obs.obs_raw_id
+                    HAVING
+                        BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
+                        AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
+                )
+                AND vars.standard_name IN (
+                    'lwe_thickness_of_precipitation_amount',
+                    'thickness_of_rainfall_amount',
+                    'thickness_of_snowfall_amount'  -- verify that this is rainfall equiv!
+                )
+                AND vars.cell_method = 'time: sum'
+                AND hx.freq IN ('1-hourly', 'daily')
+            GROUP BY
+                hx.history_id, vars_id, obs_month
+        ) AS temp
+    ''').columns(
+        column('history_id'),
+        column('vars_id'),
+        column('obs_month'),
+        column('statistic'),
+        column('data_coverage')
+    )
+    __primary_key__ = 'history_id vars_id obs_month'.split()
