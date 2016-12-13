@@ -6,12 +6,29 @@ import testing.postgresql
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pytest
+from pytest import fixture
 
 import pycds
 from pycds import Network, Contact, Station, History, Variable
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
+@fixture(scope='module')
+def mod_blank_postgis_session():
+    with testing.postgresql.Postgresql() as pg:
+        engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
+        sesh = sessionmaker(bind=engine)()
+        yield sesh
+
+@fixture(scope='module')
+def mod_empty_database_session(mod_blank_postgis_session):
+    sesh = mod_blank_postgis_session
+    engine = sesh.get_bind()
+    pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+    yield sesh
 
 @pytest.yield_fixture(scope='function')
 def blank_postgis_session():
