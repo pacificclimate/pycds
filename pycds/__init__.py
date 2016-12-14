@@ -211,6 +211,26 @@ class NativeFlag(Base):
                          name='meta_native_flag_unique'),
     )
 
+class DerivedValue(Base):
+    __tablename__ = 'derived_values'
+    id = Column('derived_value_id', Integer, primary_key=True)
+    time = Column('value_time', DateTime)
+    mod_time = Column(DateTime, nullable=False,
+                      default=datetime.datetime.utcnow)
+    datum = Column(Float)
+    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+
+    # Relationships
+    history = relationship('History', backref=backref('derived_values', order_by=id))
+    variable = relationship('Variable', backref=backref('derived_values', order_by=id))
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('value_time', 'history_id', 'vars_id',
+                         name='derived_value_time_place_variable_unique'),
+    )
+
 # The DeferredBase is currently used for views.
 # When testing, not using proper views may create issues
 # TODO: Implement proper views like
