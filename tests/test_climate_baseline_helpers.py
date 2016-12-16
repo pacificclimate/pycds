@@ -117,13 +117,13 @@ def describe_load__pcic__climate__baseline__values():
             def source(stations):
                 lines = []
                 for station in stations:
-                    temps = [str(100*station.id + 2*month + 0.5).encode('utf-8') for month in range(1, 13)]
+                    temps = [str(100*station.id + 2*month + 0.5).encode('ascii') for month in range(1, 13)]
                     temps.append(b'99')
                     line = struct.pack(
                         field_format,
-                        bytes(station.native_id), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                        bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
                         *temps
-                    ).replace('\0', ' ')
+                    ).decode('ascii').replace('\0', ' ')
                     lines.append(line + '\n')
                 return lines
 

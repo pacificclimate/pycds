@@ -122,8 +122,8 @@ def load_pcic_climate_baseline_values(session, var_name, source):
     baseline_day = 1  # TODO: confirm
 
     def parse_line(line):
-        field_values = struct.unpack(field_format, line.rstrip('\n'))
-        field_values = [fv.rstrip('\0 ') for fv in field_values]  # struct.unpack creates null-terminated strings
+        field_values = struct.unpack(field_format, bytes(line.rstrip('\n').encode('ascii')))
+        field_values = [fv.decode('ascii').rstrip('\0 ') for fv in field_values]  # struct.unpack creates null-terminated strings
         return dict(zip(field_names, field_values))
 
     create_pcic_climate_baseline_variables(session)
