@@ -93,20 +93,15 @@ def mod_empty_test_db_session(mod_blank_postgis_session):
 
 @fixture
 def view_test_session(mod_empty_test_db_session):
-    for sesh in generic_sesh(mod_empty_test_db_session, [Thing, Description], [
-        [
-            Description(id=1, desc='alpha'),
-            Description(id=2, desc='beta'),
-            Description(id=3, desc='gamma'),
-        ],
-        [
-            Thing(id=1, name='one', description_id=1),
-            Thing(id=2, name='two', description_id=2),
-            Thing(id=3, name='three', description_id=3),
-            Thing(id=4, name='four', description_id=2),
-            Thing(id=5, name='five', description_id=1),
-        ]
-
+    for sesh in generic_sesh(mod_empty_test_db_session, [
+        Description(id=1, desc='alpha'),
+        Description(id=2, desc='beta'),
+        Description(id=3, desc='gamma'),
+        Thing(id=1, name='one', description_id=1),
+        Thing(id=2, name='two', description_id=2),
+        Thing(id=3, name='three', description_id=3),
+        Thing(id=4, name='four', description_id=2),
+        Thing(id=5, name='five', description_id=1),
     ]):
         yield sesh
 
