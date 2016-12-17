@@ -282,9 +282,12 @@ def generic_sesh(sesh, sa_objects):
 
     The shorter method is used throughout.
     '''
-    sesh.add_all(sa_objects)
+    for sao in sa_objects:
+        sesh.add(sao)
+        sesh.commit()
     sesh.flush()
     yield sesh
     for sao in reversed(sa_objects):
         sesh.delete(sao)
+        sesh.commit()
     sesh.flush()
