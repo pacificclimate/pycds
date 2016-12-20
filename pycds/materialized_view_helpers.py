@@ -33,36 +33,18 @@ class RefreshMaterializedView(DDLElement):
 
 @compiler.compiles(CreateMaterializedView)
 def compile(element, compiler, **kw):
-    return "CREATE MATERIALIZED VIEW %s AS %s" % (
+    return 'CREATE MATERIALIZED VIEW {} AS {}'.format(
         element.name,
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
 @compiler.compiles(DropMaterializedView)
 def compile(element, compiler, **kw):
-    return "DROP MATERIALIZED VIEW %s" % (element.name)
+    return 'DROP MATERIALIZED VIEW {}'.format(element.name)
 
 @compiler.compiles(RefreshMaterializedView)
 def compile(element, compiler, **kw):
-    return "REFRESH MATERIALIZED VIEW %s %s" % \
-           (('CONCURRENTLY' if element.concurrently else ''), element.name)
-
-# TODO: Remove
-def create_materialized_view(name, metadata, selectable):
-    temp_metadata = MetaData()
-    t = Table(name, temp_metadata)
-    for c in selectable.c:
-        t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
-
-    CreateMaterializedView(name, selectable).execute_at('after-create', metadata)
-
-    @event.listens_for(metadata, "after_create")
-    def create_indexes(target, connection, **kw):
-        for idx in t.indexes:
-            idx.create(connection)
-
-    DropMaterializedView(name).execute_at('before-drop', metadata)
-
-    return t
+    return 'REFRESH MATERIALIZED VIEW {} {}'.format(
+        ('CONCURRENTLY' if element.concurrently else ''), element.name)
 
 
 class MaterializedViewMixin(object):
@@ -94,7 +76,6 @@ class MaterializedViewMixin(object):
                 idx.create(connection)
 
         return t
-        # return create_materialized_view(cls.viewname(), cls.metadata, cls.__selectable__)
 
     @declared_attr
     def __mapper_args__(cls):
