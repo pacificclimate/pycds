@@ -21,7 +21,7 @@ class Thing(Base):
     description_id = Column(Integer, ForeignKey('descriptions.id'))
 
     def __repr__(self):
-        return '<Thing(id=%d, name=%s, desc_id=%d)>' % (self.id, self.name, self.description_id)
+        return '<Thing(id={}, name={}, desc_id={})>'.format(self.id, self.name, self.description_id)
 
 
 class Description(Base):
@@ -30,7 +30,7 @@ class Description(Base):
     desc = Column(String)
 
     def __repr__(self):
-        return '<Description(id=%d, desc=%s)>' % (self.id, self.desc)
+        return '<Description(id={}, desc={})>'.format(self.id, self.desc)
 
 
 class SimpleThing(Base, ViewMixin):
@@ -44,7 +44,7 @@ class SimpleThing(Base, ViewMixin):
     """).columns(Thing.id, Thing.name, Thing.description_id)
 
     def __repr__(self):
-        return '<SimpleThing(id=%d, desc=%s)>' % (self.id, self.name)
+        return '<SimpleThing(id={}, desc={})>'.format(self.id, self.name)
 
 
 class ThingWithDescription(Base, ViewMixin):
@@ -64,7 +64,7 @@ class ThingCount(Base, ViewMixin):
     __primary_key__ = ['desc']
 
     def __repr__(self):
-        return '<ThingWithDescription(id=%d, name=%s, desc=%s)>' % (self.id, self.name, self.desc)
+        return '<ThingWithDescription(id={}, name={}, desc={})>'.format(self.id, self.name, self.desc)
 
 
 
