@@ -48,17 +48,6 @@ class SimpleThing(Base, ViewMixin):
 
 
 class ThingWithDescription(Base, ViewMixin):
-    # this works:
-    # __selectable__ = select([Thing.id, Thing.name, Description.desc])\
-    #     .select_from(Thing.__table__.join(Description.__table__, Thing.description_id == Description.id))
-
-    # this works:
-    # __selectable__ = text('''
-    #     SELECT things.id, things.name, descriptions.desc
-    #     FROM things JOIN descriptions ON (things.description_id = descriptions.id)
-    # ''').columns(Thing.id, Thing.name, Description.desc)
-
-    # so does this! which is essential for text-defined queries with new columns
     __selectable__ = text('''
         SELECT things.id, things.name, descriptions.desc
         FROM things JOIN descriptions ON (things.description_id = descriptions.id)
