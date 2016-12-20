@@ -86,7 +86,8 @@ def describe_with_1_network():
                         assert query(DailyExtremeTemperature).count() == 1
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                    def it_returns_the_expected_station_variable_and_day(query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
+                    def it_returns_the_expected_station_variable_and_day(
+                            query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
                         result = query(DailyExtremeTemperature).first()
                         assert result.history_id == history_stn1_hourly.id
                         assert result.vars_id == var_temp_point.id
@@ -132,7 +133,8 @@ def describe_with_1_network():
                         assert query(DailyExtremeTemperature).count() == 2
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                    def it_returns_the_expected_station_variables(query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
+                    def it_returns_the_expected_station_variables(
+                            query, DailyExtremeTemperature, history_stn1_hourly, var_temp_point):
                         for result in query(DailyExtremeTemperature):
                             assert result.history_id == history_stn1_hourly.id
                             assert result.vars_id == var_temp_point.id
@@ -380,14 +382,16 @@ def describe_with_1_network():
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                    def it_returns_one_result_per_history(query, DailyExtremeTemperature, history_stn1_hourly, history_stn1_daily):
+                    def it_returns_one_result_per_history(
+                            query, DailyExtremeTemperature, history_stn1_hourly, history_stn1_daily):
                         assert query(DailyExtremeTemperature).count() == 2
                         assert set([r.history_id for r in query(DailyExtremeTemperature)]) == \
                                {history_stn1_hourly.id, history_stn1_daily.id}
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
                     def it_returns_the_expected_coverage(query, DailyExtremeTemperature):
-                        assert [r.data_coverage for r in query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)] \
+                        assert [r.data_coverage for r in
+                                query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)] \
                                 == approx([n_hours/24.0, 1.0])
 
         def describe_with_12_hourly_history():
@@ -495,7 +499,8 @@ def describe_with_2_networks():
                     n_hours = 4
 
                     @fixture
-                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
+                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly,
+                                 var_temp_point2, history_stn2_hourly):
                         observations = []
                         id = 0
                         for (var, hx) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]:
@@ -518,5 +523,6 @@ def describe_with_2_networks():
                                var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
                         assert set([(r.history_id, r.vars_id, r.obs_day) for r in query(DailyExtremeTemperature)]) == \
                                set([(stn.id, var.id, datetime.datetime(2000, 1, day))
-                                    for (var, stn) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]
+                                    for (var, stn) in [(var_temp_point, history_stn1_hourly),
+                                                       (var_temp_point2, history_stn2_hourly)]
                                     for day in range(1, n_days+1)])
