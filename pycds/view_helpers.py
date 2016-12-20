@@ -48,8 +48,20 @@ class ViewMixin(object):
             __selectable__ = <SQLAlchemy selectable>
             __primary_key__ = ['primary', 'key', 'columns']
 
-        __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
-        It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+    __selectable__ must be assigned a SQLAlchemy selectable, which is any SQLAlchemy object from which rows can be
+        selected. This could be be the result of a sqlalchemy.orm.query expression, a sqlalchemy.sql.select
+        expression, or a sqlalchemy.sql.text expression. See http://docs.sqlalchemy.org/en/latest/core/selectable.html
+        for details.
+        The columns returned by __selectable__ are used to construct a proxy table that represents the view in the
+        ORM. In the database, this table is actually a view. In the ORM it is a table object, since SQLAlchemy
+        does not have a separate native view object (which is why these helpers have to be defined).
+
+    __primary_key__ is an optional (see below) array of the names of the columns that from the primary key of the view.
+        This array is used to construct the standard SQLAlchemy declarative attribute __mapper_args__,
+        specifically its 'primary_key' component. Construction of __mapper_args__ is very simple, and it may at
+        some point become desirable to make it more sophisticated. For now it is adequate to the need.
+        __primary_key__ is optional and may be omitted if __selectable__ already defines primary keys. It must
+        be defined otherwise (e.g., text selectables with anonymous columns; see tests).
 
     To create a materialized view in the database:
         Base.metadata.create_all()
