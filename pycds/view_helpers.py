@@ -44,12 +44,22 @@ class ViewMixin(object):
 
     Usage:
 
-    class Thing(Base, ViewMixin):
-        __selectable__ = <SQLAlchemy selectable>
-        __primary_key__ = ['primary', 'key', 'columns']
+        class Thing(Base, ViewMixin):
+            __selectable__ = <SQLAlchemy selectable>
+            __primary_key__ = ['primary', 'key', 'columns']
 
-    __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
-    It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+        __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
+        It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+
+    To create a materialized view in the database:
+        Base.metadata.create_all()
+    or
+        Thing.create()
+
+    To drop a materialized view from the database:
+        Base.metadata.drop_all()
+    or
+        Thing.drop()
 
     """
 

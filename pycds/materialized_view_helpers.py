@@ -53,12 +53,25 @@ class MaterializedViewMixin(object):
 
     Usage:
 
-    class Thing(Base, MaterializedViewMixin):
-        __selectable__ = <SQLAlchemy selectable>
-        __primary_key__ = ['primary', 'key', 'columns']
+        class Thing(Base, MaterializedViewMixin):
+            __selectable__ = <SQLAlchemy selectable>
+            __primary_key__ = ['primary', 'key', 'columns']
 
-    __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
-    It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+        __primary_key__ attribute is optional and may be omitted if __selectable__ already defines primary keys.
+        It must be defined otherwise (e.g., text selectables with anonymous columns; see tests).
+
+    To create a materialized view in the database:
+        Base.metadata.create_all()
+    or
+        Thing.create()
+
+    To drop a materialized view from the database:
+        Base.metadata.drop_all()
+    or
+        Thing.drop()
+
+    To refresh a materialized view in the database:
+        Thing.refresh()
 
     """
 
@@ -70,6 +83,10 @@ class MaterializedViewMixin(object):
             t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
 
         # Not sure if this will work, but it reproduces the setting above ...
+        # This event liseter causes indexes defined for the materialized view to be created after the mat view
+        # table is created by calling metadata.create_all().
+        # However, this is no the only way to create this table, and so it may be necessary to add index creation
+        # code to method .create() below.
         @event.listens_for(cls.metadata, "after_create")
         def create_indexes(target, connection, **kw):
             for idx in t.indexes:
@@ -92,6 +109,7 @@ class MaterializedViewMixin(object):
     @classmethod
     def create(cls, sesh):
         sesh.execute(CreateMaterializedView(cls.viewname(), cls.__selectable__))
+        # TODO: Add index creation code here?
 
     @classmethod
     def drop(cls, sesh):
