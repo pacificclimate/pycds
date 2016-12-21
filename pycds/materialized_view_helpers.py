@@ -1,3 +1,16 @@
+"""Materialized view creation tools
+
+SQLAlchemy does not have out-of-the-box support for views or materialized views.
+This module adds materialized view functionality.
+
+For info on materialized view creation in SQLAlchemy see:
+http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
+but note this depends on flask. Essence is the same as a view.
+For an explanation of why we use `append_column` instead of `_make_proxy`, see. This is the core stuff
+for materialized views in SQLAlchemy, from its author:
+https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
+"""
+
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
 from sqlalchemy import event
@@ -5,17 +18,6 @@ from sqlalchemy import Table, Column, MetaData
 from sqlalchemy.ext.declarative import declared_attr
 from pycds.view_helpers import snake_case
 
-# Materialized view creation tools
-#
-# SQLAlchemy does not have out-of-the-box support for views or materialized views.
-# This module adds materialized view functionality.
-
-# For info on materialized view creation in SQLAlchemy see:
-#   http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
-#       but note this depends on flask. Essence is the same as a view.
-# For an explanation of why we use `append_column` instead of `_make_proxy`, see. This is the core stuff
-# for materialized views in SQLAlchemy, from its author:
-#   https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
 
 class CreateMaterializedView(DDLElement):
     def __init__(self, name, selectable):

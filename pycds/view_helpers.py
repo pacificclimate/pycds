@@ -1,18 +1,19 @@
+"""View creation tools
+
+SQLAlchemy does not have out-of-the-box support for views or materialized views.
+This module adds view functionality.
+
+For details on view creation in SQLAlchemy see:
+http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
+https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
+https://gist.github.com/techniq/5174412
+"""
+
 import re
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.sql import table
 from sqlalchemy.ext.declarative import declared_attr
-
-# View creation tools
-#
-# SQLAlchemy does not have out-of-the-box support for views or materialized views.
-# This module adds view functionality.
-
-# For details on view creation in SQLAlchemy see:
-#   http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
-#   https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
-#   https://gist.github.com/techniq/5174412
 
 class CreateView(DDLElement):
     def __init__(self, name, selectable):
