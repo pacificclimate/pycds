@@ -64,12 +64,12 @@ class ViewMixin(object):
         __primary_key__ is optional and may be omitted if __selectable__ already defines primary keys. It must
         be defined otherwise (e.g., text selectables with anonymous columns; see tests).
 
-    To create a materialized view in the database:
+    To create a view in the database:
         Base.metadata.create_all()
     or
         Thing.create()
 
-    To drop a materialized view from the database:
+    To drop a view from the database:
         Base.metadata.drop_all()
     or
         Thing.drop()
