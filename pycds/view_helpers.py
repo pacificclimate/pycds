@@ -40,8 +40,10 @@ def snake_case(ident):
 
 
 class ViewMixin(object):
-    """Mixin for ORM classes that are views. Defines the two key attributes of an ORM class,
-    __table__ and __mapper_args__, based on the values of class attributes __selectable__ and __primary_key__.
+    """Mixin for ORM classes that are views.
+
+    This mixin defines the two key attributes of an ORM class, __table__ and __mapper_args__,
+    based on the values of class attributes __selectable__ and __primary_key__ that the inheriting class defines.
 
     Usage:
 
@@ -97,8 +99,8 @@ class ViewMixin(object):
 
     @classmethod
     def create(cls, sesh):
-        sesh.execute(CreateView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(CreateView(cls.viewname(), cls.__selectable__))
 
     @classmethod
     def drop(cls, sesh):
-        sesh.execute(DropView(cls.viewname()))
+        return sesh.execute(DropView(cls.viewname()))

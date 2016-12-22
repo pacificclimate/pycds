@@ -124,13 +124,13 @@ class MaterializedViewMixin(object):
 
     @classmethod
     def create(cls, sesh):
-        sesh.execute(CreateMaterializedView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(CreateMaterializedView(cls.viewname(), cls.__selectable__))
         # TODO: Add index creation code here?
 
     @classmethod
     def drop(cls, sesh):
-        sesh.execute(DropMaterializedView(cls.viewname()))
+        return sesh.execute(DropMaterializedView(cls.viewname()))
 
     @classmethod
     def refresh(cls, sesh, concurrently=False):
-        sesh.execute(RefreshMaterializedView(cls.viewname(), concurrently))
+        return sesh.execute(RefreshMaterializedView(cls.viewname(), concurrently))
