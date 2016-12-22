@@ -3,15 +3,12 @@
 Define views for weather anomaly applications using tools in pycds.view_helpers.
 
 """
-# TODO: Apply materialized views to all weather anomaly views
-# To convert a pure view to a materialized view, inherit from MaterializedViewMixin instead.
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
 
-from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
 Base = declarative_base()
@@ -66,7 +63,7 @@ sqlalchemy.event.listen(
 # TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
 # and by cell_method
 
-class DailyMaxTemperature(Base, ViewMixin):
+class DailyMaxTemperature(Base, MaterializedViewMixin):
     __selectable__ = text('''
         SELECT
             hx.history_id AS history_id,
@@ -115,7 +112,7 @@ class DailyMaxTemperature(Base, ViewMixin):
     )
     __primary_key__ = 'history_id vars_id obs_day'.split()
 
-class DailyMinTemperature(Base, ViewMixin):
+class DailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = text('''
         SELECT
             hx.history_id AS history_id,

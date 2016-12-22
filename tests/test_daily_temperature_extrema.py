@@ -26,15 +26,21 @@ def describe_function_effective__day__for__Tmax():
         assert result[0]['eday'] == expected_day[tod]
 
 
+views = [DailyMaxTemperature, DailyMinTemperature]
+
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):
     sesh = mod_empty_database_session
-    views = [DailyMaxTemperature, DailyMinTemperature]
     for view in views:
         view.create(sesh)
     yield sesh
     for view in reversed(views):
         view.drop(sesh)
+
+
+def refresh_views(sesh):
+    for view in views:
+        view.refresh(sesh)
 
 
 def describe_with_1_network():
@@ -79,6 +85,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -126,6 +133,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -201,6 +209,7 @@ def describe_with_1_network():
 
                             @fixture
                             def query(flag_assoc_sesh):
+                                refresh_views(flag_assoc_sesh)
                                 return flag_assoc_sesh.query
 
                             def setup_is_correct(flag_assoc_sesh):
@@ -245,6 +254,7 @@ def describe_with_1_network():
 
                             @fixture
                             def query(flag_assoc_sesh):
+                                refresh_views(flag_assoc_sesh)
                                 return flag_assoc_sesh.query
 
                             def setup_is_correct(flag_assoc_sesh):
@@ -286,6 +296,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -330,6 +341,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -379,6 +391,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -445,6 +458,7 @@ def describe_with_1_network():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature, expected', [
@@ -516,6 +530,7 @@ def describe_with_2_networks():
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
