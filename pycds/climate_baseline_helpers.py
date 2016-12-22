@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """Tools for loading climate baseline data into database from flat files.
 """
 
@@ -7,6 +9,10 @@ from calendar import monthrange
 from pycds import Network, History, Variable, DerivedValue
 
 pcic_climate_variable_network_name = 'PCIC Climate Variables'
+
+
+class InvalidVariableName(Exception):
+    pass
 
 
 def get_or_create_pcic_climate_variables_network(session):
@@ -127,6 +133,12 @@ def load_pcic_climate_baseline_values(session, var_name, source):
 
     create_pcic_climate_baseline_variables(session)
     variable = session.query(Variable).filter(Variable.name == var_name).first()
+    if not variable:
+        raise InvalidVariableName("Climate variable named '{}' was not found in the database".format(var_name))
+
+    print('Loading...')
+    n_added = 0
+    n_skipped = 0
 
     for line in source:
         data = parse_line(line)
@@ -143,9 +155,15 @@ def load_pcic_climate_baseline_values(session, var_name, source):
                     history_id=latest_history.id
                 ) for month in range(1, 13)]
             )
+            n_added += 1
         else:
-            print '\nSkipping input line:'
-            print line
-            print 'Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id'])
+            print('\nSkipping input line:')
+            print(line)
+            print('Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id']))
+            n_added += 1
 
     session.flush()
+
+    print('Loading complete')
+    print('{} input lines successfully processed'.format(n_added))
+    print('{} input lines skipped'.format(n_skipped))

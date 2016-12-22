@@ -2,13 +2,18 @@ import datetime
 from calendar import monthrange
 import struct
 
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 
 import pycds
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, DerivedValue
-from pycds.climate_baseline_helpers import pcic_climate_variable_network_name, get_or_create_pcic_climate_variables_network, \
-    create_pcic_climate_baseline_variables, load_pcic_climate_baseline_values, field_format
+from pycds.climate_baseline_helpers import \
+    pcic_climate_variable_network_name, \
+    get_or_create_pcic_climate_variables_network, \
+    create_pcic_climate_baseline_variables, \
+    load_pcic_climate_baseline_values, \
+    field_format, \
+    InvalidVariableName
 
 
 @fixture
@@ -110,44 +115,55 @@ def describe_load__pcic__climate__baseline__values():
             for sesh in generic_sesh(sesh_with_climate_baseline_variables, stations + histories):
                 yield sesh
 
-        def describe_with_a_fake_source():
+        def describe_with_an_invalid_climate_variable_name():
+            var_name = 'foo'
+
+            def test_throws_an_exception(sesh_with_station_and_history_records):
+                sesh = sesh_with_station_and_history_records
+                with raises(InvalidVariableName):
+                    load_pcic_climate_baseline_values(sesh, var_name, [])
+
+
+        def describe_with_a_valid_climate_variable_name():
             var_name = 'Tx_Climatology'  # Any valid one will do
 
-            @fixture
-            def source(stations):
-                lines = []
-                for station in stations:
-                    temps = [str(100*station.id + 2*month + 0.5).encode('ascii') for month in range(1, 13)]
-                    temps.append(b'99')
-                    line = struct.pack(
-                        field_format,
-                        bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
-                        *temps
-                    ).decode('ascii').replace('\0', ' ')
-                    lines.append(line + '\n')
-                return lines
+            def describe_with_a_fake_source():
 
-            def test_loads_the_values_into_the_database(sesh_with_station_and_history_records, stations, source):
-                sesh = sesh_with_station_and_history_records
-                load_pcic_climate_baseline_values(sesh, var_name, source)
-                derived_values = sesh.query(DerivedValue)
+                @fixture
+                def source(stations):
+                    lines = []
+                    for station in stations:
+                        temps = [str(100*station.id + 2*month + 0.5).encode('ascii') for month in range(1, 13)]
+                        temps.append(b'99')
+                        line = struct.pack(
+                            field_format,
+                            bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                            *temps
+                        ).decode('ascii').replace('\0', ' ')
+                        lines.append(line + '\n')
+                    return lines
 
-                assert derived_values.count() == 12 * len(stations)
+                def test_loads_the_values_into_the_database(sesh_with_station_and_history_records, stations, source):
+                    sesh = sesh_with_station_and_history_records
+                    load_pcic_climate_baseline_values(sesh, var_name, source)
+                    derived_values = sesh.query(DerivedValue)
 
-                expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
-                for station in stations:
-                    station_values = derived_values.join(History).join(Station) \
-                        .filter(Station.id == station.id) \
-                        .order_by(DerivedValue.time)
-                    latest_history = sesh.query(History)\
-                        .filter(History.station.has(id=station.id))\
-                        .order_by(History.sdate.desc())\
-                        .first()
-                    for i, value in enumerate(station_values):
-                        month = i + 1
-                        last_day = monthrange(2000, month)[1]
-                        assert value.time == datetime.datetime(2000, month, last_day, 23)
-                        assert value.datum == 100*station.id + 2*month + 0.5
-                        assert value.history == latest_history
-                        assert value.variable == expected_variable
+                    assert derived_values.count() == 12 * len(stations)
+
+                    expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
+                    for station in stations:
+                        station_values = derived_values.join(History).join(Station) \
+                            .filter(Station.id == station.id) \
+                            .order_by(DerivedValue.time)
+                        latest_history = sesh.query(History)\
+                            .filter(History.station.has(id=station.id))\
+                            .order_by(History.sdate.desc())\
+                            .first()
+                        for i, value in enumerate(station_values):
+                            month = i + 1
+                            last_day = monthrange(2000, month)[1]
+                            assert value.time == datetime.datetime(2000, month, last_day, 23)
+                            assert value.datum == 100*station.id + 2*month + 0.5
+                            assert value.history == latest_history
+                            assert value.variable == expected_variable
 
