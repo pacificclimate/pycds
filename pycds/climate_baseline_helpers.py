@@ -1,5 +1,4 @@
 """Tools for loading climate baseline data into database from flat files.
-
 """
 
 import struct
@@ -135,14 +134,18 @@ def load_pcic_climate_baseline_values(session, var_name, source):
             .filter(History.station.has(native_id=data['native_id']))\
             .order_by(History.sdate.desc())\
             .first()
-        assert latest_history
-        session.add_all(
-            [DerivedValue(
-                time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
-                datum=float(data[str(month)]),
-                vars_id=variable.id,
-                history_id=latest_history.id
-            ) for month in range(1, 13)]
-        )
+        if latest_history:
+            session.add_all(
+                [DerivedValue(
+                    time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
+                    datum=float(data[str(month)]),
+                    vars_id=variable.id,
+                    history_id=latest_history.id
+                ) for month in range(1, 13)]
+            )
+        else:
+            print '\nSkipping input line:'
+            print line
+            print 'Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id'])
 
     session.flush()
