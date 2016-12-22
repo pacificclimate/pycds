@@ -1,8 +1,13 @@
+"""Tools for loading climate baseline data into database from flat files.
+
+"""
+
 import struct
 import datetime
+from calendar import monthrange
 from pycds import Network, History, Variable, DerivedValue
 
-pcic_climate_variable_name = 'PCIC Climate Variables'
+pcic_climate_variable_network_name = 'PCIC Climate Variables'
 
 
 def get_or_create_pcic_climate_variables_network(session):
@@ -15,13 +20,12 @@ def get_or_create_pcic_climate_variables_network(session):
         Network object for synthetic network for derived variables
     """
 
-    network = session.query(Network).filter(Network.name == pcic_climate_variable_name).first()
+    network = session.query(Network).filter(Network.name == pcic_climate_variable_network_name).first()
     if not network:
         network = Network(
-            name=pcic_climate_variable_name,
-            long_name='Synthetic network for derived variables computed by PCIC',
-            # virtual='???',   # TODO: What does this mean? No existing networks define it
-            publish=False,  # TODO: What does this mean?
+            name=pcic_climate_variable_network_name,
+            long_name='Synthetic network for climate variables computed by PCIC',
+            publish=True,
             # color = '#??????', # TODO: Does this need to be defined?
         )
         session.add(network)
@@ -30,7 +34,7 @@ def get_or_create_pcic_climate_variables_network(session):
 
 
 def create_pcic_climate_baseline_variables(session):
-    """Create the derived variables for climate baseline values.
+    """Create, if they do not exist, the derived variables for climate baseline values.
     Create the necessary synthetic network for them if it does not already exist.
 
     Args:
@@ -55,14 +59,6 @@ def create_pcic_climate_baseline_variables(session):
             'cell_method': 't: maximum within days t: mean within months t: mean over years',
             'description': 'Climatological mean of monthly mean of maximum daily temperature',
             'display_name': 'Temperature Climatology (Max.)'
-        },
-        {
-            'name': 'T_mean_Climatology',
-            'unit': temp_unit,
-            'standard_name': temp_standard_name,
-            'cell_method': 't: mean within days t: mean within months t: mean over years',
-            'description': 'Climatological mean of monthly mean of mean daily temperature',
-            'display_name': 'Temperature Climatology (Mean)'
         },
         {
             'name': 'Tn_Climatology',
@@ -112,14 +108,18 @@ def load_pcic_climate_baseline_values(session, var_name, source):
         var_name (str): name of climate baseline variable for which the values are to be loaded
 
         source (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
-            (strings) containing the data to be loaded; typically a `file.readlines()`
+            (strings) containing the data to be loaded; typically result of `file.readlines()`
 
     Returns:
         None
     """
 
-    baseline_year = 9999  # TODO: find out what this should be
-    baseline_day = 1  # TODO: confirm
+    # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
+    baseline_year = 2000
+    def baseline_day(month):
+        """Return last day of month in baseline_year"""
+        return monthrange(baseline_year, month)[1]
+    baseline_hour = 23
 
     def parse_line(line):
         field_values = struct.unpack(field_format, bytes(line.rstrip('\n').encode('ascii')))
@@ -138,7 +138,7 @@ def load_pcic_climate_baseline_values(session, var_name, source):
         assert latest_history
         session.add_all(
             [DerivedValue(
-                time=datetime.datetime(baseline_year, month, baseline_day),
+                time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
                 datum=float(data[str(month)]),
                 vars_id=variable.id,
                 history_id=latest_history.id

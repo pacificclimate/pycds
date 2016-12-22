@@ -1,4 +1,5 @@
 import datetime
+from calendar import monthrange
 import struct
 
 from pytest import fixture, mark
@@ -6,7 +7,7 @@ from pytest import fixture, mark
 import pycds
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, DerivedValue
-from pycds.climate_baseline_helpers import pcic_climate_variable_name, get_or_create_pcic_climate_variables_network, \
+from pycds.climate_baseline_helpers import pcic_climate_variable_network_name, get_or_create_pcic_climate_variables_network, \
     create_pcic_climate_baseline_variables, load_pcic_climate_baseline_values, field_format
 
 
@@ -45,30 +46,29 @@ def describe_get__or__create__pcic__climate__variables__network():
     def test_creates_the_expected_new_network_record(empty_database_session):
         sesh = empty_database_session
         network = get_or_create_pcic_climate_variables_network(sesh)
-        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_name)
+        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
         result = results.first()
         assert network.id == result.id
-        assert result.publish == False
+        assert result.publish == True
         assert 'PCIC' in result.long_name
 
     def test_creates_no_more_than_one_of_them(empty_database_session):
         sesh = empty_database_session
         get_or_create_pcic_climate_variables_network(sesh)
         get_or_create_pcic_climate_variables_network(sesh)
-        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_name)
+        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
 
 def describe_create__pcic__climate__baseline__variables():
 
     def test_causes_network_to_be_created(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
-        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_name)
+        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
 
     @mark.parametrize('name, keyword, kwd', [
         ('Tx_Climatology', 'maximum', 'Max.'),
-        ('T_mean_Climatology', 'mean', 'Mean'),
         ('Tn_Climatology', 'minimum', 'Min.'),
     ])
     def test_creates_temperature_variables(sesh_with_climate_baseline_variables, name, keyword, kwd):
@@ -99,7 +99,7 @@ def describe_create__pcic__climate__baseline__variables():
         create_pcic_climate_baseline_variables(sesh)
         create_pcic_climate_baseline_variables(sesh)
         results = sesh.query(Variable).filter(Variable.name.like('%_Climatology'))
-        assert results.count() == 4
+        assert results.count() == 3
 
 
 def describe_load__pcic__climate__baseline__values():
@@ -145,7 +145,8 @@ def describe_load__pcic__climate__baseline__values():
                         .first()
                     for i, value in enumerate(station_values):
                         month = i + 1
-                        assert value.time == datetime.datetime(9999, month, 1)
+                        last_day = monthrange(2000, month)[1]
+                        assert value.time == datetime.datetime(2000, month, last_day, 23)
                         assert value.datum == 100*station.id + 2*month + 0.5
                         assert value.history == latest_history
                         assert value.variable == expected_variable
