@@ -1,3 +1,11 @@
+"""Weather anomaly views
+
+Define views for weather anomaly applications using tools in pycds.view_helpers.
+
+"""
+# TODO: Apply materialized views to all weather anomaly views
+# To convert a pure view to a materialized view, inherit from MaterializedViewMixin instead.
+
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
@@ -9,34 +17,18 @@ from pycds.materialized_view_helpers import MaterializedViewMixin
 Base = declarative_base()
 metadata = Base.metadata
 
-# "Proper" views - defined using view functionality within SQLAlchemy using tools in pycds.view_helpers
-# TODO: Apply materialized views to all weather anomaly views
-# To convert a pure view to a materialized view, inherit from MaterializedViewMixin instead.
-
-# Materialized view: Daily maximum temperature
-# Materialized view: Daily minimum temperature
-#   - These views support views that deliver monthly average of daily max/min temperature.
-#   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
-#   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
-#      in a day. The computation is correct for a given day if and only if the observation frequency does not change
-#      during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
-#      fatal to distinguishing adequate coverage.
-#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-#       unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-#       This decision subject to revision.
-
-# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
-# TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
-# and by cell_method
-
-# This defined function returns the day that should be used (the effective day) for computing daily Tmax.
-# The effective day depends on the observation frequency (and, technically, the network, but for now it seems
-# that 12-hour frequency is only for a single network). Nominal reporting times are 0700 and 1600 local; it is therefore
-# sufficient to use noon (1200) to divide morning from afternoon reports. Hence:
-#   For 12-hour frequency: for any given day, the period over which the max should be taken is from noon the day
-#       before to noon of the given day.
-#   For 1-hour and daily frequency: for any given day, the period is midnight to midnight of that day.
+# This function returns the day that should be used (the effective day) for computing daily maximum temperature.
+# It maps the actual observation day to an effective day that causes its to be aggregated within the appropriate daily
+# period.
+#
+# Effective day depends on the observation frequency (and, technically, the network, but for now it seems
+# that 12-hour frequency is only for a single network).
+#   For 1-hour and daily frequency:
+#       the effective day is day of observation
+#   For 12-hour frequency:
+#       nominal reporting times are 0700 and 1600 local; we use noon (1200) to divide morning from afternoon reports
+#       the period over which the max should be taken is from noon the day before to noon of the given day
+#       the effective day is advanced by one day for afternoon observations
 sqlalchemy.event.listen(
     metadata, 'before_create',
     DDL('''
@@ -56,6 +48,23 @@ sqlalchemy.event.listen(
         $$ LANGUAGE plpgsql;
     ''')
 )
+
+# Materialized view: Daily maximum temperature
+# Materialized view: Daily minimum temperature
+#   - These views support views that deliver monthly average of daily max/min temperature.
+#   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+#   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
+#      in a day. The computation is correct for a given day if and only if the observation frequency does not change
+#      during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
+#      fatal to distinguishing adequate coverage.
+#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+#       unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+#       This decision subject to revision.
+
+# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
+# TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
+# and by cell_method
 
 class DailyMaxTemperature(Base, ViewMixin):
     __selectable__ = text('''
