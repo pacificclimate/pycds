@@ -160,7 +160,7 @@ def load_pcic_climate_baseline_values(session, var_name, source):
             print('\nSkipping input line:')
             print(line)
             print('Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id']))
-            n_added += 1
+            n_skipped += 1
 
     session.flush()
 
