@@ -13,11 +13,11 @@ from pycds.materialized_view_helpers import MaterializedViewMixin
 
 # Define some simple objects (and their tables) to test view helpers against
 
-Base = declarative_base()
-metadata = Base.metadata
+ContentBase = declarative_base()
+ViewBase = declarative_base()
 
 
-class Thing(Base):
+class Thing(ContentBase):
     __tablename__ = 'things'
     id = Column(Integer, primary_key=True)
     name = Column(String)
@@ -27,7 +27,7 @@ class Thing(Base):
         return '<Thing(id={}, name={}, desc_id={})>'.format(self.id, self.name, self.description_id)
 
 
-class Description(Base):
+class Description(ContentBase):
     __tablename__ = 'descriptions'
     id = Column(Integer, primary_key=True)
     desc = Column(String)
@@ -36,7 +36,7 @@ class Description(Base):
         return '<Description(id={}, desc={})>'.format(self.id, self.desc)
 
 
-class SimpleThing(Base, MaterializedViewMixin):
+class SimpleThing(ViewBase, MaterializedViewMixin):
     # __selectable__ = select([Thing]).where(Thing.id <= literal_column('3'))  # deeelightful
 
     # less delightful but applicable to cases where we use text queries for selectable:
@@ -50,7 +50,7 @@ class SimpleThing(Base, MaterializedViewMixin):
         return '<SimpleThing(id={}, desc={})>'.format(self.id, self.name)
 
 
-class ThingWithDescription(Base, MaterializedViewMixin):
+class ThingWithDescription(ViewBase, MaterializedViewMixin):
     __selectable__ = text('''
         SELECT things.id, things.name, descriptions.desc
         FROM things JOIN descriptions ON (things.description_id = descriptions.id)
@@ -58,7 +58,7 @@ class ThingWithDescription(Base, MaterializedViewMixin):
     __primary_key__ = ['id']
 
 
-class ThingCount(Base, MaterializedViewMixin):
+class ThingCount(ViewBase, MaterializedViewMixin):
     __selectable__ = text("""
         SELECT d.desc as desc, count(things.id) as num
         FROM things JOIN descriptions as d ON (things.description_id = d.id)
@@ -71,11 +71,17 @@ class ThingCount(Base, MaterializedViewMixin):
 
 
 @fixture(scope="module")
-def mod_empty_test_db_session(mod_blank_postgis_session):
-    # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+def mod_empty_content_session(mod_blank_postgis_session):
     sesh = mod_blank_postgis_session
     engine = sesh.get_bind()
-    Base.metadata.create_all(bind=engine)
+    ContentBase.metadata.create_all(bind=engine)
+    yield sesh
+
+@fixture(scope="module")
+def mod_empty_view_session(mod_empty_content_session):
+    sesh = mod_empty_content_session
+    # The following could be done with ViewBase.metadata.create_all(bind=engine), but this exercises
+    # the code under test better.
     views = [SimpleThing, ThingWithDescription, ThingCount]
     for view in views:
         view.create(sesh)
@@ -84,8 +90,8 @@ def mod_empty_test_db_session(mod_blank_postgis_session):
         view.drop(sesh)
 
 @fixture
-def view_test_session(mod_empty_test_db_session):
-    for sesh in generic_sesh(mod_empty_test_db_session, [
+def view_test_session(mod_empty_view_session):
+    for sesh in generic_sesh(mod_empty_view_session, [
         Description(id=1, desc='alpha'),
         Description(id=2, desc='beta'),
         Description(id=3, desc='gamma'),
