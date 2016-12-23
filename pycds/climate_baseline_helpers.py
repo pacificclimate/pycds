@@ -119,7 +119,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
             must be associated
 
     Returns:
-        None
+        (n_added, n_skipped): counts of lines (not values!) added to database or skipped, respectively
     """
 
     # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
@@ -174,3 +174,5 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
     print('Loading complete')
     print('{} input lines successfully processed'.format(n_added))
     print('{} input lines skipped'.format(n_skipped))
+
+    return (n_added, n_skipped)

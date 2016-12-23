@@ -162,7 +162,11 @@ def describe_load__pcic__climate__baseline__values():
 
                     def test_loads_the_values_into_the_database(sesh_with_station_and_history_records, stations, source):
                         sesh = sesh_with_station_and_history_records
-                        load_pcic_climate_baseline_values(sesh, var_name, source)
+
+                        n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
+                        assert n_loaded == 2
+                        assert n_skipped == 0
+
                         derived_values = sesh.query(DerivedValue)
 
                         assert derived_values.count() == 12 * len(stations)
