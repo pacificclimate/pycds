@@ -9,10 +9,6 @@ from pycds import Network, History, Variable, DerivedValue
 pcic_climate_variable_network_name = 'PCIC Climate Variables'
 
 
-class InvalidVariableName(Exception):
-    pass
-
-
 def get_or_create_pcic_climate_variables_network(session):
     """Get or, if it does not exist, create the synthetic network for derived variables
 
@@ -132,7 +128,7 @@ def load_pcic_climate_baseline_values(session, var_name, source):
     create_pcic_climate_baseline_variables(session)
     variable = session.query(Variable).filter(Variable.name == var_name).first()
     if not variable:
-        raise InvalidVariableName("Climate variable named '{}' was not found in the database".format(var_name))
+        raise ValueError("Climate variable named '{}' was not found in the database".format(var_name))
 
     print('Loading...')
     n_added = 0

@@ -120,7 +120,7 @@ def describe_load__pcic__climate__baseline__values():
 
             def test_throws_an_exception(sesh_with_station_and_history_records):
                 sesh = sesh_with_station_and_history_records
-                with raises(InvalidVariableName):
+                with raises(ValueError):
                     load_pcic_climate_baseline_values(sesh, var_name, [])
 
 
