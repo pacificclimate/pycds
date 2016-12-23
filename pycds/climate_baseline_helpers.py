@@ -143,6 +143,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         raise ValueError("Climate variable named '{}' associate with network {} was not found in the database"
                          .format(var_name, network_name))
 
+    # TODO: Use logging rather than print throughout
     print('Loading...')
     n_added = 0
     n_skipped = 0
