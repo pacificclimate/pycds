@@ -212,8 +212,8 @@ class NativeFlag(Base):
     )
 
 class DerivedValue(Base):
-    __tablename__ = 'derived_values'
-    id = Column('derived_value_id', Integer, primary_key=True)
+    __tablename__ = 'obs_derived_values'
+    id = Column('obs_derived_value_id', Integer, primary_key=True)
     time = Column('value_time', DateTime)
     mod_time = Column(DateTime, nullable=False,
                       default=datetime.datetime.utcnow)
@@ -222,13 +222,13 @@ class DerivedValue(Base):
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
 
     # Relationships
-    history = relationship('History', backref=backref('derived_values', order_by=id))
-    variable = relationship('Variable', backref=backref('derived_values', order_by=id))
+    history = relationship('History', backref=backref('obs_derived_values', order_by=id))
+    variable = relationship('Variable', backref=backref('obs_derived_values', order_by=id))
 
     # Constraints
     __table_args__ = (
         UniqueConstraint('value_time', 'history_id', 'vars_id',
-                         name='derived_value_time_place_variable_unique'),
+                         name='obs_derived_value_time_place_variable_unique'),
     )
 
 # The DeferredBase is currently used for views.
