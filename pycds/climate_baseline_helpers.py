@@ -99,7 +99,7 @@ field_widths = [8, 1, 12, 5, 1, 12, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
 field_format = ' '.join(['{}s'.format(fw) for fw in field_widths])
 
 
-def load_pcic_climate_baseline_values(session, var_name, source):
+def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pcic_climate_variable_network_name):
     """Load baseline values into the database.
     Create the necessary variables and synthetic network if they do not already exist.
 
@@ -108,8 +108,11 @@ def load_pcic_climate_baseline_values(session, var_name, source):
 
         var_name (str): name of climate baseline variable for which the values are to be loaded
 
-        source (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
+        lines (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
             (strings) containing the data to be loaded; typically result of `file.readlines()`
+
+        network_name (str): name of the network to which the climate variable (identified by var_name)
+            must be associated
 
     Returns:
         None
@@ -128,15 +131,19 @@ def load_pcic_climate_baseline_values(session, var_name, source):
         return dict(zip(field_names, field_values))
 
     create_pcic_climate_baseline_variables(session)
-    variable = session.query(Variable).filter(Variable.name == var_name).first()
+    variable = session.query(Variable)\
+        .filter_by(name=var_name)\
+        .filter(Variable.network.has(name=network_name))\
+        .first()
     if not variable:
-        raise ValueError("Climate variable named '{}' was not found in the database".format(var_name))
+        raise ValueError("Climate variable named '{}' associate with network {} was not found in the database"
+                         .format(var_name, network_name))
 
     print('Loading...')
     n_added = 0
     n_skipped = 0
 
-    for line in source:
+    for line in lines:
         data = parse_line(line)
         latest_history = session.query(History)\
             .filter(History.station.has(native_id=data['native_id']))\
