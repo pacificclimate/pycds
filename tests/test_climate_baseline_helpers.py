@@ -10,7 +10,7 @@ from pycds import Network, Station, History, Variable, DerivedValue
 from pycds.climate_baseline_helpers import \
     pcic_climate_variable_network_name, \
     get_or_create_pcic_climate_variables_network, \
-    create_pcic_climate_baseline_variables, \
+    get_or_create_pcic_climate_baseline_variables, \
     load_pcic_climate_baseline_values, \
     field_format
 
@@ -26,7 +26,7 @@ def empty_database_session(mod_blank_postgis_session):
 @fixture
 def sesh_with_climate_baseline_variables(empty_database_session):
     sesh = empty_database_session
-    create_pcic_climate_baseline_variables(sesh)
+    get_or_create_pcic_climate_baseline_variables(sesh)
     yield sesh
 
 
@@ -66,6 +66,13 @@ def describe_get__or__create__pcic__climate__variables__network():
 
 def describe_create__pcic__climate__baseline__variables():
 
+    def test_returns_the_expected_variables(empty_database_session):
+        sesh = empty_database_session
+        variables = get_or_create_pcic_climate_baseline_variables(sesh)
+        assert len(variables) == 3
+        assert set([v.name for v in variables]) == set(['Tx_Climatology', 'Tn_Climatology', 'Precip_Climatology'])
+        # More aggressive testing of each variable below
+
     def test_causes_network_to_be_created(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
         results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
@@ -100,8 +107,8 @@ def describe_create__pcic__climate__baseline__variables():
 
     def test_creates_no_more_than_one_of_each(empty_database_session):
         sesh = empty_database_session
-        create_pcic_climate_baseline_variables(sesh)
-        create_pcic_climate_baseline_variables(sesh)
+        get_or_create_pcic_climate_baseline_variables(sesh)
+        get_or_create_pcic_climate_baseline_variables(sesh)
         results = sesh.query(Variable).filter(Variable.name.like('%_Climatology'))
         assert results.count() == 3
 

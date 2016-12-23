@@ -34,15 +34,15 @@ def get_or_create_pcic_climate_variables_network(session, network_name=pcic_clim
     return network
 
 
-def create_pcic_climate_baseline_variables(session):
-    """Create, if they do not exist, the derived variables for climate baseline values.
+def get_or_create_pcic_climate_baseline_variables(session):
+    """Get or, if they do not exist, create the derived variables for climate baseline values.
     Create the necessary synthetic network for them if it does not already exist.
 
     Args:
         session (...): SQLAlchemy session for accessing the database
 
     Returns:
-        None
+        List of climate baseline Variables created (or existing) in database
     """
 
     network = get_or_create_pcic_climate_variables_network(session)
@@ -79,13 +79,17 @@ def create_pcic_climate_baseline_variables(session):
         },
     ]
 
+    variables = []
     for vs in variable_specs:
         variable = session.query(Variable).filter(Variable.name == vs['name']).first()
         if not variable:
             vs.update(short_name='{0} {1}'.format(vs['standard_name'], vs['cell_method']),
                       network_id=network.id)
-            session.add(Variable(**vs))
+            variable = Variable(**vs)
+            session.add(variable)
+        variables.append(variable)
     session.flush()
+    return variables
 
 
 # Names and widths of fields in flat source files. Copied from Faron's R code.
@@ -130,7 +134,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         field_values = [fv.decode('ascii').rstrip('\0 ') for fv in field_values]  # struct.unpack creates null-terminated strings
         return dict(zip(field_names, field_values))
 
-    create_pcic_climate_baseline_variables(session)
+    get_or_create_pcic_climate_baseline_variables(session)
     variable = session.query(Variable)\
         .filter_by(name=var_name)\
         .filter(Variable.network.has(name=network_name))\
