@@ -1,7 +1,6 @@
 import sys
 import logging
 from argparse import ArgumentParser
-from itertools import islice
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -30,6 +29,12 @@ Examples:
 
     f = open(args.file)
 
+    # Header processing: decduced from file and from R code that processes it
+    # Headers are optional
+    # Header if present, is 2 lines:
+    #   - crs?: GEO | ALB | UTM
+    #   - some mysterious number, e.g, 21
+    # We don't use these header values, and (naturally, therefore) we skip them if present
     line = next(f)
     if line.rstrip(' \0\n') in ['GEO','ALB','UTM']:
         line = next(f)  # header present; skip second header line
