@@ -9,20 +9,22 @@ from pycds import Network, History, Variable, DerivedValue
 pcic_climate_variable_network_name = 'PCIC Climate Variables'
 
 
-def get_or_create_pcic_climate_variables_network(session):
+def get_or_create_pcic_climate_variables_network(session, network_name=pcic_climate_variable_network_name):
     """Get or, if it does not exist, create the synthetic network for derived variables
 
     Args:
         session (...): SQLAlchemy session for accessing the database
 
+        network_name (str): name of the network to create
+
     Returns:
         Network object for synthetic network for derived variables
     """
 
-    network = session.query(Network).filter(Network.name == pcic_climate_variable_network_name).first()
+    network = session.query(Network).filter(Network.name == network_name).first()
     if not network:
         network = Network(
-            name=pcic_climate_variable_network_name,
+            name=network_name,
             long_name='Synthetic network for climate variables computed by PCIC',
             publish=True,
             # color = '#??????', # TODO: Does this need to be defined?
