@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 """Tools for loading climate baseline data into database from flat files.
 """
 
