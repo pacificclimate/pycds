@@ -75,13 +75,29 @@ sqlalchemy.event.listen(
 # TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
 # and by cell_method
 
-class DailyMaxTemperature(Base, MaterializedViewMixin):
-    __selectable__ = text('''
+def daily_temperature_extremum_selectable(extremum):
+    '''Return a SQLAlchemy selector for a specified extremum of daily temperature.
+
+    Args:
+        extremum (str): 'max' | 'min'
+
+    Returns:
+        sqlalchemy.sql.expression.FromClause (in fact, sqlalchemy.sql.expression.TextClause)
+    '''
+
+    def cell_method(extremum):
+        method = {
+            'max': ['time: maximum', 'time: point', 'time: mean'],
+            'min': ['time: minimum', 'time: point', 'time: mean'],
+        }
+        return ', '.join("'{}'".format(m) for m in method[extremum])
+
+    return text('''
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            effective_day(obs.obs_time, 'max', hx.freq) AS obs_day,
-            max(obs.datum) AS statistic,
+            effective_day(obs.obs_time, '{0}', hx.freq) AS obs_day,
+            {0}(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
                 WHEN 'daily' THEN 1.0::float
@@ -111,64 +127,23 @@ class DailyMaxTemperature(Base, MaterializedViewMixin):
                     AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
             )
             AND vars.standard_name = 'air_temperature'
-            AND vars.cell_method IN ('time: maximum', 'time: point', 'time: mean')
+            AND vars.cell_method IN ({1})
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
-    ''').columns(
-        column('history_id'),
-        column('vars_id'),
-        column('obs_day'),
-        column('statistic'),
-        column('data_coverage')
+    '''.format(extremum, cell_method(extremum)))\
+    .columns(
+            column('history_id'),
+            column('vars_id'),
+            column('obs_day'),
+            column('statistic'),
+            column('data_coverage')
     )
+
+class DailyMaxTemperature(Base, MaterializedViewMixin):
+    __selectable__ = daily_temperature_extremum_selectable('max')
     __primary_key__ = 'history_id vars_id obs_day'.split()
 
 class DailyMinTemperature(Base, MaterializedViewMixin):
-    __selectable__ = text('''
-        SELECT
-            hx.history_id AS history_id,
-            obs.vars_id AS vars_id,
-            effective_day(obs.obs_time, 'min') AS obs_day,
-            min(obs.datum) AS statistic,
-            sum(
-                CASE hx.freq
-                WHEN 'daily' THEN 1.0::float
-                WHEN '1-hourly' THEN (1.0 / 24.0)::float
-                WHEN '12-hourly' THEN 0.5::float
-                END
-            ) AS data_coverage
-        FROM
-            obs_raw AS obs
-            INNER JOIN meta_vars AS vars USING (vars_id)
-            INNER JOIN meta_history AS hx USING (history_id)
-        WHERE
-            obs.obs_raw_id IN (
-                -- Return id of each observation without any associated discard flags;
-                -- in other words, exclude observations marked discard, and don't be fooled by
-                -- additional flags that don't discard (hence the aggregate BOOL_OR's).
-                SELECT obs.obs_raw_id
-                FROM
-                    obs_raw AS obs
-                    LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
-                    LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
-                    LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
-                    LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
-                GROUP BY obs.obs_raw_id
-                HAVING
-                    BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
-                    AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
-            )
-            AND vars.standard_name = 'air_temperature'
-            AND vars.cell_method IN ('time: minimum', 'time: point', 'time: mean')
-            AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
-        GROUP BY
-            hx.history_id, vars_id, obs_day
-    ''').columns(
-        column('history_id'),
-        column('vars_id'),
-        column('obs_day'),
-        column('statistic'),
-        column('data_coverage')
-    )
+    __selectable__ = daily_temperature_extremum_selectable('min')
     __primary_key__ = 'history_id vars_id obs_day'.split()
