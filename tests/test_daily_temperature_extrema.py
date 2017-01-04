@@ -1,3 +1,17 @@
+'''Test daily temperature extrema views
+
+Please see README for a description of the test framework used here.
+
+Idiosyncracies:
+
+    - Most tests define and use the fixture `query`, which is not strictly necessary, but provides a place to put
+      the very necessary view.refresh() calls.
+    - The various `query` fixtures look as if they could exploit the autouse feature of pytest
+      (http://doc.pytest.org/en/latest/fixture.html#autouse-fixtures-xunit-setup-on-steroids), but unfortunately they
+      can't: Each one is the terminus of a different cascade of fixtures. (Different fixtures may have the same name
+      in different contexts, but they are actually different objects, embodying different test conditions, and that
+      prevents us from using autouse.
+'''
 import datetime
 
 from pytest import fixture, mark, approx

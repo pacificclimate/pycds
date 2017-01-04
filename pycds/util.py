@@ -268,7 +268,17 @@ def create_test_data_from_reflection(read_engine, write_engine):
 
 def generic_sesh(sesh, sa_objects):
     '''All session fixtures follow a common pattern, abstracted in this generator function.
-    To use the generator correctly, i.e., so that the teardown after the yield is also performed,
+
+    Args:
+        sesh (sqlalchemy.orm.session.Session): database session
+
+        sa_objects: list of SQLAlchemy ORM objects to be added to database for setup and removed on teardown
+            Order within list is respected for setup and teardown, so that dependencies can be respected.
+
+    Returns:
+        yields sesh after setup
+
+    To use this generator correctly, i.e., so that the teardown after the yield is also performed,
     a fixture must first yield the result of next(g), then call next(g) again. This can be done two ways:
 
       gs = generic_sesh(...)
