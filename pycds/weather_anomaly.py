@@ -14,7 +14,7 @@ from pycds.materialized_view_helpers import MaterializedViewMixin
 Base = declarative_base()
 metadata = Base.metadata
 
-# This function returns the day that should be used (the effective day) for computing daily maximum temperature.
+# This function returns the day that should be used (the effective day) for computing daily *maximum* temperature.
 # It maps the actual observation day to an effective day that causes its to be aggregated within the appropriate daily
 # period.
 #
@@ -41,6 +41,22 @@ sqlalchemy.event.listen(
             offs = '1 day'::INTERVAL;
           END IF;
           RETURN date_trunc('day', obs_time) + offs;
+        END;
+        $$ LANGUAGE plpgsql;
+    ''')
+)
+
+# This function returns the day that should be used (the effective day) for computing daily *minimum* temperature.
+# It maps the actual observation day to an effective day that causes its to be aggregated within the appropriate daily
+# period. Unlike Tmax, the effective day for Tmin does not depend on observation frequency; it is always the day of
+# observation.
+sqlalchemy.event.listen(
+    metadata, 'before_create',
+    DDL('''
+        CREATE OR REPLACE FUNCTION effective_day_for_Tmin(obs_time timestamp without time zone)
+        RETURNS timestamp without time zone AS $$
+        BEGIN
+          RETURN date_trunc('day', obs_time);
         END;
         $$ LANGUAGE plpgsql;
     ''')
@@ -117,7 +133,7 @@ class DailyMinTemperature(Base, MaterializedViewMixin):
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            date_trunc('day', obs.obs_time) AS obs_day,
+            effective_day_for_Tmin(obs.obs_time) AS obs_day,
             min(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
