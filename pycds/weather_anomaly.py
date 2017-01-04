@@ -14,49 +14,45 @@ from pycds.materialized_view_helpers import MaterializedViewMixin
 Base = declarative_base()
 metadata = Base.metadata
 
-# This function returns the day that should be used (the effective day) for computing daily *maximum* temperature.
-# It maps the actual observation day to an effective day that causes its to be aggregated within the appropriate daily
+
+# This function returns the day that should be used (the effective day) for computing daily temperature extrema.
+# It maps the actual observation day to an effective day that causes it to be aggregated within the appropriate 24-hour
 # period.
 #
-# Effective day depends on the observation frequency (and, technically, the network, but for now it seems
-# that 12-hour frequency is only for a single network).
+# Effective day depends on the extremum being computed (max, min) and the observation frequency (and, technically,
+# the network, but for now it seems that 12-hour frequency is only used in a single network).
+#
+# For maximum temperature:
 #   For 1-hour and daily frequency:
 #       the effective day is day of observation
 #   For 12-hour frequency:
 #       nominal reporting times are 0700 and 1600 local; we use noon (1200) to divide morning from afternoon reports
 #       the period over which the max should be taken is from noon the day before to noon of the given day
 #       the effective day is advanced by one day for afternoon observations
+#
+# For minimum temperature:
+#   effective day does not depend on observation frequency; it is always the day of observation
 sqlalchemy.event.listen(
     metadata, 'before_create',
     DDL('''
-        CREATE OR REPLACE FUNCTION effective_day_for_Tmax(obs_time timestamp without time zone, freq varchar)
+        CREATE OR REPLACE FUNCTION effective_day(
+          obs_time timestamp without time zone, extremum varchar, freq varchar = ''
+        )
         RETURNS timestamp without time zone AS $$
         DECLARE
           offs INTERVAL; -- 'offset' is a reserved word
           hour INTEGER;
         BEGIN
           offs := '0'::INTERVAL;
-          hour := date_part('hour', obs_time);
-          IF freq = '12-hourly' AND hour >= 12 THEN
-            offs = '1 day'::INTERVAL;
+          IF extremum = 'max' THEN
+              hour := date_part('hour', obs_time);
+              IF freq = '12-hourly' AND hour >= 12 THEN
+                offs = '1 day'::INTERVAL;
+              END IF;
+          ELSE
+            offs = '0'::INTERVAL;
           END IF;
           RETURN date_trunc('day', obs_time) + offs;
-        END;
-        $$ LANGUAGE plpgsql;
-    ''')
-)
-
-# This function returns the day that should be used (the effective day) for computing daily *minimum* temperature.
-# It maps the actual observation day to an effective day that causes its to be aggregated within the appropriate daily
-# period. Unlike Tmax, the effective day for Tmin does not depend on observation frequency; it is always the day of
-# observation.
-sqlalchemy.event.listen(
-    metadata, 'before_create',
-    DDL('''
-        CREATE OR REPLACE FUNCTION effective_day_for_Tmin(obs_time timestamp without time zone)
-        RETURNS timestamp without time zone AS $$
-        BEGIN
-          RETURN date_trunc('day', obs_time);
         END;
         $$ LANGUAGE plpgsql;
     ''')
@@ -84,7 +80,7 @@ class DailyMaxTemperature(Base, MaterializedViewMixin):
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            effective_day_for_Tmax(obs.obs_time, hx.freq) AS obs_day,
+            effective_day(obs.obs_time, 'max', hx.freq) AS obs_day,
             max(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
@@ -133,7 +129,7 @@ class DailyMinTemperature(Base, MaterializedViewMixin):
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            effective_day_for_Tmin(obs.obs_time) AS obs_day,
+            effective_day(obs.obs_time, 'min') AS obs_day,
             min(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
