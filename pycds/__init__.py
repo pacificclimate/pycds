@@ -133,7 +133,6 @@ ObsRawNativeFlags = Table(
     UniqueConstraint(
         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
-# ObsRawNativeFlags = obs_raw_native_flags_t
 
 # Association table for Obs *--* PCICFLag
 ObsRawPCICFlags = Table(
@@ -206,9 +205,9 @@ class Variable(Base):
 
 
 class NativeFlag(Base):
-    '''This class maps to the table which records all observations which
-    have been `flagged` by the data provider (i.e. the network) for
-    some reason. This table records the details of the flags.
+    '''This class maps to the table which records all 'flags' for observations which have been `flagged` by the
+    data provider (i.e. the network) for some reason. This table records the details of the flags.
+    Actual flagging is recorded in the class/table ObsRawNativeFlags.
     '''
     __tablename__ = 'meta_native_flag'
     id = Column('native_flag_id', Integer, primary_key=True)
@@ -227,6 +226,10 @@ class NativeFlag(Base):
     )
 
 class PCICFlag(Base):
+    '''This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
+    for some reason. This table records the details of the flags.
+    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    '''
     __tablename__ = 'meta_pcic_flag'
     id = Column('pcic_flag_id', Integer, primary_key=True)
     name = Column('flag_name', String)
