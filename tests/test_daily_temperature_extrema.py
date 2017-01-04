@@ -217,10 +217,10 @@ def describe_with_1_network():
                             def flag_assoc_sesh(flag_sesh, native_flag_discard, native_flag_non_discard):
                                 sesh = flag_sesh
                                 obs = sesh.query(Obs)
-                                for id in range(0, 12):
-                                    obs.filter_by(id=id).first().native_flags.append(native_flag_discard)
-                                for id in range(6, 18):
-                                    obs.filter_by(id=id).first().native_flags.append(native_flag_non_discard)
+                                for o in obs.filter(0 <= Obs.id).filter(Obs.id < 12).all():
+                                    o.native_flags.append(native_flag_discard)
+                                for o in obs.filter(6 <= Obs.id).filter(Obs.id < 18).all():
+                                    o.native_flags.append(native_flag_non_discard)
                                 sesh.flush()
                                 yield sesh
                                 for id in range(0, 24):
