@@ -124,7 +124,7 @@ class History(Base):
         "Obs", backref=backref('meta_history', order_by=id))
 
 # Association table for Obs *--* NativeFLag
-obs_raw_native_flags_t = Table(
+ObsRawNativeFlags = Table(
     'obs_raw_native_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
            ForeignKey('obs_raw.obs_raw_id')),
@@ -133,10 +133,10 @@ obs_raw_native_flags_t = Table(
     UniqueConstraint(
         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
-ObsRawNativeFlags = obs_raw_native_flags_t
+# ObsRawNativeFlags = obs_raw_native_flags_t
 
 # Association table for Obs *--* PCICFLag
-obs_raw_pcic_flags_t = Table(
+ObsRawPCICFlags = Table(
     'obs_raw_pcic_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
            ForeignKey('obs_raw.obs_raw_id')),
@@ -145,7 +145,6 @@ obs_raw_pcic_flags_t = Table(
     UniqueConstraint(
         'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique')
 )
-ObsRawPCICFlags = obs_raw_pcic_flags_t
 
 
 class MetaSensor(Base):
@@ -173,10 +172,10 @@ class Obs(Base):
     history = relationship("History", backref=backref('obs_raw', order_by=id))
     variable = relationship(
         "Variable", backref=backref('obs_raw', order_by=id))
-    flags = relationship("NativeFlag", secondary=obs_raw_native_flags_t, backref="flagged_obs")
+    flags = relationship("NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs")
     # better named alias for 'flags'; don't repeat backref
-    native_flags = relationship("NativeFlag", secondary=obs_raw_native_flags_t)
-    pcic_flags = relationship("PCICFlag", secondary=obs_raw_pcic_flags_t, backref="flagged_obs")
+    native_flags = relationship("NativeFlag", secondary=ObsRawNativeFlags)
+    pcic_flags = relationship("PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs")
 
     # Constraints
     __table_args__ = (
