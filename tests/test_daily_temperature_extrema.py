@@ -11,28 +11,25 @@ from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 def describe_function_effective__day():
     expected_day = {
         'max': {
-            '1-hourly': {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 1)},
-            '12-hourly': {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 2)},
+            '1-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
+            '12-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 2)},
         },
         'min': {
-            '1-hourly': {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 1)},
-            '12-hourly': {'morning': datetime.datetime(2000, 1, 1), 'afternoon': datetime.datetime(2000, 1, 1)},
+            '1-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
+            '12-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
         }
     }
 
-    @mark.parametrize('tod, obs_time', [
-        ('morning', '2000-01-01 07:23'),
-        ('afternoon', '2000-01-01 16:18')
-    ])
+    @mark.parametrize('obs_time', ['2000-01-01 07:23', '2000-01-01 16:18'])  # morning and afternoon
     @mark.parametrize('freq', ['1-hourly', '12-hourly'])
     @mark.parametrize('extremum', ['max', 'min'])
-    def it_returns_the_expected_day_of_observation(mod_empty_database_session, tod, obs_time, extremum, freq):
+    def it_returns_the_expected_day_of_observation(mod_empty_database_session, obs_time, extremum, freq):
         result = mod_empty_database_session.execute(
             text('SELECT effective_day(:obs_time, :extremum, :freq) AS eday'),
             {'obs_time': obs_time, 'extremum': extremum, 'freq': freq}
         ).fetchall()
         assert len(result) == 1
-        assert result[0]['eday'] == expected_day[extremum][freq][tod]
+        assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
 
 
 views = [DailyMaxTemperature, DailyMinTemperature]
