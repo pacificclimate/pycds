@@ -85,13 +85,6 @@ def daily_temperature_extremum_selectable(extremum):
         sqlalchemy.sql.expression.FromClause (in fact, sqlalchemy.sql.expression.TextClause)
     '''
 
-    def cell_method(extremum):
-        method = {
-            'max': ['time: maximum', 'time: point', 'time: mean'],
-            'min': ['time: minimum', 'time: point', 'time: mean'],
-        }
-        return ', '.join("'{}'".format(m) for m in method[extremum])
-
     return text('''
         SELECT
             hx.history_id AS history_id,
@@ -127,11 +120,11 @@ def daily_temperature_extremum_selectable(extremum):
                     AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
             )
             AND vars.standard_name = 'air_temperature'
-            AND vars.cell_method IN ({1})
+            AND vars.cell_method IN ('time: {0}imum', 'time: point', 'time: mean')
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
-    '''.format(extremum, cell_method(extremum)))\
+    '''.format(extremum))\
     .columns(
             column('history_id'),
             column('vars_id'),
