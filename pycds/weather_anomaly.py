@@ -2,7 +2,18 @@
 
 Define views for weather anomaly applications using tools in pycds.view_helpers.
 
-"""
+Materialized view: Daily maximum temperature
+Materialized view: Daily minimum temperature
+  - These views support views that deliver monthly average of daily max/min temperature.
+  - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+  - data_coverage is the fraction of observations actually available in a day relative to those potentially available
+     in a day. The computation is correct for a given day if and only if the observation frequency does not change
+     during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
+     fatal to distinguishing adequate coverage.
+  - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+      unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+      This decision subject to revision."""
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
@@ -58,22 +69,6 @@ sqlalchemy.event.listen(
     ''')
 )
 
-# Materialized view: Daily maximum temperature
-# Materialized view: Daily minimum temperature
-#   - These views support views that deliver monthly average of daily max/min temperature.
-#   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
-#   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
-#      in a day. The computation is correct for a given day if and only if the observation frequency does not change
-#      during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
-#      fatal to distinguishing adequate coverage.
-#   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-#       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-#       unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-#       This decision subject to revision.
-
-# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
-# TODO: Factor out common query structure into a defined function (parameterized by min/max function [can this be done?]
-# and by cell_method
 
 def daily_temperature_extremum_selectable(extremum):
     '''Return a SQLAlchemy selector for a specified extremum of daily temperature.
