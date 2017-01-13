@@ -3,9 +3,11 @@ import datetime
 __all__ = [
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory',
-    'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'MetaSensor'
+    'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
+    'MetaSensor'
 ]
 
+import sqlalchemy
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
@@ -121,7 +123,8 @@ class History(Base):
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
 
-association_table = Table(
+# Association table for Obs *--* NativeFLag
+ObsRawNativeFlags = Table(
     'obs_raw_native_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
            ForeignKey('obs_raw.obs_raw_id')),
@@ -130,7 +133,17 @@ association_table = Table(
     UniqueConstraint(
         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
 )
-ObsRawNativeFlags = association_table
+
+# Association table for Obs *--* PCICFLag
+ObsRawPCICFlags = Table(
+    'obs_raw_pcic_flags', Base.metadata,
+    Column('obs_raw_id', BigInteger,
+           ForeignKey('obs_raw.obs_raw_id')),
+    Column('pcic_flag_id', Integer, ForeignKey(
+        'meta_pcic_flag.pcic_flag_id')),
+    UniqueConstraint(
+        'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique')
+)
 
 
 class MetaSensor(Base):
@@ -158,8 +171,10 @@ class Obs(Base):
     history = relationship("History", backref=backref('obs_raw', order_by=id))
     variable = relationship(
         "Variable", backref=backref('obs_raw', order_by=id))
-    flags = relationship(
-        "NativeFlag", secondary=association_table, backref="flagged_obs")
+    flags = relationship("NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs")
+    # better named alias for 'flags'; don't repeat backref
+    native_flags = relationship("NativeFlag", secondary=ObsRawNativeFlags)
+    pcic_flags = relationship("PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs")
 
     # Constraints
     __table_args__ = (
@@ -190,9 +205,9 @@ class Variable(Base):
 
 
 class NativeFlag(Base):
-    '''This class maps to the table which records all observations which
-    have been `flagged` by the data provider (i.e. the network) for
-    some reason. This table records the details of the flags.
+    '''This class maps to the table which records all 'flags' for observations which have been `flagged` by the
+    data provider (i.e. the network) for some reason. This table records the details of the flags.
+    Actual flagging is recorded in the class/table ObsRawNativeFlags.
     '''
     __tablename__ = 'meta_native_flag'
     id = Column('native_flag_id', Integer, primary_key=True)
@@ -202,14 +217,25 @@ class NativeFlag(Base):
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship("Network", backref=backref(
-        'meta_native_flag', order_by=id))
+    network = relationship("Network", backref=backref('meta_native_flag', order_by=id))
 
     # Constraints
     __table_args__ = (
         UniqueConstraint('network_id', 'value',
                          name='meta_native_flag_unique'),
     )
+
+class PCICFlag(Base):
+    '''This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
+    for some reason. This table records the details of the flags.
+    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    '''
+    __tablename__ = 'meta_pcic_flag'
+    id = Column('pcic_flag_id', Integer, primary_key=True)
+    name = Column('flag_name', String)
+    description = Column(String)
+    discard = Column(Boolean)
+
 
 class DerivedValue(Base):
     __tablename__ = 'obs_derived_values'
@@ -231,11 +257,11 @@ class DerivedValue(Base):
                          name='obs_derived_value_time_place_variable_unique'),
     )
 
-# The DeferredBase is currently used for views.
+
+# "Improper" views - defined in crmp repo, and accessed in ORM by referring to them as tables.
+# DeferredBase is currently used for these views.
 # When testing, not using proper views may create issues
-# TODO: Implement proper views like
-# http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
-# or https://gist.github.com/techniq/5174412
+# TODO: Implement as proper views using pycds.view_helpers
 
 DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
 deferred_metadata = DeferredBase.metadata
