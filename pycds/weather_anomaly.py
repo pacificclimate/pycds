@@ -41,7 +41,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
 
-from pycds.view_helpers import ViewMixin  # TODO: Remove
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
 Base = declarative_base()
@@ -207,12 +206,12 @@ class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
 
 class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('min')
-    __primary_key__ = 'history_id vars_id obs_day'.split()
+    __primary_key__ = 'history_id vars_id obs_month'.split()
 
 
 # TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
 
-class MonthlyTotalPrecipitation(Base, ViewMixin):
+class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
     __selectable__ = text('''
         SELECT
             history_id,
