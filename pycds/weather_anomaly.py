@@ -2,8 +2,8 @@
 
 Define views for weather anomaly applications using tools in pycds.view_helpers.
 
-Materialized view: Daily maximum temperature
-Materialized view: Daily minimum temperature
+Materialized view: Daily maximum temperature (DailyMaxTemperature)
+Materialized view: Daily minimum temperature (DailyMinTemperature)
   - These views support views that deliver monthly average of daily max/min temperature.
   - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
   - data_coverage is the fraction of observations actually available in a day relative to those potentially available
@@ -13,13 +13,24 @@ Materialized view: Daily minimum temperature
   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
       unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-      This decision subject to revision."""
+      This decision subject to revision.
+
+Materialized View: Monthly average of daily maximum temperature (MonthlyAverageOfDailyMaxTemperature)
+Materialized View: Monthly average of daily minimum temperature (MonthlyAverageOfDailyMinTemperature)
+  - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
+      in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
+      daily data coverage above).
+  - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+      excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+"""
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
 
+from pycds.view_helpers import ViewMixin  # TODO: Remove
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
 Base = declarative_base()
@@ -128,10 +139,60 @@ def daily_temperature_extremum_selectable(extremum):
             column('data_coverage')
     )
 
+
 class DailyMaxTemperature(Base, MaterializedViewMixin):
     __selectable__ = daily_temperature_extremum_selectable('max')
     __primary_key__ = 'history_id vars_id obs_day'.split()
 
+
 class DailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = daily_temperature_extremum_selectable('min')
     __primary_key__ = 'history_id vars_id obs_day'.split()
+
+
+def monthly_average_of_daily_temperature_extremum_selectable(extremum):
+    '''Return a SQLAlchemy selector for a monthly average of a specified extremum of daily temperature.
+
+    Args:
+        extremum (str): 'max' | 'min'
+
+    Returns:
+        sqlalchemy.sql.expression.FromClause (in fact, sqlalchemy.sql.expression.TextClause)
+    '''
+
+    return text('''
+        SELECT
+            history_id,
+            vars_id,
+            obs_month,
+            statistic,
+            total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+        FROM (
+            SELECT
+                history_id,
+                vars_id,
+                date_trunc('month', obs_day) AS obs_month,
+                avg(statistic) AS statistic,
+                sum(data_coverage) AS total_data_coverage
+            FROM
+                daily_{0}_temperature_mv
+            GROUP BY
+                history_id, vars_id, obs_month
+        ) AS temp
+    '''.format(extremum))\
+    .columns(
+        column('history_id'),
+        column('vars_id'),
+        column('obs_month'),
+        column('statistic'),
+        column('data_coverage')
+    )
+
+
+class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
+    __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('max')
+    __primary_key__ = 'history_id vars_id obs_month'.split()
+
+class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
+    __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('min')
+    __primary_key__ = 'history_id vars_id obs_month'.split()
