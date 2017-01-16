@@ -8,11 +8,12 @@ from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 from pycds.weather_anomaly import MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature
 
 
+views = [DailyMaxTemperature, DailyMinTemperature,
+         MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature]
+
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):
     sesh = mod_empty_database_session
-    views = [DailyMaxTemperature, DailyMinTemperature,
-             MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature]
     for view in views:
         view.create(sesh)
     yield sesh
@@ -20,32 +21,37 @@ def with_views_sesh(mod_empty_database_session):
         view.drop(sesh)
 
 
+def refresh_views(sesh):
+    for view in views:
+        view.refresh(sesh)
+
+
 def describe_with_1_network():
 
     @fixture
     def network_sesh(with_views_sesh, network1):
-        for sesh in generic_sesh(with_views_sesh, Network, [network1]):
+        for sesh in generic_sesh(with_views_sesh , [network1]):
             yield sesh
 
     def describe_with_1_station():
 
         @fixture
         def station_sesh(network_sesh, station1):
-            for sesh in generic_sesh(network_sesh, Station, [station1]):
+            for sesh in generic_sesh(network_sesh , [station1]):
                 yield sesh
 
         def describe_with_1_history_hourly():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly]):
+                for sesh in generic_sesh(station_sesh , [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
+                    for sesh in generic_sesh(history_sesh , [var_temp_point]):
                         yield sesh
 
                 def describe_with_a_full_set_of_observations_for_one_month():
@@ -64,11 +70,12 @@ def describe_with_1_network():
                                     Obs(id=id, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                         time=datetime.datetime(2000, 1, day, hour), datum=float(hour))
                                 )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh , observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
@@ -117,11 +124,12 @@ def describe_with_1_network():
                                     Obs(id=id, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                         time=datetime.datetime(2000, 1, day, hour), datum=float(hour))
                                 )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh , observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature, statistic', [
@@ -142,7 +150,7 @@ def describe_with_1_network():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo):
-                    for sesh in generic_sesh(history_sesh, Variable,
+                    for sesh in generic_sesh(history_sesh ,
                                              [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]):
                         yield sesh
 
@@ -164,11 +172,12 @@ def describe_with_1_network():
                                         Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
                                             time=datetime.datetime(2000, 1, day, hour), datum=float(hour))
                                     )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh , observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
@@ -189,14 +198,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_daily]):
+                for sesh in generic_sesh(station_sesh , [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_temp_point]):
+                    for sesh in generic_sesh(history_sesh , [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -215,11 +224,12 @@ def describe_with_1_network():
                                     Obs(id=id + 100, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
                                         time=datetime.datetime(2000, month, day, 12), datum=float(id))
                                 )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh , observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
@@ -246,28 +256,28 @@ def describe_with_2_networks():
 
     @fixture
     def network_sesh(with_views_sesh, network1, network2):
-        for sesh in generic_sesh(with_views_sesh, Network, [network1, network2]):
+        for sesh in generic_sesh(with_views_sesh , [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
 
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in generic_sesh(network_sesh, Station, [station1, station2]):
+            for sesh in generic_sesh(network_sesh , [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn2_hourly]):
+                for sesh in generic_sesh(station_sesh , [history_stn1_hourly, history_stn2_hourly]):
                     yield sesh
 
             def describe_with_1_variable_per_network(): # temp: point
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_temp_point, var_temp_point2]):
+                    for sesh in generic_sesh(history_sesh , [var_temp_point, var_temp_point2]):
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
@@ -289,11 +299,12 @@ def describe_with_2_networks():
                                             Obs(id=id, vars_id=var.id, history_id=hx.id,
                                                 time=datetime.datetime(2000, month, day, hour), datum=float(id))
                                         )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh , observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     @mark.parametrize('MonthlyAvgOfDailyExtremeTemperature', [
@@ -302,7 +313,9 @@ def describe_with_2_networks():
                     def it_returns_one_row_per_unique_combo_hx_var_month(
                             query, MonthlyAvgOfDailyExtremeTemperature,
                             var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
-                        assert set([(r.history_id, r.vars_id, r.obs_month) for r in query(MonthlyAvgOfDailyExtremeTemperature)]) == \
+                        assert set([(r.history_id, r.vars_id, r.obs_month)
+                                    for r in query(MonthlyAvgOfDailyExtremeTemperature)]) == \
                                set([(stn.id, var.id, datetime.datetime(2000, month, 1))
-                                    for (var, stn) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]
+                                    for (var, stn) in [(var_temp_point, history_stn1_hourly),
+                                                       (var_temp_point2, history_stn2_hourly)]
                                     for month in months])
