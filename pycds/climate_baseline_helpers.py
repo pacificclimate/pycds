@@ -4,7 +4,7 @@
 import struct
 import datetime
 from calendar import monthrange
-from pycds import Network, History, Variable, DerivedValue
+from pycds import Network, Station, History, Variable, DerivedValue
 
 pcic_climate_variable_network_name = 'PCIC Climate Variables'
 
@@ -177,3 +177,56 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
     print('{} input lines skipped'.format(n_skipped))
 
     return (n_added, n_skipped)
+
+
+def verify_baseline_network_and_variables(session):
+    """Verify that the expected baseline network and variable records are present in database.
+    These reproduce most of the unit tests for the corresponding upload functions.
+
+    :param session:
+    :return: None
+    """
+
+    # Network
+    networks = session.query(Network).filter(Network.name == pcic_climate_variable_network_name)
+    assert networks.count() == 1
+    network = networks.first()
+
+    # Temperature variables
+    for (name, keyword, kwd) in [
+        ('Tx_Climatology', 'maximum', 'Max.'),
+        ('Tn_Climatology', 'minimum', 'Min.'),
+    ]:
+        temp_variable = session.query(Variable).filter(Variable.name == name).first()
+        assert temp_variable
+        assert (temp_variable.unit, temp_variable.standard_name, temp_variable.network_id) == \
+               (u'celsius', u'air_temperature', network.id)
+        assert temp_variable.short_name == u'air_temperature {}'.format(temp_variable.cell_method)
+        assert temp_variable.cell_method == u't: {} within days t: mean within months t: mean over years'.format(keyword)
+        assert temp_variable.description == u'Climatological mean of monthly mean of {} daily temperature'.format(keyword)
+        assert temp_variable.display_name == u'Temperature Climatology ({})'.format(kwd)
+
+    # Precipitation variable
+    precip_variable = session.query(Variable).filter(Variable.name == 'Precip_Climatology').first()
+    assert (precip_variable.unit, precip_variable.standard_name, precip_variable.network_id) == \
+           (u'mm', u'lwe_thickness_of_precipitation_amount', network.id)
+    assert precip_variable.short_name == u'lwe_thickness_of_precipitation_amount {}'.format(precip_variable.cell_method)
+    assert precip_variable.cell_method == u't: sum within months t: mean over years'
+    assert precip_variable.description == u'Climatological mean of monthly total precipitation'
+    assert precip_variable.display_name == u'Precipitation Climatology'
+
+
+def verify_baseline_max_temperatures(session, station_count):
+    """Verify that the database contains the expected content for baseline values. Specifically:
+
+    - the expected number (count) of climate baseline values, given the number of stations with baseline values
+    - specific example values, taken from visual intepretation of an arbitrary selection of stations
+      in the input file.
+    """
+
+    derived_values = \
+        session.query(DerivedValue)\
+        .join(DerivedValue.variable)\
+        .filter(Variable.name == 'Tx_Climatology')
+
+    assert derived_values.count() == 12 * station_count
