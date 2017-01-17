@@ -7,10 +7,12 @@ from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import MonthlyTotalPrecipitation
 
 
+views = [MonthlyTotalPrecipitation]
+
+
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):
     sesh = mod_empty_database_session
-    views = [MonthlyTotalPrecipitation]
     for view in views:
         view.create(sesh)
     yield sesh
@@ -18,32 +20,37 @@ def with_views_sesh(mod_empty_database_session):
         view.drop(sesh)
 
 
+def refresh_views(sesh):
+    for view in views:
+        view.refresh(sesh)
+
+
 def describe_with_1_network():
 
     @fixture
     def network_sesh(with_views_sesh, network1):
-        for sesh in generic_sesh(with_views_sesh, Network, [network1]):
+        for sesh in generic_sesh(with_views_sesh, [network1]):
             yield sesh
 
     def describe_with_1_station():
 
         @fixture
         def station_sesh(network_sesh, station1):
-            for sesh in generic_sesh(network_sesh, Station, [station1]):
+            for sesh in generic_sesh(network_sesh, [station1]):
                 yield sesh
 
         def describe_with_1_history_hourly():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly]):
+                for sesh in generic_sesh(station_sesh, [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_precip_net1_1):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_precip_net1_1]):
+                    for sesh in generic_sesh(history_sesh, [var_precip_net1_1]):
                         yield sesh
 
                 def describe_with_observations_for_a_month():
@@ -62,11 +69,12 @@ def describe_with_1_network():
                                     Obs(id=id, vars_id=var_precip_net1_1.id, history_id=history_stn1_hourly.id,
                                         time=datetime.datetime(2000, 1, day, hour), datum=1.0)
                                 )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     def it_returns_a_single_row(query):
@@ -90,7 +98,7 @@ def describe_with_1_network():
 
                 @fixture
                 def variable_sesh(history_sesh, var_precip_net1_1, var_precip_net1_2, var_temp_point, var_foo):
-                    for sesh in generic_sesh(history_sesh, Variable, [
+                    for sesh in generic_sesh(history_sesh, [
                         var_precip_net1_1, var_precip_net1_2, var_temp_point, var_foo
                     ]):
                         yield sesh
@@ -113,11 +121,12 @@ def describe_with_1_network():
                                         Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
                                             time=datetime.datetime(2000, 1, day, hour), datum=1.0)
                                     )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     def it_returns_exactly_the_expected_variables(
@@ -130,14 +139,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_daily]):
+                for sesh in generic_sesh(station_sesh, [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_precip_net1_1):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_precip_net1_1]):
+                    for sesh in generic_sesh(history_sesh, [var_precip_net1_1]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -156,11 +165,12 @@ def describe_with_1_network():
                                     Obs(id=id + 100, vars_id=var_precip_net1_1.id, history_id=history_stn1_daily.id,
                                         time=datetime.datetime(2000, month, day, 12), datum=float(id))
                                 )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     def it_returns_the_expected_number_of_rows(query):
@@ -178,28 +188,28 @@ def describe_with_2_networks():
 
     @fixture
     def network_sesh(with_views_sesh, network1, network2):
-        for sesh in generic_sesh(with_views_sesh, Network, [network1, network2]):
+        for sesh in generic_sesh(with_views_sesh, [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
 
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in generic_sesh(network_sesh, Station, [station1, station2]):
+            for sesh in generic_sesh(network_sesh, [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
-                for sesh in generic_sesh(station_sesh, History, [history_stn1_hourly, history_stn2_hourly]):
+                for sesh in generic_sesh(station_sesh, [history_stn1_hourly, history_stn2_hourly]):
                     yield sesh
 
             def describe_with_1_variable_per_network():
 
                 @fixture
                 def variable_sesh(history_sesh, var_precip_net1_1, var_precip_net2_1):
-                    for sesh in generic_sesh(history_sesh, Variable, [var_precip_net1_1, var_precip_net2_1]):
+                    for sesh in generic_sesh(history_sesh, [var_precip_net1_1, var_precip_net2_1]):
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
@@ -221,17 +231,20 @@ def describe_with_2_networks():
                                             Obs(id=id, vars_id=var.id, history_id=hx.id,
                                                 time=datetime.datetime(2000, month, day, hour), datum=float(id))
                                         )
-                        for sesh in generic_sesh(variable_sesh, Obs, observations):
+                        for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
                     @fixture
                     def query(obs_sesh):
+                        refresh_views(obs_sesh)
                         return obs_sesh.query
 
                     def it_returns_one_row_per_unique_combo_hx_var_month(
                             query,
                             var_precip_net1_1, history_stn1_hourly, var_precip_net2_1, history_stn2_hourly):
-                        assert set([(r.history_id, r.vars_id, r.obs_month) for r in query(MonthlyTotalPrecipitation)]) == \
+                        assert set([(r.history_id, r.vars_id, r.obs_month) 
+                                    for r in query(MonthlyTotalPrecipitation)]) == \
                                set([(stn.id, var.id, datetime.datetime(2000, month, 1))
-                                    for (var, stn) in [(var_precip_net1_1, history_stn1_hourly), (var_precip_net2_1, history_stn2_hourly)]
+                                    for (var, stn) in [(var_precip_net1_1, history_stn1_hourly), 
+                                                       (var_precip_net2_1, history_stn2_hourly)]
                                     for month in months])
