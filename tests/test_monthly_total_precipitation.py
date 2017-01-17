@@ -219,10 +219,12 @@ def describe_with_2_networks():
                     hours = range(4, 20)
 
                     @fixture
-                    def obs_sesh(variable_sesh, var_precip_net1_1, history_stn1_hourly, var_precip_net2_1, history_stn2_hourly):
+                    def obs_sesh(variable_sesh, var_precip_net1_1, history_stn1_hourly,
+                                 var_precip_net2_1, history_stn2_hourly):
                         observations = []
                         id = 0
-                        for (var, hx) in [(var_precip_net1_1, history_stn1_hourly), (var_precip_net2_1, history_stn2_hourly)]:
+                        for (var, hx) in [(var_precip_net1_1, history_stn1_hourly),
+                                          (var_precip_net2_1, history_stn2_hourly)]:
                             for month in months:
                                 for day in days:
                                     for hour in hours:
