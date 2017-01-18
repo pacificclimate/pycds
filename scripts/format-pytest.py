@@ -1,8 +1,24 @@
-"""This script transforms the hard to read test results output of pytest-describe into a readable form like that
-produced by rspec or jasmine. Anything that is not a test result line is passed through unchanged. A test result
-line is a line occurring between the '======== ...' test summary boundary markers, and containing '::'.
+#! /usr/bin/env python
 
-Usage: pytest ... | python scripts/format-pytest-describe.py"""
+"""When test classes or functions (as in `pytest-describe`) are deeply nested, the output of `pytest -v` is bulky, repetitive,
+and difficult to read.
+
+This script transforms the output of `pytest` into a more readable format like that produced by `rspec` or `jasmine`:
+
+- Repetition is factored out into a hierarchial list-like presentation.
+- Identifiers of test classes and functions are printed with spaces in place of underscores
+  (e.g., `the_unicorn_has_exactly_one_horn` prints as "the unicorn has exactly one horn");
+- Identifiers beginning with `describe` have the `describe` omitted in printing: This makes `pytest-describe` context
+  functions read more smoothly.
+- Test results (success, failure, etc.) are also signalled for easier identification by a symbol at the front of
+  each test listing, as well as the `pytest` standard code in parentheses at the end.
+
+Anything in the output file that is not a test result line is passed through unchanged.
+A test result line is any line that occurs between the '======== ...' boundary markers, and that contains '::'.
+The accumulated test results are printed as a hierarchical list after the closing boundary marker.
+
+Usage: pytest -v ... | python scripts/format-pytest.py
+"""
 
 import sys
 import re
