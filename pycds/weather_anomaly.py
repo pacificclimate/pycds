@@ -48,7 +48,6 @@ Base = declarative_base()
 metadata = Base.metadata
 
 
-class DiscardedObsId(Base, ViewMixin):
     """This class represents a view which returns the id's of all observations that have been discarded,
     either by a native flag or a PCIC flag."""
     __selectable__ = text('''
@@ -139,7 +138,7 @@ def daily_temperature_extremum_selectable(extremum):
             INNER JOIN meta_vars AS vars USING (vars_id)
             INNER JOIN meta_history AS hx USING (history_id)
         WHERE
-            obs.obs_raw_id NOT IN (SELECT * FROM discarded_obs_id_v)
+            obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
             AND vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: {0}imum', 'time: point', 'time: mean')
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
@@ -239,7 +238,7 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
                 INNER JOIN meta_vars AS vars USING (vars_id)
                 INNER JOIN meta_history AS hx USING (history_id)
             WHERE
-                obs.obs_raw_id NOT IN (SELECT * FROM discarded_obs_id_v)
+                obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
                 AND vars.standard_name IN (
                     'lwe_thickness_of_precipitation_amount',
                     'thickness_of_rainfall_amount',

@@ -32,7 +32,7 @@ from pytest import fixture, mark, approx
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs
 from pycds.weather_anomaly import \
-    DiscardedObsId, \
+    DiscardedObs, \
     DailyMaxTemperature, DailyMinTemperature, \
     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
     MonthlyTotalPrecipitation
@@ -41,7 +41,7 @@ from pycds.weather_anomaly import \
 views_to_refresh = [DailyMaxTemperature, DailyMinTemperature,
                      MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature,
                      MonthlyTotalPrecipitation]
-views = [DiscardedObsId] + views_to_refresh
+views = [DiscardedObs] + views_to_refresh
 
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):

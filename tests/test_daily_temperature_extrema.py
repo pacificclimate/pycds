@@ -19,7 +19,7 @@ from sqlalchemy.sql import text
 
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
-from pycds.weather_anomaly import DiscardedObsId
+from pycds.weather_anomaly import DiscardedObs
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 
@@ -47,7 +47,7 @@ def describe_function_effective__day():
         assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
 
 
-views = [DiscardedObsId, DailyMaxTemperature, DailyMinTemperature]
+views = [DiscardedObs, DailyMaxTemperature, DailyMinTemperature]
 refreshable_views = [DailyMaxTemperature, DailyMinTemperature]
 
 @fixture(scope='module')
