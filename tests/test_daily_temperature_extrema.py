@@ -98,7 +98,7 @@ def describe_with_1_network():
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
-                            Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                            Obs(variable=var_temp_point, history=history_stn1_hourly,
                                 time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
                             for i in range(1, 4)
                         ]
@@ -136,20 +136,12 @@ def describe_with_1_network():
 
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
-                        observations = [(Obs(id=1, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                         time=datetime.datetime(2000, 1, 1, 12), datum=1.0)), (
-                                    Obs(id=2, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 1, 13), datum=2.0)), (
-                                    Obs(id=3, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 1, 14), datum=3.0)), (
-                                    Obs(id=4, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 2, 12), datum=4.0)), (
-                                    Obs(id=5, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 2, 13), datum=5.0)), (
-                                    Obs(id=6, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 2, 14), datum=6.0)), (
-                                    Obs(id=7, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
-                                        time=datetime.datetime(2000, 1, 2, 15), datum=7.0))]
+                        observations = [Obs(variable=var_temp_point, history=history_stn1_hourly,
+                                            time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
+                                        for i in range(3)] +\
+                                       [Obs(variable=var_temp_point, history=history_stn1_hourly,
+                                            time=datetime.datetime(2000, 1, 2, 8+i), datum=float(i))
+                                        for i in range(4,8)]
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
@@ -175,8 +167,8 @@ def describe_with_1_network():
                                set([datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 2)])
 
                     @mark.parametrize('DailyExtremeTemperature, statistics', [
-                        (DailyMaxTemperature, [3.0, 7.0]),
-                        (DailyMinTemperature, [1.0, 4.0])
+                        (DailyMaxTemperature, [2.0, 7.0]),
+                        (DailyMinTemperature, [0.0, 4.0])
                     ])
                     def it_returns_the_expected_extreme_values(refreshed_sesh, DailyExtremeTemperature, statistics):
                         results = refreshed_sesh.query(DailyExtremeTemperature).order_by(DailyExtremeTemperature.obs_day)
@@ -309,7 +301,7 @@ def describe_with_1_network():
                         for var in [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]:
                             for i in range(0,2):
                                 id += 1
-                                observations.append(Obs(id=id, vars_id=var.id, history_id=history_stn1_hourly.id,
+                                observations.append(Obs(variable=var, history=history_stn1_hourly,
                                              time=datetime.datetime(2000, 1, 1, 12, id), datum=float(id)))
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
@@ -352,7 +344,7 @@ def describe_with_1_network():
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_daily):
                         observations = [
-                            Obs(id=i + 100, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
+                            Obs(id=i + 100, variable=var_temp_point, history=history_stn1_daily,
                                   time=datetime.datetime(2000, 1, i+10, 12), datum=float(i+10))
                              for i in range(0,n_days)
                             ]
@@ -399,12 +391,12 @@ def describe_with_1_network():
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly, history_stn1_daily):
                         # hourly observations
                         observations = [
-                            Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                            Obs(variable=var_temp_point, history=history_stn1_hourly,
                                       time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
                                  for i in range(0, n_hours)
                             ]
                         # daily observation
-                        observations.append(Obs(id=99, vars_id=var_temp_point.id, history_id=history_stn1_daily.id,
+                        observations.append(Obs(variable=var_temp_point, history=history_stn1_daily,
                                      time=datetime.datetime(2000, 1, 2, 12), datum=10.0))
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
@@ -457,22 +449,17 @@ def describe_with_1_network():
 
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_max, var_temp_min, history_stn1_12_hourly):
-                        observations = []
-                        id = 0
-                        for day, hours in iter(tmax.items()):
-                            for hour, temp in iter(hours.items()):
-                                id += 1
-                                observations.append(
-                                    Obs(id=id, vars_id=var_temp_max.id, history_id=history_stn1_12_hourly.id,
-                                        time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
-                                )
-                        for day, hours in iter(tmin.items()):
-                            for hour, temp in iter(hours.items()):
-                                id += 1
-                                observations.append(
-                                    Obs(id=id, vars_id=var_temp_min.id, history_id=history_stn1_12_hourly.id,
-                                        time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
-                                )
+                        observations = [Obs(variable=var_temp_max, history=history_stn1_12_hourly,
+                                            time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
+                                        for day, hours in iter(tmax.items())
+                                        for hour, temp in iter(hours.items())
+                                       ] +\
+                                       [Obs(variable=var_temp_min, history=history_stn1_12_hourly,
+                                                time=datetime.datetime(2000, 1, day, hour), datum=float(temp))
+                                        for day, hours in iter(tmin.items())
+                                        for hour, temp in iter(hours.items())
+                                       ]
+
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
@@ -537,12 +524,13 @@ def describe_with_2_networks():
                                  var_temp_point2, history_stn2_hourly):
                         observations = []
                         id = 0
-                        for (var, hx) in [(var_temp_point, history_stn1_hourly), (var_temp_point2, history_stn2_hourly)]:
+                        for (var, hx) in [(var_temp_point, history_stn1_hourly),
+                                          (var_temp_point2, history_stn2_hourly)]:
                             for day in range(1, n_days+1):
                                 for hour in range(0, n_hours):
                                     id += 1
                                     observations.append(
-                                        Obs(id=id, vars_id=var.id, history_id=hx.id,
+                                        Obs(variable=var, history=hx,
                                               time=datetime.datetime(2000, 1, day, 12+hour), datum=float(id))
                                     )
                         for sesh in generic_sesh(variable_sesh, observations):
@@ -556,7 +544,8 @@ def describe_with_2_networks():
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
                     def it_returns_one_row_per_unique_combo_hx_var_day(refreshed_sesh, DailyExtremeTemperature,
                                var_temp_point, history_stn1_hourly, var_temp_point2, history_stn2_hourly):
-                        assert set([(r.history_id, r.vars_id, r.obs_day) for r in refreshed_sesh.query(DailyExtremeTemperature)]) == \
+                        assert set([(r.history_id, r.vars_id, r.obs_day)
+                                    for r in refreshed_sesh.query(DailyExtremeTemperature)]) == \
                                set([(stn.id, var.id, datetime.datetime(2000, 1, day))
                                     for (var, stn) in [(var_temp_point, history_stn1_hourly),
                                                        (var_temp_point2, history_stn2_hourly)]
