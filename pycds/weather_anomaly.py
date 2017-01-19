@@ -44,26 +44,30 @@ from sqlalchemy.schema import DDL
 from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
+from sqlalchemy import select, join, func, union, bindparam, literal
+from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
+
 Base = declarative_base()
 metadata = Base.metadata
 
 
+class DiscardedObs(Base, ViewMixin):
     """This class represents a view which returns the id's of all observations that have been discarded,
     either by a native flag or a PCIC flag."""
-    __selectable__ = text('''
-        SELECT ornf.obs_raw_id AS id
-        FROM
-          obs_raw_native_flags as ornf
-          JOIN meta_native_flag AS mnf ON (ornf.native_flag_id = mnf.native_flag_id)
-        WHERE COALESCE(mnf.discard, FALSE)
-        UNION ALL
-        SELECT orpf.obs_raw_id AS id
-        FROM
-          obs_raw_pcic_flags as orpf
-          JOIN meta_pcic_flag AS mpf ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
-        WHERE COALESCE(mpf.discard, FALSE)
-    ''').columns(column('obs_raw_id'))
-    __primary_key__ = ['obs_raw_id']
+    __selectable__ = union(
+        select([ObsRawNativeFlags.c.obs_raw_id.label('id')])\
+        .select_from(ObsRawNativeFlags.join(NativeFlag))\
+        .where(NativeFlag.discard),
+        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
+        # .where(func.coalesce(PCICFlag.discard, False)),
+
+        select([ObsRawPCICFlags.c.obs_raw_id.label('id')])\
+        .select_from(ObsRawPCICFlags.join(PCICFlag)) \
+        .where(PCICFlag.discard),
+        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
+        # .where(func.coalesce(PCICFlag.discard, False)),
+    )
+    __primary_key__ = ['id']
 
 
 # This function returns the day that should be used (the effective day) for computing daily temperature extrema.
@@ -242,7 +246,7 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
                 AND vars.standard_name IN (
                     'lwe_thickness_of_precipitation_amount',
                     'thickness_of_rainfall_amount',
-                    'thickness_of_snowfall_amount'  -- verify that this is rainfall equiv!
+                    'thickness_of_snowfall_amount'
                 )
                 AND vars.cell_method = 'time: sum'
                 AND hx.freq IN ('1-hourly', 'daily')
