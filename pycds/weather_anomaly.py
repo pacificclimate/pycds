@@ -41,10 +41,30 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
 
+from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
 Base = declarative_base()
 metadata = Base.metadata
+
+
+class DiscardedObsId(Base, ViewMixin):
+    """This class represents a view which returns the id's of all observations that have been discarded,
+    either by a native flag or a PCIC flag."""
+    __selectable__ = text('''
+        SELECT ornf.obs_raw_id AS id
+        FROM
+          obs_raw_native_flags as ornf
+          JOIN meta_native_flag AS mnf ON (ornf.native_flag_id = mnf.native_flag_id)
+        WHERE COALESCE(mnf.discard, FALSE)
+        UNION ALL
+        SELECT orpf.obs_raw_id AS id
+        FROM
+          obs_raw_pcic_flags as orpf
+          JOIN meta_pcic_flag AS mpf ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
+        WHERE COALESCE(mpf.discard, FALSE)
+    ''').columns(column('obs_raw_id'))
+    __primary_key__ = ['obs_raw_id']
 
 
 # This function returns the day that should be used (the effective day) for computing daily temperature extrema.
@@ -119,22 +139,7 @@ def daily_temperature_extremum_selectable(extremum):
             INNER JOIN meta_vars AS vars USING (vars_id)
             INNER JOIN meta_history AS hx USING (history_id)
         WHERE
-            obs.obs_raw_id IN (
-                -- Return id of each observation without any associated discard flags;
-                -- in other words, exclude observations marked discard, and don't be fooled by
-                -- additional flags that don't discard (hence the aggregate BOOL_OR's).
-                SELECT obs.obs_raw_id
-                FROM
-                    obs_raw AS obs
-                    LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
-                    LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
-                    LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
-                    LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
-                GROUP BY obs.obs_raw_id
-                HAVING
-                    BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
-                    AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
-            )
+            obs.obs_raw_id NOT IN (SELECT * FROM discarded_obs_id_v)
             AND vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: {0}imum', 'time: point', 'time: mean')
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
@@ -209,8 +214,6 @@ class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
     __primary_key__ = 'history_id vars_id obs_month'.split()
 
 
-# TODO: Factor out common subquery for non-discarded obs_raw_id's (as a view)
-
 class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
     __selectable__ = text('''
         SELECT
@@ -236,22 +239,7 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
                 INNER JOIN meta_vars AS vars USING (vars_id)
                 INNER JOIN meta_history AS hx USING (history_id)
             WHERE
-                obs.obs_raw_id IN (
-                    -- Return id of each observation without any associated discard flags;
-                    -- in other words, exclude observations marked discard, and don't be fooled by
-                    -- additional flags that don't discard (hence the aggregate BOOL_OR's).
-                    SELECT obs.obs_raw_id
-                    FROM
-                        obs_raw AS obs
-                        LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
-                        LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
-                        LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
-                        LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
-                    GROUP BY obs.obs_raw_id
-                    HAVING
-                        BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
-                        AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
-                )
+                obs.obs_raw_id NOT IN (SELECT * FROM discarded_obs_id_v)
                 AND vars.standard_name IN (
                     'lwe_thickness_of_precipitation_amount',
                     'thickness_of_rainfall_amount',

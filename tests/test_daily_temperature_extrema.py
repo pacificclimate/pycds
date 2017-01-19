@@ -19,6 +19,7 @@ from sqlalchemy.sql import text
 
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
+from pycds.weather_anomaly import DiscardedObsId
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 
@@ -46,7 +47,8 @@ def describe_function_effective__day():
         assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
 
 
-views = [DailyMaxTemperature, DailyMinTemperature]
+views = [DiscardedObsId, DailyMaxTemperature, DailyMinTemperature]
+refreshable_views = [DailyMaxTemperature, DailyMinTemperature]
 
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):
@@ -59,7 +61,7 @@ def with_views_sesh(mod_empty_database_session):
 
 
 def refresh_views(sesh):
-    for view in views:
+    for view in refreshable_views:
         view.refresh(sesh)
 
 
@@ -188,12 +190,14 @@ def describe_with_1_network():
                 def describe_with_many_observations_in_one_day_bis():
                     '''Set up observations for native flag tests'''
 
+                    num_flags = 24
+
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
                             Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
                                 time=datetime.datetime(2000, 1, 1, i), datum=float(i))
-                            for i in range(0, 24)
+                            for i in range(num_flags)
                             ]
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
@@ -211,19 +215,24 @@ def describe_with_1_network():
 
                         def describe_with_native_flag_associations():
                             '''m < n associations of discard native flag to observations;
-                            k < n associations of not discard native flag to observations'''
+                            k < n associations of not discard native flag to observations, some on same observations
+                                as discard flags'''
+
+                            # num_discard_flags must be different than num_flags/2 to guarantee test is unambiguous
+                            num_discard_flags = 10
+                            num_non_discard_flags = 12
 
                             @fixture
                             def flag_assoc_sesh(flag_sesh, native_flag_discard, native_flag_non_discard):
                                 sesh = flag_sesh
                                 obs = sesh.query(Obs)
-                                for o in obs.filter(0 <= Obs.id).filter(Obs.id < 12).all():
+                                for o in obs.filter(0 <= Obs.id).filter(Obs.id < num_discard_flags).all():
                                     o.native_flags.append(native_flag_discard)
-                                for o in obs.filter(6 <= Obs.id).filter(Obs.id < 18).all():
+                                for o in obs.filter(6 <= Obs.id).filter(Obs.id < 6 + num_non_discard_flags).all():
                                     o.native_flags.append(native_flag_non_discard)
                                 sesh.flush()
                                 yield sesh
-                                for id in range(0, 24):
+                                for id in range(num_flags):
                                     obs.filter_by(id=id).first().native_flags = []
                                 sesh.flush()
 
@@ -235,16 +244,16 @@ def describe_with_1_network():
                             def setup_is_correct(flag_assoc_sesh):
                                 obs = flag_assoc_sesh.query(Obs)
                                 obs_flagged_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == True))
-                                assert obs_flagged_discard.count() == 12
+                                assert obs_flagged_discard.count() == num_discard_flags
                                 obs_flagged_not_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == False))
-                                assert obs_flagged_not_discard.count() == 12
+                                assert obs_flagged_not_discard.count() == num_non_discard_flags
 
                             @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
                             def it_excludes_all_and_only_discarded_observations(query, DailyExtremeTemperature):
                                 results = query(DailyExtremeTemperature)
                                 assert results.count() == 1
                                 result = results.first()
-                                assert result.data_coverage == approx(0.5)
+                                assert result.data_coverage == approx(1 - float(num_discard_flags)/num_flags)
 
                     def describe_with_pcic_flags():
                         '''2 pcic flags, 1 discard, 1 not discard'''
