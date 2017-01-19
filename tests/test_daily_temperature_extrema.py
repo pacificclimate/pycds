@@ -9,6 +9,8 @@ Idiosyncracies:
   can't: Each one is the terminus of a different cascade of fixtures. (Different fixtures may have the same name
   in different contexts, but they are actually different objects, embodying different test conditions, and that
   prevents us from using autouse.
+- We use a workaround for the absent but desirable ability to parametrize tests over fixtures. See
+  docstring in tests/test_wa_monthly_views_common.py for a more complete explanation of this technique.
 '''
 import datetime
 
@@ -188,14 +190,17 @@ def describe_with_1_network():
                 def describe_with_many_observations_in_one_day_bis():
                     '''Set up observations for native flag tests'''
 
-                    num_flags = 24
+                    num_obs_for_native = 12
+                    num_obs_for_pcic = 12
+                    num_obs = num_obs_for_native + num_obs_for_pcic
+                    pcic_offset = num_obs_for_native
 
                     @fixture
                     def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
-                            Obs(id=i, vars_id=var_temp_point.id, history_id=history_stn1_hourly.id,
+                            Obs(id=i, variable=var_temp_point, history=history_stn1_hourly,
                                 time=datetime.datetime(2000, 1, 1, i), datum=float(i))
-                            for i in range(num_flags)
+                            for i in range(num_obs)
                             ]
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
@@ -207,8 +212,10 @@ def describe_with_1_network():
                         '''2 native flags, 1 discard, 1 not discard'''
 
                         @fixture
-                        def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard):
-                            for sesh in generic_sesh(obs_sesh, [native_flag_discard, native_flag_non_discard]):
+                        def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard,
+                                      pcic_flag_discard, pcic_flag_non_discard):
+                            for sesh in generic_sesh(obs_sesh, [native_flag_discard, native_flag_non_discard,
+                                                                pcic_flag_discard, pcic_flag_non_discard]):
                                 yield sesh
 
                         def describe_with_native_flag_associations():
@@ -216,87 +223,73 @@ def describe_with_1_network():
                             k < n associations of not discard native flag to observations, some on same observations
                                 as discard flags'''
 
-                            # num_discard_flags must be different than num_flags/2 to guarantee test is unambiguous
-                            num_discard_flags = 10
-                            num_non_discard_flags = 12
+                            # num_discarded must be different than num_obs/2 to guarantee test is unambiguous
+                            num_discarded = 5
+                            num_non_discarded = 5
 
                             @fixture
-                            def flag_assoc_sesh(flag_sesh, native_flag_discard, native_flag_non_discard):
+                            def flag_assoc_sesh(request, flag_sesh,
+                                                native_flag_discard, native_flag_non_discard,
+                                                pcic_flag_discard, pcic_flag_non_discard):
+                                """This fixture is used as an indirect fixture for parametrized tests.
+                                Its behaviour depends on the value of request.param, which tells whether
+                                to add associations to native flags, pcic flags, or both. Associations to
+                                native flags and to pcic flags do not overlap.
+
+                                This kind of indirect parameterization is a substitute for the absent ability of pytest
+                                to parametrize over fixtures, which would make this whole things somewhat simpler to
+                                code and understand. In any case, it enables us to perform the same tests for several
+                                different combinations of flagging of observations without repetitive code.
+                                """
                                 sesh = flag_sesh
                                 obs = sesh.query(Obs)
-                                for o in obs.filter(0 <= Obs.id).filter(Obs.id < num_discard_flags).all():
-                                    o.native_flags.append(native_flag_discard)
-                                for o in obs.filter(6 <= Obs.id).filter(Obs.id < 6 + num_non_discard_flags).all():
-                                    o.native_flags.append(native_flag_non_discard)
+                                if request.param in ['native', 'both']:
+                                    for o in obs.filter((0 <= Obs.id) & (Obs.id < num_discarded)).all():
+                                        o.native_flags.append(native_flag_discard)
+                                    for o in obs.filter((3 <= Obs.id) & (Obs.id < 3 + num_non_discarded)).all():
+                                        o.native_flags.append(native_flag_non_discard)
+                                elif request.param in ['pcic', 'both']:
+                                    for o in obs.filter((pcic_offset <= Obs.id) & (Obs.id < pcic_offset + num_discarded)).all():
+                                        o.pcic_flags.append(pcic_flag_discard)
+                                    for o in obs.filter((pcic_offset + 3 <= Obs.id) & (Obs.id < pcic_offset + 3 + num_non_discarded)).all():
+                                        o.pcic_flags.append(pcic_flag_non_discard)
                                 sesh.flush()
                                 yield sesh
-                                for id in range(num_flags):
-                                    obs.filter_by(id=id).first().native_flags = []
+                                for o in obs.all():
+                                    o.native_flags = []
+                                    o.pcic_flags = []
                                 sesh.flush()
 
-                            @fixture
-                            def refreshed_sesh(flag_assoc_sesh):
-                                refresh_views(flag_assoc_sesh)
-                                yield flag_assoc_sesh
-
+                            @mark.parametrize('flag_assoc_sesh', [
+                                'native',
+                                'pcic'
+                            ], indirect=True)
                             def setup_is_correct(flag_assoc_sesh):
                                 obs = flag_assoc_sesh.query(Obs)
-                                obs_flagged_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == True))
-                                assert obs_flagged_discard.count() == num_discard_flags
-                                obs_flagged_not_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == False))
-                                assert obs_flagged_not_discard.count() == num_non_discard_flags
+                                obs_flagged_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == True) |
+                                                                 Obs.pcic_flags.any(PCICFlag.discard == True))
+                                assert obs_flagged_discard.count() == num_discarded
+                                obs_flagged_not_discard = obs.filter(Obs.native_flags.any(NativeFlag.discard == False) |
+                                                                     Obs.pcic_flags.any(PCICFlag.discard == False))
+                                assert obs_flagged_not_discard.count() == num_non_discarded
 
+                            @mark.parametrize('flag_assoc_sesh', [
+                                'native',
+                                'pcic',
+                                'both'
+                            ], indirect=True)
                             @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                            def it_excludes_all_and_only_discarded_observations(refreshed_sesh, DailyExtremeTemperature):
-                                results = refreshed_sesh.query(DailyExtremeTemperature)
+                            def it_excludes_all_and_only_discarded_observations(flag_assoc_sesh, DailyExtremeTemperature):
+                                sesh = flag_assoc_sesh
+                                refresh_views(sesh)
+                                results = sesh.query(DailyExtremeTemperature)
+                                num_actually_discarded = sesh.query(Obs)\
+                                    .filter(Obs.native_flags.any(NativeFlag.discard == True) |
+                                                                 Obs.pcic_flags.any(PCICFlag.discard == True))\
+                                    .count()
                                 assert results.count() == 1
                                 result = results.first()
-                                assert result.data_coverage == approx(1 - float(num_discard_flags)/num_flags)
-
-                    def describe_with_pcic_flags():
-                        '''2 pcic flags, 1 discard, 1 not discard'''
-
-                        @fixture
-                        def flag_sesh(obs_sesh, pcic_flag_discard, pcic_flag_non_discard):
-                            for sesh in generic_sesh(obs_sesh, [pcic_flag_discard, pcic_flag_non_discard]):
-                                yield sesh
-
-                        def describe_with_pcic_flag_associations():
-                            '''m < n associations of discard pcic flag to observations;
-                            k < n associations of not discard pcic flag to observations'''
-
-                            @fixture
-                            def flag_assoc_sesh(flag_sesh, pcic_flag_discard, pcic_flag_non_discard):
-                                sesh = flag_sesh
-                                obs = sesh.query(Obs)
-                                for id in range(0, 12):
-                                    obs.filter_by(id=id).first().pcic_flags.append(pcic_flag_discard)
-                                for id in range(6, 18):
-                                    obs.filter_by(id=id).first().pcic_flags.append(pcic_flag_non_discard)
-                                sesh.flush()
-                                yield sesh
-                                for id in range(0, 24):
-                                    obs.filter_by(id=id).first().pcic_flags = []
-                                sesh.flush()
-
-                            @fixture
-                            def refreshed_sesh(flag_assoc_sesh):
-                                refresh_views(flag_assoc_sesh)
-                                yield flag_assoc_sesh
-
-                            def setup_is_correct(flag_assoc_sesh):
-                                obs = flag_assoc_sesh.query(Obs)
-                                obs_flagged_discard = obs.filter(Obs.pcic_flags.any(PCICFlag.discard == True))
-                                assert obs_flagged_discard.count() == 12
-                                obs_flagged_not_discard = obs.filter(Obs.pcic_flags.any(PCICFlag.discard == False))
-                                assert obs_flagged_not_discard.count() == 12
-
-                            @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                            def it_excludes_all_and_only_discarded_observations(refreshed_sesh, DailyExtremeTemperature):
-                                results = refreshed_sesh.query(DailyExtremeTemperature)
-                                assert results.count() == 1
-                                result = results.first()
-                                assert result.data_coverage == approx(0.5)
+                                assert result.data_coverage == approx(1 - float(num_actually_discarded)/num_obs)
 
             def describe_with_many_variables():
 
