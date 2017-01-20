@@ -23,6 +23,17 @@ Materialized View: Monthly average of daily minimum temperature (MonthlyAverageO
   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
+Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
+  - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
+  - data_coverage is the fraction of observations actually available in a month relative to those potentially
+     available in a month. This computation is correct if and only if the observation frequency does not change
+     during any one day in the month. It remains approximately correct if such days are rare, and remains valid
+     for the purpose of distinguishing adequate coverage.
+  - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
+      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
+      excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+
 """
 
 import sqlalchemy
@@ -30,11 +41,33 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
 
-from pycds.view_helpers import ViewMixin  # TODO: Remove
+from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
+
+from sqlalchemy import select, join, func, union, bindparam, literal
+from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
 
 Base = declarative_base()
 metadata = Base.metadata
+
+
+class DiscardedObs(Base, ViewMixin):
+    """This class represents a view which returns the id's of all observations that have been discarded,
+    either by a native flag or a PCIC flag."""
+    __selectable__ = union(
+        select([ObsRawNativeFlags.c.obs_raw_id.label('id')])\
+        .select_from(ObsRawNativeFlags.join(NativeFlag))\
+        .where(NativeFlag.discard),
+        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
+        # .where(func.coalesce(PCICFlag.discard, False)),
+
+        select([ObsRawPCICFlags.c.obs_raw_id.label('id')])\
+        .select_from(ObsRawPCICFlags.join(PCICFlag)) \
+        .where(PCICFlag.discard),
+        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
+        # .where(func.coalesce(PCICFlag.discard, False)),
+    )
+    __primary_key__ = ['id']
 
 
 # This function returns the day that should be used (the effective day) for computing daily temperature extrema.
@@ -109,22 +142,7 @@ def daily_temperature_extremum_selectable(extremum):
             INNER JOIN meta_vars AS vars USING (vars_id)
             INNER JOIN meta_history AS hx USING (history_id)
         WHERE
-            obs.obs_raw_id IN (
-                -- Return id of each observation without any associated discard flags;
-                -- in other words, exclude observations marked discard, and don't be fooled by
-                -- additional flags that don't discard (hence the aggregate BOOL_OR's).
-                SELECT obs.obs_raw_id
-                FROM
-                    obs_raw AS obs
-                    LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
-                    LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
-                    LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
-                    LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
-                GROUP BY obs.obs_raw_id
-                HAVING
-                    BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
-                    AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
-            )
+            obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
             AND vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: {0}imum', 'time: point', 'time: mean')
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
@@ -193,6 +211,53 @@ class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('max')
     __primary_key__ = 'history_id vars_id obs_month'.split()
 
+
 class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_selectable('min')
+    __primary_key__ = 'history_id vars_id obs_month'.split()
+
+
+class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
+    __selectable__ = text('''
+        SELECT
+            history_id,
+            vars_id,
+            obs_month,
+            statistic,
+            total_data_coverage / DaysInMonth(obs_month::date) as data_coverage
+        FROM (
+            SELECT
+                hx.history_id,
+                obs.vars_id,
+                date_trunc('month', obs_time) AS obs_month,
+                sum(datum) AS statistic,
+                sum(
+                    CASE hx.freq
+                    WHEN 'daily' THEN 1.0::float
+                    WHEN '1-hourly' THEN (1.0 / 24.0)::float
+                    END
+                ) AS total_data_coverage
+            FROM
+                obs_raw AS obs
+                INNER JOIN meta_vars AS vars USING (vars_id)
+                INNER JOIN meta_history AS hx USING (history_id)
+            WHERE
+                obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
+                AND vars.standard_name IN (
+                    'lwe_thickness_of_precipitation_amount',
+                    'thickness_of_rainfall_amount',
+                    'thickness_of_snowfall_amount'
+                )
+                AND vars.cell_method = 'time: sum'
+                AND hx.freq IN ('1-hourly', 'daily')
+            GROUP BY
+                hx.history_id, vars_id, obs_month
+        ) AS temp
+    ''').columns(
+        column('history_id'),
+        column('vars_id'),
+        column('obs_month'),
+        column('statistic'),
+        column('data_coverage')
+    )
     __primary_key__ = 'history_id vars_id obs_month'.split()
