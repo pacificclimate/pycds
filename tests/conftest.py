@@ -17,6 +17,29 @@ from pycds import Contact, Network, Station, History, Variable, Obs, NativeFlag,
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
+
+@fixture(scope='session')
+def engine():
+    """Test-session-wide database engine"""
+    with testing.postgresql.Postgresql() as pg:
+        engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
+        pycds.Base.metadata.create_all(bind=engine)
+        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+        yield engine
+
+
+@fixture(scope='function')
+def session(engine):
+    """Single-test database session. All session actions are rolled back on teardown"""
+    session = sessionmaker(bind=engine)()
+    yield session
+    session.rollback()
+    session.close()
+
+
+@fixture()
+
 @fixture(scope='module')
 def mod_blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:

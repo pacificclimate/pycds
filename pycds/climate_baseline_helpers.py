@@ -179,17 +179,36 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
     return (n_added, n_skipped)
 
 
+def expect_value(what, value, expected):
+    assert value == expected, \
+        '{}: expected "{}", got "{}"'.format(what, expected, value)
+
+
 def verify_baseline_network_and_variables(session):
     """Verify that the expected baseline network and variable records are present in database.
     These reproduce most of the unit tests for the corresponding upload functions.
 
     :param session:
-    :return: None
+    :return: boolean (always True)
+    :raise AssertionError when any error is detected
     """
+
+    def expect_variable(name):
+        variable = session.query(Variable) \
+            .join(Variable.network) \
+            .filter((Network.name == pcic_climate_variable_network_name) & (Variable.name == name)) \
+            .first()
+        assert variable, 'Climate baseline variable named "{}" not found in database'.format(name)
+        return variable
+
+
+    def expect_variable_attr(variable, attr, expected):
+        value = getattr(variable, attr)
+        expect_value('Variable "{}" {}'.format(variable.name, attr), value, expected)
 
     # Network
     networks = session.query(Network).filter(Network.name == pcic_climate_variable_network_name)
-    assert networks.count() == 1
+    assert networks.count() == 1, 'Network "{}" not found in database'.format(pcic_climate_variable_network_name)
     network = networks.first()
 
     # Temperature variables
@@ -197,36 +216,74 @@ def verify_baseline_network_and_variables(session):
         ('Tx_Climatology', 'maximum', 'Max.'),
         ('Tn_Climatology', 'minimum', 'Min.'),
     ]:
-        temp_variable = session.query(Variable).filter(Variable.name == name).first()
-        assert temp_variable
-        assert (temp_variable.unit, temp_variable.standard_name, temp_variable.network_id) == \
-               (u'celsius', u'air_temperature', network.id)
-        assert temp_variable.short_name == u'air_temperature {}'.format(temp_variable.cell_method)
-        assert temp_variable.cell_method == u't: {} within days t: mean within months t: mean over years'.format(keyword)
-        assert temp_variable.description == u'Climatological mean of monthly mean of {} daily temperature'.format(keyword)
-        assert temp_variable.display_name == u'Temperature Climatology ({})'.format(kwd)
+        temp_variable = expect_variable(name)
+        expect_variable_attr(temp_variable, 'unit', u'celsius')
+        expect_variable_attr(temp_variable, 'standard_name', u'air_temperature')
+        expect_variable_attr(temp_variable, 'network_id', network.id)
+        expect_variable_attr(temp_variable, 'short_name', u'air_temperature t: {} within days t: mean within months t: mean over years'.format(keyword))
+        expect_variable_attr(temp_variable, 'cell_method', u't: {} within days t: mean within months t: mean over years'.format(keyword))
+        expect_variable_attr(temp_variable, 'description', u'Climatological mean of monthly mean of {} daily temperature'.format(keyword))
+        expect_variable_attr(temp_variable, 'display_name', u'Temperature Climatology ({})'.format(kwd))
 
     # Precipitation variable
-    precip_variable = session.query(Variable).filter(Variable.name == 'Precip_Climatology').first()
-    assert (precip_variable.unit, precip_variable.standard_name, precip_variable.network_id) == \
-           (u'mm', u'lwe_thickness_of_precipitation_amount', network.id)
-    assert precip_variable.short_name == u'lwe_thickness_of_precipitation_amount {}'.format(precip_variable.cell_method)
-    assert precip_variable.cell_method == u't: sum within months t: mean over years'
-    assert precip_variable.description == u'Climatological mean of monthly total precipitation'
-    assert precip_variable.display_name == u'Precipitation Climatology'
+    precip_variable = expect_variable('Precip_Climatology')
+    expect_variable_attr(precip_variable, 'unit', u'mm')
+    expect_variable_attr(precip_variable, 'standard_name', u'lwe_thickness_of_precipitation_amount')
+    expect_variable_attr(precip_variable, 'network_id', network.id)
+    expect_variable_attr(precip_variable, 'short_name', u'lwe_thickness_of_precipitation_amount t: sum within months t: mean over years')
+    expect_variable_attr(precip_variable, 'cell_method', u't: sum within months t: mean over years')
+    expect_variable_attr(precip_variable, 'description', u'Climatological mean of monthly total precipitation')
+    expect_variable_attr(precip_variable, 'display_name', u'Precipitation Climatology')
+
+    return True
 
 
-def verify_baseline_max_temperatures(session, station_count):
+def verify_baseline_values(session, station_count, var_name, expected_stations_and_values):
     """Verify that the database contains the expected content for baseline values. Specifically:
 
     - the expected number (count) of climate baseline values, given the number of stations with baseline values
     - specific example values, taken from visual intepretation of an arbitrary selection of stations
       in the input file.
+
+    :param session:
+    :param station_count: number of stations for which baseline climate values should exist
+        (we cannot rely on just counting the number of stations in the database, I think)
+    :param var_name: name of variable to be checked
+    :param expected_stations_and_values: list of expected stations and associated climate baseline values
+        for the specified variable to be checked. Of the form
+        [
+            {
+                'station_native_id': str, # identifies station
+                'values': list(numeric), # 12 expected values, in ascending month order
+            },
+            ...
+
+        ]
+    :return boolean: always True
+    :raise AssertionError when any error is detected
     """
 
     derived_values = \
-        session.query(DerivedValue)\
-        .join(DerivedValue.variable)\
-        .filter(Variable.name == 'Tx_Climatology')
+        session.query(DerivedValue) \
+            .join(DerivedValue.history) \
+            .join(DerivedValue.variable) \
+            .join(History.station) \
+            .join(Variable.network) \
+            .filter(Network.name == pcic_climate_variable_network_name) \
+            .filter(Variable.name == var_name)
 
-    assert derived_values.count() == 12 * station_count
+    expect_value('{} values count'.format(var_name), derived_values.count(), 12 * station_count)
+
+    for expected_stn_and_values in expected_stations_and_values:
+        station_native_id = expected_stn_and_values['station_native_id']
+        stn_dvs = derived_values \
+            .filter(Station.native_id == station_native_id) \
+            .order_by(DerivedValue.time) \
+            .all()
+        expect_value('Variable "{}", Station "{}" value count:'.format(var_name, station_native_id),
+                     len(stn_dvs), 12)
+        for m, expected_value in enumerate(expected_stn_and_values['values']):
+            expect_value('Variable {}, Station {}, Month {} datum:'.format(var_name, station_native_id, m+1),
+                         stn_dvs[m].datum, expected_value)
+
+    return True
