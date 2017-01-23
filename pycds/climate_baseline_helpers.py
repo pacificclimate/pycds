@@ -238,7 +238,7 @@ def verify_baseline_network_and_variables(session):
     return True
 
 
-def verify_baseline_values(session, station_count, var_name, expected_stations_and_values):
+def verify_baseline_values(session, var_name, station_count, expected_stations_and_values):
     """Verify that the database contains the expected content for baseline values. Specifically:
 
     - the expected number (count) of climate baseline values, given the number of stations with baseline values

@@ -262,7 +262,7 @@ def describe_verify__baseline__values():
             def it_raises_an_exception(sesh_with_climate_baseline_variables, var_name):
                 sesh = sesh_with_climate_baseline_variables
                 with raises(AssertionError) as excinfo:
-                    verify_baseline_values(sesh, 1, var_name, None)
+                    verify_baseline_values(sesh, var_name, 1, None)
                 assert var_name in str(excinfo.value)
                 assert 'values count' in str(excinfo.value)
                 assert 'expected "12"' in str(excinfo.value)
@@ -312,7 +312,7 @@ def describe_verify__baseline__values():
                 def it_succeeds(sesh_with_climate_baseline_values, var_name, expected_stations_and_values):
                     sesh = sesh_with_climate_baseline_values
                     try:
-                        finished = verify_baseline_values(sesh, 2, var_name, expected_stations_and_values)
+                        finished = verify_baseline_values(sesh, var_name, 2, expected_stations_and_values)
                     except AssertionError:
                         fail('Unexpected AssertionError from verify')
                     assert finished
@@ -331,7 +331,7 @@ def describe_verify__baseline__values():
                         {'station_native_id': station_native_id, 'values': values},
                     ]
                     with raises(AssertionError) as excinfo:
-                        verify_baseline_values(sesh, 2, var_name, expected_stations_and_values)
+                        verify_baseline_values(sesh, var_name, 2, expected_stations_and_values)
                     assert var_name in str(excinfo.value)
                     assert station_native_id in str(excinfo.value)
                     assert expected_keyword in str(excinfo.value)
