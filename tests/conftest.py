@@ -38,8 +38,6 @@ def session(engine):
     session.close()
 
 
-@fixture()
-
 @fixture(scope='module')
 def mod_blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
