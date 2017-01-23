@@ -47,7 +47,7 @@ def histories(stations):
 
 def describe_get__or__create__pcic__climate__variables__network():
 
-    def test_creates_the_expected_new_network_record(empty_database_session):
+    def it_creates_the_expected_new_network_record(empty_database_session):
         sesh = empty_database_session
         network = get_or_create_pcic_climate_variables_network(sesh)
         results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
@@ -57,7 +57,7 @@ def describe_get__or__create__pcic__climate__variables__network():
         assert result.publish == True
         assert 'PCIC' in result.long_name
 
-    def test_creates_no_more_than_one_of_them(empty_database_session):
+    def it_creates_no_more_than_one_of_them(empty_database_session):
         sesh = empty_database_session
         get_or_create_pcic_climate_variables_network(sesh)
         get_or_create_pcic_climate_variables_network(sesh)
@@ -66,14 +66,14 @@ def describe_get__or__create__pcic__climate__variables__network():
 
 def describe_create__pcic__climate__baseline__variables():
 
-    def test_returns_the_expected_variables(empty_database_session):
+    def it_returns_the_expected_variables(empty_database_session):
         sesh = empty_database_session
         variables = get_or_create_pcic_climate_baseline_variables(sesh)
         assert len(variables) == 3
         assert set([v.name for v in variables]) == set(['Tx_Climatology', 'Tn_Climatology', 'Precip_Climatology'])
         # More aggressive testing of each variable below
 
-    def test_causes_network_to_be_created(sesh_with_climate_baseline_variables):
+    def it_causes_network_to_be_created(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
         results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
@@ -82,7 +82,7 @@ def describe_create__pcic__climate__baseline__variables():
         ('Tx_Climatology', 'maximum', 'Max.'),
         ('Tn_Climatology', 'minimum', 'Min.'),
     ])
-    def test_creates_temperature_variables(sesh_with_climate_baseline_variables, name, keyword, kwd):
+    def it_creates_temperature_variables(sesh_with_climate_baseline_variables, name, keyword, kwd):
         sesh = sesh_with_climate_baseline_variables
         network = get_or_create_pcic_climate_variables_network(sesh)
         result = sesh.query(Variable).filter(Variable.name == name).first()
@@ -94,7 +94,7 @@ def describe_create__pcic__climate__baseline__variables():
         assert result.description == u'Climatological mean of monthly mean of {} daily temperature'.format(keyword)
         assert result.display_name == u'Temperature Climatology ({})'.format(kwd)
 
-    def test_creates_precip_variable(sesh_with_climate_baseline_variables):
+    def it_creates_precip_variable(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
         network = get_or_create_pcic_climate_variables_network(sesh)
         result = sesh.query(Variable).filter(Variable.name == 'Precip_Climatology').first()
@@ -105,7 +105,7 @@ def describe_create__pcic__climate__baseline__variables():
         assert result.description == u'Climatological mean of monthly total precipitation'
         assert result.display_name == u'Precipitation Climatology'
 
-    def test_creates_no_more_than_one_of_each(empty_database_session):
+    def it_creates_no_more_than_one_of_each(empty_database_session):
         sesh = empty_database_session
         get_or_create_pcic_climate_baseline_variables(sesh)
         get_or_create_pcic_climate_baseline_variables(sesh)
@@ -121,70 +121,108 @@ def describe_load__pcic__climate__baseline__values():
             for sesh in generic_sesh(sesh_with_climate_baseline_variables, stations + histories):
                 yield sesh
 
-        def describe_with_an_invalid_climate_variable_name():
-            var_name = 'foo'
+        def describe_with_an_invalid_climate_network_or_variable_name():
 
-            def test_throws_an_exception(sesh_with_station_and_history_records):
+            @mark.parametrize('network_name, var_name', [
+                ('foo', 'Tx_Climatology'),
+                (pcic_climate_variable_network_name, 'foo'),
+            ])
+            def it_throws_an_exception(sesh_with_station_and_history_records, network_name, var_name):
                 sesh = sesh_with_station_and_history_records
                 with raises(ValueError):
-                    load_pcic_climate_baseline_values(sesh, var_name, [])
+                    load_pcic_climate_baseline_values(sesh, var_name, [], network_name=network_name)
 
+        def describe_with_valid_network_and_variable_names():
+            # use default value for param network_name in load_pcic_climate_baseline_values
 
-        def describe_with_a_valid_climate_variable_name():
-            var_name = 'Tx_Climatology'  # Any valid one will do
+            def describe_with_no_missing_data():
 
-            def describe_with_an_invalid_network_name():
-                network_name = 'foo'
+                @fixture
+                def source(request, stations):
+                    lines = []
+                    for station in stations:
+                        if request.param in ['Tx_Climatology', 'Tn_Climatology']:
+                            values = [str(int(10*(100*station.id + 2*month + 0.5))).encode('ascii')
+                                      for month in range(1, 13)]
+                        else:
+                            values = [str(100*station.id + 2*month).encode('ascii')
+                                      for month in range(1, 13)]
+                        values.append(b'99')
+                        line = struct.pack(
+                            field_format,
+                            bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                            *values
+                        ).decode('ascii').replace('\0', ' ')
+                        lines.append(line + '\n')
+                    return lines
 
-                def test_throws_an_exception(sesh_with_station_and_history_records):
+                @mark.parametrize('var_name, source', [
+                    ('Tx_Climatology', 'Tx_Climatology'), 
+                    ('Tn_Climatology', 'Tn_Climatology'), 
+                    ('Precip_Climatology', 'Precip_Climatology'), 
+                ], indirect=['source'])
+                def it_correctly_converts_and_loads_values_into_the_database(
+                        sesh_with_station_and_history_records, stations, var_name, source):
                     sesh = sesh_with_station_and_history_records
-                    with raises(ValueError):
-                        load_pcic_climate_baseline_values(sesh, var_name, [], network_name=network_name)
 
-            def describe_with_a_valid_network_name():
-                # use default value for param network_name in load_pcic_climate_baseline_values
+                    n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
+                    assert n_loaded == 2
+                    assert n_skipped == 0
 
-                def describe_with_a_fake_source():
+                    derived_values = sesh.query(DerivedValue)\
+                        .join(DerivedValue.variable)\
+                        .filter(Variable.name == var_name)
 
-                    @fixture
-                    def source(stations):
-                        lines = []
-                        for station in stations:
-                            temps = [str(100*station.id + 2*month + 0.5).encode('ascii') for month in range(1, 13)]
-                            temps.append(b'99')
-                            line = struct.pack(
-                                field_format,
-                                bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
-                                *temps
-                            ).decode('ascii').replace('\0', ' ')
-                            lines.append(line + '\n')
-                        return lines
+                    assert derived_values.count() == 12 * len(stations)
 
-                    def test_loads_the_values_into_the_database(sesh_with_station_and_history_records, stations, source):
-                        sesh = sesh_with_station_and_history_records
-
-                        n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
-                        assert n_loaded == 2
-                        assert n_skipped == 0
-
-                        derived_values = sesh.query(DerivedValue)
-
-                        assert derived_values.count() == 12 * len(stations)
-
-                        expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
-                        for station in stations:
-                            station_values = derived_values.join(History).join(Station) \
-                                .filter(Station.id == station.id) \
-                                .order_by(DerivedValue.time)
-                            latest_history = sesh.query(History)\
-                                .filter(History.station.has(id=station.id))\
-                                .order_by(History.sdate.desc())\
-                                .first()
-                            for i, value in enumerate(station_values):
-                                month = i + 1
-                                last_day = monthrange(2000, month)[1]
-                                assert value.time == datetime.datetime(2000, month, last_day, 23)
+                    expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
+                    for station in stations:
+                        station_values = derived_values.join(History).join(Station) \
+                            .filter(Station.id == station.id) \
+                            .order_by(DerivedValue.time)
+                        latest_history = sesh.query(History)\
+                            .filter(History.station.has(id=station.id))\
+                            .order_by(History.sdate.desc())\
+                            .first()
+                        for i, value in enumerate(station_values):
+                            month = i + 1
+                            last_day = monthrange(2000, month)[1]
+                            assert value.time == datetime.datetime(2000, month, last_day, 23)
+                            if var_name in ['Tx_Climatology', 'Tn_Climatology']:
                                 assert value.datum == 100*station.id + 2*month + 0.5
-                                assert value.history == latest_history
-                                assert value.variable == expected_variable
+                            else:
+                                assert value.datum == 100*station.id + 2*month
+                            assert value.history == latest_history
+                            assert value.variable == expected_variable
 
+            def describe_with_a_station_with_missing_data_for_some_months():
+                
+                @fixture
+                def source(stations):
+                    values = [b'-9999', b'2', b'3', b'4', b'5', b'-9999', b'7', b'8', b'-9999', b'-9999', b'11', b'12', b'50']
+                    line = struct.pack(
+                        field_format,
+                        bytes(stations[0].native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                        *values
+                    ).decode('ascii').replace('\0', ' ')
+                    return [line + '\n']
+                
+                @mark.parametrize('var_name', ['Tx_Climatology', 'Tn_Climatology', 'Precip_Climatology'])
+                def it_loads_only_non_absent_values(
+                        sesh_with_station_and_history_records, stations, var_name, source):
+                    sesh = sesh_with_station_and_history_records
+
+                    n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
+                    assert n_loaded == 1
+                    assert n_skipped == 0
+
+                    derived_values = sesh.query(DerivedValue) \
+                        .join(DerivedValue.variable) \
+                        .filter(Variable.name == var_name)
+                    station_values = derived_values.join(History).join(Station) \
+                        .filter(Station.id == stations[0].id)
+                    assert set([sv.time.month for sv in station_values]) == {2, 3, 4, 5, 7, 8, 11, 12}
+                    
+                    
+                        
+                    
