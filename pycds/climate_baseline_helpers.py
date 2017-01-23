@@ -120,6 +120,16 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
 
     Returns:
         (n_added, n_skipped): counts of lines (not values!) added to database or skipped, respectively
+
+    Read the input lines one by one and interpret each under a fixed-width format (provided externally; defined above
+    in variables field_names, field_widths, field_format.
+
+    The data fields are further formatted as follows:
+
+    - Temperature values are given in 10ths of a degree C.
+    - Precipitation values are given in mm.
+    - A raw value of -9999 indicates no data for that particular station and month. These values are not
+      stored in the database.
     """
 
     # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
@@ -140,8 +150,15 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         .filter(Variable.network.has(name=network_name))\
         .first()
     if not variable:
-        raise ValueError("Climate variable named '{}' associate with network {} was not found in the database"
+        raise ValueError("Climate variable named '{}' associated with network {} was not found in the database"
                          .format(var_name, network_name))
+
+
+    if var_name in ['Tx_Climatology', 'Tn_Climatology']:
+        convert = lambda temp_in_10thsC: float(temp_in_10thsC) / 10
+    else:
+        convert = lambda precip_in_mm: float(precip_in_mm)
+
 
     # TODO: Use logging rather than print throughout
     print('Loading...')
@@ -155,14 +172,17 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
             .order_by(History.sdate.desc())\
             .first()
         if latest_history:
-            session.add_all(
-                [DerivedValue(
-                    time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
-                    datum=float(data[str(month)]),
-                    vars_id=variable.id,
-                    history_id=latest_history.id
-                ) for month in range(1, 13)]
-            )
+            for month in range(1, 13):
+                datum = data[str(month)]
+                if datum != '-9999':
+                    session.add(
+                        DerivedValue(
+                            time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
+                            datum=convert(datum),
+                            variable=variable,
+                            history=latest_history
+                        )
+                    )
             n_added += 1
         else:
             print('\nSkipping input line:')
