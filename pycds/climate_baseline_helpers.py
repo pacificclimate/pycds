@@ -1,6 +1,7 @@
 """Tools for loading climate baseline data into database from flat files.
 """
 
+import logging
 import struct
 import datetime
 from calendar import monthrange
@@ -164,8 +165,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], netw
         convert = lambda precip_in_mm: float(precip_in_mm)
 
 
-    # TODO: Use logging rather than print throughout
-    print('Loading...')
+    logging.info('Loading...')
     n_added = 0
     n_excluded = 0
     n_skipped = 0
@@ -179,7 +179,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], netw
                 .order_by(History.sdate.desc())\
                 .first()
             if latest_history:
-                print('\nAdding station "{}"'.format(station_native_id))
+                logging.info('Adding station "{}"'.format(station_native_id))
                 for month in range(1, 13):
                     datum = data[str(month)]
                     if datum != '-9999':
@@ -193,20 +193,20 @@ def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], netw
                         )
                 n_added += 1
             else:
-                print('\nSkipping input line:')
-                print(line)
-                print('Reason: No history record(s) found for station with native_id = "{}"'.format(station_native_id))
+                logging.info('Skipping input line:')
+                logging.info(line)
+                logging.info('Reason: No history record(s) found for station with native_id = "{}"'.format(station_native_id))
                 n_skipped += 1
         else:
-            print('\nExcluding station with native id = "{}": found in exclude list'.format(station_native_id))
+            logging.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))
             n_excluded += 1
 
     session.flush()
 
-    print('\nLoading complete')
-    print('{} input lines processed'.format(n_added + n_excluded + n_skipped))
-    print('{} stations added to database'.format(n_added))
-    print('{} stations excluded'.format(n_excluded))
-    print('{} stations skipped'.format(n_skipped))
+    logging.info('Loading complete')
+    logging.info('{} input lines processed'.format(n_added + n_excluded + n_skipped))
+    logging.info('{} stations added to database'.format(n_added))
+    logging.info('{} stations excluded'.format(n_excluded))
+    logging.info('{} stations skipped'.format(n_skipped))
 
     return (n_added, n_excluded, n_skipped)
