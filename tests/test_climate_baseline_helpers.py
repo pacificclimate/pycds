@@ -16,16 +16,8 @@ from pycds.climate_baseline_helpers import \
 
 
 @fixture
-def empty_database_session(mod_blank_postgis_session):
-    sesh = mod_blank_postgis_session
-    engine = sesh.get_bind()
-    pycds.Base.metadata.create_all(bind=engine)
-    yield sesh
-
-
-@fixture
-def sesh_with_climate_baseline_variables(empty_database_session):
-    sesh = empty_database_session
+def sesh_with_climate_baseline_variables(session):
+    sesh = session
     get_or_create_pcic_climate_baseline_variables(sesh)
     yield sesh
 
@@ -47,8 +39,8 @@ def histories(stations):
 
 def describe_get__or__create__pcic__climate__variables__network():
 
-    def it_creates_the_expected_new_network_record(empty_database_session):
-        sesh = empty_database_session
+    def it_creates_the_expected_new_network_record(session):
+        sesh = session
         network = get_or_create_pcic_climate_variables_network(sesh)
         results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
@@ -57,8 +49,8 @@ def describe_get__or__create__pcic__climate__variables__network():
         assert result.publish == True
         assert 'PCIC' in result.long_name
 
-    def it_creates_no_more_than_one_of_them(empty_database_session):
-        sesh = empty_database_session
+    def it_creates_no_more_than_one_of_them(session):
+        sesh = session
         get_or_create_pcic_climate_variables_network(sesh)
         get_or_create_pcic_climate_variables_network(sesh)
         results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
@@ -66,8 +58,8 @@ def describe_get__or__create__pcic__climate__variables__network():
 
 def describe_create__pcic__climate__baseline__variables():
 
-    def it_returns_the_expected_variables(empty_database_session):
-        sesh = empty_database_session
+    def it_returns_the_expected_variables(session):
+        sesh = session
         variables = get_or_create_pcic_climate_baseline_variables(sesh)
         assert len(variables) == 3
         assert set([v.name for v in variables]) == set(['Tx_Climatology', 'Tn_Climatology', 'Precip_Climatology'])
@@ -105,8 +97,8 @@ def describe_create__pcic__climate__baseline__variables():
         assert result.description == u'Climatological mean of monthly total precipitation'
         assert result.display_name == u'Precipitation Climatology'
 
-    def it_creates_no_more_than_one_of_each(empty_database_session):
-        sesh = empty_database_session
+    def it_creates_no_more_than_one_of_each(session):
+        sesh = session
         get_or_create_pcic_climate_baseline_variables(sesh)
         get_or_create_pcic_climate_baseline_variables(sesh)
         results = sesh.query(Variable).filter(Variable.name.like('%_Climatology'))
