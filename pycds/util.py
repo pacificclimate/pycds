@@ -294,10 +294,8 @@ def generic_sesh(sesh, sa_objects):
     '''
     for sao in sa_objects:
         sesh.add(sao)
-        sesh.commit()
-    sesh.flush()
+        sesh.flush()
     yield sesh
     for sao in reversed(sa_objects):
         sesh.delete(sao)
-        sesh.commit()
-    sesh.flush()
+        sesh.flush()
