@@ -103,7 +103,7 @@ field_widths = [8, 1, 12, 5, 1, 12, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
 field_format = ' '.join(['{}s'.format(fw) for fw in field_widths])
 
 
-def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pcic_climate_variable_network_name):
+def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], network_name=pcic_climate_variable_network_name):
     """Load baseline values into the database.
     Create the necessary variables and synthetic network if they do not already exist.
 
@@ -113,9 +113,13 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         var_name (str): name of climate baseline variable for which the values are to be loaded
 
         lines (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
-            (strings) containing the data to be loaded; typically result of `file.readlines()`
+            (strings) containing the data to be loaded; typically result of `file.readlines()`.
+            Each line represents a single station.
 
-        network_name (str): name of the network to which the climate variable (identified by var_name)
+        exclude (list): a list of station native id's that should be excluded from the stations
+            loaded from `lines`.
+
+        network_name (str): name of the network to which the climate variable (identified by `var_name`)
             must be associated
 
     Returns:
@@ -163,37 +167,46 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
     # TODO: Use logging rather than print throughout
     print('Loading...')
     n_added = 0
+    n_excluded = 0
     n_skipped = 0
 
     for line in lines:
         data = parse_line(line)
-        latest_history = session.query(History)\
-            .filter(History.station.has(native_id=data['native_id']))\
-            .order_by(History.sdate.desc())\
-            .first()
-        if latest_history:
-            for month in range(1, 13):
-                datum = data[str(month)]
-                if datum != '-9999':
-                    session.add(
-                        DerivedValue(
-                            time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
-                            datum=convert(datum),
-                            variable=variable,
-                            history=latest_history
+        station_native_id = data['native_id'].strip()
+        if station_native_id not in exclude:
+            latest_history = session.query(History)\
+                .filter(History.station.has(native_id=station_native_id))\
+                .order_by(History.sdate.desc())\
+                .first()
+            if latest_history:
+                print('\nAdding station "{}"'.format(station_native_id))
+                for month in range(1, 13):
+                    datum = data[str(month)]
+                    if datum != '-9999':
+                        session.add(
+                            DerivedValue(
+                                time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
+                                datum=convert(datum),
+                                variable=variable,
+                                history=latest_history
+                            )
                         )
-                    )
-            n_added += 1
+                n_added += 1
+            else:
+                print('\nSkipping input line:')
+                print(line)
+                print('Reason: No history record(s) found for station with native_id = "{}"'.format(station_native_id))
+                n_skipped += 1
         else:
-            print('\nSkipping input line:')
-            print(line)
-            print('Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id']))
-            n_skipped += 1
+            print('\nExcluding station with native id = "{}": found in exclude list'.format(station_native_id))
+            n_excluded += 1
 
     session.flush()
 
-    print('Loading complete')
-    print('{} input lines successfully processed'.format(n_added))
-    print('{} input lines skipped'.format(n_skipped))
+    print('\nLoading complete')
+    print('{} input lines processed'.format(n_added + n_excluded + n_skipped))
+    print('{} stations added to database'.format(n_added))
+    print('{} stations excluded'.format(n_excluded))
+    print('{} stations skipped'.format(n_skipped))
 
-    return (n_added, n_skipped)
+    return (n_added, n_excluded, n_skipped)

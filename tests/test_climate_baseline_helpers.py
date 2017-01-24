@@ -161,19 +161,26 @@ def describe_load__pcic__climate__baseline__values():
                     ('Tn_Climatology', 'Tn_Climatology'), 
                     ('Precip_Climatology', 'Precip_Climatology'), 
                 ], indirect=['source'])
+                @mark.parametrize('exclude, n_exclude_matching', [
+                    ([], 0),
+                    (['100'], 1),
+                    (['foo'], 0),
+                    (['100', 'foo', '200'], 2)
+                ])
                 def it_correctly_converts_and_loads_values_into_the_database(
-                        sesh_with_station_and_history_records, stations, var_name, source):
+                        sesh_with_station_and_history_records, stations, var_name, source, exclude, n_exclude_matching):
                     sesh = sesh_with_station_and_history_records
 
-                    n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
-                    assert n_loaded == 2
+                    n_loaded, n_excluded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source, exclude)
+                    assert n_loaded == len(stations) - n_exclude_matching
+                    assert n_excluded == n_exclude_matching
                     assert n_skipped == 0
 
                     derived_values = sesh.query(DerivedValue)\
                         .join(DerivedValue.variable)\
                         .filter(Variable.name == var_name)
 
-                    assert derived_values.count() == 12 * len(stations)
+                    assert derived_values.count() == 12 * n_loaded
 
                     expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
                     for station in stations:
@@ -212,8 +219,9 @@ def describe_load__pcic__climate__baseline__values():
                         sesh_with_station_and_history_records, stations, var_name, source):
                     sesh = sesh_with_station_and_history_records
 
-                    n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
+                    n_loaded, n_excluded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
                     assert n_loaded == 1
+                    assert n_excluded == 0
                     assert n_skipped == 0
 
                     derived_values = sesh.query(DerivedValue) \
