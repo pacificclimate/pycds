@@ -51,9 +51,9 @@ Examples:
                 {'station_native_id': '16', 'values': convert_temp_data([-9999, -9999, -9999, -9999, -9999, -9999, 173, 184, 175, 139, -9999, -9999, ])},
                 {'station_native_id': '21', 'values': convert_temp_data([47, 71, 91, 127, 163, 190, 221, 223, 192, 129, 69, 41, ])},
                 # # last 3, lines
-                {'station_native_id': 'bctx005', 'values': convert_temp_data([-58, -21, 32, 90, 147, 185, 199, 187, 136, 69, 2, -33, ])},
-                {'station_native_id': 'bctx004', 'values': convert_temp_data([-104, -39, 45, 124, 174, 213, 233, 223, 166, 82, -32, -79, ])},
-                {'station_native_id': 'bctx003', 'values': convert_temp_data([-73, -28, 29, 103, 142, 182, 189, 182, 133, 80, -8, -55, ])},
+                {'station_native_id': '1101200', 'values': convert_temp_data([56, 76, 103, 135, 168, 194, 226, 230, 202, 141, 82, 54, ])},
+                {'station_native_id': '171', 'values': convert_temp_data([-9999, -9999, -9999, -9999, 152, 195, 216, 199, 139, 48, -9999, -9999, ])},
+                {'station_native_id': '110CCCC', 'values': convert_temp_data([53, 70, 97, 134, 172, 195, 229, 231, 197, 135, 78, 49, ])},
                 # # some lines from the middle (line #s 500, 1000, 1500, 2000)
                 {'station_native_id': '101009', 'values': convert_temp_data([44, 60, 91, 124, 161, 191, 225, 230, 201, 135, 69, 43, ])},
                 {'station_native_id': '1034175', 'values': convert_temp_data([-9999, -9999, -9999, -9999, -9999, 169, 192, 196, 188, 145, 96, -9999, ])},
@@ -69,14 +69,14 @@ Examples:
                 {'station_native_id': '16', 'values': convert_temp_data([-9999, -9999, -9999, -9999, -9999, -9999, 104, 105, 89, 59, -9999, -9999, ])},
                 {'station_native_id': '21', 'values': convert_temp_data([-10, -6, 0, 17, 45, 76, 96, 96, 69, 39, 10, -8, ])},
                 # last 3, lines
-                {'station_native_id': 'bctn005', 'values': convert_temp_data([-115, -80, -36, -7, 36, 67, 92, 81, 56, 19, -41, -79, ])},
-                {'station_native_id': 'bctn004', 'values': convert_temp_data([-174, -139, -77, -20, 25, 67, 92, 80, 40, -7, -89, -142, ])},
-                {'station_native_id': 'bctn003', 'values': convert_temp_data([-127, -96, -35, -4, 39, 72, 82, 80, 56, 17, -55, -94, ])},
+                {'station_native_id': 'PKM', 'values': convert_temp_data([-110, -100, -82, -46, -1, 32, 62, 68, 23, -24, -86, -115, ])},
+                {'station_native_id': 'CLO', 'values': convert_temp_data([1, 11, 21, 41, 71, 99, 123, 129, 103, 65, 29, 7, ])},
+                {'station_native_id': '1097646', 'values': convert_temp_data([-144, -113, -70, -34, 6, 36, 41, 40, 8, -24, -73, -123, ])},
                 # some lines from the middle (line #s 500, 1000, 1500, 2000)
                 {'station_native_id': '101023', 'values': convert_temp_data([-6, -1, 9, 26, 57, 84, 104, 111, 90, 53, 15, -7, ])},
                 {'station_native_id': '1036210', 'values': convert_temp_data([4, 8, 17, 39, 70, 101, 122, 123, 97, 65, 29, 9, ])},
                 {'station_native_id': '1160511', 'values': convert_temp_data([-77, -55, -12, 28, 77, 123, 144, 134, 86, 31, -22, -70, ])},
-                {'station_native_id': '32492676', 'values': convert_temp_data([-34, -19, -6, 14, 45, 91, 96, 100, 76, 43, 2, -21, ])},
+                {'station_native_id': '1127830', 'values': convert_temp_data([-40, -20, 5, 35, 74, 109, 139, 137, 93, 44, 8, -29, ])},
             ]
         },
         'Precip_Climatology': {
@@ -87,14 +87,14 @@ Examples:
                 {'station_native_id': '4', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 228, 155, 104, 128, 191, -9999, -9999, -9999, ])},
                 {'station_native_id': '8', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 173, 123, 85, 85, 128, -9999, -9999, -9999, ])},
                 # last 3, lines
-                {'station_native_id': 'newsnot5', 'values': convert_precip_data([15, 13, 10, 8, 8, 18, 28, 33, 23, 23, 18, 18, ])},
-                {'station_native_id': 'newsnot8', 'values': convert_precip_data([33, 33, 30, 28, 23, 46, 84, 119, 89, 53, 38, 33, ])},
-                {'station_native_id': 'akps013', 'values': convert_precip_data([27, 23, 17, -9999, -9999, -9999, -9999, -9999, -9999, -9999, 40, 44, ])},
+                {'station_native_id': '36', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 68, 62, 38, 49, 53, -9999, -9999, -9999, ])},
+                {'station_native_id': '210', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 24, 48, 48, 36, 25, -9999, -9999, -9999, ])},
+                {'station_native_id': '363', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 61, 61, 65, 58, 75, -9999, -9999, -9999 ])},
                 # some lines from the middle (line #s 500, , 1000, , 1500, , 2000, )
-                {'station_native_id': 'bc65', 'values': convert_precip_data([154, 131, 111, 87, 61, 70, 35, 45, 61, 80, 194, 166, ])},
+                {'station_native_id': '118401', 'values': convert_precip_data([45, 60, 63, 85, 85, 112, 116, 103, 75, 54, -9999, 53, ])},
                 {'station_native_id': '1091169', 'values': convert_precip_data([42, 30, 26, 21, 37, 49, 43, 44, 42, 51, 49, 46, ])},
                 {'station_native_id': '1166658', 'values': convert_precip_data([39, 31, 33, 34, 44, 63, 54, 42, 36, 30, 36, 46, ])},
-                {'station_native_id': '247362', 'values': convert_precip_data([12, 8, 18, 30, 58, 67, 45, 45, 34, 17, 12, 11, ])},
+                {'station_native_id': '1108848', 'values': convert_precip_data([260, 232, 201, 153, 118, 96, 72, 75, 92, 204, 327, 313 ])},
             ]
         },
     }
