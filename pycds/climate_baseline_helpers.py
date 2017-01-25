@@ -124,6 +124,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
 
     # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
     baseline_year = 2000
+
     def baseline_day(month):
         """Return last day of month in baseline_year"""
         return monthrange(baseline_year, month)[1]
@@ -131,7 +132,8 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
 
     def parse_line(line):
         field_values = struct.unpack(field_format, bytes(line.rstrip('\n').encode('ascii')))
-        field_values = [fv.decode('ascii').rstrip('\0 ') for fv in field_values]  # struct.unpack creates null-terminated strings
+        # struct.unpack creates null-terminated strings
+        field_values = [fv.decode('ascii').rstrip('\0 ') for fv in field_values]
         return dict(zip(field_names, field_values))
 
     get_or_create_pcic_climate_baseline_variables(session)
@@ -176,7 +178,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
     print('{} input lines successfully processed'.format(n_added))
     print('{} input lines skipped'.format(n_skipped))
 
-    return (n_added, n_skipped)
+    return n_added, n_skipped
 
 
 def expect_value(what, value, expected):
@@ -200,7 +202,6 @@ def verify_baseline_network_and_variables(session):
             .first()
         assert variable, 'Climate baseline variable named "{}" not found in database'.format(name)
         return variable
-
 
     def expect_variable_attr(variable, attr, expected):
         value = getattr(variable, attr)
@@ -274,24 +275,24 @@ def verify_baseline_values(session, var_name, station_count, expected_stations_a
 
     stations_with_dvs = \
         session.query(Station.native_id)\
-            .select_from(DerivedValue) \
-            .join(DerivedValue.history) \
-            .join(History.station) \
-            .join(Variable.network) \
-            .filter(Network.name == pcic_climate_variable_network_name) \
-            .filter(Variable.name == var_name) \
-            .group_by(Station.native_id)
+        .select_from(DerivedValue) \
+        .join(DerivedValue.history) \
+        .join(History.station) \
+        .join(Variable.network) \
+        .filter(Network.name == pcic_climate_variable_network_name) \
+        .filter(Variable.name == var_name) \
+        .group_by(Station.native_id)
 
     expect_value('{} station count'.format(var_name), stations_with_dvs.count(), station_count)
 
     derived_values = \
         session.query(DerivedValue) \
-            .join(DerivedValue.history) \
-            .join(DerivedValue.variable) \
-            .join(History.station) \
-            .join(Variable.network) \
-            .filter(Network.name == pcic_climate_variable_network_name) \
-            .filter(Variable.name == var_name)
+        .join(DerivedValue.history) \
+        .join(DerivedValue.variable) \
+        .join(History.station) \
+        .join(Variable.network) \
+        .filter(Network.name == pcic_climate_variable_network_name) \
+        .filter(Variable.name == var_name)
 
     for expected_stn_and_values in expected_stations_and_values:
         station_native_id = expected_stn_and_values['station_native_id']

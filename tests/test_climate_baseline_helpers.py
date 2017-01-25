@@ -30,7 +30,7 @@ def sesh_with_climate_baseline_variables(session):
 
 @fixture
 def stations():
-    return [Station(native_id=native_id) for native_id in '100 200'.split() ]
+    return [Station(native_id=native_id) for native_id in '100 200'.split()]
 
 
 @fixture
@@ -60,7 +60,7 @@ def describe_get__or__create__pcic__climate__variables__network():
         assert results.count() == 1
         result = results.first()
         assert network.id == result.id
-        assert result.publish == True
+        assert result.publish is True
         assert 'PCIC' in result.long_name
 
     def test_creates_no_more_than_one_of_them(session):
@@ -68,6 +68,7 @@ def describe_get__or__create__pcic__climate__variables__network():
         get_or_create_pcic_climate_variables_network(session)
         results = session.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
+
 
 def describe_create__pcic__climate__baseline__variables():
 
@@ -129,7 +130,6 @@ def describe_load__pcic__climate__baseline__values():
                 with raises(ValueError):
                     load_pcic_climate_baseline_values(sesh, var_name, [])
 
-
         def describe_with_a_valid_climate_variable_name():
             var_name = 'Tx_Climatology'  # Any valid one will do
 
@@ -154,13 +154,15 @@ def describe_load__pcic__climate__baseline__values():
                             temps.append(b'99')
                             line = struct.pack(
                                 field_format,
-                                bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                                bytes(station.native_id.encode('ascii')),
+                                b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
                                 *temps
                             ).decode('ascii').replace('\0', ' ')
                             lines.append(line + '\n')
                         return lines
 
-                    def test_loads_the_values_into_the_database(sesh_with_station_and_history_records, stations, source):
+                    def test_loads_the_values_into_the_database(
+                            sesh_with_station_and_history_records, stations, source):
                         sesh = sesh_with_station_and_history_records
 
                         n_loaded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
@@ -206,8 +208,6 @@ def describe_verify__baseline__network__and__variables():
                             if var.name == request.param)
             sesh.delete(variable)
             yield sesh
-            # get_or_create_pcic_climate_baseline_variables(sesh)
-
 
         @mark.parametrize('missing_var, sesh_with_1_var_missing', [
             ('Tx_Climatology', 'Tx_Climatology'),
@@ -251,6 +251,7 @@ def describe_verify__baseline__network__and__variables():
                 assert var_name in str(excinfo.value)
                 assert attr_name in str(excinfo.value)
                 assert 'expected' in str(excinfo.value)
+
 
 def describe_verify__baseline__values():
     def describe_with_baseline_network_and_variables():
@@ -321,7 +322,7 @@ def describe_verify__baseline__values():
                 @mark.parametrize('station_native_id, values, expected_keyword', [
                     ('foo', range(1, 13), 'value count'),
                     ('200', range(1, 13), 'value count'),
-                    ('100', list(range(1,5)) + [99] + list(range(6,13)), 'datum'),
+                    ('100', list(range(1, 5)) + [99] + list(range(6, 13)), 'datum'),
                     ('200', [(m if m % 2 == 0 else None) for m in range(1, 13)], 'datum'),
                 ])
                 def it_raises_an_exception(sesh_with_climate_baseline_values, var_name,
