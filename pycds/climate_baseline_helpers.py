@@ -254,7 +254,8 @@ def verify_baseline_values(session, var_name, station_count, expected_stations_a
         [
             {
                 'station_native_id': str, # identifies station
-                'values': list(numeric), # 12 expected values, in ascending month order
+                'values': list(numeric), # 12 expected values, in ascending month order;
+                                         # absent value indicated by value None
             },
             ...
 
@@ -262,6 +263,18 @@ def verify_baseline_values(session, var_name, station_count, expected_stations_a
     :return boolean: always True
     :raise AssertionError when any error is detected
     """
+
+    stations_with_dvs = \
+        session.query(Station.native_id)\
+            .select_from(DerivedValue) \
+            .join(DerivedValue.history) \
+            .join(History.station) \
+            .join(Variable.network) \
+            .filter(Network.name == pcic_climate_variable_network_name) \
+            .filter(Variable.name == var_name) \
+            .group_by(Station.native_id)
+
+    expect_value('{} station count'.format(var_name), stations_with_dvs.count(), station_count)
 
     derived_values = \
         session.query(DerivedValue) \
@@ -272,18 +285,22 @@ def verify_baseline_values(session, var_name, station_count, expected_stations_a
             .filter(Network.name == pcic_climate_variable_network_name) \
             .filter(Variable.name == var_name)
 
-    expect_value('{} values count'.format(var_name), derived_values.count(), 12 * station_count)
-
     for expected_stn_and_values in expected_stations_and_values:
         station_native_id = expected_stn_and_values['station_native_id']
         stn_dvs = derived_values \
             .filter(Station.native_id == station_native_id) \
             .order_by(DerivedValue.time) \
             .all()
-        expect_value('Variable "{}", Station "{}" value count:'.format(var_name, station_native_id),
-                     len(stn_dvs), 12)
-        for m, expected_value in enumerate(expected_stn_and_values['values']):
-            expect_value('Variable {}, Station {}, Month {} datum:'.format(var_name, station_native_id, m+1),
-                         stn_dvs[m].datum, expected_value)
+        expected_values = expected_stn_and_values['values']
+        expect_value('Variable "{}", Station "{}" value count'.format(var_name, station_native_id),
+                     len(stn_dvs), 12 - expected_values.count(None))
+        stn_idx = 0
+        month = 1
+        for expected_value in expected_values:
+            if expected_value is not None:
+                expect_value('Variable {}, Station {}, Month {} datum'.format(var_name, station_native_id, month),
+                             stn_dvs[stn_idx].datum, expected_value)
+                stn_idx += 1
+            month += 1
 
     return True

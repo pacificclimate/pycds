@@ -264,14 +264,14 @@ def describe_verify__baseline__values():
                 with raises(AssertionError) as excinfo:
                     verify_baseline_values(sesh, var_name, 1, None)
                 assert var_name in str(excinfo.value)
-                assert 'values count' in str(excinfo.value)
-                assert 'expected "12"' in str(excinfo.value)
+                assert 'station count' in str(excinfo.value)
+                assert 'expected "1"' in str(excinfo.value)
                 assert 'got "0"' in str(excinfo.value)
 
         def describe_with_valid_climate_baseline_values_in_database():
 
             @fixture
-            def sesh_with_climate_baseline_values(sesh_with_station_and_history_records):
+            def sesh_with_climate_baseline_values(sesh_with_station_and_history_records, histories):
                 sesh = sesh_with_station_and_history_records
                 variables = sesh.query(Variable)\
                     .filter(Variable.network.has(name=pcic_climate_variable_network_name)) \
@@ -287,11 +287,11 @@ def describe_verify__baseline__values():
                         time=datetime.datetime(2000, month, monthrange(2000, month)[1], 23),
                         datum=float(month),
                         variable=variable,
-                        history=history
+                        history=histories[h]
                     )
                     for variable in variables
-                    for history in histories
-                    for month in range(1,13)
+                    for h in range(2)
+                    for month in range(1, 13, h+1)  # a bit tricky: for history[1], leave out every other month
                 ]
                 for s in generic_sesh(sesh, derived_values):
                     yield s
@@ -306,7 +306,7 @@ def describe_verify__baseline__values():
                     ],
                     [
                         {'station_native_id': '100', 'values': range(1, 13)},
-                        {'station_native_id': '200', 'values': range(1, 13)},
+                        {'station_native_id': '200', 'values': [(m if m % 2 else None) for m in range(1, 13)]},
                     ],
                 ])
                 def it_succeeds(sesh_with_climate_baseline_values, var_name, expected_stations_and_values):
@@ -322,7 +322,9 @@ def describe_verify__baseline__values():
                 @mark.parametrize('var_name', climatology_var_names)
                 @mark.parametrize('station_native_id, values, expected_keyword', [
                     ('foo', range(1, 13), 'value count'),
+                    ('200', range(1, 13), 'value count'),
                     ('100', list(range(1,5)) + [99] + list(range(6,13)), 'datum'),
+                    ('200', [(m if m % 2 == 0 else None) for m in range(1, 13)], 'datum'),
                 ])
                 def it_raises_an_exception(sesh_with_climate_baseline_values, var_name,
                                            station_native_id, values, expected_keyword):
