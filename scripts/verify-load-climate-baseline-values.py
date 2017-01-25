@@ -22,9 +22,13 @@ Examples:
     postgresql+psycopg2://scott:tiger@localhost/mydatabase
     postgresql+pg8000://scott:tiger@localhost/mydatabase
 """)
-    parser.add_argument("-d", "--dsn", help="Database DSN in which to create new network")
-    parser.add_argument("-v", "--variable", help="Name of variable to be loaded")
-    parser.add_argument("-f", "--file", help="Path of file containing climate baseline values to be loaded")
+    parser.add_argument("-d", "--dsn", help="Database DSN to verify")
+    parser.add_argument("-xc", "--Txcount", help="Expected count of stations for Tx_Climatology",
+                        type=int, required=True)
+    parser.add_argument("-nc", "--Tncount", help="Expected count of stations for Tn_Climatology",
+                        type=int, required=True)
+    parser.add_argument("-pc", "--Precipcount", help="Expected count of stations for Precip_Climatology",
+                        type=int, required=True)
     args = parser.parse_args()
 
     logger = logging.getLogger(__name__)
@@ -52,7 +56,7 @@ Examples:
     # from manual inspection (copy/paste) of input files:
     value_verification_data = {
         'Tx_Climatology': {
-            'station_count': 3098,
+            'station_count': args.Txcount,
             'expected_stations_and_values': [
                 # first 3 lines
                 {'station_native_id': '11', 'values': convert_temp_data([29, 46, 57, 89, 127, 157, 196, 201, 172, 112, 56, 30, ])},
@@ -69,7 +73,7 @@ Examples:
             ]
         },
         'Tn_Climatology': {
-            'station_count': 3100,
+            'station_count': args.Tncount,
             'expected_stations_and_values': [
                 # first 3 lines
                 {'station_native_id': '11', 'values': convert_temp_data([-8, 1, -1, 17, 43, 65, 87, 100, 91, 47, 16, -7, ])},
@@ -86,7 +90,7 @@ Examples:
             ]
         },
         'Precip_Climatology': {
-            'station_count': 4215,
+            'station_count': args.Precipcount,
             'expected_stations_and_values': [
                 # first 3 lines
                 {'station_native_id': '3', 'values': convert_precip_data([-9999, -9999, -9999, -9999, 168, 120, 82, 87, 137, -9999, -9999, -9999, ])},
