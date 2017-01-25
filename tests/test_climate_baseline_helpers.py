@@ -95,22 +95,22 @@ def describe_create__pcic__climate__baseline__variables():
         result = sesh.query(Variable).filter(Variable.name == name).first()
         assert result
         assert (result.unit, result.standard_name, result.network_id) == \
-               (u'celsius', u'air_temperature', network.id)
-        assert result.short_name == u'air_temperature {}'.format(result.cell_method)
-        assert result.cell_method == u't: {} within days t: mean within months t: mean over years'.format(keyword)
-        assert result.description == u'Climatological mean of monthly mean of {} daily temperature'.format(keyword)
-        assert result.display_name == u'Temperature Climatology ({})'.format(kwd)
+               ('celsius', 'air_temperature', network.id)
+        assert result.short_name == 'air_temperature {}'.format(result.cell_method)
+        assert result.cell_method == 't: {} within days t: mean within months t: mean over years'.format(keyword)
+        assert result.description == 'Climatological mean of monthly mean of {} daily temperature'.format(keyword)
+        assert result.display_name == 'Temperature Climatology ({})'.format(kwd)
 
     def test_creates_precip_variable(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
         network = get_or_create_pcic_climate_variables_network(sesh)
         result = sesh.query(Variable).filter(Variable.name == 'Precip_Climatology').first()
         assert (result.unit, result.standard_name, result.network_id) == \
-               (u'mm', u'lwe_thickness_of_precipitation_amount', network.id)
-        assert result.short_name == u'lwe_thickness_of_precipitation_amount {}'.format(result.cell_method)
-        assert result.cell_method == u't: sum within months t: mean over years'
-        assert result.description == u'Climatological mean of monthly total precipitation'
-        assert result.display_name == u'Precipitation Climatology'
+               ('mm', 'lwe_thickness_of_precipitation_amount', network.id)
+        assert result.short_name == 'lwe_thickness_of_precipitation_amount {}'.format(result.cell_method)
+        assert result.cell_method == 't: sum within months t: mean over years'
+        assert result.description == 'Climatological mean of monthly total precipitation'
+        assert result.display_name == 'Precipitation Climatology'
 
     def test_creates_no_more_than_one_of_each(session):
         sesh = session
@@ -235,12 +235,12 @@ def describe_verify__baseline__network__and__variables():
 
             @mark.parametrize('var_name', climatology_var_names)
             @mark.parametrize('attr_name, attr_value', [
-                ('unit', u'foo'),
-                ('standard_name', u'foo'),
-                ('short_name', u'foo'),
-                ('cell_method', u'foo'),
-                ('description', u'foo'),
-                ('display_name', u'foo'),
+                ('unit', 'foo'),
+                ('standard_name', 'foo'),
+                ('short_name', 'foo'),
+                ('cell_method', 'foo'),
+                ('description', 'foo'),
+                ('display_name', 'foo'),
             ])
             def it_raises_an_exception(sesh_with_climate_baseline_variables, var_name, attr_name, attr_value):
                 sesh = sesh_with_climate_baseline_variables
