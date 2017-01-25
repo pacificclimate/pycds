@@ -217,23 +217,31 @@ def verify_baseline_network_and_variables(session):
         ('Tn_Climatology', 'minimum', 'Min.'),
     ]:
         temp_variable = expect_variable(name)
-        expect_variable_attr(temp_variable, 'unit', u'celsius')
-        expect_variable_attr(temp_variable, 'standard_name', u'air_temperature')
-        expect_variable_attr(temp_variable, 'network_id', network.id)
-        expect_variable_attr(temp_variable, 'short_name', u'air_temperature t: {} within days t: mean within months t: mean over years'.format(keyword))
-        expect_variable_attr(temp_variable, 'cell_method', u't: {} within days t: mean within months t: mean over years'.format(keyword))
-        expect_variable_attr(temp_variable, 'description', u'Climatological mean of monthly mean of {} daily temperature'.format(keyword))
-        expect_variable_attr(temp_variable, 'display_name', u'Temperature Climatology ({})'.format(kwd))
-
+        expected_attrs = {
+            'unit': 'celsius',
+            'standard_name': 'air_temperature',
+            'network_id': network.id,
+            'short_name': 'air_temperature t: {} within days t: mean within months t: mean over years'.format(keyword),
+            'cell_method': 't: {} within days t: mean within months t: mean over years'.format(keyword),
+            'description': 'Climatological mean of monthly mean of {} daily temperature'.format(keyword),
+            'display_name': 'Temperature Climatology ({})'.format(kwd),
+        }
+        for attr, value in expected_attrs.items():
+            expect_variable_attr(temp_variable, attr, value)
+            
     # Precipitation variable
     precip_variable = expect_variable('Precip_Climatology')
-    expect_variable_attr(precip_variable, 'unit', u'mm')
-    expect_variable_attr(precip_variable, 'standard_name', u'lwe_thickness_of_precipitation_amount')
-    expect_variable_attr(precip_variable, 'network_id', network.id)
-    expect_variable_attr(precip_variable, 'short_name', u'lwe_thickness_of_precipitation_amount t: sum within months t: mean over years')
-    expect_variable_attr(precip_variable, 'cell_method', u't: sum within months t: mean over years')
-    expect_variable_attr(precip_variable, 'description', u'Climatological mean of monthly total precipitation')
-    expect_variable_attr(precip_variable, 'display_name', u'Precipitation Climatology')
+    expected_attrs = {
+        'unit': 'mm',
+        'standard_name': 'lwe_thickness_of_precipitation_amount',
+        'network_id': network.id,
+        'short_name': 'lwe_thickness_of_precipitation_amount t: sum within months t: mean over years',
+        'cell_method': 't: sum within months t: mean over years',
+        'description': 'Climatological mean of monthly total precipitation',
+        'display_name': 'Precipitation Climatology',
+    }
+    for attr, value in expected_attrs.items():
+        expect_variable_attr(precip_variable, attr, value)
 
     return True
 
