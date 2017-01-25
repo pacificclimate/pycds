@@ -30,13 +30,13 @@ def sesh_with_climate_baseline_variables(session):
 
 @fixture
 def stations():
-    return [Station(id=1, native_id='100'), Station(id=2, native_id='200'), ]
+    return [Station(native_id=native_id) for native_id in '100 200'.split() ]
 
 
 @fixture
 def histories(stations):
     return [History(
-        station_id=station.id,
+        station=station,
         station_name='Station {0}'.format(station.native_id),
         sdate=datetime.datetime(year, 1, 1),
         edate=datetime.datetime(year+1, 1, 1),
@@ -55,9 +55,8 @@ climatology_var_names = ['Tx_Climatology', 'Tn_Climatology', 'Precip_Climatology
 def describe_get__or__create__pcic__climate__variables__network():
 
     def test_creates_the_expected_new_network_record(session):
-        sesh = session
-        network = get_or_create_pcic_climate_variables_network(sesh)
-        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
+        network = get_or_create_pcic_climate_variables_network(session)
+        results = session.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
         result = results.first()
         assert network.id == result.id
@@ -65,10 +64,9 @@ def describe_get__or__create__pcic__climate__variables__network():
         assert 'PCIC' in result.long_name
 
     def test_creates_no_more_than_one_of_them(session):
-        sesh = session
-        get_or_create_pcic_climate_variables_network(sesh)
-        get_or_create_pcic_climate_variables_network(sesh)
-        results = sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
+        get_or_create_pcic_climate_variables_network(session)
+        get_or_create_pcic_climate_variables_network(session)
+        results = session.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
 
 def describe_create__pcic__climate__baseline__variables():
