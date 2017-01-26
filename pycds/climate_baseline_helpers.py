@@ -104,7 +104,9 @@ field_widths = [8, 1, 12, 5, 1, 12, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
 field_format = ' '.join(['{}s'.format(fw) for fw in field_widths])
 
 
-def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], network_name=pcic_climate_variable_network_name):
+def load_pcic_climate_baseline_values(session, var_name, lines,
+                                      exclude=[],
+                                      network_name=pcic_climate_variable_network_name):
     """Load baseline values into the database.
     Create the necessary variables and synthetic network if they do not already exist.
 
@@ -160,12 +162,10 @@ def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], netw
         raise ValueError("Climate variable named '{}' associated with network {} was not found in the database"
                          .format(var_name, network_name))
 
-
     if var_name in ['Tx_Climatology', 'Tn_Climatology']:
         convert = lambda temp_in_10thsC: float(temp_in_10thsC) / 10
     else:
         convert = lambda precip_in_mm: float(precip_in_mm)
-
 
     logging.info('Loading...')
     n_added = 0
@@ -197,7 +197,8 @@ def load_pcic_climate_baseline_values(session, var_name, lines, exclude=[], netw
             else:
                 logging.info('Skipping input line:')
                 logging.info(line)
-                logging.info('Reason: No history record(s) found for station with native_id = "{}"'.format(station_native_id))
+                logging.info('Reason: No history record(s) found for station with native_id = "{}"'
+                             .format(station_native_id))
                 n_skipped += 1
         else:
             logging.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))

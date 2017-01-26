@@ -155,7 +155,8 @@ def describe_load__pcic__climate__baseline__values():
                         values.append(b'99')
                         line = struct.pack(
                             field_format,
-                            bytes(station.native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                            bytes(station.native_id.encode('ascii')),
+                            b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
                             *values
                         ).decode('ascii').replace('\0', ' ')
                         lines.append(line + '\n')
@@ -211,10 +212,12 @@ def describe_load__pcic__climate__baseline__values():
                 
                 @fixture
                 def source(stations):
-                    values = [b'-9999', b'2', b'3', b'4', b'5', b'-9999', b'7', b'8', b'-9999', b'-9999', b'11', b'12', b'50']
+                    values = [b'-9999', b'2', b'3', b'4', b'5', b'-9999',
+                              b'7', b'8', b'-9999', b'-9999', b'11', b'12', b'50']
                     line = struct.pack(
                         field_format,
-                        bytes(stations[0].native_id.encode('ascii')), b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
+                        bytes(stations[0].native_id.encode('ascii')),
+                        b' ', b'Station Name', b'elev', b' ', b'long', b'lat',
                         *values
                     ).decode('ascii').replace('\0', ' ')
                     return [line + '\n']
