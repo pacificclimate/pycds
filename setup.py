@@ -30,7 +30,14 @@ setup(
     package_data={'pycds': ['data/crmp_subset_data.sql']},
     include_package_data=True,
     zip_safe=True,
-    scripts=['scripts/demo.py', 'scripts/mktestdb.py'],
+    scripts=[
+        'scripts/demo.py',
+        'scripts/mktestdb.py',
+        'scripts/format-pytest.py',
+        'scripts/load-climate-baseline-values.py',
+        'scripts/verify-load-climate-baseline-values.py',
+        'scripts/manage-views.py'
+    ],
     install_requires=['SQLAlchemy', 'geoalchemy2', 'psycopg2'],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
