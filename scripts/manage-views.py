@@ -9,10 +9,12 @@ from sqlalchemy.orm import sessionmaker
 
 from pycds.materialized_view_helpers import MaterializedViewMixin
 from pycds.weather_anomaly import \
+    DiscardedObs, \
     DailyMaxTemperature, DailyMinTemperature, \
     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
     MonthlyTotalPrecipitation
 
+base_views = [DiscardedObs]
 daily_views = [DailyMaxTemperature, DailyMinTemperature]
 monthly_views = [MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, MonthlyTotalPrecipitation]
 
@@ -39,12 +41,14 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
+    # Order matters
     views = {
-        'daily': daily_views,
-        'monthly': monthly_views,
-        'all': daily_views + monthly_views  # order matters
+        'daily': base_views + daily_views,
+        'monthly': base_views + monthly_views,
+        'all': base_views + daily_views + monthly_views
     }[args.views]
 
     for view in views:
-        logging.info("{} '{}'".format(args.operation.capitalize(), view.viewname()))
-        getattr(view, args.operation)()
+        if args.operation == 'create' or issubclass(view, MaterializedViewMixin):
+            logging.info("{} '{}'".format(args.operation.capitalize(), view.viewname()))
+            getattr(view, args.operation)()
