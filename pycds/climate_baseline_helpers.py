@@ -1,6 +1,7 @@
 """Tools for loading climate baseline data into database from flat files.
 """
 
+import logging
 import struct
 import datetime
 from calendar import monthrange
@@ -103,7 +104,9 @@ field_widths = [8, 1, 12, 5, 1, 12, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
 field_format = ' '.join(['{}s'.format(fw) for fw in field_widths])
 
 
-def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pcic_climate_variable_network_name):
+def load_pcic_climate_baseline_values(session, var_name, lines,
+                                      exclude=[],
+                                      network_name=pcic_climate_variable_network_name):
     """Load baseline values into the database.
     Create the necessary variables and synthetic network if they do not already exist.
 
@@ -113,13 +116,27 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         var_name (str): name of climate baseline variable for which the values are to be loaded
 
         lines (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
-            (strings) containing the data to be loaded; typically result of `file.readlines()`
+            (strings) containing the data to be loaded; typically result of `file.readlines()`.
+            Each line represents a single station.
 
-        network_name (str): name of the network to which the climate variable (identified by var_name)
+        exclude (list): a list of station native id's that should be excluded from the stations
+            loaded from `lines`.
+
+        network_name (str): name of the network to which the climate variable (identified by `var_name`)
             must be associated
 
     Returns:
         (n_added, n_skipped): counts of lines (not values!) added to database or skipped, respectively
+
+    Read the input lines one by one and interpret each under a fixed-width format (provided externally; defined above
+    in variables field_names, field_widths, field_format.
+
+    The data fields are further formatted as follows:
+
+    - Temperature values are given in 10ths of a degree C.
+    - Precipitation values are given in mm.
+    - A raw value of -9999 indicates no data for that particular station and month. These values are not
+      stored in the database.
     """
 
     # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
@@ -142,43 +159,60 @@ def load_pcic_climate_baseline_values(session, var_name, lines, network_name=pci
         .filter(Variable.network.has(name=network_name))\
         .first()
     if not variable:
-        raise ValueError("Climate variable named '{}' associate with network {} was not found in the database"
+        raise ValueError("Climate variable named '{}' associated with network {} was not found in the database"
                          .format(var_name, network_name))
 
-    # TODO: Use logging rather than print throughout
-    print('Loading...')
+    if var_name in ['Tx_Climatology', 'Tn_Climatology']:
+        convert = lambda temp_in_10thsC: float(temp_in_10thsC) / 10
+    else:
+        convert = lambda precip_in_mm: float(precip_in_mm)
+
+    logging.info('Loading...')
     n_added = 0
+    n_excluded = 0
     n_skipped = 0
 
     for line in lines:
         data = parse_line(line)
-        latest_history = session.query(History)\
-            .filter(History.station.has(native_id=data['native_id']))\
-            .order_by(History.sdate.desc())\
-            .first()
-        if latest_history:
-            session.add_all(
-                [DerivedValue(
-                    time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
-                    datum=float(data[str(month)]),
-                    vars_id=variable.id,
-                    history_id=latest_history.id
-                ) for month in range(1, 13)]
-            )
-            n_added += 1
+        station_native_id = data['native_id'].strip()
+        if station_native_id not in exclude:
+            latest_history = session.query(History)\
+                .filter(History.station.has(native_id=station_native_id))\
+                .order_by(History.sdate.desc())\
+                .first()
+            if latest_history:
+                logging.info('Adding station "{}"'.format(station_native_id))
+                for month in range(1, 13):
+                    datum = data[str(month)]
+                    if datum != '-9999':
+                        session.add(
+                            DerivedValue(
+                                time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
+                                datum=convert(datum),
+                                variable=variable,
+                                history=latest_history
+                            )
+                        )
+                n_added += 1
+            else:
+                logging.info('Skipping input line:')
+                logging.info(line)
+                logging.info('Reason: No history record(s) found for station with native_id = "{}"'
+                             .format(station_native_id))
+                n_skipped += 1
         else:
-            print('\nSkipping input line:')
-            print(line)
-            print('Reason: No history record(s) found for station with native_id = "{}"'.format(data['native_id']))
-            n_skipped += 1
+            logging.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))
+            n_excluded += 1
 
     session.flush()
 
-    print('Loading complete')
-    print('{} input lines successfully processed'.format(n_added))
-    print('{} input lines skipped'.format(n_skipped))
+    logging.info('Loading complete')
+    logging.info('{} input lines processed'.format(n_added + n_excluded + n_skipped))
+    logging.info('{} stations added to database'.format(n_added))
+    logging.info('{} stations excluded'.format(n_excluded))
+    logging.info('{} stations skipped'.format(n_skipped))
 
-    return n_added, n_skipped
+    return n_added, n_excluded, n_skipped
 
 
 def expect_value(what, value, expected):

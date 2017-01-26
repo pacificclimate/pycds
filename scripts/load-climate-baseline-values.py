@@ -19,6 +19,7 @@ Examples:
     parser.add_argument("-d", "--dsn", help="Database DSN in which to create new network")
     parser.add_argument("-v", "--variable", help="Name of variable to be loaded")
     parser.add_argument("-f", "--file", help="Path of file containing climate baseline values to be loaded")
+    parser.add_argument("-e", "--exclude", help="Path of file containing native ids of stations to be excluded from loading, one per line")
     args = parser.parse_args()
 
     logger = logging.getLogger(__name__)
@@ -41,4 +42,14 @@ Examples:
     else:
         f.seek(0)  # no header; reset to beginning of file
 
-    load_pcic_climate_baseline_values(session, args.variable, f)
+    # Load excluded station native ids, if provided
+    if args.exclude:
+        with open(args.exclude) as e:
+            exclude = e.readlines()
+    else:
+        exclude = []
+    exclude = [x.strip() for x in exclude]
+
+    load_pcic_climate_baseline_values(session, args.variable, f, exclude)
+
+    session.commit()
