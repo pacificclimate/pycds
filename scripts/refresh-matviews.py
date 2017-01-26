@@ -42,6 +42,5 @@ Examples:
     }[args.views]
 
     for view in views:
-        if isinstance(view, MaterializedViewMixin):
-            logging.info("Refreshing '{}'".format(view.viewname()))
-            view.refresh(session)
+        logging.info("Refreshing '{}'".format(view.viewname()))
+        view.refresh(session)
