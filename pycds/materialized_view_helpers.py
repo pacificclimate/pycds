@@ -24,14 +24,17 @@ class CreateMaterializedView(DDLElement):
         self.name = name
         self.selectable = selectable
 
+
 class DropMaterializedView(DDLElement):
     def __init__(self, name):
         self.name = name
+
 
 class RefreshMaterializedView(DDLElement):
     def __init__(self, name, concurrently=False):
         self.name = name
         self.concurrently = concurrently
+
 
 @compiler.compiles(CreateMaterializedView)
 def compile(element, compiler, **kw):
@@ -39,9 +42,11 @@ def compile(element, compiler, **kw):
         element.name,
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
+
 @compiler.compiles(DropMaterializedView)
 def compile(element, compiler, **kw):
     return 'DROP MATERIALIZED VIEW {}'.format(element.name)
+
 
 @compiler.compiles(RefreshMaterializedView)
 def compile(element, compiler, **kw):

@@ -17,9 +17,9 @@ Materialized view: Daily minimum temperature (DailyMinTemperature)
 
 Materialized View: Monthly average of daily maximum temperature (MonthlyAverageOfDailyMaxTemperature)
 Materialized View: Monthly average of daily minimum temperature (MonthlyAverageOfDailyMinTemperature)
-  - data_coverage is the fraction of of observations actually available in a month relative to those potentially available
-      in a month, and is robust to varying reporting frequencies on different days in the month (but see caveat for
-      daily data coverage above).
+  - data_coverage is the fraction of of observations actually available in a month relative to those potentially
+    available in a month, and is robust to varying reporting frequencies on different days in the month (but see
+    caveat for daily data coverage above).
   - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
       The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
       excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
@@ -37,15 +37,14 @@ Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
 """
 
 import sqlalchemy
+from sqlalchemy import select, union
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import text, column
 from sqlalchemy.schema import DDL
+from sqlalchemy.sql import text, column
 
-from pycds.view_helpers import ViewMixin
-from pycds.materialized_view_helpers import MaterializedViewMixin
-
-from sqlalchemy import select, join, func, union, bindparam, literal
 from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
+from pycds.materialized_view_helpers import MaterializedViewMixin
+from pycds.view_helpers import ViewMixin
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -55,8 +54,8 @@ class DiscardedObs(Base, ViewMixin):
     """This class represents a view which returns the id's of all observations that have been discarded,
     either by a native flag or a PCIC flag."""
     __selectable__ = union(
-        select([ObsRawNativeFlags.c.obs_raw_id.label('id')])\
-        .select_from(ObsRawNativeFlags.join(NativeFlag))\
+        select([ObsRawNativeFlags.c.obs_raw_id.label('id')])
+        .select_from(ObsRawNativeFlags.join(NativeFlag))
         .where(NativeFlag.discard),
         # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
         # .where(func.coalesce(PCICFlag.discard, False)),
@@ -115,14 +114,14 @@ sqlalchemy.event.listen(
 
 
 def daily_temperature_extremum_selectable(extremum):
-    '''Return a SQLAlchemy selector for a specified extremum of daily temperature.
+    """Return a SQLAlchemy selector for a specified extremum of daily temperature.
 
     Args:
         extremum (str): 'max' | 'min'
 
     Returns:
         sqlalchemy.sql.expression.FromClause (in fact, sqlalchemy.sql.expression.TextClause)
-    '''
+    """
 
     return text('''
         SELECT
@@ -149,13 +148,13 @@ def daily_temperature_extremum_selectable(extremum):
         GROUP BY
             hx.history_id, vars_id, obs_day
     '''.format(extremum))\
-    .columns(
-            column('history_id'),
-            column('vars_id'),
-            column('obs_day'),
-            column('statistic'),
-            column('data_coverage')
-    )
+        .columns(
+                column('history_id'),
+                column('vars_id'),
+                column('obs_day'),
+                column('statistic'),
+                column('data_coverage')
+        )
 
 
 class DailyMaxTemperature(Base, MaterializedViewMixin):
@@ -169,14 +168,14 @@ class DailyMinTemperature(Base, MaterializedViewMixin):
 
 
 def monthly_average_of_daily_temperature_extremum_selectable(extremum):
-    '''Return a SQLAlchemy selector for a monthly average of a specified extremum of daily temperature.
+    """Return a SQLAlchemy selector for a monthly average of a specified extremum of daily temperature.
 
     Args:
         extremum (str): 'max' | 'min'
 
     Returns:
         sqlalchemy.sql.expression.FromClause (in fact, sqlalchemy.sql.expression.TextClause)
-    '''
+    """
 
     return text('''
         SELECT
@@ -198,13 +197,13 @@ def monthly_average_of_daily_temperature_extremum_selectable(extremum):
                 history_id, vars_id, obs_month
         ) AS temp
     '''.format(extremum))\
-    .columns(
-        column('history_id'),
-        column('vars_id'),
-        column('obs_month'),
-        column('statistic'),
-        column('data_coverage')
-    )
+        .columns(
+            column('history_id'),
+            column('vars_id'),
+            column('obs_month'),
+            column('statistic'),
+            column('data_coverage')
+        )
 
 
 class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
