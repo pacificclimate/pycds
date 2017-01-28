@@ -8,16 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import pycds
-from pycds.materialized_view_helpers import MaterializedViewMixin
-from pycds.weather_anomaly import \
-    DiscardedObs, \
-    DailyMaxTemperature, DailyMinTemperature, \
-    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
-    MonthlyTotalPrecipitation
-
-base_views = [DiscardedObs]
-daily_views = [DailyMaxTemperature, DailyMinTemperature]
-monthly_views = [MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, MonthlyTotalPrecipitation]
+from pycds.manage_views import manage_views
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="""Script to manage views in the PCDS/CRMP database.
@@ -45,16 +36,6 @@ Examples:
     session.execute('SET search_path TO crmp')
     pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
-    # Order matters
-    views = {
-        'daily': base_views + daily_views,
-        'monthly': base_views + monthly_views,
-        'all': base_views + daily_views + monthly_views
-    }[args.views]
-
-    for view in views:
-        if args.operation == 'create' or issubclass(view, MaterializedViewMixin):
-            logging.info("{} '{}'".format(args.operation.capitalize(), view.viewname()))
-            getattr(view, args.operation)(session)
+    manage_views(session, args.operation, args.views)
 
     session.commit()
