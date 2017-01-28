@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import pycds
 from pycds.materialized_view_helpers import MaterializedViewMixin
 from pycds.weather_anomaly import \
     DiscardedObs, \
@@ -42,6 +43,7 @@ Examples:
     session = sessionmaker(bind=engine)()
 
     session.execute('SET search_path TO crmp')
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
     # Order matters
     views = {
