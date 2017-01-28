@@ -41,6 +41,8 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
+    session.execute('SET search_path TO crmp')
+
     # Order matters
     views = {
         'daily': base_views + daily_views,
@@ -51,4 +53,6 @@ Examples:
     for view in views:
         if args.operation == 'create' or issubclass(view, MaterializedViewMixin):
             logging.info("{} '{}'".format(args.operation.capitalize(), view.viewname()))
-            getattr(view, args.operation)()
+            getattr(view, args.operation)(session)
+
+    session.commit()
