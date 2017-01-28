@@ -9,6 +9,12 @@ but note this depends on flask. Essence is the same as a view.
 For an explanation of why we use `append_column` instead of `_make_proxy`, see. This is the core stuff
 for materialized views in SQLAlchemy, from its author:
 https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
+
+The current version of these helpers has been modified simply to create and update regular tables instead
+of true materialized views. This enables these helpers to be used in with Postgresql versions < 9.3 (when
+materialized views were introduced). To restore the true materialized view functionality, revert the merge
+commit for the branch "fake-materialized-views".
+
 """
 
 from sqlalchemy.ext import compiler
@@ -31,27 +37,28 @@ class DropMaterializedView(DDLElement):
 
 
 class RefreshMaterializedView(DDLElement):
-    def __init__(self, name, concurrently=False):
+    def __init__(self, name, selectable):
         self.name = name
-        self.concurrently = concurrently
+        self.selectable = selectable
 
 
 @compiler.compiles(CreateMaterializedView)
 def compile(element, compiler, **kw):
-    return 'CREATE MATERIALIZED VIEW {} AS {}'.format(
+    return 'CREATE TABLE {} AS {}'.format(
         element.name,
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
 
 @compiler.compiles(DropMaterializedView)
 def compile(element, compiler, **kw):
-    return 'DROP MATERIALIZED VIEW {}'.format(element.name)
+    return 'DROP TABLE {}'.format(element.name)
 
 
 @compiler.compiles(RefreshMaterializedView)
 def compile(element, compiler, **kw):
-    return 'REFRESH MATERIALIZED VIEW {} {}'.format(
-        ('CONCURRENTLY' if element.concurrently else ''), element.name)
+    return 'TRUNCATE TABLE {0}; INSERT INTO {0} {1}'.format(
+        element.name,
+        compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
 
 class MaterializedViewMixin(object):
@@ -137,5 +144,5 @@ class MaterializedViewMixin(object):
         return sesh.execute(DropMaterializedView(cls.viewname()))
 
     @classmethod
-    def refresh(cls, sesh, concurrently=False):
-        return sesh.execute(RefreshMaterializedView(cls.viewname(), concurrently))
+    def refresh(cls, sesh):
+        return sesh.execute(RefreshMaterializedView(cls.viewname(), cls.__selectable__))
