@@ -112,8 +112,10 @@ def test_simple_view(view_test_session):
     things = sesh.query(Thing)
     assert things.count() == 5
 
-    SimpleThing.refresh(sesh)
     view_things = sesh.query(SimpleThing)
+    assert view_things.count() == 0  # there is nothing in the view before refreshing it
+    SimpleThing.refresh(sesh)
+    assert view_things.count() == 3  # there is something after
     assert [t.id for t in view_things.order_by(SimpleThing.id)] == [1, 2, 3]
 
 
