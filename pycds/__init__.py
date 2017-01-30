@@ -8,6 +8,7 @@ __all__ = [
 ]
 
 import sqlalchemy
+from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
@@ -16,7 +17,7 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema='crmp'))  # TODO: refactor metadata
 metadata = Base.metadata
 
 

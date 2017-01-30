@@ -7,6 +7,7 @@ import sys
 import testing.postgresql
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.schema import CreateSchema
 import pytest
 from pytest import fixture
 
@@ -24,6 +25,7 @@ def engine():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         pycds.Base.metadata.create_all(bind=engine)
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
@@ -43,6 +45,7 @@ def mod_blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         sesh = sessionmaker(bind=engine)()
         yield sesh
 
@@ -59,6 +62,7 @@ def blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         sesh = sessionmaker(bind=engine)()
 
         yield sesh

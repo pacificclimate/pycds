@@ -53,6 +53,8 @@ refreshable_views = [DailyMaxTemperature, DailyMinTemperature]
 @fixture(scope='module')
 def with_views_sesh(mod_empty_database_session):
     sesh = mod_empty_database_session
+    sesh.execute('SET search_path TO crmp')
+    print('\nwith_views_sesh: search_path', [r for r in sesh.execute('SHOW search_path')])
     for view in views:
         view.create(sesh)
     yield sesh

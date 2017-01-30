@@ -37,6 +37,7 @@ Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
 """
 
 import sqlalchemy
+from sqlalchemy import MetaData
 from sqlalchemy import select, union
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import DDL
@@ -46,7 +47,7 @@ from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
 from pycds.materialized_view_helpers import MaterializedViewMixin
 from pycds.view_helpers import ViewMixin
 
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema='crmp'))  # TODO: refactor metadata
 metadata = Base.metadata
 
 
