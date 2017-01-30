@@ -35,6 +35,10 @@ def engine():
 def session(engine):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
+    # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
+    # public (for postgis functions)
+    session.execute('SET search_path TO crmp, public')
+    # print('\nsearch_path', [r for r in session.execute('SHOW search_path')])
     yield session
     session.rollback()
     session.close()

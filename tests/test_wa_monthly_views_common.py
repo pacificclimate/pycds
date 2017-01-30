@@ -43,14 +43,14 @@ views_to_refresh = [DailyMaxTemperature, DailyMinTemperature,
                      MonthlyTotalPrecipitation]
 views = [DiscardedObs] + views_to_refresh
 
-@fixture(scope='module')
-def with_views_sesh(mod_empty_database_session):
-    sesh = mod_empty_database_session
+
+@fixture(scope='function')
+def with_views_sesh(session):
     for view in views:
-        view.create(sesh)
-    yield sesh
+        view.create(session)
+    yield (session)
     for view in reversed(views):
-        view.drop(sesh)
+        view.drop(session)
 
 
 def refresh_views(sesh):

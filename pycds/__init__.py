@@ -17,7 +17,7 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-Base = declarative_base(metadata=MetaData(schema='crmp'))  # TODO: refactor metadata
+Base = declarative_base(metadata=MetaData(schema='crmp'))
 metadata = Base.metadata
 
 
@@ -365,7 +365,7 @@ class ObsWithFlags(Base):
 sqlalchemy.event.listen(
     metadata, 'before_create',
     DDL('''
-        CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
+        CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
         $$
             SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
             as timestamp));

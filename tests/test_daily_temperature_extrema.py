@@ -39,6 +39,7 @@ def describe_function_effective__day():
     @mark.parametrize('freq', ['1-hourly', '12-hourly'])
     @mark.parametrize('extremum', ['max', 'min'])
     def it_returns_the_expected_day_of_observation(mod_empty_database_session, obs_time, extremum, freq):
+        mod_empty_database_session.execute('SET search_path TO crmp')
         result = mod_empty_database_session.execute(
             text('SELECT effective_day(:obs_time, :extremum, :freq) AS eday'),
             {'obs_time': obs_time, 'extremum': extremum, 'freq': freq}
@@ -50,16 +51,14 @@ def describe_function_effective__day():
 views = [DiscardedObs, DailyMaxTemperature, DailyMinTemperature]
 refreshable_views = [DailyMaxTemperature, DailyMinTemperature]
 
-@fixture(scope='module')
-def with_views_sesh(mod_empty_database_session):
-    sesh = mod_empty_database_session
-    sesh.execute('SET search_path TO crmp')
-    print('\nwith_views_sesh: search_path', [r for r in sesh.execute('SHOW search_path')])
+
+@fixture(scope='function')
+def with_views_sesh(session):
     for view in views:
-        view.create(sesh)
-    yield sesh
+        view.create(session)
+    yield session
     for view in reversed(views):
-        view.drop(sesh)
+        view.drop(session)
 
 
 def refresh_views(sesh):
@@ -113,6 +112,7 @@ def describe_with_1_network():
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
+                    @mark.thisone
                     def it_returns_a_single_row(refreshed_sesh, DailyExtremeTemperature):
                         assert refreshed_sesh.query(DailyExtremeTemperature).count() == 1
 

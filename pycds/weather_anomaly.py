@@ -47,7 +47,7 @@ from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
 from pycds.materialized_view_helpers import MaterializedViewMixin
 from pycds.view_helpers import ViewMixin
 
-Base = declarative_base(metadata=MetaData(schema='crmp'))  # TODO: refactor metadata
+Base = declarative_base(metadata=MetaData(schema='crmp'))
 metadata = Base.metadata
 
 
@@ -90,7 +90,7 @@ class DiscardedObs(Base, ViewMixin):
 sqlalchemy.event.listen(
     metadata, 'before_create',
     DDL('''
-        CREATE OR REPLACE FUNCTION effective_day(
+        CREATE OR REPLACE FUNCTION crmp.effective_day(
           obs_time timestamp without time zone, extremum varchar, freq varchar = ''
         )
         RETURNS timestamp without time zone AS $$
