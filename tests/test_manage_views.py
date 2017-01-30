@@ -16,7 +16,6 @@ monthly_views = ['monthly_average_of_daily_max_temperature_mv', 'monthly_average
     ('create', 'all', daily_views + monthly_views),
 ])
 def test_it(engine, session, operation, view, view_names):
-    # pycds.weather_anomaly.Base.metadata.create_all(bind=engine)  # this proves unnecessary
     table_names = inspect(engine).get_table_names()
     # print('before', table_names)
     for vn in view_names:

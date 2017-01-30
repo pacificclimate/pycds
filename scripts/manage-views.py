@@ -34,7 +34,6 @@ Examples:
     session = sessionmaker(bind=engine)()
 
     session.execute('SET search_path TO crmp')
-    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
     manage_views(session, args.operation, args.views)
 
