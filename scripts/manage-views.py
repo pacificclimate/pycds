@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 import pycds
 from pycds.manage_views import manage_views
+import pycds.weather_anomaly
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="""Script to manage views in the PCDS/CRMP database.
@@ -23,7 +24,7 @@ Examples:
     parser.add_argument('-d', '--dsn', help='Database DSN in which to manage views')
     parser.add_argument('operation', help="Operation to perform (create | refresh)",
                         choices=['create', 'refresh'])
-    parser.add_argument('views', help="Views to refresh (daily | monthly | all)",
+    parser.add_argument('views', help="Views to affect (daily | monthly | all)",
                         choices=['daily', 'monthly', 'all'])
     args = parser.parse_args()
 
@@ -33,7 +34,10 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    session.execute('SET search_path TO crmp')
+    pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+
+    session.execute('SET search_path TO crmp, public')
 
     manage_views(session, args.operation, args.views)
 
