@@ -128,7 +128,7 @@ def daily_temperature_extremum_selectable(extremum):
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            effective_day(obs.obs_time, '{0}', hx.freq) AS obs_day,
+            effective_day(obs.obs_time, '{0}', hx.freq::varchar) AS obs_day,
             {0}(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
