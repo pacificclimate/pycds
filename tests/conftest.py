@@ -5,9 +5,11 @@ import logging, logging.config
 import sys
 
 import testing.postgresql
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import CreateSchema
+from sqlalchemy.schema import DDL, CreateSchema
+
 import pytest
 from pytest import fixture
 
@@ -27,6 +29,17 @@ def engine():
         engine.execute("create extension postgis")
         engine.execute(CreateSchema('crmp'))
         pycds.Base.metadata.create_all(bind=engine)
+        sqlalchemy.event.listen(
+            pycds.weather_anomaly.Base.metadata,
+            'before_create',
+            DDL('''
+                CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
+                $$
+                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
+                    as timestamp));
+                $$ LANGUAGE sql;
+            ''')
+        )
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
