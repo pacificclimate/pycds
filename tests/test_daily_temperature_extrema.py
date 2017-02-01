@@ -182,7 +182,13 @@ def describe_with_1_network():
                         assert [r.data_coverage for r in results] == approx([3.0/24.0, 4.0/24.0])
 
                 def describe_with_many_observations_in_one_day_bis():
-                    '''Set up observations for native flag tests'''
+                    '''Set up observations for flag tests.
+                    24 observations total, one for each hour in the single day Jan 1, 2000.
+                    Therefore daily temperature extrema views will have one row - for that date.
+                    Flags will be associated to these observations that cause a certain number of observations
+                    to be excluded from the daily temperature extrema calculations.
+                    This exclusion will affect the data_coverage figure for the (one) row returned - discards will
+                    cause data_coverage to be less than 1.0 by the fraction of observations excluded.'''
 
                     num_obs_for_native = 12
                     num_obs_for_pcic = 12
@@ -199,11 +205,10 @@ def describe_with_1_network():
                         for sesh in generic_sesh(variable_sesh, observations):
                             yield sesh
 
-                    # It would be better to DRY up describe_with_native_flags and describe_with_pcic_flags by
-                    # parametrizing, but pytest doesn't yet support parameterization over fixtures:
-                    # see https://github.com/pytest-dev/pytest/issues/349
-                    def describe_with_native_flags():
-                        '''2 native flags, 1 discard, 1 not discard'''
+                    def describe_with_flags():
+                        '''2 native flags, 1 discard, 1 not discard.
+                        Ditto pcic flags.
+                        '''
 
                         @fixture
                         def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard,
@@ -212,10 +217,22 @@ def describe_with_1_network():
                                                                 pcic_flag_discard, pcic_flag_non_discard]):
                                 yield sesh
 
-                        def describe_with_native_flag_associations():
-                            '''m < n associations of discard native flag to observations;
-                            k < n associations of not discard native flag to observations, some on same observations
-                                as discard flags'''
+                        def describe_with_flag_associations():
+                            '''Associate flags to various subsets of the observations. Specifically:
+
+                            For native flags:
+                            - associate discard flags to num_discarded (=5) observations (id = 0..4)
+                            - associate non-discard flags to num_non_discarded (=5) observations,
+                              some overlapping discards (id = 3..7)
+
+                            For pcic flags:
+                            - associate discard flags to num_discarded (=5) observations (id = 12..16)
+                            - associate non-discard flags to num_non_discarded (=5) observations,
+                              some overlapping discards (id = 15..19)
+
+                            Note that native and pcic flag associations do not overlap. That would be better to test,
+                            but also harder ... lazy/pragmatic
+                            '''
 
                             # num_discarded must be different than num_obs/2 to guarantee test is unambiguous
                             num_discarded = 5
@@ -231,7 +248,7 @@ def describe_with_1_network():
                                 native flags and to pcic flags do not overlap.
 
                                 This kind of indirect parameterization is a substitute for the absent ability of pytest
-                                to parametrize over fixtures, which would make this whole things somewhat simpler to
+                                to parametrize over fixtures, which would make this whole thing somewhat simpler to
                                 code and understand. In any case, it enables us to perform the same tests for several
                                 different combinations of flagging of observations without repetitive code.
                                 """
