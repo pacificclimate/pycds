@@ -24,8 +24,8 @@ Examples:
     parser.add_argument('-d', '--dsn', help='Database DSN in which to manage views')
     parser.add_argument('operation', help="Operation to perform (create | refresh)",
                         choices=['create', 'refresh'])
-    parser.add_argument('views', help="Views to affect (daily | monthly | all)",
-                        choices=['daily', 'monthly', 'all'])
+    parser.add_argument('views', help="Views to affect",
+                        choices=['base', 'daily', 'monthly', 'all', 'base-only', 'daily-only', 'monthly-only'])
     args = parser.parse_args()
 
     logger = logging.getLogger(__name__)
