@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import pycds
+import pycds.manage_views
 from pycds.manage_views import manage_views
 import pycds.weather_anomaly
 
@@ -28,16 +28,27 @@ Examples:
                         choices=['base', 'daily', 'monthly', 'all', 'base-only', 'daily-only', 'monthly-only'])
     args = parser.parse_args()
 
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logger = logging.getLogger(pycds.manage_views.__name__)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger.setHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
+    logger.DEBUG('creating all ORM objects')
     pycds.Base.metadata.create_all(bind=engine)
     pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
+    def search_path():
+        sp = session.execute('SHOW search_path')
+        return ','.join([r.search_path for r in sp])
+
+    logger.DEBUG('search_path before: {}'.format(search_path()))
     session.execute('SET search_path TO crmp, public')
+    logger.DEBUG('search_path after: {}'.format(search_path()))
 
     manage_views(session, args.operation, args.views)
 
