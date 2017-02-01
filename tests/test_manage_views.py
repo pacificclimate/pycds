@@ -1,13 +1,17 @@
 import datetime
+import logging
+
 from pytest import fixture, mark
 import testing.postgresql
 
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import CreateSchema
+from sqlalchemy.schema import DDL, CreateSchema
 from sqlalchemy import text, inspect
 
 import pycds
+import pycds.weather_anomaly
 from pycds import Obs
 from pycds.manage_views import base_views, daily_views, monthly_views, manage_views
 
@@ -31,11 +35,25 @@ def per_test_engine():
     - we opt for the latter; the former proves unwieldy
 
     Fortunately this mechanism is only necessary for testing the create operation."""
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
         engine.execute(CreateSchema('crmp'))
         pycds.Base.metadata.create_all(bind=engine)
+        # This is in the prod database already, but we have to add it to the test database manually
+        sqlalchemy.event.listen(
+            pycds.weather_anomaly.Base.metadata,
+            'before_create',
+            DDL('''
+                CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
+                $$
+                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
+                    as timestamp));
+                $$ LANGUAGE sql;
+            ''')
+        )
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
@@ -58,6 +76,8 @@ def per_test_session(per_test_engine):
 ])
 def test_create(per_test_engine, per_test_session, what, exp_matview_names):
 
+    # print('>>>> search_path', [r.search_path for r in per_test_session.execute('SHOW search_path')])
+
     def check_views_and_tables(present):
         def check(expected_names, actual_names):
             for name in expected_names:
@@ -75,6 +95,7 @@ def test_create(per_test_engine, per_test_session, what, exp_matview_names):
 @fixture
 def session_with_views(session):
     """Test fixture for manage_views('refresh'): Session with views defined."""
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
     print('\nsession_with_views: SETUP')
     views = base_views + daily_views + monthly_views
     for view in views:
