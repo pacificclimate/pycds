@@ -22,10 +22,10 @@ Examples:
     postgresql+pg8000://scott:tiger@localhost/mydatabase
 """)
     parser.add_argument('-d', '--dsn', help='Database DSN in which to manage views')
-    parser.add_argument('operation', help="Operation to perform (create | refresh)",
+    parser.add_argument('operation', help="Operation to perform",
                         choices=['create', 'refresh'])
     parser.add_argument('views', help="Views to affect",
-                        choices=['base', 'daily', 'monthly', 'all', 'base-only', 'daily-only', 'monthly-only'])
+                        choices=['daily', 'monthly-only', 'all'])
     args = parser.parse_args()
 
     logger = logging.getLogger(pycds.manage_views.__name__)

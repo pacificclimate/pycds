@@ -13,10 +13,9 @@ from sqlalchemy import text, inspect
 import pycds
 import pycds.weather_anomaly
 from pycds import Obs
-from pycds.manage_views import base_views, daily_views, monthly_views, manage_views
+from pycds.manage_views import daily_views, monthly_views, manage_views
 
 
-base_view_names = [v.viewname() for v in base_views]
 daily_view_names = [v.viewname() for v in daily_views]
 monthly_view_names = [v.viewname() for v in monthly_views]
 
@@ -70,7 +69,7 @@ def per_test_session(per_test_engine):
 
 @mark.parametrize('what, exp_matview_names', [
     ('daily', daily_view_names),
-    # `create monthly` will fail if the daily views do not already exist, succeed if they do;
+    # `create monthly-only` will fail if the daily views do not already exist, succeed if they do;
     # we don't bother setting up the test machinery to test that
     ('all', daily_view_names + monthly_view_names),
 ])
@@ -83,7 +82,6 @@ def test_create(per_test_engine, per_test_session, what, exp_matview_names):
             for name in expected_names:
                 assert (present and (name in actual_names)) or (not present and (name not in actual_names))
 
-        check(base_view_names, inspect(per_test_engine).get_view_names(schema='crmp'))
         check(exp_matview_names, inspect(per_test_engine).get_table_names(schema='crmp'))
 
     check_views_and_tables(False)
@@ -97,7 +95,7 @@ def session_with_views(session):
     """Test fixture for manage_views('refresh'): Session with views defined."""
     logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
     print('\nsession_with_views: SETUP')
-    views = base_views + daily_views + monthly_views
+    views = daily_views + monthly_views
     for view in views:
         view.create(session)
     session.flush()
@@ -110,7 +108,7 @@ def session_with_views(session):
 
 @mark.parametrize('what, exp_views', [
     ('daily', daily_views),
-    # `refresh monthly` will fail if the daily views haven't been refreshed, succeed if they do;
+    # `refresh monthly-only` will fail if the daily views haven't been refreshed, succeed if they do;
     # we don't bother setting up the test machinery to test that
     ('all', daily_views + monthly_views),
 ])
