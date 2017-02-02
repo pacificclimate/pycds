@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import pycds.climate_baseline_helpers
 from pycds.climate_baseline_helpers import load_pcic_climate_baseline_values
 
 if __name__ == '__main__':
@@ -21,14 +22,33 @@ Examples:
     parser.add_argument("-d", "--dsn", help="Database DSN in which to create new network")
     parser.add_argument("-v", "--variable", help="Name of variable to be loaded")
     parser.add_argument("-f", "--file", help="Path of file containing climate baseline values to be loaded")
-    parser.add_argument("-e", "--exclude", help="Path of file containing native ids of stations to be excluded from loading, one per line")
+    parser.add_argument("-x", "--exclude", help="Path of file containing native ids of stations to be excluded from loading, one per line")
+    log_level_choices = 'NOTSET DEBUG INFO WARNING ERROR CRITICAL'.split()
+    parser.add_argument('-s', '--scriptloglevel', help='Script logging level',
+                        choices=log_level_choices, default='INFO')
+    parser.add_argument('-e', '--dbengloglevel', help='Database engine logging level',
+                        choices=log_level_choices, default='WARNING')
     args = parser.parse_args()
 
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    script_logger = logging.getLogger(__name__)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    sa_logger = logging.getLogger('sqlalchemy.engine')
+    sa_logger.addHandler(handler)
+    sa_logger.setLevel(getattr(logging, args.dbengloglevel))
+
+    script_logger = logging.getLogger(pycds.climate_baseline_helpers.__name__)
+    script_logger.addHandler(handler)
+    script_logger.setLevel(getattr(logging, args.scriptloglevel))
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
+
+    sa_logger.info('info')
+    script_logger.info('info')
 
     f = open(args.file)
 

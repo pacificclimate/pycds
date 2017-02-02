@@ -9,6 +9,8 @@ from pycds import Network, Station, History, Variable, DerivedValue
 
 pcic_climate_variable_network_name = 'PCIC Climate Variables'
 
+logger = logging.getLogger(__name__)
+
 
 def get_or_create_pcic_climate_variables_network(session, network_name=pcic_climate_variable_network_name):
     """Get or, if it does not exist, create the synthetic network for derived variables
@@ -167,7 +169,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
     else:
         convert = lambda precip_in_mm: float(precip_in_mm)
 
-    logging.info('Loading...')
+    logger.info('Loading...')
     n_added = 0
     n_excluded = 0
     n_skipped = 0
@@ -181,7 +183,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
                 .order_by(History.sdate.desc())\
                 .first()
             if latest_history:
-                logging.info('Adding station "{}"'.format(station_native_id))
+                logger.info('Adding station "{}"'.format(station_native_id))
                 for month in range(1, 13):
                     datum = data[str(month)]
                     if datum != '-9999':
@@ -195,22 +197,22 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
                         )
                 n_added += 1
             else:
-                logging.info('Skipping input line:')
-                logging.info(line)
-                logging.info('Reason: No history record(s) found for station with native_id = "{}"'
+                logger.info('Skipping input line:')
+                logger.info(line)
+                logger.info('Reason: No history record(s) found for station with native_id = "{}"'
                              .format(station_native_id))
                 n_skipped += 1
         else:
-            logging.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))
+            logger.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))
             n_excluded += 1
 
     session.flush()
 
-    logging.info('Loading complete')
-    logging.info('{} input lines processed'.format(n_added + n_excluded + n_skipped))
-    logging.info('{} stations added to database'.format(n_added))
-    logging.info('{} stations excluded'.format(n_excluded))
-    logging.info('{} stations skipped'.format(n_skipped))
+    logger.info('Loading complete')
+    logger.info('{} input lines processed'.format(n_added + n_excluded + n_skipped))
+    logger.info('{} stations added to database'.format(n_added))
+    logger.info('{} stations excluded'.format(n_excluded))
+    logger.info('{} stations skipped'.format(n_skipped))
 
     return n_added, n_excluded, n_skipped
 
