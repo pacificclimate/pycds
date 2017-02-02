@@ -4,7 +4,7 @@ python:
   - 3.4
   - 3.5
 addons:
-  postgresql: "9.3"
+  postgresql: "9.1"
 install:
   - pip install -U pip
   - pip install -i https://pypi.pacificclimate.org/simple/ -r requirements.txt -r test_requirements.txt
