@@ -28,18 +28,23 @@ Examples:
                         choices=['daily', 'monthly-only', 'all'])
     args = parser.parse_args()
 
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
-    logger = logging.getLogger(pycds.manage_views.__name__)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+
+    sa_logger = logging.getLogger('sqlalchemy.engine')
+    sa_logger.addHandler(handler)
+    sa_logger.setLevel(logging.DEBUG)
+    sa_logger.debug('test test test')
+
+    mv_logger = logging.getLogger(pycds.manage_views.__name__)
+    mv_logger.addHandler(handler)
+    mv_logger.setLevel(logging.DEBUG)
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    logger.debug('creating all ORM objects')
+    mv_logger.debug('creating all ORM objects')
     pycds.Base.metadata.create_all(bind=engine)
     pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
@@ -47,9 +52,9 @@ Examples:
         sp = session.execute('SHOW search_path')
         return ','.join([r.search_path for r in sp])
 
-    logger.debug('search_path before: {}'.format(search_path()))
+    mv_logger.debug('search_path before: {}'.format(search_path()))
     session.execute('SET search_path TO crmp, public')
-    logger.debug('search_path after: {}'.format(search_path()))
+    mv_logger.debug('search_path after: {}'.format(search_path()))
 
     manage_views(session, args.operation, args.views)
 
