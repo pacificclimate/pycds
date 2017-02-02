@@ -22,6 +22,11 @@ Examples:
     postgresql+pg8000://scott:tiger@localhost/mydatabase
 """)
     parser.add_argument('-d', '--dsn', help='Database DSN in which to manage views')
+    log_level_choices = 'NOTSET DEBUG INFO WARNING ERROR CRITICAL'.split()
+    parser.add_argument('-s', '--scriptloglevel', help='Script logging level',
+                        choices=log_level_choices, default='INFO')
+    parser.add_argument('-e', '--dbengloglevel', help='Database engine logging level',
+                        choices=log_level_choices, default='WARNING')
     parser.add_argument('operation', help="Operation to perform",
                         choices=['create', 'refresh'])
     parser.add_argument('views', help="Views to affect",
@@ -34,12 +39,11 @@ Examples:
 
     sa_logger = logging.getLogger('sqlalchemy.engine')
     sa_logger.addHandler(handler)
-    sa_logger.setLevel(logging.DEBUG)
-    sa_logger.debug('test test test')
+    sa_logger.setLevel(getattr(logging, args.dbengloglevel))
 
     mv_logger = logging.getLogger(pycds.manage_views.__name__)
     mv_logger.addHandler(handler)
-    mv_logger.setLevel(logging.DEBUG)
+    mv_logger.setLevel(getattr(logging, args.scriptloglevel))
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
