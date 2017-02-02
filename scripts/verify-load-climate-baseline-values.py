@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-import sys
 import logging
 from argparse import ArgumentParser
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import pycds.climate_baseline_helpers
 from pycds.climate_baseline_helpers import verify_baseline_network_and_variables, verify_baseline_values
 
 if __name__ == '__main__':
@@ -32,10 +32,26 @@ Examples:
                         type=int, required=True)
     parser.add_argument("-p", "--Precipcount", help="Expected count of stations for Precip_Climatology",
                         type=int, required=True)
+    log_level_choices = 'NOTSET DEBUG INFO WARNING ERROR CRITICAL'.split()
+    parser.add_argument('-s', '--scriptloglevel', help='Script logging level',
+                        choices=log_level_choices, default='INFO')
+    parser.add_argument('-e', '--dbengloglevel', help='Database engine logging level',
+                        choices=log_level_choices, default='WARNING')
     args = parser.parse_args()
 
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    script_logger = logging.getLogger(__name__)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    sa_logger = logging.getLogger('sqlalchemy.engine')
+    sa_logger.addHandler(handler)
+    sa_logger.setLevel(getattr(logging, args.dbengloglevel))
+
+    script_logger = logging.getLogger(pycds.climate_baseline_helpers.__name__)
+    script_logger.addHandler(handler)
+    script_logger.setLevel(getattr(logging, args.scriptloglevel))
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
@@ -221,4 +237,7 @@ Examples:
                 .format(var_name, esv['station_native_id'], count)
 
     for var_name, info in value_verification_data.items():
+        script_logger.info('Verifying {}'.format(var_name))
         verify_baseline_values(session, var_name, info['station_count'], info['expected_stations_and_values'])
+
+    sa_logger('Verification complete. No problems found.')
