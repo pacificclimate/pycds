@@ -63,3 +63,5 @@ Examples:
     manage_views(session, args.operation, args.views)
 
     session.commit()
+
+    mv_logger.info('Done')
