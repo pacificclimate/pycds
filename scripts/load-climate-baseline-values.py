@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import pycds.weather_anomaly
 import pycds.climate_baseline_helpers
 from pycds.climate_baseline_helpers import load_pcic_climate_baseline_values
 
@@ -47,8 +48,17 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    sa_logger.info('info')
-    script_logger.info('info')
+    script_logger.debug('creating all ORM objects')
+    pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+
+    def search_path():
+        sp = session.execute('SHOW search_path')
+        return ','.join([r.search_path for r in sp])
+
+    script_logger.debug('search_path before: {}'.format(search_path()))
+    session.execute('SET search_path TO crmp, public')
+    script_logger.debug('search_path after: {}'.format(search_path()))
 
     f = open(args.file)
 
@@ -60,8 +70,10 @@ Examples:
     # We don't use these header values, and (naturally, therefore) we skip them if present
     line = next(f)
     if line.rstrip(' \0\n') in ['GEO','ALB','UTM']:
+        script_logger.debug('Header lines detected; skipping first 2 lines in file')
         line = next(f)  # header present; skip second header line
     else:
+        script_logger.debug('No header lines detected')
         f.seek(0)  # no header; reset to beginning of file
 
     # Load excluded station native ids, if provided
@@ -72,6 +84,6 @@ Examples:
         exclude = []
     exclude = [x.strip() for x in exclude]
 
-    load_pcic_climate_baseline_values(session, args.variable, f, exclude)
+    load_pcic_climate_baseline_values(session, args.variable, f, exclude=exclude)
 
     session.commit()
