@@ -17,15 +17,24 @@ from pycds.climate_baseline_helpers import \
 
 
 @fixture
-def sesh_with_climate_baseline_network(session):
-    get_or_create_pcic_climate_variables_network(session)
-    yield session
+def other_network():
+    return Network(name='Other Network')
+
+@fixture
+def other_climatology_variables(other_network):
+    return [Variable(name=name, network=other_network) for name in climatology_var_names]
 
 
 @fixture
-def sesh_with_climate_baseline_variables(session):
-    get_or_create_pcic_climate_baseline_variables(session)
-    yield session
+def sesh_with_other_network_and_climatology_variables(session, other_network, other_climatology_variables):
+    for sesh in generic_sesh(session, [other_network] + other_climatology_variables):
+        yield sesh
+
+
+@fixture
+def sesh_with_climate_baseline_variables(sesh_with_other_network_and_climatology_variables):
+    get_or_create_pcic_climate_baseline_variables(sesh_with_other_network_and_climatology_variables)
+    yield sesh_with_other_network_and_climatology_variables
 
 
 @fixture
@@ -72,8 +81,9 @@ def describe_get__or__create__pcic__climate__variables__network():
 
 def describe_create__pcic__climate__baseline__variables():
 
-    def it_returns_the_expected_variables(session):
-        variables = get_or_create_pcic_climate_baseline_variables(session)
+    def it_returns_the_expected_variables(sesh_with_other_network_and_climatology_variables):
+        variables = get_or_create_pcic_climate_baseline_variables(
+            sesh_with_other_network_and_climatology_variables)
         assert len(variables) == 3
         assert set([v.name for v in variables]) == set(climatology_var_names)
         # More aggressive testing of each variable below
@@ -90,7 +100,10 @@ def describe_create__pcic__climate__baseline__variables():
     def it_creates_temperature_variables(sesh_with_climate_baseline_variables, name, keyword, kwd):
         sesh = sesh_with_climate_baseline_variables
         network = get_or_create_pcic_climate_variables_network(sesh)
-        result = sesh.query(Variable).filter(Variable.name == name).first()
+        result = sesh.query(Variable)\
+            .filter(Variable.name == name)\
+            .filter(Variable.network.has(name=pcic_climate_variable_network_name))\
+            .first()
         assert result
         assert (result.unit, result.standard_name, result.network_id) == \
                ('celsius', 'air_temperature', network.id)
@@ -102,7 +115,10 @@ def describe_create__pcic__climate__baseline__variables():
     def it_creates_precip_variable(sesh_with_climate_baseline_variables):
         sesh = sesh_with_climate_baseline_variables
         network = get_or_create_pcic_climate_variables_network(sesh)
-        result = sesh.query(Variable).filter(Variable.name == 'Precip_Climatology').first()
+        result = sesh.query(Variable)\
+            .filter(Variable.name == 'Precip_Climatology') \
+            .filter(Variable.network.has(name=pcic_climate_variable_network_name)) \
+            .first()
         assert (result.unit, result.standard_name, result.network_id) == \
                ('mm', 'lwe_thickness_of_precipitation_amount', network.id)
         assert result.short_name == 'lwe_thickness_of_precipitation_amount {}'.format(result.cell_method)
@@ -144,6 +160,10 @@ def describe_load__pcic__climate__baseline__values():
 
                 @fixture
                 def source(request, stations):
+                    '''Returns an interable with input lines for testing loading.
+                    First lines are created by packing data into the expected format.
+                    Last line is blank, to test blank line handling.
+                    '''
                     lines = []
                     for station in stations:
                         if request.param in ['Tx_Climatology', 'Tn_Climatology']:
@@ -160,6 +180,7 @@ def describe_load__pcic__climate__baseline__values():
                             *values
                         ).decode('ascii').replace('\0', ' ')
                         lines.append(line + '\n')
+                    lines.append('\n')  # add a blank line
                     return lines
 
                 @mark.parametrize('var_name, source', [
@@ -177,18 +198,24 @@ def describe_load__pcic__climate__baseline__values():
                         sesh_with_station_and_history_records, stations, var_name, source, exclude, n_exclude_matching):
                     sesh = sesh_with_station_and_history_records
 
-                    n_loaded, n_excluded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source, exclude)
-                    assert n_loaded == len(stations) - n_exclude_matching
-                    assert n_excluded == n_exclude_matching
-                    assert n_skipped == 0
+                    n_lines_added, n_values_added, n_lines_errored, n_lines_excluded, n_lines_skipped = \
+                        load_pcic_climate_baseline_values(sesh, var_name, source, exclude)
+                    assert n_lines_added == len(stations) - n_exclude_matching
+                    assert n_values_added == n_lines_added * 12
+                    assert n_lines_errored == 1
+                    assert n_lines_excluded == n_exclude_matching
+                    assert n_lines_skipped == 0
 
                     derived_values = sesh.query(DerivedValue)\
                         .join(DerivedValue.variable)\
                         .filter(Variable.name == var_name)
 
-                    assert derived_values.count() == 12 * n_loaded
+                    assert derived_values.count() == 12 * n_lines_added
 
-                    expected_variable = sesh.query(Variable).filter_by(name=var_name).first()
+                    expected_variable = sesh.query(Variable)\
+                        .filter_by(name=var_name) \
+                        .filter(Variable.network.has(name=pcic_climate_variable_network_name)) \
+                        .first()
                     for station in stations:
                         station_values = derived_values.join(History).join(Station) \
                             .filter(Station.id == station.id) \
@@ -227,10 +254,13 @@ def describe_load__pcic__climate__baseline__values():
                         sesh_with_station_and_history_records, stations, var_name, source):
                     sesh = sesh_with_station_and_history_records
 
-                    n_loaded, n_excluded, n_skipped = load_pcic_climate_baseline_values(sesh, var_name, source)
-                    assert n_loaded == 1
-                    assert n_excluded == 0
-                    assert n_skipped == 0
+                    n_lines_added, n_values_added, n_lines_errored, n_lines_excluded, n_lines_skipped = \
+                        load_pcic_climate_baseline_values(sesh, var_name, source)
+                    assert n_lines_added == 1
+                    assert n_values_added == 8
+                    assert n_lines_errored == 0
+                    assert n_lines_excluded == 0
+                    assert n_lines_skipped == 0
 
                     derived_values = sesh.query(DerivedValue) \
                         .join(DerivedValue.variable) \

@@ -84,7 +84,10 @@ def get_or_create_pcic_climate_baseline_variables(session):
 
     variables = []
     for vs in variable_specs:
-        variable = session.query(Variable).filter(Variable.name == vs['name']).first()
+        variable = session.query(Variable)\
+            .filter(Variable.name == vs['name']) \
+            .filter(Variable.network.has(name=pcic_climate_variable_network_name)) \
+            .first()
         if not variable:
             vs.update(short_name='{0} {1}'.format(vs['standard_name'], vs['cell_method']),
                       network_id=network.id)
@@ -128,7 +131,11 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
             must be associated
 
     Returns:
-        (n_added, n_skipped): counts of lines (not values!) added to database or skipped, respectively
+        n_lines_added,      # count of lines loaded (stations processed) into database
+        n_values_added,     # count of climatology values added to database
+        n_lines_errored,    # count of lines that got an error during parsing (unpacking)
+        n_lines_excluded,   # count of lines excluded via exclusion list
+        n_lines_skipped,    # count of lines skipped (normally because no matching station exists in database)
 
     Read the input lines one by one and interpret each under a fixed-width format (provided externally; defined above
     in variables field_names, field_widths, field_format.
@@ -157,7 +164,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
 
     get_or_create_pcic_climate_baseline_variables(session)
     variable = session.query(Variable)\
-        .filter_by(name=var_name)\
+        .filter(Variable.name == var_name)\
         .filter(Variable.network.has(name=network_name))\
         .first()
     if not variable:
@@ -170,12 +177,23 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
         convert = lambda precip_in_mm: float(precip_in_mm)
 
     logger.info('Loading...')
-    n_added = 0
-    n_excluded = 0
-    n_skipped = 0
+    n_lines_total = 0
+    n_lines_added = 0
+    n_values_added = 0
+    n_lines_errored = 0
+    n_lines_excluded = 0
+    n_lines_skipped = 0
 
     for line in lines:
-        data = parse_line(line)
+        n_lines_total += 1
+        try:
+            data = parse_line(line)
+        except struct.error as e:
+            logger.info('Error processing input line:')
+            logger.info(line)
+            logger.info('Error: {}'.format(repr(e)))
+            n_lines_errored += 1
+            continue
         station_native_id = data['native_id'].strip()
         if station_native_id not in exclude:
             latest_history = session.query(History)\
@@ -195,26 +213,33 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
                                 history=latest_history
                             )
                         )
-                n_added += 1
+                        n_values_added += 1
+                n_lines_added += 1
             else:
                 logger.info('Skipping input line:')
                 logger.info(line)
                 logger.info('Reason: No history record(s) found for station with native_id = "{}"'
                              .format(station_native_id))
-                n_skipped += 1
+                n_lines_skipped += 1
         else:
             logger.info('Excluding station with native id = "{}": found in exclude list'.format(station_native_id))
-            n_excluded += 1
+            n_lines_excluded += 1
 
     session.flush()
 
-    logger.info('Loading complete')
-    logger.info('{} input lines processed'.format(n_added + n_excluded + n_skipped))
-    logger.info('{} stations added to database'.format(n_added))
-    logger.info('{} stations excluded'.format(n_excluded))
-    logger.info('{} stations skipped'.format(n_skipped))
+    assert n_lines_total == n_lines_errored + n_lines_added + n_lines_excluded + n_lines_skipped, \
+        'Total number of lines processed {} is not total of errored {} +added {} + excluded {} + skipped {}'\
+            .format(n_lines_total, n_lines_errored, n_lines_added, n_lines_excluded, n_lines_skipped)
 
-    return n_added, n_excluded, n_skipped
+    logger.info('Loading complete')
+    logger.info('{} input lines processed'.format(n_lines_total))
+    logger.info('{} stations (input lines) processed into to database'.format(n_lines_added))
+    logger.info('{} climatology values added to database'.format(n_values_added))
+    logger.info('{} input lines errored'.format(n_lines_errored))
+    logger.info('{} stations excluded'.format(n_lines_excluded))
+    logger.info('{} stations skipped'.format(n_lines_skipped))
+
+    return n_lines_added, n_values_added, n_lines_errored, n_lines_excluded, n_lines_skipped
 
 
 def expect_value(what, value, expected):
