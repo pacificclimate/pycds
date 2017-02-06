@@ -204,7 +204,7 @@ def load_pcic_climate_baseline_values(session, var_name, lines,
                 logger.info('Adding station "{}"'.format(station_native_id))
                 for month in range(1, 13):
                     datum = data[str(month)]
-                    if datum != '-9999':
+                    if datum.strip() != '-9999':
                         session.add(
                             DerivedValue(
                                 time=datetime.datetime(baseline_year, month, baseline_day(month), baseline_hour),
