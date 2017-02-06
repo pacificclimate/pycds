@@ -337,9 +337,10 @@ def verify_baseline_values(session, var_name, station_count, expected_stations_a
     stations_with_dvs = \
         session.query(Station.native_id)\
         .select_from(DerivedValue) \
-        .join(DerivedValue.history) \
-        .join(History.station) \
-        .join(Variable.network) \
+        .join(History, DerivedValue.history_id == History.id) \
+        .join(Station, History.station_id == Station.id) \
+        .join(Variable, DerivedValue.vars_id == Variable.id) \
+        .join(Network, Variable.network_id == Network.id) \
         .filter(Network.name == pcic_climate_variable_network_name) \
         .filter(Variable.name == var_name) \
         .group_by(Station.native_id)
