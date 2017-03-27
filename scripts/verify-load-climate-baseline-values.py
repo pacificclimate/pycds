@@ -98,8 +98,8 @@ Examples:
                 },
                 {
                     'station_native_id': '171',
-                    'values': convert_temp_data([-9999, -9999, -9999, -9999, 152, 195, 
-                                                 216, 199, 139, 48, -9999, -9999])
+                    'values': convert_temp_data([-9999, -9999, -9999, -9999,   138,   172,
+                                                 200,   193,   140,    68, -9999, -9999])
                 },
                 {
                     'station_native_id': '110CCCC',
@@ -228,16 +228,22 @@ Examples:
 
     }
 
-    # Quis custodiet ipsos custodes?
-    for var_name, info in value_verification_data.items():
-        for esv in info['expected_stations_and_values']:
-            count = len(esv['values'])
-            assert count == 12, \
-                'Verification data is erroneous! Variable {}, station {}: bad count: {}'\
-                .format(var_name, esv['station_native_id'], count)
+    # Verifications (here and in verify_baseline_values) raise AssertionError if there is a verification failure.
+    # Don't let that prevent closing down the session properly afterwards.
+    try:
+        # Quis custodiet ipsos custodes?
+        for var_name, info in value_verification_data.items():
+            for esv in info['expected_stations_and_values']:
+                count = len(esv['values'])
+                assert count == 12, \
+                    'Verification data is erroneous! Variable {}, station {}: bad count: {}'\
+                    .format(var_name, esv['station_native_id'], count)
 
-    for var_name, info in value_verification_data.items():
-        script_logger.info('Verifying {}'.format(var_name))
-        verify_baseline_values(session, var_name, info['station_count'], info['expected_stations_and_values'])
+        for var_name, info in value_verification_data.items():
+            script_logger.info('Verifying {}'.format(var_name))
+            verify_baseline_values(session, var_name, info['station_count'], info['expected_stations_and_values'])
 
-    sa_logger('Verification complete. No problems found.')
+        script_logger.info('Verification complete. No problems found.')
+
+    finally:
+        session.close()
