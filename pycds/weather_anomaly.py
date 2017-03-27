@@ -96,7 +96,7 @@ sqlalchemy.event.listen(
 
 
 # Common subquery used in daily temperature extrema and monthly total precip queries
-keepers = '''
+undiscarded_observations = '''
     SELECT
         obs.*
     FROM
@@ -146,7 +146,7 @@ def daily_temperature_extremum_selectable(extremum):
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
-    '''.format(extremum, keepers))\
+    '''.format(extremum, undiscarded_observations))\
         .columns(
                 column('history_id'),
                 column('vars_id'),
@@ -250,7 +250,7 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
             GROUP BY
                 hx.history_id, vars_id, obs_month
         ) AS temp
-    '''.format(keepers))\
+    '''.format(undiscarded_observations))\
         .columns(
             column('history_id'),
             column('vars_id'),
