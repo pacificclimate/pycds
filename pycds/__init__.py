@@ -8,6 +8,7 @@ __all__ = [
 ]
 
 import sqlalchemy
+from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
@@ -16,7 +17,7 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema='crmp'))
 metadata = Base.metadata
 
 
@@ -360,14 +361,3 @@ class ObsWithFlags(Base):
     flag_name = Column(String)
     description = Column(String)
     flag_value = Column(String)
-
-sqlalchemy.event.listen(
-    metadata, 'before_create',
-    DDL('''
-        CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
-        $$
-            SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
-            as timestamp));
-        $$ LANGUAGE sql;
-    ''')
-)

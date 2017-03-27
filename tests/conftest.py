@@ -5,8 +5,11 @@ import logging, logging.config
 import sys
 
 import testing.postgresql
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.schema import DDL, CreateSchema
+
 import pytest
 from pytest import fixture
 
@@ -24,7 +27,19 @@ def engine():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         pycds.Base.metadata.create_all(bind=engine)
+        sqlalchemy.event.listen(
+            pycds.weather_anomaly.Base.metadata,
+            'before_create',
+            DDL('''
+                CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
+                $$
+                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
+                    as timestamp));
+                $$ LANGUAGE sql;
+            ''')
+        )
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
@@ -33,6 +48,10 @@ def engine():
 def session(engine):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
+    # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
+    # public (for postgis functions)
+    session.execute('SET search_path TO crmp, public')
+    # print('\nsearch_path', [r for r in session.execute('SHOW search_path')])
     yield session
     session.rollback()
     session.close()
@@ -43,6 +62,7 @@ def mod_blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         sesh = sessionmaker(bind=engine)()
         yield sesh
 
@@ -59,6 +79,7 @@ def blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
         sesh = sessionmaker(bind=engine)()
 
         yield sesh

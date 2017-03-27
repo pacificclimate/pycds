@@ -57,7 +57,7 @@ Some testing data was sourced from a production database. The steps to produce t
 1. As database superuser, run CREATE SCHEMA subset AUTHRIZATION <username>;
 2. As that user, run ``psql -h <db_host> -f create_crmp_subset.sql crmp. This insert a selection of data into the ``subset`` schema.
 3. Then, ``pg_dump -h <db_host> -d crmp --schema=subset --data-only --no-owner --no-privileges --no-tablespaces --column-inserts -f pycds/data/crmp_subset_data.sql``
-4. Edit this file removing the ``SET search_path...`` line, and re-ordering the data inserts to respect foreign key constraints. Default sort is alphabetical and the only changes that should need to be made are ordering meta_network, meta_station, and meta_history first and leaving the remaining inserts ordered as is.
+4. Edit this file change the ``SET search_path...`` line to ``SET search_path = crmp``, and re-ordering the data inserts to respect foreign key constraints. Default sort is alphabetical and the only changes that should need to be made are ordering meta_network, meta_station, and meta_history first and leaving the remaining inserts ordered as is.
 
 BDD Test Framework ``(pytest-describe``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

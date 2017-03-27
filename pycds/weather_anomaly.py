@@ -37,6 +37,7 @@ Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
 """
 
 import sqlalchemy
+from sqlalchemy import MetaData
 from sqlalchemy import select, union
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import DDL
@@ -46,27 +47,8 @@ from pycds import ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag
 from pycds.materialized_view_helpers import MaterializedViewMixin
 from pycds.view_helpers import ViewMixin
 
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema='crmp'))
 metadata = Base.metadata
-
-
-class DiscardedObs(Base, ViewMixin):
-    """This class represents a view which returns the id's of all observations that have been discarded,
-    either by a native flag or a PCIC flag."""
-    __selectable__ = union(
-        select([ObsRawNativeFlags.c.obs_raw_id.label('id')])
-        .select_from(ObsRawNativeFlags.join(NativeFlag))
-        .where(NativeFlag.discard),
-        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
-        # .where(func.coalesce(PCICFlag.discard, False)),
-
-        select([ObsRawPCICFlags.c.obs_raw_id.label('id')])\
-        .select_from(ObsRawPCICFlags.join(PCICFlag)) \
-        .where(PCICFlag.discard),
-        # TODO: the following would be better, but I cannot figure out how to bind a param outside of a session
-        # .where(func.coalesce(PCICFlag.discard, False)),
-    )
-    __primary_key__ = ['id']
 
 
 # This function returns the day that should be used (the effective day) for computing daily temperature extrema.
@@ -89,7 +71,7 @@ class DiscardedObs(Base, ViewMixin):
 sqlalchemy.event.listen(
     metadata, 'before_create',
     DDL('''
-        CREATE OR REPLACE FUNCTION effective_day(
+        CREATE OR REPLACE FUNCTION crmp.effective_day(
           obs_time timestamp without time zone, extremum varchar, freq varchar = ''
         )
         RETURNS timestamp without time zone AS $$
@@ -113,6 +95,24 @@ sqlalchemy.event.listen(
 )
 
 
+# Common subquery used in daily temperature extrema and monthly total precip queries
+undiscarded_observations = '''
+    SELECT
+        obs.*
+    FROM
+        obs_raw AS obs
+        LEFT JOIN obs_raw_native_flags  AS ornf ON (obs.obs_raw_id = ornf.obs_raw_id)
+        LEFT JOIN meta_native_flag      AS mnf  ON (ornf.native_flag_id = mnf.native_flag_id)
+        LEFT JOIN obs_raw_pcic_flags    AS orpf ON (obs.obs_raw_id = orpf.obs_raw_id)
+        LEFT JOIN meta_pcic_flag        AS mpf  ON (orpf.pcic_flag_id = mpf.pcic_flag_id)
+    GROUP BY
+        obs.obs_raw_id
+    HAVING
+        BOOL_OR(COALESCE(mnf.discard, FALSE)) = FALSE
+        AND BOOL_OR(COALESCE(mpf.discard, FALSE)) = FALSE
+'''
+
+
 def daily_temperature_extremum_selectable(extremum):
     """Return a SQLAlchemy selector for a specified extremum of daily temperature.
 
@@ -127,7 +127,7 @@ def daily_temperature_extremum_selectable(extremum):
         SELECT
             hx.history_id AS history_id,
             obs.vars_id AS vars_id,
-            effective_day(obs.obs_time, '{0}', hx.freq) AS obs_day,
+            effective_day(obs.obs_time, '{0}', hx.freq::varchar) AS obs_day,
             {0}(obs.datum) AS statistic,
             sum(
                 CASE hx.freq
@@ -137,17 +137,16 @@ def daily_temperature_extremum_selectable(extremum):
                 END
             ) AS data_coverage
         FROM
-            obs_raw AS obs
+            ({1}) AS obs
             INNER JOIN meta_vars AS vars USING (vars_id)
             INNER JOIN meta_history AS hx USING (history_id)
         WHERE
-            obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
-            AND vars.standard_name = 'air_temperature'
+            vars.standard_name = 'air_temperature'
             AND vars.cell_method IN ('time: {0}imum', 'time: point', 'time: mean')
             AND hx.freq IN ('1-hourly', '12-hourly', 'daily')
         GROUP BY
             hx.history_id, vars_id, obs_day
-    '''.format(extremum))\
+    '''.format(extremum, undiscarded_observations))\
         .columns(
                 column('history_id'),
                 column('vars_id'),
@@ -237,12 +236,11 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
                     END
                 ) AS total_data_coverage
             FROM
-                obs_raw AS obs
+                ({0}) AS obs
                 INNER JOIN meta_vars AS vars USING (vars_id)
                 INNER JOIN meta_history AS hx USING (history_id)
             WHERE
-                obs.obs_raw_id NOT IN (SELECT id FROM discarded_obs_v)
-                AND vars.standard_name IN (
+                vars.standard_name IN (
                     'lwe_thickness_of_precipitation_amount',
                     'thickness_of_rainfall_amount',
                     'thickness_of_snowfall_amount'
@@ -252,11 +250,12 @@ class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
             GROUP BY
                 hx.history_id, vars_id, obs_month
         ) AS temp
-    ''').columns(
-        column('history_id'),
-        column('vars_id'),
-        column('obs_month'),
-        column('statistic'),
-        column('data_coverage')
-    )
+    '''.format(undiscarded_observations))\
+        .columns(
+            column('history_id'),
+            column('vars_id'),
+            column('obs_month'),
+            column('statistic'),
+            column('data_coverage')
+        )
     __primary_key__ = 'history_id vars_id obs_month'.split()

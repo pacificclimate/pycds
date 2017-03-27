@@ -7,16 +7,9 @@ from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pycds.materialized_view_helpers import MaterializedViewMixin
-from pycds.weather_anomaly import \
-    DiscardedObs, \
-    DailyMaxTemperature, DailyMinTemperature, \
-    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
-    MonthlyTotalPrecipitation
-
-base_views = [DiscardedObs]
-daily_views = [DailyMaxTemperature, DailyMinTemperature]
-monthly_views = [MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, MonthlyTotalPrecipitation]
+import pycds.manage_views
+from pycds.manage_views import manage_views
+import pycds.weather_anomaly
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="""Script to manage views in the PCDS/CRMP database.
@@ -29,26 +22,46 @@ Examples:
     postgresql+pg8000://scott:tiger@localhost/mydatabase
 """)
     parser.add_argument('-d', '--dsn', help='Database DSN in which to manage views')
-    parser.add_argument('operation', help="Operation to perform (create | refresh)",
+    log_level_choices = 'NOTSET DEBUG INFO WARNING ERROR CRITICAL'.split()
+    parser.add_argument('-s', '--scriptloglevel', help='Script logging level',
+                        choices=log_level_choices, default='INFO')
+    parser.add_argument('-e', '--dbengloglevel', help='Database engine logging level',
+                        choices=log_level_choices, default='WARNING')
+    parser.add_argument('operation', help="Operation to perform",
                         choices=['create', 'refresh'])
-    parser.add_argument('views', help="Views to refresh (daily | monthly | all)",
-                        choices=['daily', 'monthly', 'all'])
+    parser.add_argument('views', help="Views to affect",
+                        choices=['daily', 'monthly-only', 'all'])
     args = parser.parse_args()
 
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    sa_logger = logging.getLogger('sqlalchemy.engine')
+    sa_logger.addHandler(handler)
+    sa_logger.setLevel(getattr(logging, args.dbengloglevel))
+
+    mv_logger = logging.getLogger(pycds.manage_views.__name__)
+    mv_logger.addHandler(handler)
+    mv_logger.setLevel(getattr(logging, args.scriptloglevel))
 
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    # Order matters
-    views = {
-        'daily': base_views + daily_views,
-        'monthly': base_views + monthly_views,
-        'all': base_views + daily_views + monthly_views
-    }[args.views]
+    mv_logger.debug('creating all ORM objects')
+    pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
-    for view in views:
-        if args.operation == 'create' or issubclass(view, MaterializedViewMixin):
-            logging.info("{} '{}'".format(args.operation.capitalize(), view.viewname()))
-            getattr(view, args.operation)()
+    def search_path():
+        sp = session.execute('SHOW search_path')
+        return ','.join([r.search_path for r in sp])
+
+    mv_logger.debug('search_path before: {}'.format(search_path()))
+    session.execute('SET search_path TO crmp, public')
+    mv_logger.debug('search_path after: {}'.format(search_path()))
+
+    manage_views(session, args.operation, args.views)
+
+    session.commit()
+
+    mv_logger.info('Done')
