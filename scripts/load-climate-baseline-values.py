@@ -84,6 +84,9 @@ Examples:
         exclude = []
     exclude = [x.strip() for x in exclude]
 
-    load_pcic_climate_baseline_values(session, args.variable, f, exclude=exclude)
+    try:
+        load_pcic_climate_baseline_values(session, args.variable, f, exclude=exclude)
+        session.commit()
+    finally:
+        session.close()
 
-    session.commit()
