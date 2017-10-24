@@ -75,7 +75,7 @@ def orm_station_table(sesh, stn_id, raw=True):
     # Start with all of the times for which observations exist
     # and then use this as a basis for a left join
     # (sqlite doesn't support full outer joins
-    times = sesh.query(ObsWithFlags.obs_time.label('obs_time'))\
+    times = sesh.query(ObsWithFlags.obs_time.label('flag_time'))\
         .filter(ObsWithFlags.station_id == stn_id)\
         .order_by(ObsWithFlags.obs_time).distinct()
     stmt = times.subquery()
