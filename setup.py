@@ -2,7 +2,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-__version__ = (2, 2, 0)
+__version__ = (2, 2, 1)
 
 
 class PyTest(TestCommand):

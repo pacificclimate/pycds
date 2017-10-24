@@ -1,6 +1,13 @@
 News / Release Notes
 ====================
 
+2.2.1
+-----
+
+*Release Date: 2017-Oct-24*
+
+* Fixes a query in the util module where both columns were ambiguously named "obs_time"
+
 2.2.0
 -----
 
