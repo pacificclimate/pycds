@@ -1,16 +1,25 @@
 dist: trusty
+sudo: true
 language: python
 python:
   - 2.7
   - 3.4
   - 3.5
+  - 3.6
+env:
+  - POSTGRESQL_VERSION=9.2
+  - POSTGRESQL_VERSION=9.3
+  - POSTGRESQL_VERSION=9.4
+  - POSTGRESQL_VERSION=9.5
+  - POSTGRESQL_VERSION=9.6
 addons:
-  postgresql: "9.3"
-  apt:
-      packages:
-        - postgresql-9.3-postgis-2.3
+  - postgresql
+before_install:
+  - sudo service postgresql stop && sudo service postgresql start $POSTGRESQL_VERSION
 install:
   - pip install -U pip
   - pip install -i https://pypi.pacificclimate.org/simple/ -r requirements.txt -r test_requirements.txt
   - pip install -i https://pypi.pacificclimate.org/simple/ .
+before_script:
+  - psql -U postgres -c "create extension postgis"
 script: py.test -v --tb=short tests
