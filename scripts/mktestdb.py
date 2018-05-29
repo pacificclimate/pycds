@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument("-i",
                         "--include-data",
                         action='store_true',
-                        help="Include test data in build")
+                        help="Create a small test dataset in the new database")
     args = parser.parse_args()
 
     logger = logging.getLogger(__name__)
