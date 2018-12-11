@@ -9,7 +9,7 @@ __all__ = [
 
 import sqlalchemy
 from sqlalchemy import MetaData
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date
+from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Index
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
@@ -184,6 +184,13 @@ class Obs(Base):
         UniqueConstraint('obs_time', 'history_id', 'vars_id',
                          name='time_place_variable_unique'),
     )
+
+    # Indexes
+    mod_time_idx = Index('mod_time_idx', 'mod_time')
+    obs_raw_comp_idx = Index('obs_raw_comp_idx', 'obs_time', 'vars_id',
+                             'history_id')
+    obs_raw_history_id_idx = Index('obs_raw_history_id_idx', 'history_id')
+    obs_raw_id_idx = Index('obs_raw_id_idx', 'obs_raw_id')
 
 
 class Variable(Base):
