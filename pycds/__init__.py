@@ -90,7 +90,7 @@ class Station(Base):
         "History", backref=backref('meta_station', order_by=id))
 
     def __str__(self):
-        return '<CRMP Station %s:%s>' % (self.network.name, self.native_id)
+        return '<CRMP Station %s:%s id=%d>' % (self.network.name, self.native_id, self.id)
 
 
 class History(Base):
@@ -123,6 +123,12 @@ class History(Base):
         "Station", backref=backref('meta_history', order_by=id))
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
+
+    def __str__(self):
+        return '<CRMP History "%s" %s->%s @ %.2f,%.2f:%dm id=%d>' % (
+            self.station_name,
+            self.sdate, self.edate, self.lat, self.lon, self.elevation,
+            self.id)
 
 
 # Association table for Obs *--* NativeFLag
@@ -185,6 +191,10 @@ class Obs(Base):
                          name='time_place_variable_unique'),
     )
 
+    def __str__(self):
+        return '<CRMP obs "%s" %s %s %.2f id=%d>' % (self.history.name,
+                self.variable.name, self.time, self.datum, self.id)
+
 
 class Variable(Base):
     '''This class maps to the table which records the details of the
@@ -205,6 +215,10 @@ class Variable(Base):
     network = relationship(
         "Network", backref=backref('meta_vars', order_by=id))
     obs = relationship("Obs", backref=backref('meta_vars', order_by=id))
+
+    def __str__(self):
+        return '<CRMP Variable %s:%s (%s:%s) id=%d>' % (self.network.name,
+                self.name, self.standard_name, self.unit, self.id)
 
 
 class NativeFlag(Base):

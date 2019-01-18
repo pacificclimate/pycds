@@ -1,3 +1,4 @@
-pytest
+# pytest-describe seems to break at version 4 of pytest
+pytest==3
 pytest-describe
 testing.postgresql
