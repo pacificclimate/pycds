@@ -1,3 +1,5 @@
+from sqlalchemy import text
+
 from pycds import CrmpNetworkGeoserver
 
 def test_crmp_network_geoserver(large_test_session):
@@ -9,7 +11,7 @@ def test_crmp_network_geoserver(large_test_session):
     assert nrows != 0
 
     # Select all rows from network FLNRO-WMB
-    where_clause = "network_name = 'FLNRO-WMB'"
+    where_clause = text("network_name = 'FLNRO-WMB'")
     q = q.filter(where_clause)
     rv = q.all()
 
@@ -19,7 +21,7 @@ def test_crmp_network_geoserver(large_test_session):
     nrows = filtered_nrows
 
     # Select all rows where max_obs_time is before 2005
-    where_clause = "max_obs_time < '2005-01-01'"
+    where_clause = text("max_obs_time < '2005-01-01'")
 
     # Assert that number of rows is less
     rv = q.filter(where_clause).all()
