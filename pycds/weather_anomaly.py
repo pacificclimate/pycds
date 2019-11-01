@@ -51,50 +51,6 @@ Base = declarative_base(metadata=MetaData(schema='crmp'))
 metadata = Base.metadata
 
 
-# This function returns the day that should be used (the effective day) for computing daily temperature extrema.
-# It maps the actual observation day to an effective day that causes it to be aggregated within the appropriate 24-hour
-# period.
-#
-# Effective day depends on the extremum being computed (max, min) and the observation frequency (and, technically,
-# the network, but for now it seems that 12-hour frequency is only used in a single network).
-#
-# For maximum temperature:
-#   For 1-hour and daily frequency:
-#       the effective day is day of observation
-#   For 12-hour frequency:
-#       nominal reporting times are 0700 and 1600 local; we use noon (1200) to divide morning from afternoon reports
-#       the period over which the max should be taken is from noon the day before to noon of the given day
-#       the effective day is advanced by one day for afternoon observations
-#
-# For minimum temperature:
-#   effective day does not depend on observation frequency; it is always the day of observation
-sqlalchemy.event.listen(
-    metadata, 'before_create',
-    DDL('''
-        CREATE OR REPLACE FUNCTION crmp.effective_day(
-          obs_time timestamp without time zone, extremum varchar, freq varchar = ''
-        )
-        RETURNS timestamp without time zone AS $$
-        DECLARE
-          offs INTERVAL; -- 'offset' is a reserved word
-          hour INTEGER;
-        BEGIN
-          offs := '0'::INTERVAL;
-          IF extremum = 'max' THEN
-              hour := date_part('hour', obs_time);
-              IF freq = '12-hourly' AND hour >= 12 THEN
-                offs = '1 day'::INTERVAL;
-              END IF;
-          ELSE
-            offs = '0'::INTERVAL;
-          END IF;
-          RETURN date_trunc('day', obs_time) + offs;
-        END;
-        $$ LANGUAGE plpgsql;
-    ''')
-)
-
-
 # Common subquery used in daily temperature extrema and monthly total precip queries
 undiscarded_observations = '''
     SELECT
