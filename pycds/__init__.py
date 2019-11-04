@@ -84,10 +84,15 @@ class Station(Base):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
 
+    # Relationships
     network = relationship(
         "Network", backref=backref('meta_station', order_by=id))
     histories = relationship(
         "History", backref=backref('meta_station', order_by=id))
+
+    # Indexes
+    fki_meta_station_network_id_fkey = \
+        Index('fki_meta_station_network_id_fkey', 'network_id')
 
     def __str__(self):
         return '<CRMP Station %s:%s>' % (self.network.name, self.native_id)
@@ -118,14 +123,22 @@ class History(Base):
     sensor_id = Column(ForeignKey(u'meta_sensor.sensor_id'))
     the_geom = Column(Geometry('GEOMETRY', 4326))
 
+    # Relationships
     sensor = relationship("MetaSensor")
     station = relationship(
         "Station", backref=backref('meta_history', order_by=id))
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
 
+    # Indexes
+    fki_meta_history_station_id_fk = \
+        Index('fki_meta_history_station_id_fk', 'station_id')
+    meta_history_freq_idx = \
+        Index('meta_history_freq_idx', 'freq')
+
 
 # Association table for Obs *--* NativeFLag
+# TODO: Define using declarative base
 ObsRawNativeFlags = Table(
     'obs_raw_native_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
@@ -133,11 +146,15 @@ ObsRawNativeFlags = Table(
     Column('native_flag_id', Integer, ForeignKey(
         'meta_native_flag.native_flag_id')),
     UniqueConstraint(
-        'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique')
+        'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique'),
+
+    # Indexes
+    Index('flag_index', 'obs_raw_id')
 )
 
 
 # Association table for Obs *--* PCICFLag
+# TODO: Define using declarative base
 ObsRawPCICFlags = Table(
     'obs_raw_pcic_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
@@ -145,7 +162,10 @@ ObsRawPCICFlags = Table(
     Column('pcic_flag_id', Integer, ForeignKey(
         'meta_pcic_flag.pcic_flag_id')),
     UniqueConstraint(
-        'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique')
+        'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique'),
+
+    # Indexes
+    Index('pcic_flag_index', 'obs_raw_id')
 )
 
 
@@ -209,10 +229,14 @@ class Variable(Base):
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey('meta_network.network_id'))
 
+    # Relationships
     network = relationship(
         "Network", backref=backref('meta_vars', order_by=id))
     obs = relationship("Obs", backref=backref('meta_vars', order_by=id))
 
+    # Indexes
+    fki_meta_vars_network_id_fkey = \
+        Index('fki_meta_vars_network_id_fkey', 'network_id')
 
 class NativeFlag(Base):
     '''This class maps to the table which records all 'flags' for observations which have been `flagged` by the
@@ -353,7 +377,13 @@ class ObsCountPerMonthHistory(DeferredBase):
     count = Column(Integer)
     date_trunc = Column(DateTime)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+
+    # Relationships
     history = relationship("History")
+
+    # Indexes
+    obs_count_per_month_history_idx = \
+        Index('obs_count_per_month_history_idx', 'date_trunc', 'history_id')
 
 
 class ClimoObsCount(DeferredBase):
@@ -365,6 +395,9 @@ class ClimoObsCount(DeferredBase):
     __tablename__ = 'climo_obs_count_mv'
     count = Column(BigInteger)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+
+    # Indexes
+    climo_obs_count_idx = Index('climo_obs_count_idx', 'history_id')
 
 
 class VarsPerHistory(Base):
@@ -384,6 +417,9 @@ class VarsPerHistory(Base):
     vars_id = Column(Integer, ForeignKey(
         'meta_vars.vars_id'), primary_key=True)
 
+    # Indexes
+    var_hist_idx = Index('var_hist_idx', 'history_id', 'vars_id')
+
 
 class CollapsedVariables(DeferredBase):
     """This class maps to a manual materialized view that supports the
@@ -393,6 +429,9 @@ class CollapsedVariables(DeferredBase):
     vars = Column(String)
     display_names = Column(String)
 
+    # Indexes
+    collapsed_vars_idx = Index('collapsed_vars_idx', 'history_id')
+
 
 class StationObservationStats(DeferredBase):
     __tablename__ = 'station_obs_stats_mv'
@@ -401,3 +440,8 @@ class StationObservationStats(DeferredBase):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     obs_count = BigInteger
+
+    # Indexes
+    station_obs_stats_mv_idx = Index(
+        'station_obs_stats_mv_idx', 'min_obs_time', 'max_obs_time',
+        'obs_count', 'station_id', 'history_id')
