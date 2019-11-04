@@ -269,7 +269,8 @@ class DerivedValue(Base):
     )
 
 
-# "Improper" views - defined in crmp repo, and accessed in ORM by referring to them as tables.
+# "Improper" views - defined in crmp repo, and accessed in ORM by referring to
+# them as tables.
 # DeferredBase is currently used for these views.
 # When testing, not using proper views may create issues
 # TODO: Implement as proper views using pycds.view_helpers
@@ -279,9 +280,11 @@ deferred_metadata = DeferredBase.metadata
 
 
 class CrmpNetworkGeoserver(DeferredBase):
-    '''This table maps to a convenience view that is used by geoserver for mapping.
-    '''
+    """This table maps to a convenience view that is used by geoserver for
+    mapping.
+    """
     __tablename__ = 'crmp_network_geoserver'
+    __table_args__ = {'info': {'is_view': True}}
     network_name = Column(String)
     native_id = Column(String)
     station_name = Column(String)
@@ -306,51 +309,13 @@ class CrmpNetworkGeoserver(DeferredBase):
     the_geom = Column(Geometry('GEOMETRY', 4326))
 
 
-class ObsCountPerMonthHistory(DeferredBase):
-    '''This class maps to a materialized view that is required for web app
-    performance. It is used for approximating the number of
-    observations which will be returned by station selection criteria.
-    '''
-    __tablename__ = 'obs_count_per_month_history_mv'
-    count = Column(Integer)
-    date_trunc = Column(DateTime)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
-    history = relationship("History")
-
-
-class ClimoObsCount(DeferredBase):
-    '''This class maps to a materialized view that is required for web app
-    performance. It is used for approximating the number of
-    climatologies which will be returned by station selection
-    criteria.
-    '''
-    __tablename__ = 'climo_obs_count_mv'
-    count = Column(BigInteger)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
-
-
-class VarsPerHistory(Base):
-    '''This class maps to a materialized view that is required for web app
-    performance. It is used to link recorded quantities (variables) to
-    the station/history level, rather than just the network level
-    (just because one station in the network records a quantity,
-    doesn't mean that all stations in the network do). To some extent,
-    this view is an add on to compensate for poor database
-    normalization, but it's close enough to get by.
-    '''
-    __tablename__ = 'vars_per_history_mv'
-    history_id = Column(Integer, ForeignKey(
-        'meta_history.history_id'), primary_key=True)
-    vars_id = Column(Integer, ForeignKey(
-        'meta_vars.vars_id'), primary_key=True)
-
-
-class ObsWithFlags(Base):
+class ObsWithFlags(DeferredBase):
     '''This class maps to a convenience view that is used to construct a
     table of flagged observations; i.e. one row per observation with
     additional columns for each attached flag.
     '''
     __tablename__ = 'obs_with_flags'
+    __table_args__ = {'info': {'is_view': True}}
     vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
     network_id = Column(Integer, ForeignKey('meta_network.network_id'))
     unit = Column(String)
@@ -368,3 +333,71 @@ class ObsWithFlags(Base):
     flag_name = Column(String)
     description = Column(String)
     flag_value = Column(String)
+
+
+# "External manual materialized views": CRMP contains a set of auxiliary tables,
+# views, functions, and triggers that implement simulated or manually
+# maintained materialized views (as opposed to natively supported matviews).
+# For some details, see
+# https://github.com/pacificclimate/crmp/tree/master/database/manual-matviews.
+# The following classes map onto the manual matviews defined in CRMP.
+# NOTE: There are *no* mappings in PyCDS for the infrastructure for
+# implementing manual matviews.
+
+class ObsCountPerMonthHistory(DeferredBase):
+    """This class maps to a manual materialized view that is required for web
+    app performance. It is used for approximating the number of
+    observations which will be returned by station selection criteria.
+    """
+    __tablename__ = 'obs_count_per_month_history_mv'
+    count = Column(Integer)
+    date_trunc = Column(DateTime)
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    history = relationship("History")
+
+
+class ClimoObsCount(DeferredBase):
+    """This class maps to a manual materialized view that is required for
+    web app performance. It is used for approximating the number of
+    climatologies which will be returned by station selection
+    criteria.
+    """
+    __tablename__ = 'climo_obs_count_mv'
+    count = Column(BigInteger)
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+
+
+class VarsPerHistory(Base):
+    """This class maps to a manual materialized view that is required for
+    web app performance. It is used to link recorded quantities (variables) to
+    the station/history level, rather than just the network level
+    (just because one station in the network records a quantity,
+    doesn't mean that all stations in the network do). To some extent,
+    this view is an add on to compensate for poor database
+    normalization, but it's close enough to get by.
+    """
+    __tablename__ = 'vars_per_history_mv'
+    # TODO: These columns are not primary keys in the CRMP database.
+    #  Which is right?
+    history_id = Column(Integer, ForeignKey(
+        'meta_history.history_id'), primary_key=True)
+    vars_id = Column(Integer, ForeignKey(
+        'meta_vars.vars_id'), primary_key=True)
+
+
+class CollapsedVariables(DeferredBase):
+    """This class maps to a manual materialized view that supports the
+    view CrmpNetworkGeoserver."""
+    __tablename__ = 'collapsed_vars_mv'
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    vars = Column(String)
+    display_names = Column(String)
+
+
+class StationObservationStats(DeferredBase):
+    __tablename__ = 'station_obs_stats_mv'
+    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    min_obs_time = Column(DateTime)
+    max_obs_time = Column(DateTime)
+    obs_count = BigInteger
