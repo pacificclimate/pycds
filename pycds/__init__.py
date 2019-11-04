@@ -4,7 +4,7 @@ __all__ = [
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory',
     'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
-    'MetaSensor'
+    'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
 ]
 
 import sqlalchemy
