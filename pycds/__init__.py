@@ -238,6 +238,21 @@ class Variable(Base):
     fki_meta_vars_network_id_fkey = \
         Index('fki_meta_vars_network_id_fkey', 'network_id')
 
+
+class ClimatologyAttributes(Base):
+    __tablename__ = 'meta_climo_attrs'
+    vars_id = Column(
+        Integer, ForeignKey('meta_vars.vars_id'), primary_key=True)
+    station_id = Column(
+        Integer, ForeignKey('meta_station.station_id'), primary_key=True)
+    month = Column(Integer, primary_key=True)
+    wmo_code = Column(String(1))
+    adjusted = Column(Boolean)
+
+    # Indexes
+    meta_climo_attrs_idx = Index(
+        'meta_climo_attrs_idx', 'vars_id', 'station_id', 'wmo_code', 'month')
+
 class NativeFlag(Base):
     '''This class maps to the table which records all 'flags' for observations which have been `flagged` by the
     data provider (i.e. the network) for some reason. This table records the details of the flags.
