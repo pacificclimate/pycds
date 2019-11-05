@@ -213,6 +213,21 @@ class Obs(Base):
     obs_raw_id_idx = Index('obs_raw_id_idx', 'obs_raw_id')
 
 
+class TimeBound(Base):
+    """This class maps to a table which records the start and end times
+    for an observation on a variable that spans a (changeable) time period,
+    rather than a variable that is at a point in time (which could represent
+    an instantaneous observation or a summary observation, e.g., daily average,
+    for a fixed, known time period). These are typically climatologies and
+    cumulative precipitations over variable time periods.
+    """
+    __tablename__ = 'time_bounds'
+    obs_raw_id = Column(
+        Integer, ForeignKey('obs_raw.obs_raw_id'), primary_key=True)
+    start = Column(DateTime)
+    end = Column(DateTime)
+
+
 class Variable(Base):
     '''This class maps to the table which records the details of the
     physical quantities which are recorded by the weather stations.
