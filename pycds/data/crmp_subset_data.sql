@@ -223,20 +223,6 @@ INSERT INTO meta_native_flag (native_flag_id, flag_name, description, network_id
 
 
 --
--- Data for Name: meta_network_geoserver; Type: TABLE DATA; Schema: subset; Owner: -
---
-
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (5, 'BCH', '#0010A5');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (1, 'EC', '#FF0000');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (19, 'EC_raw', '#FF0000');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (12, 'MoFR', '#0C6600');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (10, 'MoAg', '#801899');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (17, 'ARDA', '#5791D9');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (9, 'MoE', '#B03060');
-INSERT INTO meta_network_geoserver (network_id, network_name, col_hex) VALUES (2, 'MoTIe', '#37ea00');
-
-
---
 -- Data for Name: meta_pcic_flag; Type: TABLE DATA; Schema: subset; Owner: -
 --
 

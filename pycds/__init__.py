@@ -45,15 +45,6 @@ class Network(Base):
         return '<CRMP Network %s>' % self.name
 
 
-class MetaNetworkGeoserver(Network):
-    __tablename__ = 'meta_network_geoserver'
-
-    network_id = Column(ForeignKey(
-        'meta_network.network_id'), primary_key=True)
-    network_name = Column(String(255))
-    col_hex = Column(String(7))
-
-
 class Contact(Base):
     '''This class maps to the table which represents contact people and
     representatives for the networks of the Climate Related Monitoring
