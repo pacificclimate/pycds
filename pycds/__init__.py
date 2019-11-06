@@ -1,6 +1,7 @@
 import datetime
 
 __all__ = [
+    'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory',
     'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
@@ -322,36 +323,6 @@ class DerivedValue(Base):
 
 DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
 deferred_metadata = DeferredBase.metadata
-
-
-class CrmpNetworkGeoserver(DeferredBase):
-    """This table maps to a convenience view that is used by geoserver for
-    mapping.
-    """
-    __tablename__ = 'crmp_network_geoserver'
-    __table_args__ = {'info': {'is_view': True}}
-    network_name = Column(String)
-    native_id = Column(String)
-    station_name = Column(String)
-    lon = Column(Numeric)
-    lat = Column(Numeric)
-    elevation = Column('elev', Float)
-    min_obs_time = Column(DateTime)
-    max_obs_time = Column(DateTime)
-    freq = Column(String)
-    tz_offset = Column(Interval)
-    province = Column(String)
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
-    country = Column(String)
-    comments = Column(String)
-    sensor_id = Column(Integer)
-    description = Column(String(255))
-    network_id = Column(Integer)
-    col_hex = Column(String(7))
-    vars = Column(String)
-    display_names = Column(String)
-    the_geom = Column(Geometry('GEOMETRY', 4326))
 
 
 class ObsWithFlags(DeferredBase):
