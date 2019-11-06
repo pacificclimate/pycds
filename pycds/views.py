@@ -73,3 +73,39 @@ class CrmpNetworkGeoserver(Base, ViewMixin):
         column('display_names')
     )
     __primary_key__ = ['station_id']
+
+
+class ObsWithFlags(Base, ViewMixin):
+    # TODO: Why is this called 'ObsWithFlags'? There are no flags!
+    #  Better name: ObsWithMetadata
+    __viewname__ = 'obs_with_flags'
+    __selectable__ = text('''
+        SELECT 
+            meta_vars.vars_id, 
+            meta_vars.network_id, 
+            meta_vars.unit, 
+            meta_vars.standard_name, 
+            meta_vars.cell_method, 
+            meta_vars.net_var_name, 
+            obs_raw.obs_raw_id, 
+            hx.station_id, 
+            obs_raw.obs_time, 
+            obs_raw.mod_time, 
+            obs_raw.datum
+        FROM meta_vars
+        NATURAL JOIN obs_raw
+        JOIN meta_history hx ON hx.history_id = obs_raw.history_id
+    ''').columns(
+        column('vars_id'),
+        column('network_id'),
+        column('unit'),
+        column('standard_name'),
+        column('cell_method'),
+        column('net_var_name'),
+        column('obs_raw_id'),
+        column('station_id'),
+        column('obs_time'),
+        column('mod_time'),
+        column('datum')
+    )
+    __primary_key__ = ['obs_raw_id']

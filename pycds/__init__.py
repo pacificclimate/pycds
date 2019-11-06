@@ -4,7 +4,7 @@ __all__ = [
     'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'ObsCountPerMonthHistory', 'VarsPerHistory',
-    'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
+    'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
     'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
 ]
 
@@ -324,41 +324,6 @@ class DerivedValue(Base):
 DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
 deferred_metadata = DeferredBase.metadata
 
-
-class ObsWithFlags(DeferredBase):
-    '''This class maps to a convenience view that is used to construct a
-    table of flagged observations; i.e. one row per observation with
-    additional columns for each attached flag.
-    '''
-    __tablename__ = 'obs_with_flags'
-    __table_args__ = {'info': {'is_view': True}}
-    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
-    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
-    unit = Column(String)
-    standard_name = Column(String)
-    cell_method = Column(String)
-    net_var_name = Column(String)
-    obs_raw_id = Column(Integer, ForeignKey(
-        'obs_raw.obs_raw_id'), primary_key=True)
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    obs_time = Column(DateTime)
-    mod_time = Column(DateTime)
-    datum = Column(Float)
-    native_flag_id = Column(Integer, ForeignKey(
-        'meta_native_flag.native_flag_id'))
-    flag_name = Column(String)
-    description = Column(String)
-    flag_value = Column(String)
-
-
-# "External manual materialized views": CRMP contains a set of auxiliary tables,
-# views, functions, and triggers that implement simulated or manually
-# maintained materialized views (as opposed to natively supported matviews).
-# For some details, see
-# https://github.com/pacificclimate/crmp/tree/master/database/manual-matviews.
-# The following classes map onto the manual matviews defined in CRMP.
-# NOTE: There are *no* mappings in PyCDS for the infrastructure for
-# implementing manual matviews.
 
 class ObsCountPerMonthHistory(DeferredBase):
     """This class maps to a manual materialized view that is required for web

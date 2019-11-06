@@ -19,7 +19,7 @@ def test_reflect_tables_into_session(blank_postgis_session):
         'meta_sensor', 'meta_contact', 'climo_obs_count_mv',
         'obs_count_per_month_history_mv',
         'vars_per_history_mv', 'meta_history',
-        'meta_vars', 'meta_network', 'meta_station', 'obs_with_flags',
+        'meta_vars', 'meta_network', 'meta_station',
         'obs_raw', 'meta_native_flag', 'obs_raw_native_flags'
     }
 
