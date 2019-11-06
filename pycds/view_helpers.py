@@ -4,8 +4,8 @@ SQLAlchemy does not have out-of-the-box support for views or materialized views.
 This module adds view functionality.
 
 For details on view creation in SQLAlchemy see:
+https://github.com/sqlalchemy/sqlalchemy/wiki/Views
 http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
-https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
 https://gist.github.com/techniq/5174412
 """
 
@@ -53,8 +53,13 @@ class ViewMixin(object):
     Usage:
 
         class Thing(Base, ViewMixin):
+            __viewname__ = 'things'
             __selectable__ = <SQLAlchemy selectable>
             __primary_key__ = ['primary', 'key', 'columns']
+
+    __viewname__ is an optional name for the view. If this attribute is not
+        defined, a value is constructed by converting the class name to snake
+        case and suffixing '_v'.
 
     __selectable__ must be assigned a SQLAlchemy selectable, which is any SQLAlchemy object from which rows can be
         selected. This could be be the result of a sqlalchemy.orm.query expression, a sqlalchemy.sql.select
@@ -100,7 +105,8 @@ class ViewMixin(object):
 
     @classmethod
     def viewname(cls):
-        return snake_case(cls.__name__) + '_v'
+        return cls.__viewname__ if cls.__viewname__ \
+            else snake_case(cls.__name__) + '_v'
 
     @classmethod
     def create(cls, sesh):
