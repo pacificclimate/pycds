@@ -105,8 +105,11 @@ class ViewMixin(object):
 
     @classmethod
     def viewname(cls):
-        return cls.__viewname__ if cls.__viewname__ \
-            else snake_case(cls.__name__) + '_v'
+        try:
+            return cls.__viewname__
+        except AttributeError:
+            # TODO: Don't suffix with _v. Yuck.
+            return snake_case(cls.__name__) + '_v'
 
     @classmethod
     def create(cls, sesh):
