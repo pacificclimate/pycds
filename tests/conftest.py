@@ -18,7 +18,7 @@ import pycds
 import pycds.weather_anomaly
 from pycds import Contact, Network, Station, History, Variable, Obs, \
     NativeFlag, PCICFlag
-from pycds.views import CrmpNetworkGeoserver
+from pycds.views import CrmpNetworkGeoserver, ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
 
 
@@ -132,10 +132,14 @@ def large_test_session(blank_postgis_session):
     # Hmmm... this should have been created by
     # `pycds.Base.metadata.create_all(bind=engine)` above
     CrmpNetworkGeoserver.create(blank_postgis_session)
+    ObsWithFlags.create(blank_postgis_session)
 
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 
     yield blank_postgis_session
+
+    CrmpNetworkGeoserver.drop(blank_postgis_session)
+    ObsWithFlags.drop(blank_postgis_session)
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
 #   Network
