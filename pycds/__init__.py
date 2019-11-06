@@ -3,7 +3,7 @@ import datetime
 __all__ = [
     'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
-    'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory',
+    'ObsCountPerMonthHistory', 'VarsPerHistory',
     'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
     'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
 ]
