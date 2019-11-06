@@ -18,6 +18,7 @@ import pycds
 import pycds.weather_anomaly
 from pycds import Contact, Network, Station, History, Variable, Obs, \
     NativeFlag, PCICFlag
+from pycds.views import CrmpNetworkGeoserver
 from pycds.functions import daysinmonth, effective_day
 
 
@@ -127,6 +128,10 @@ def large_test_session(blank_postgis_session):
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
         sql = f.read()
     blank_postgis_session.execute(sql)
+
+    # Hmmm... this should have been created by
+    # `pycds.Base.metadata.create_all(bind=engine)` above
+    CrmpNetworkGeoserver.create(blank_postgis_session)
 
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 

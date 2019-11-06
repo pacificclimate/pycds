@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
-from pycds import CrmpNetworkGeoserver
+from pycds.views import CrmpNetworkGeoserver
+
 
 def test_crmp_network_geoserver(large_test_session):
     q = large_test_session.query(CrmpNetworkGeoserver.network_name)
