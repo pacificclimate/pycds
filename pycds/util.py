@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData
 
 from pycds import *
-from pycds import Base, DeferredBase
+from pycds import Base
 
 
 # http://stackoverflow.com/questions/5631078/sqlalchemy-print-the-actual-query
@@ -115,7 +115,7 @@ TestVariable = namedtuple(
 
 def create_test_database(engine):
     Base.metadata.create_all(bind=engine)
-    DeferredBase.metadata.create_all(bind=engine)
+
 
 # This is fragile, fragile code
 # Kind of assumes a postgres read_engine and an sqlite write_engine

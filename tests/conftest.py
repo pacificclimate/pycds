@@ -89,7 +89,6 @@ def test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
-    pycds.DeferredBase.metadata.create_all(bind=engine)
 
     moti = Network(name='MoTIe')
     ec = Network(name='EC')
@@ -123,7 +122,6 @@ def large_test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
-    pycds.DeferredBase.metadata.create_all(bind=engine)
 
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
         sql = f.read()
