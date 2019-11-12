@@ -19,11 +19,17 @@ import pycds.weather_anomaly
 from pycds import Contact, Network, Station, History, Variable, Obs, \
     NativeFlag, PCICFlag
 from pycds.views import \
-    CrmpNetworkGeoserver, HistoryStationNetwork, ObsWithFlags
+    CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
+    ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
 
 
-all_views = [CrmpNetworkGeoserver, HistoryStationNetwork, ObsWithFlags]
+all_views = [
+    CrmpNetworkGeoserver,
+    HistoryStationNetwork,
+    ObsCountPerDayHistory,
+    ObsWithFlags
+]
 
 # Set up database environment before testing. This is triggered each time a
 # database is created; in these tests, by `.metadata.create_all()` calls.

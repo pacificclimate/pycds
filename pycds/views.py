@@ -11,6 +11,7 @@ a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
 for more information.
 """
 
+from sqlalchemy import func, text
 from sqlalchemy.orm import Query
 from pycds import Base, Network, Station, History, Variable, Obs, \
     StationObservationStats, CollapsedVariables
@@ -86,6 +87,20 @@ class HistoryStationNetwork(Base, ViewMixin):
         .select_from(History)
             .join(Station)
             .join(Network)
+    ).selectable
+    __primary_key__ = ['history_id']
+
+
+class ObsCountPerDayHistory(Base, ViewMixin):
+    __viewname__ = 'obs_count_per_day_history_v'  # Legacy name
+    __selectable__ = (
+        Query([
+            func.count().label('count'),
+            func.date_trunc('day', Obs.time).label('date_trunc'),
+            Obs.history_id.label('history_id')
+        ])
+        .select_from(Obs)
+        .group_by(func.date_trunc('day', Obs.time), Obs.history_id)
     ).selectable
     __primary_key__ = ['history_id']
 
