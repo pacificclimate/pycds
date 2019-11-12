@@ -106,7 +106,4 @@ def test_obs_with_flags(large_test_session):
         assert obs_with_flags.obs_raw_id == obs.id
         assert obs_with_flags.vars_id == obs.vars_id
         assert obs_with_flags.network_id == obs.variable.network_id
-        # FIXME: The following results in an error:
-        #  Error "function st_asewkb(public.geometry) does not exist"
-        #  PostGIS is installed, but its functions are not available.
-        # assert obs_with_flags.station_id == obs.history.station_id
+        assert obs_with_flags.station_id == obs.history.station_id
