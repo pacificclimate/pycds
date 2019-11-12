@@ -96,6 +96,11 @@ class History(Base):
     small distances (e.g. from one end of the airport runway to
     another) or change the frequency of its observations, this table
     records the details of those changes.
+
+    WARNING: The GeoAlchemy2 `Geometry` column (attribute `the_geom`) forces
+    all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
+    This may or may not be desirable for all use cases, specifically views.
+    See the GeoAlchemy2 documentation for details.
     '''
     __tablename__ = 'meta_history'
     id = Column('history_id', Integer, primary_key=True)

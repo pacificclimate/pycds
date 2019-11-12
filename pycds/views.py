@@ -9,6 +9,12 @@ the ORM, or to be maintained and migrated.
 This module defines views in the ORM as SQL views in the database, using
 a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
 for more information.
+
+WARNING: The `History` class defines column `the_geom` using GeoAlchemy2
+data type `Geometry`. This forces
+all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
+This may or may not be desirable for all use cases, specifically views.
+If views are behaving oddly with respect to geometry, this is worth looking at.
 """
 
 from sqlalchemy import func, text
