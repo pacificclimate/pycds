@@ -1,7 +1,8 @@
 from sqlalchemy import text
 
-from pycds import Obs
-from pycds.views import CrmpNetworkGeoserver, ObsWithFlags
+from pycds import Obs, History
+from pycds.views import \
+    CrmpNetworkGeoserver, HistoryStationNetwork, ObsWithFlags
 
 
 def test_crmp_network_geoserver(large_test_session):
@@ -30,6 +31,24 @@ def test_crmp_network_geoserver(large_test_session):
     filtered_nrows = len(rv)
     assert filtered_nrows != 0
     assert filtered_nrows < nrows
+
+
+def test_history_station_network(large_test_session):
+    hsn_q = (
+        large_test_session.query(HistoryStationNetwork)
+        .order_by(HistoryStationNetwork.history_id)
+    )
+    hx_q = (
+        large_test_session.query(History)
+        .order_by(History.id)
+    )
+
+    assert hsn_q.count() == hx_q.count()
+
+    for hsn, hx in zip(hsn_q.all(), hx_q.all()):
+        assert hsn.history_id == hx.id
+        assert hsn.station_id == hx.station.id
+        assert hsn.network_id == hx.station.network.id
 
 
 def test_obs_with_flags(large_test_session):

@@ -36,7 +36,7 @@ class CrmpNetworkGeoserver(Base, ViewMixin):
             History.id.label('history_id'),
             History.country.label('country'),
             History.comments.label('comments'),
-            raw(History.the_geom, 'the_geom'),
+            History.the_geom,
             History.sensor_id.label('sensor_id'),
             Network.long_name.label('description'),
             Station.network_id.label('network_id'),
@@ -52,9 +52,42 @@ class CrmpNetworkGeoserver(Base, ViewMixin):
                 StationObservationStats,
                 StationObservationStats.history_id == History.id
             )
-        .selectable
-    )
+    ).selectable
     __primary_key__ = ['station_id']
+
+
+class HistoryStationNetwork(Base, ViewMixin):
+    """This view as its name suggests is a convenience view that joins
+    History, Station, and Network tables.
+    """
+    __viewname__ = 'history_join_station_network'  # Legacy name
+    __selectable__ = (
+        Query([
+            Station.network_id.label('network_id'),
+            History.station_id.label('station_id'),
+            History.id.label('history_id'),
+            History.station_name.label('station_name'),
+            History.lon.label('lon'),
+            History.lat.label('lat'),
+            History.elevation.label('elev'),
+            History.sdate.label('sdate'),
+            History.edate.label('edate'),
+            History.tz_offset.label('tz_offset'),
+            History.province.label('province'),
+            History.country.label('country'),
+            History.comments.label('comments'),
+            History.the_geom,
+            History.sensor_id.label('sensor_id'),
+            Station.native_id.label('native_id'),
+            Network.name.label('network_name'),
+            Network.long_name.label('description'),
+            Network.virtual.label('virtual')
+        ])
+        .select_from(History)
+            .join(Station)
+            .join(Network)
+    ).selectable
+    __primary_key__ = ['history_id']
 
 
 class ObsWithFlags(Base, ViewMixin):
@@ -78,6 +111,5 @@ class ObsWithFlags(Base, ViewMixin):
         .select_from(Obs)
             .join(Variable)
             .join(History)
-        .selectable
-    )
+    ).selectable
     __primary_key__ = ['obs_raw_id']
