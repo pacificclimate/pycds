@@ -24,9 +24,6 @@ INSERT INTO meta_network (network_id, network_name, description, virtual, publis
 INSERT INTO meta_network (network_id, network_name, description, virtual, publish, col_hex, contact_id) VALUES (2, 'MoTIe', 'Ministry of Transportation and Infrastructure (electronic)', NULL, true, '#37ea00', NULL);
 
 
--- --
--- -- Data for Name: meta_station; Type: TABLE DATA; Schema: subset; Owner: -
--- --
 --
 -- Data for Name: meta_station; Type: TABLE DATA; Schema: subset; Owner: -
 --
