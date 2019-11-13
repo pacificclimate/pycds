@@ -111,8 +111,7 @@ class ViewMixin(object):
         try:
             return cls.__viewname__
         except AttributeError:
-            # TODO: Don't suffix with _v. Yuck.
-            return snake_case(cls.__name__) + '_v'
+            return snake_case(cls.__name__)
 
     @classmethod
     def create(cls, sesh):
@@ -122,14 +121,3 @@ class ViewMixin(object):
     def drop(cls, sesh):
         return sesh.execute(DropView(cls.viewname()))
 
-
-def raw(col, lbl=None):
-    """Return a string naming a SQLAlchemy column, optionally with label (AS)
-    This is necessary to circumvent the behaviour of GeoAlchemy2 in which it
-    automagically (and apparently un-reversably) renders a Geometry column in a
-    Query (select statement) with function ST_AsEWKB. For some purposes,
-    we need the raw (unwrapped) column, and this appears to be the only way
-    to get it. This isn't nice, but it works.
-    See view CrmpNetworkGeoserver for its use.
-    """
-    return str(col.expression.compile()) + ' AS {}'.format(lbl) if lbl else ''

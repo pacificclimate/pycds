@@ -21,7 +21,7 @@ from sqlalchemy import func, text
 from sqlalchemy.orm import Query
 from pycds import Base, Network, Station, History, Variable, Obs, \
     StationObservationStats, CollapsedVariables
-from pycds.view_helpers import ViewMixin, raw
+from pycds.view_helpers import ViewMixin
 
 
 class CrmpNetworkGeoserver(Base, ViewMixin):
