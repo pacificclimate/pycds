@@ -15,16 +15,17 @@ at least the following options:
    views and tables are defined, as originally. See
    https://docs.sqlalchemy.org/en/13/core/events.html#sqlalchemy.events.DDLEvents.before_create
 
-2. Use Alembic (not yet introduced, but it will be soon). See Alembic Cookbook,
-   Replaceable Objects:
-   https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects
-   for a way to proceed. This also has some bearing on the creation of views
-   and matviews. It is probably the best way forward.
-
-3. By script invoked from the command line. This has some advantages (amongst
+2. By script invoked from the command line. This has some advantages (amongst
    them, simplicity), but it places the functions outside of the migration
    path, which in some cases might be undesirable (e.g., in case a function
    depends on a particular table or view).
+
+3. Use Alembic (not yet introduced, but it will be soon). See Alembic Cookbook,
+   Replaceable Objects:
+   https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects
+   for a way to proceed. This also has some bearing on the creation of views
+   and matviews. This is currently the preferred approach.
+
 """
 
 from sqlalchemy.schema import DDL
@@ -104,6 +105,7 @@ daily_ts = DDL('''
 ''')
 
 
+# Return the number of days in the month of the given date.
 daysinmonth = DDL('''
     CREATE OR REPLACE FUNCTION daysinmonth(date)
       RETURNS double precision AS
@@ -116,6 +118,8 @@ daysinmonth = DDL('''
 ''')
 
 
+# Execute function `query_one_station`. This function does not appear to be
+# in use in any production code. Possibly it is in use ad-hoc.
 do_query_one_station = DDL('''
     CREATE OR REPLACE FUNCTION do_query_one_station(station_id integer)
       RETURNS refcursor AS
@@ -182,6 +186,22 @@ effective_day = DDL('''
   ''')
 
 
+# Returns the text of a SELECT statement for a table containing the values
+# of all the variables reported by the specified station, filtered by whether
+# the variables are climatological or non-climatological. The rows of the
+# resulting table contain the following columns:
+#
+#   `obs_time`
+#       for each variable reported by the station:
+#       `   datum` of observation for this variable at `obs_time`
+#           (`NULL` if no observation for this variable at `obs_time`)
+#               AS `net_var_name`
+#
+# This would be better done in application code with SQLAlchemy, but it likely
+# predates its introduction. Consider such replacement.
+#
+# NOTE: Production code: This function is called by functions
+# `query_one_station` and `query_one_station_climo` .
 getstationvariabletable = DDL('''
     CREATE OR REPLACE FUNCTION getstationvariabletable(
         station_id integer,
@@ -252,6 +272,10 @@ monthly_ts = DDL('''
 ''')
 
 
+# Returns a row set containing the values of all the non-climatological
+# variables reported by the specified station. For the definition of the
+# row set, see function `getStationVariableTable`.
+# NOTE: Production code: This function is called by the PDP PCDS backend.
 query_one_station = DDL('''
     CREATE OR REPLACE FUNCTION query_one_station(station_id integer)
       RETURNS text AS
@@ -266,6 +290,10 @@ query_one_station = DDL('''
 ''')
 
 
+# Returns a row set containing the values of all the climatological
+# variables reported by the specified station. For the definition of the
+# row set, see function `getStationVariableTable`.
+# NOTE: Production code: This function is called by the PDP PCDS backend.
 query_one_station_climo = DDL('''
     CREATE OR REPLACE FUNCTION query_one_station_climo(station_id integer)
       RETURNS text AS

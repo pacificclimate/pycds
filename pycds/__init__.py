@@ -206,11 +206,11 @@ class Obs(Base):
 
 class TimeBound(Base):
     """This class maps to a table which records the start and end times
-    for an observation on a variable that spans a (changeable) time period,
-    rather than a variable that is at a point in time (which could represent
-    an instantaneous observation or a summary observation, e.g., daily average,
-    for a fixed, known time period). These are typically climatologies and
-    cumulative precipitations over variable time periods.
+    for an observation on a variable that spans a changeable time period,
+    rather than a variable that is at a point in time or which spans a
+    fixed, known time period and is represented by a single standardized point
+    in that time period). Variable time periods are typically for climatologies
+    and cumulative precipitations.
     """
     __tablename__ = 'time_bounds'
     obs_raw_id = Column(
