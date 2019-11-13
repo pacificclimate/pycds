@@ -9,14 +9,19 @@ def test_reflect_tables_into_session(blank_postgis_session):
     engine = blank_postgis_session.get_bind()
     create_test_database(engine)
 
-    res = blank_postgis_session.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'crmp';")
-    res = [x[0] for x in res.fetchall()]
+    res = blank_postgis_session.execute('''
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'crmp';
+    ''')
 
-    assert set(res).issuperset(set(['meta_sensor', 'meta_contact', 'climo_obs_count_mv',
-        'obs_count_per_month_history_mv', 'meta_network_geoserver',
+    assert {x[0] for x in res.fetchall()} >= {
+        'meta_sensor', 'meta_contact', 'climo_obs_count_mv',
+        'obs_count_per_month_history_mv',
         'vars_per_history_mv', 'crmp_network_geoserver', 'meta_history',
         'meta_vars', 'meta_network', 'meta_station', 'obs_with_flags',
-        'obs_raw', 'meta_native_flag', 'obs_raw_native_flags']))
+        'obs_raw', 'meta_native_flag', 'obs_raw_native_flags'
+    }
 
 
 def test_can_create_test_db(blank_postgis_session):

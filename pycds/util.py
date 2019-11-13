@@ -125,7 +125,7 @@ def create_reflected_test_database(read_engine, write_engine):
     meta = MetaData(bind=write_engine)
     meta.reflect(bind=read_engine)
 
-    for tablename in ('matviews', 'stats_station_var'):
+    for tablename in ('matviews'):
         meta.remove(meta.tables[tablename])
 
     logger.info("Overriding PG types that are unknown to sqlite")

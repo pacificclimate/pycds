@@ -7,6 +7,7 @@ import sys
 import testing.postgresql
 import sqlalchemy
 from sqlalchemy import create_engine
+from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
 
@@ -15,7 +16,20 @@ from pytest import fixture
 
 import pycds
 import pycds.weather_anomaly
-from pycds import Contact, Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
+from pycds import Contact, Network, Station, History, Variable, Obs, \
+    NativeFlag, PCICFlag
+from pycds.functions import daysinmonth, effective_day
+
+
+# Set up database environment before testing. This is triggered each time a
+# database is created; in these tests, by `.metadata.create_all()` calls.
+@event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
+def do_before_create(target, connection, **kw):
+    connection.execute('SET search_path TO crmp, public')
+    # Add required functions
+    connection.execute(daysinmonth)
+    connection.execute(effective_day)
+
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -29,17 +43,6 @@ def engine():
         engine.execute("create extension postgis")
         engine.execute(CreateSchema('crmp'))
         pycds.Base.metadata.create_all(bind=engine)
-        sqlalchemy.event.listen(
-            pycds.weather_anomaly.Base.metadata,
-            'before_create',
-            DDL('''
-                CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
-                $$
-                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
-                    as timestamp));
-                $$ LANGUAGE sql;
-            ''')
-        )
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
@@ -48,10 +51,6 @@ def engine():
 def session(engine):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
-    # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
-    # public (for postgis functions)
-    session.execute('SET search_path TO crmp, public')
-    # print('\nsearch_path', [r for r in session.execute('SHOW search_path')])
     yield session
     session.rollback()
     session.close()
