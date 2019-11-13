@@ -25,6 +25,10 @@ from pycds.view_helpers import ViewMixin
 
 
 class CrmpNetworkGeoserver(Base, ViewMixin):
+    """
+    This view is used by the PDP Geoserver backend for generating station
+    map layers.
+    """
     __viewname__ = 'crmp_network_geoserver'
     __selectable__ = (
         Query([
@@ -64,7 +68,8 @@ class CrmpNetworkGeoserver(Base, ViewMixin):
 
 
 class HistoryStationNetwork(Base, ViewMixin):
-    """This view as its name suggests is a convenience view that joins
+    """
+    This view, as its name suggests, is a convenience view that joins
     History, Station, and Network tables.
     """
     __viewname__ = 'history_join_station_network'  # Legacy name
@@ -98,6 +103,10 @@ class HistoryStationNetwork(Base, ViewMixin):
 
 
 class ObsCountPerDayHistory(Base, ViewMixin):
+    """
+    This view provides counts of observations grouped by day (date) and
+    history_id
+    """
     __viewname__ = 'obs_count_per_day_history_v'  # Legacy name
     __selectable__ = (
         Query([
@@ -112,6 +121,9 @@ class ObsCountPerDayHistory(Base, ViewMixin):
 
 
 class ObsWithFlags(Base, ViewMixin):
+    """
+    This view joins Obs with History and Variable.
+    """
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
     #  Better name: ObsWithMetadata
     __viewname__ = 'obs_with_flags'
