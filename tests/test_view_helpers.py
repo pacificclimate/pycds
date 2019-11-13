@@ -102,7 +102,7 @@ def view_test_session(mod_empty_view_session):
         yield sesh
 
 def test_viewname():
-    assert SimpleThing.viewname() == 'simple_thing_v'
+    assert SimpleThing.viewname() == 'simple_thing'
 
 def test_simple_view(view_test_session):
     sesh = view_test_session
