@@ -280,7 +280,7 @@ query_one_station = DDL('''
     CREATE OR REPLACE FUNCTION query_one_station(station_id integer)
       RETURNS text AS
     $BODY$
-        stn_query = "SELECT * FROM crmp.getStationVariableTable(" + str(station_id) + ", false)"
+        stn_query = "SELECT * FROM getStationVariableTable(" + str(station_id) + ", false)"
         data = plpy.execute(stn_query)
         #plpy.warning(data)
         return data[0]['getstationvariabletable']
@@ -298,7 +298,7 @@ query_one_station_climo = DDL('''
     CREATE OR REPLACE FUNCTION query_one_station_climo(station_id integer)
       RETURNS text AS
     $BODY$
-        stn_query = "SELECT * FROM crmp.getStationVariableTable(" + str(station_id) + ", true)"
+        stn_query = "SELECT * FROM getStationVariableTable(" + str(station_id) + ", true)"
         data = plpy.execute(stn_query)
         #plpy.warning(data)
         return data[0]['getstationvariabletable']

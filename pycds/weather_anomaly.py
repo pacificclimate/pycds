@@ -43,7 +43,8 @@ from sqlalchemy.sql import text, column
 
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
-Base = declarative_base(metadata=MetaData(schema='crmp'))
+# Base = declarative_base(metadata=MetaData(schema='crmp'))
+Base = declarative_base()
 metadata = Base.metadata
 
 

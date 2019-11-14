@@ -18,7 +18,8 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-Base = declarative_base(metadata=MetaData(schema='crmp'))
+# Base = declarative_base(metadata=MetaData(schema='crmp'))
+Base = declarative_base()
 metadata = Base.metadata
 
 

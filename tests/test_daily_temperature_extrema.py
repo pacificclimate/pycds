@@ -38,7 +38,7 @@ def describe_function_effective__day():
     @mark.parametrize('freq', ['1-hourly', '12-hourly'])
     @mark.parametrize('extremum', ['max', 'min'])
     def it_returns_the_expected_day_of_observation(mod_empty_database_session, obs_time, extremum, freq):
-        mod_empty_database_session.execute('SET search_path TO crmp')
+        # mod_empty_database_session.execute('SET search_path TO crmp')
         result = mod_empty_database_session.execute(
             text('SELECT effective_day(:obs_time, :extremum, :freq) AS eday'),
             {'obs_time': obs_time, 'extremum': extremum, 'freq': freq}

@@ -31,11 +31,19 @@ all_views = [
     ObsWithFlags
 ]
 
+
+_schema_name = 'test_schema'
+
+@fixture
+def schema_name():
+    return _schema_name
+
+
 # Set up database environment before testing. This is triggered each time a
 # database is created; in these tests, by `.metadata.create_all()` calls.
 @event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
 def do_before_create(target, connection, **kw):
-    connection.execute('SET search_path TO crmp, public')
+    connection.execute('SET search_path TO {}, public'.format(_schema_name))
     # Add required functions
     connection.execute(daysinmonth)
     connection.execute(effective_day)
@@ -51,7 +59,7 @@ def engine():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
+        engine.execute(CreateSchema(_schema_name))
         pycds.Base.metadata.create_all(bind=engine)
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
@@ -71,7 +79,7 @@ def mod_blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
+        engine.execute(CreateSchema(_schema_name))
         sesh = sessionmaker(bind=engine)()
         yield sesh
 
@@ -88,9 +96,9 @@ def blank_postgis_session():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
+        engine.execute(CreateSchema(_schema_name))
         sesh = sessionmaker(bind=engine)()
-        sesh.execute('SET search_path TO crmp, public')
+        sesh.execute('SET search_path TO {}, public'.format(_schema_name))
 
         yield sesh
 

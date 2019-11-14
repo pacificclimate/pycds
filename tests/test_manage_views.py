@@ -21,7 +21,7 @@ monthly_view_names = [v.viewname() for v in monthly_views]
 
 
 @fixture(scope='function')
-def per_test_engine():
+def per_test_engine(schema_name):
     """Single-test database engine, so that we are starting with a clean database for each individual test.
     Somewhat slow (computationally expensive) but simple. We need this mechanism because:
 
@@ -39,14 +39,16 @@ def per_test_engine():
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
+        engine.execute(CreateSchema(schema_name))
+        engine.execute('SET search_path TO {}, public'.format(schema_name))
         pycds.Base.metadata.create_all(bind=engine)
         # This is in the prod database already, but we have to add it to the test database manually
+        # TODO: Add from pycds.functions
         sqlalchemy.event.listen(
             pycds.weather_anomaly.Base.metadata,
             'before_create',
             DDL('''
-                CREATE OR REPLACE FUNCTION crmp.DaysInMonth(date) RETURNS double precision AS
+                CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
                 $$
                     SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
                     as timestamp));
@@ -62,8 +64,8 @@ def per_test_session(per_test_engine):
     session = sessionmaker(bind=per_test_engine)()
     # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
     # public (for postgis functions)
-    session.execute('SET search_path TO crmp, public')
-    # print('\nsearch_path', [r for r in session.execute('SHOW search_path')])
+    session.execute('SET search_path TO test_schema, public')
+    print('### per_test_session search_path', [r for r in session.execute('SHOW search_path')])
     yield session
 
 
@@ -73,16 +75,18 @@ def per_test_session(per_test_engine):
     # we don't bother setting up the test machinery to test that
     ('all', daily_view_names + monthly_view_names),
 ])
-def test_create(per_test_engine, per_test_session, what, exp_matview_names):
+def test_create(
+        per_test_engine, per_test_session, what, exp_matview_names, schema_name
+):
 
-    # print('>>>> search_path', [r.search_path for r in per_test_session.execute('SHOW search_path')])
+    print('### test_create search_path', [r.search_path for r in per_test_session.execute('SHOW search_path')])
 
     def check_views_and_tables(present):
         def check(expected_names, actual_names):
             for name in expected_names:
                 assert (present and (name in actual_names)) or (not present and (name not in actual_names))
 
-        check(exp_matview_names, inspect(per_test_engine).get_table_names(schema='crmp'))
+        check(exp_matview_names, inspect(per_test_engine).get_table_names(schema=schema_name))
 
     check_views_and_tables(False)
     manage_views(per_test_session, 'create', what)
@@ -94,16 +98,14 @@ def test_create(per_test_engine, per_test_session, what, exp_matview_names):
 def session_with_views(session):
     """Test fixture for manage_views('refresh'): Session with views defined."""
     logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
-    print('\nsession_with_views: SETUP')
     views = daily_views + monthly_views
     for view in views:
         view.create(session)
     session.flush()
+    print('### session_with_views search_path', [r.search_path for r in session.execute('SHOW search_path')])
     yield session
-    print('\nsession_with_views: TEARDOWN')
     for view in reversed(views):
         view.drop(session)
-    print('\nsession_with_views: DONE')
 
 
 @mark.parametrize('what, exp_views', [
