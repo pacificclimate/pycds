@@ -32,7 +32,7 @@ def check_schema_configuration(schema_name_):
     # the wrong schema name.
     assert Base.metadata.schema == schema_name_
     assert Network.metadata.schema == schema_name_
-    assert Network.__table__.schema == None
+    assert Network.__table__.schema == schema_name_
 
 
 def check_schemas(session_, schema_name_):

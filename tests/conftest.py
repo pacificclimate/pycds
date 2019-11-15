@@ -16,7 +16,9 @@ from pytest import fixture
 
 import pycds
 import pycds.weather_anomaly
-from pycds import Contact, Network, Station, History, Variable, Obs, \
+from pycds import \
+    get_schema_name, \
+    Contact, Network, Station, History, Variable, Obs, \
     NativeFlag, PCICFlag
 from pycds.views import \
     CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
@@ -35,7 +37,7 @@ all_views = [
 
 @fixture(scope='session')
 def schema_name():
-    return 'test_schema'
+    return get_schema_name()
 
 
 # Set up database environment before testing. This is triggered each time a

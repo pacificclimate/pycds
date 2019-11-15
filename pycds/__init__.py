@@ -1,3 +1,4 @@
+import os
 import datetime
 
 __all__ = [
@@ -18,8 +19,12 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-# Base = declarative_base(metadata=MetaData(schema='crmp'))
-Base = declarative_base()
+def get_schema_name():
+    return os.environ.get('PYCDS_SCHEMA_NAME', 'crmp')
+
+
+Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
+# Base = declarative_base()
 metadata = Base.metadata
 
 
