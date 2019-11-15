@@ -315,7 +315,18 @@ def get_table_names(session, schema_name):
 
 
 def get_view_names(session, schema_name):
-    return get_engine_inspector(session).get_view_names(schema=schema_name)
+    # Note: `Inspector.get_view_names()` always, and inaccurately, returns the
+    # empty array. Hence the query below.
+    # return get_engine_inspector(session).get_view_names(schema=schema_name)
+    rows = session.execute(
+        '''
+        SELECT table_name 
+        FROM INFORMATION_SCHEMA.views 
+        WHERE table_schema = :schema_name 
+        ''',
+        {'schema_name': schema_name}
+    ).fetchall()
+    return [row[0] for row in rows]
 
 
 def get_search_path(executor):
