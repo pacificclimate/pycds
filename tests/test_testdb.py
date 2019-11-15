@@ -2,6 +2,7 @@ from pkg_resources import resource_filename
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import pycds
 from pycds.util import create_test_database, create_test_data, insert_crmp_data
 from pycds import Contact, History, Obs
 
@@ -18,11 +19,13 @@ def set_and_verify_search_path(search_path, executor):
 
 def test_reflect_tables_into_session(blank_postgis_session, schema_name):
     engine = blank_postgis_session.get_bind()
-    set_and_verify_search_path([schema_name, 'public'], blank_postgis_session)
+    # set_and_verify_search_path([schema_name, 'public'], blank_postgis_session)
     # print('### xxx', engine.execute('SET search_path TO foo, public'.format(schema_name)))
     # # print('### xxx', engine.execute('SET search_path TO {}, public'.format(schema_name)))
     # print('### test_reflect_tables_into_session', engine.execute("show search_path").scalar())
-    create_test_database(engine)
+    # create_test_database(engine)
+    pycds.Base.metadata.schema = schema_name
+    pycds.Base.metadata.create_all(bind=engine)
 
     res = blank_postgis_session.execute('''
         SELECT table_name 
@@ -41,8 +44,10 @@ def test_reflect_tables_into_session(blank_postgis_session, schema_name):
 
 def test_can_create_test_db(blank_postgis_session, schema_name):
     engine = blank_postgis_session.get_bind()
-    engine.execute('SET search_path TO {}, public'.format(schema_name))
-    create_test_database(engine)
+    # engine.execute('SET search_path TO {}, public'.format(schema_name))
+    # create_test_database(engine)
+    pycds.Base.metadata.schema = schema_name
+    pycds.Base.metadata.create_all(bind=engine)
     create_test_data(engine)
     # Get some data
     q = blank_postgis_session.query(Contact)
@@ -50,8 +55,10 @@ def test_can_create_test_db(blank_postgis_session, schema_name):
 
 def test_can_create_crmp_subset_db(blank_postgis_session, schema_name):
     engine = blank_postgis_session.get_bind()
-    engine.execute('SET search_path TO {}, public'.format(schema_name))
-    create_test_database(engine)
+    # engine.execute('SET search_path TO {}, public'.format(schema_name))
+    # create_test_database(engine)
+    pycds.Base.metadata.schema = schema_name
+    pycds.Base.metadata.create_all(bind=engine)
     insert_crmp_data(blank_postgis_session)
 
     q = blank_postgis_session.query(History)

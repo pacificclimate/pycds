@@ -24,9 +24,7 @@ def test_can_create_postgis_geometry_table_model(blank_postgis_session):
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables
 
-def test_can_create_postgis_geometry_table_manual(
-        blank_postgis_session, schema_name
-):
+def test_can_create_postgis_geometry_table_manual(blank_postgis_session):
     blank_postgis_session.execute('''CREATE TABLE lake (
     id SERIAL NOT NULL,
     name VARCHAR,
@@ -36,7 +34,7 @@ def test_can_create_postgis_geometry_table_manual(
     res = blank_postgis_session.execute('''
         SELECT table_name 
         FROM information_schema.tables 
-        WHERE table_schema = '{}'
-    '''.format(schema_name))
+        WHERE table_schema = 'public'
+    ''')
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables

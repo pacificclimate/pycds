@@ -15,58 +15,11 @@ import pycds.weather_anomaly
 from pycds import Obs
 from pycds.manage_views import daily_views, monthly_views, manage_views
 
+from pycds.util import get_search_path, set_search_path
+
 
 daily_view_names = [v.viewname() for v in daily_views]
 monthly_view_names = [v.viewname() for v in monthly_views]
-
-
-@fixture(scope='function')
-def per_test_engine(schema_name):
-    """Single-test database engine, so that we are starting with a clean database for each individual test.
-    Somewhat slow (computationally expensive) but simple. We need this mechanism because:
-
-    - to confirm that tables have been created, we use inspection
-      (http://docs.sqlalchemy.org/en/latest/core/reflection.html#fine-grained-reflection-with-inspector)
-    - ``inspect`` is bound to an engine, not a session
-    - any session which creates views has to commit its actions to make them visible to the engine
-    - commiting prevents the usual session rollback mechanism from working
-    - therefore we either must manually remove the tables on teardown of each session, or just use a fresh database
-    - we opt for the latter; the former proves unwieldy
-
-    Fortunately this mechanism is only necessary for testing the create operation."""
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute("create extension postgis")
-        engine.execute(CreateSchema(schema_name))
-        engine.execute('SET search_path TO {}, public'.format(schema_name))
-        pycds.Base.metadata.create_all(bind=engine)
-        # This is in the prod database already, but we have to add it to the test database manually
-        # TODO: Add from pycds.functions
-        sqlalchemy.event.listen(
-            pycds.weather_anomaly.Base.metadata,
-            'before_create',
-            DDL('''
-                CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
-                $$
-                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
-                    as timestamp));
-                $$ LANGUAGE sql;
-            ''')
-        )
-        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
-        yield engine
-
-
-@fixture
-def per_test_session(per_test_engine):
-    session = sessionmaker(bind=per_test_engine)()
-    # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
-    # public (for postgis functions)
-    session.execute('SET search_path TO test_schema, public')
-    print('### per_test_session search_path', [r for r in session.execute('SHOW search_path')])
-    yield session
 
 
 @mark.parametrize('what, exp_matview_names', [
@@ -79,7 +32,14 @@ def test_create(
         per_test_engine, per_test_session, what, exp_matview_names, schema_name
 ):
 
-    print('### test_create search_path', [r.search_path for r in per_test_session.execute('SHOW search_path')])
+    print('### test_create')
+    engine_inspector = inspect(per_test_engine)
+    print('### search_path', get_search_path(per_test_session))
+
+    schema_names = engine_inspector.get_schema_names()
+    for name in schema_names:
+        print('### schema', name)
+        print('   ### tables', engine_inspector.get_table_names(schema=name))
 
     def check_views_and_tables(present):
         def check(expected_names, actual_names):
@@ -102,7 +62,7 @@ def session_with_views(session):
     for view in views:
         view.create(session)
     session.flush()
-    print('### session_with_views search_path', [r.search_path for r in session.execute('SHOW search_path')])
+    print('### session_with_views search_path', get_search_path(session))
     yield session
     for view in reversed(views):
         view.drop(session)

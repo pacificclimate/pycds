@@ -4,8 +4,8 @@ import struct
 
 from pytest import fixture, mark, raises, fail
 
-from pycds.util import generic_sesh
-from pycds import Network, Station, History, Variable, DerivedValue
+from pycds.util import generic_sesh, get_search_path
+from pycds import Base, Network, Station, History, Variable, DerivedValue
 from pycds.climate_baseline_helpers import \
     pcic_climate_variable_network_name, \
     get_or_create_pcic_climate_variables_network, \

@@ -6,7 +6,7 @@ import sys
 
 import testing.postgresql
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
@@ -22,6 +22,7 @@ from pycds.views import \
     CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
     ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
+from pycds.util import set_search_path
 
 
 all_views = [
@@ -32,19 +33,17 @@ all_views = [
 ]
 
 
-_schema_name = 'test_schema'
-
-@fixture
+@fixture(scope='session')
 def schema_name():
-    return _schema_name
+    return 'test_schema'
 
 
 # Set up database environment before testing. This is triggered each time a
 # database is created; in these tests, by `.metadata.create_all()` calls.
 @event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
 def do_before_create(target, connection, **kw):
-    connection.execute('SET search_path TO {}, public'.format(_schema_name))
     # Add required functions
+    # TODO: Verify that functions are created in schema specified in metadata!
     connection.execute(daysinmonth)
     connection.execute(effective_day)
 
@@ -54,13 +53,15 @@ def pytest_runtest_setup():
 
 
 @fixture(scope='session')
-def engine():
+def engine(schema_name):
     """Test-session-wide database engine"""
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema(_schema_name))
+        engine.execute(CreateSchema(schema_name))
+        pycds.Base.metadata.schema = schema_name
         pycds.Base.metadata.create_all(bind=engine)
+        pycds.weather_anomaly.Base.metadata.schema = schema_name
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
@@ -69,43 +70,108 @@ def engine():
 def session(engine):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
+    set_search_path(session, ['public'])
     yield session
     session.rollback()
     session.close()
 
 
-@fixture(scope='module')
-def mod_blank_postgis_session():
+@fixture(scope='function')
+def per_test_engine(schema_name):
+    """Single-test database engine, so that we are starting with a clean database for each individual test.
+    Somewhat slow (computationally expensive) but simple. We need this mechanism because:
+
+    - to confirm that tables have been created, we use inspection
+      (http://docs.sqlalchemy.org/en/latest/core/reflection.html#fine-grained-reflection-with-inspector)
+    - ``inspect`` is bound to an engine, not a session
+    - any session which creates views has to commit its actions to make them visible to the engine
+    - commiting prevents the usual session rollback mechanism from working
+    - therefore we either must manually remove the tables on teardown of each session, or just use a fresh database
+    - we opt for the latter; the former proves unwieldy
+
+    Fortunately this mechanism is only necessary for testing the create operation."""
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema(_schema_name))
+        engine.execute(CreateSchema(schema_name))
+        # engine.execute('SET search_path TO {}, public'.format(schema_name))
+        pycds.Base.metadata.schema = schema_name
+        pycds.Base.metadata.create_all(bind=engine)
+        Network.__table__.schema = schema_name
+        pycds.weather_anomaly.Base.metadata.schema = schema_name
+        # TODO: Add from pycds.functions
+        sqlalchemy.event.listen(
+            pycds.weather_anomaly.Base.metadata,
+            'before_create',
+            DDL('''
+                CREATE OR REPLACE FUNCTION DaysInMonth(date) RETURNS double precision AS
+                $$
+                    SELECT EXTRACT(DAY FROM CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day'
+                    as timestamp));
+                $$ LANGUAGE sql;
+            ''')
+        )
+        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+        engine_inspector = inspect(engine)
+        schema_names = engine_inspector.get_schema_names()
+        print('### fixture per_test_engine')
+        for name in schema_names:
+            print('### schema', name)
+            print('   ### tables', engine_inspector.get_table_names(schema=name))
+        yield engine
+
+
+@fixture
+def per_test_session(per_test_engine):
+    session = sessionmaker(bind=per_test_engine)()
+    # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
+    # public (for postgis functions)
+    # session.execute('SET search_path TO test_schema, public')
+    # print('### per_test_session search_path', [r for r in session.execute('SHOW search_path')])
+    set_search_path(session, ['public'])
+    yield session
+
+
+@fixture(scope='module')
+def mod_blank_postgis_session(schema_name):
+    with testing.postgresql.Postgresql() as pg:
+        engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
+        engine.execute(CreateSchema(schema_name))
         sesh = sessionmaker(bind=engine)()
         yield sesh
 
+
 @fixture(scope='module')
-def mod_empty_database_session(mod_blank_postgis_session):
+def mod_empty_database_session(mod_blank_postgis_session, schema_name):
     sesh = mod_blank_postgis_session
+    set_search_path(sesh, ['public'])
     engine = sesh.get_bind()
+    pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
+    pycds.weather_anomaly.Base.metadata.schema = schema_name
     pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
     yield sesh
 
+
 @pytest.yield_fixture(scope='function')
-def blank_postgis_session():
+def blank_postgis_session(schema_name):
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema(_schema_name))
+        engine.execute(CreateSchema(schema_name))
         sesh = sessionmaker(bind=engine)()
-        sesh.execute('SET search_path TO {}, public'.format(_schema_name))
+        set_search_path(sesh, ['public'])
 
         yield sesh
 
 @pytest.yield_fixture(scope='function')
-def test_session(blank_postgis_session):
+def test_session(blank_postgis_session, schema_name):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
+    pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
 
     moti = Network(name='MoTIe')
@@ -136,9 +202,10 @@ def test_session(blank_postgis_session):
     yield blank_postgis_session
 
 @pytest.yield_fixture(scope='function')
-def large_test_session(blank_postgis_session):
+def large_test_session(blank_postgis_session, schema_name):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
+    pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
 
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:

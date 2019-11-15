@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from pkg_resources import resource_filename
+import re
 
 from sqlalchemy import not_, and_, or_, Integer, Column
 from sqlalchemy.orm import sessionmaker
@@ -299,3 +300,17 @@ def generic_sesh(sesh, sa_objects):
     for sao in reversed(sa_objects):
         sesh.delete(sao)
         sesh.flush()
+
+
+def get_search_path(executor):
+    search_path = executor.execute('SHOW search_path').scalar()
+    return re.split(r',\s*', search_path)
+
+
+def reset_search_path(executor):
+    executor.execute('RESET search_path')
+
+
+def set_search_path(executor, parts, verify=False):
+    search_path = ','.join(parts)
+    executor.execute('SET search_path TO {}'.format(search_path))
