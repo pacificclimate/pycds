@@ -33,13 +33,6 @@ def test_create(
 ):
 
     print('### test_create')
-    engine_inspector = inspect(per_test_engine)
-    print('### search_path', get_search_path(per_test_session))
-
-    schema_names = engine_inspector.get_schema_names()
-    for name in schema_names:
-        print('### schema', name)
-        print('   ### tables', engine_inspector.get_table_names(schema=name))
 
     def check_views_and_tables(present):
         def check(expected_names, actual_names):

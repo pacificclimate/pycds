@@ -1,27 +1,13 @@
-from sqlalchemy import inspect
-
 from pycds import Base, Network
-from pycds.util import get_search_path, reset_search_path, set_search_path
+from pycds.util import \
+    get_schema_names, get_table_names, get_view_names, output_schema_info, \
+    get_search_path, reset_search_path, set_search_path
 
 # Helpers. Note argument names with trailing underscores to distinguish them
 # from fixtures of the similar name.
 
-# TODO: Move get_* into util?
-
-def get_engine_inspector(session_):
-    return inspect(session_.get_bind())
-
-
-def get_schema_names(session_):
-    return get_engine_inspector(session_).get_schema_names()
-
-
-def get_table_names(session_, schema_name_):
-    return get_engine_inspector(session_).get_table_names(schema=schema_name_)
-
-
-def check_search_path(session_):
-    assert get_search_path(session_) == ['public']
+def check_search_path(session_, schema_name_):
+    assert get_search_path(session_) == [schema_name_, 'public']
 
 
 def check_schema_configuration(schema_name_):
@@ -45,11 +31,11 @@ def check_table_schema(session_, schema_name_, table_names=('meta_network',)):
 
 def reset(session_):
     reset_search_path(session_)
-    Base.metadata.schema = None
 
 
 def check_fixture(session_, schema_name_):
-    check_search_path(session_)
+    output_schema_info(session_)
+    check_search_path(session_, schema_name_)
     check_schema_configuration(schema_name_)
     check_schemas(session_, schema_name_)
     check_table_schema(session_, schema_name_)

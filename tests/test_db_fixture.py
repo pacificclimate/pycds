@@ -8,6 +8,9 @@ def test_can_create_postgis_geometry_table_model(blank_postgis_session):
     from sqlalchemy.orm import sessionmaker
     from geoalchemy2 import Geometry
 
+    # Note: Base schema is None here, so Lake is created in the schema public,
+    # NOT in the first schema on the search path. This counterintuitive
+    # behaviour of SQLAlchemy can be very confusing.
     Base = declarative_base()
     class Lake(Base):
         __tablename__ = 'lake'
@@ -24,7 +27,10 @@ def test_can_create_postgis_geometry_table_model(blank_postgis_session):
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables
 
-def test_can_create_postgis_geometry_table_manual(blank_postgis_session):
+def test_can_create_postgis_geometry_table_manual(
+    blank_postgis_session, schema_name
+):
+
     blank_postgis_session.execute('''CREATE TABLE lake (
     id SERIAL NOT NULL,
     name VARCHAR,
@@ -34,7 +40,7 @@ def test_can_create_postgis_geometry_table_manual(blank_postgis_session):
     res = blank_postgis_session.execute('''
         SELECT table_name 
         FROM information_schema.tables 
-        WHERE table_schema = 'public'
-    ''')
+        WHERE table_schema = '{}'
+    '''.format(schema_name))
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables

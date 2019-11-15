@@ -3,7 +3,7 @@ from datetime import datetime
 from pkg_resources import resource_filename
 import re
 
-from sqlalchemy import not_, and_, or_, Integer, Column
+from sqlalchemy import not_, and_, or_, Integer, Column, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData
 
@@ -302,6 +302,22 @@ def generic_sesh(sesh, sa_objects):
         sesh.flush()
 
 
+def get_engine_inspector(session):
+    return inspect(session.get_bind())
+
+
+def get_schema_names(session):
+    return get_engine_inspector(session).get_schema_names()
+
+
+def get_table_names(session, schema_name):
+    return get_engine_inspector(session).get_table_names(schema=schema_name)
+
+
+def get_view_names(session, schema_name):
+    return get_engine_inspector(session).get_view_names(schema=schema_name)
+
+
 def get_search_path(executor):
     search_path = executor.execute('SHOW search_path').scalar()
     return re.split(r',\s*', search_path)
@@ -314,3 +330,18 @@ def reset_search_path(executor):
 def set_search_path(executor, parts, verify=False):
     search_path = ','.join(parts)
     executor.execute('SET search_path TO {}'.format(search_path))
+
+
+def output_schema_info(
+    session, omit_schemas=('information_schema',), output=print
+):
+    schema_names = get_schema_names(session)
+    for s_name in set(schema_names) - set(omit_schemas):
+        output('\nschema: {}'.format(s_name))
+        output(
+            '   tables: [{}]'.format(', '.join(get_table_names(session, s_name)))
+        )
+        output(
+            '   views: [{}]'.format(', '.join(get_view_names(session, s_name)))
+        )
+

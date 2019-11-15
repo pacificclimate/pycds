@@ -24,7 +24,10 @@ from pycds.views import \
     CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
     ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
-from pycds.util import set_search_path
+from pycds.util import set_search_path, output_schema_info
+
+
+logger = logging.getLogger('conftest')
 
 
 all_views = [
@@ -51,7 +54,16 @@ def do_before_create(target, connection, **kw):
 
 
 def pytest_runtest_setup():
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    print('pytest_runtest_setup')
+    # logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='### %(levelname)s %(message)s')
+    # logging.debug('pytest_runtest_setup debug')
+    # logging.info('pytest_runtest_setup info')
+    # logging.warning('pytest_runtest_setup warning')
+    logger.setLevel(logging.DEBUG)
+    logger.debug('pytest_runtest_setup debug')
+    logger.info('pytest_runtest_setup info')
+    logger.warning('pytest_runtest_setup warning')
+
 
 
 @fixture(scope='session')
@@ -69,10 +81,10 @@ def engine(schema_name):
 
 
 @fixture(scope='function')
-def session(engine):
+def session(engine, schema_name):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
-    set_search_path(session, ['public'])
+    set_search_path(session, [schema_name, 'public'])
     yield session
     session.rollback()
     session.close()
@@ -116,23 +128,23 @@ def per_test_engine(schema_name):
             ''')
         )
         pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
-        engine_inspector = inspect(engine)
-        schema_names = engine_inspector.get_schema_names()
-        print('### fixture per_test_engine')
-        for name in schema_names:
-            print('### schema', name)
-            print('   ### tables', engine_inspector.get_table_names(schema=name))
+        # engine_inspector = inspect(engine)
+        # schema_names = engine_inspector.get_schema_names()
+        # print('### fixture per_test_engine')
+        # for name in schema_names:
+        #     print('### schema', name)
+        #     print('   ### tables', engine_inspector.get_table_names(schema=name))
         yield engine
 
 
 @fixture
-def per_test_session(per_test_engine):
+def per_test_session(per_test_engine, schema_name):
     session = sessionmaker(bind=per_test_engine)()
     # Default search path is `"$user", public`. Need to reset that to search crmp (for our db/orm content) and
     # public (for postgis functions)
     # session.execute('SET search_path TO test_schema, public')
     # print('### per_test_session search_path', [r for r in session.execute('SHOW search_path')])
-    set_search_path(session, ['public'])
+    set_search_path(session, [schema_name, 'public'])
     yield session
 
 
@@ -149,7 +161,7 @@ def mod_blank_postgis_session(schema_name):
 @fixture(scope='module')
 def mod_empty_database_session(mod_blank_postgis_session, schema_name):
     sesh = mod_blank_postgis_session
-    set_search_path(sesh, ['public'])
+    set_search_path(sesh, [schema_name, 'public'])
     engine = sesh.get_bind()
     pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
@@ -165,7 +177,7 @@ def blank_postgis_session(schema_name):
         engine.execute("create extension postgis")
         engine.execute(CreateSchema(schema_name))
         sesh = sessionmaker(bind=engine)()
-        set_search_path(sesh, ['public'])
+        set_search_path(sesh, [schema_name, 'public'])
 
         yield sesh
 
@@ -205,24 +217,30 @@ def test_session(blank_postgis_session, schema_name):
 
 @pytest.yield_fixture(scope='function')
 def large_test_session(blank_postgis_session, schema_name):
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+    logger.debug('large_test_session: start')
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
+    output_schema_info(blank_postgis_session, output=logger.debug)
 
+    logger.debug('crmp_subset_data')
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
         sql = f.read()
     blank_postgis_session.execute(sql)
 
     # Hmmm... this should have been created by
     # `pycds.Base.metadata.create_all(bind=engine)` above
+
+    logger.debug('create views')
     for view in all_views:
         view.create(blank_postgis_session)
 
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
+    logger.debug('yield')
 
     yield blank_postgis_session
 
+    logger.debug('drop views')
     for view in reversed(all_views):
         view.drop(blank_postgis_session)
 

@@ -41,10 +41,11 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text, column
 
+from pycds import get_schema_name
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
-# Base = declarative_base(metadata=MetaData(schema='crmp'))
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
+# Base = declarative_base()
 metadata = Base.metadata
 
 
