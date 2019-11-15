@@ -222,7 +222,6 @@ def large_test_session(blank_postgis_session, schema_name):
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
-    output_schema_info(blank_postgis_session, output=logger.debug)
 
     logger.debug('crmp_subset_data')
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
@@ -232,17 +231,22 @@ def large_test_session(blank_postgis_session, schema_name):
     # Hmmm... this should have been created by
     # `pycds.Base.metadata.create_all(bind=engine)` above
 
-    logger.debug('create views')
+    print('create views: before')
     for view in all_views:
         view.create(blank_postgis_session)
+    print('create views: after')
+    output_schema_info(blank_postgis_session, output=print)
 
-    logger.debug('yield')
+    print('yield')
 
     yield blank_postgis_session
 
-    logger.debug('drop views')
+    print('drop views: before')
+    output_schema_info(blank_postgis_session, output=print)
     for view in reversed(all_views):
         view.drop(blank_postgis_session)
+    print('drop views: after')
+    output_schema_info(blank_postgis_session, output=print)
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
 #   Network
