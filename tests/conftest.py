@@ -84,7 +84,7 @@ def engine(schema_name):
 def session(engine, schema_name):
     """Single-test database session. All session actions are rolled back on teardown"""
     session = sessionmaker(bind=engine)()
-    set_search_path(session, [schema_name, 'public'])
+    set_search_path(session, ['public'])
     yield session
     session.rollback()
     session.close()
@@ -144,7 +144,7 @@ def per_test_session(per_test_engine, schema_name):
     # public (for postgis functions)
     # session.execute('SET search_path TO test_schema, public')
     # print('### per_test_session search_path', [r for r in session.execute('SHOW search_path')])
-    set_search_path(session, [schema_name, 'public'])
+    set_search_path(session, ['public'])
     yield session
 
 
@@ -161,7 +161,7 @@ def mod_blank_postgis_session(schema_name):
 @fixture(scope='module')
 def mod_empty_database_session(mod_blank_postgis_session, schema_name):
     sesh = mod_blank_postgis_session
-    set_search_path(sesh, [schema_name, 'public'])
+    set_search_path(sesh, ['public'])
     engine = sesh.get_bind()
     pycds.Base.metadata.schema = schema_name
     pycds.Base.metadata.create_all(bind=engine)
@@ -177,7 +177,7 @@ def blank_postgis_session(schema_name):
         engine.execute("create extension postgis")
         engine.execute(CreateSchema(schema_name))
         sesh = sessionmaker(bind=engine)()
-        set_search_path(sesh, [schema_name, 'public'])
+        set_search_path(sesh, ['public'])
 
         yield sesh
 

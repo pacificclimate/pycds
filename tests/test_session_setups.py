@@ -7,7 +7,7 @@ from pycds.util import \
 # from fixtures of the similar name.
 
 def check_search_path(session_, schema_name_):
-    assert get_search_path(session_) == [schema_name_, 'public']
+    assert get_search_path(session_) == ['public']
 
 
 def check_schema_configuration(schema_name_):
