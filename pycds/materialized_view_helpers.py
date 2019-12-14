@@ -105,8 +105,7 @@ class MaterializedViewMixin(object):
 
     @declared_attr
     def __table__(cls):
-        temp_metadata = MetaData()
-        t = Table(cls.viewname(), temp_metadata)
+        t = Table(cls.base_viewname(), cls.metadata)
         for c in cls.__selectable__.c:
             t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
 
@@ -131,18 +130,28 @@ class MaterializedViewMixin(object):
             return {}
 
     @classmethod
-    def viewname(cls):
+    def base_viewname(cls):
         return snake_case(cls.__name__) + '_mv'
 
     @classmethod
+    def qualfied_viewname(cls):
+        prefix = '' if cls.metadata.schema is None \
+            else cls.metadata.schema + '.'
+        return prefix + cls.base_viewname()
+
+    @classmethod
     def create(cls, sesh):
-        return sesh.execute(CreateMaterializedView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(CreateMaterializedView(
+            cls.qualfied_viewname(), cls.__selectable__)
+        )
         # TODO: Add index creation code here?
 
     @classmethod
     def drop(cls, sesh):
-        return sesh.execute(DropMaterializedView(cls.viewname()))
+        return sesh.execute(DropMaterializedView(cls.qualfied_viewname()))
 
     @classmethod
     def refresh(cls, sesh):
-        return sesh.execute(RefreshMaterializedView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(RefreshMaterializedView(
+            cls.qualfied_viewname(), cls.__selectable__)
+        )
