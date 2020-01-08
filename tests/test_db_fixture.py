@@ -32,6 +32,6 @@ def test_can_create_postgis_geometry_table_manual(blank_postgis_session):
     geom geometry(POLYGON,-1),
     PRIMARY KEY (id))''')
 
-    res = blank_postgis_session.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+    res = blank_postgis_session.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'crmp'")
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables

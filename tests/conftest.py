@@ -18,8 +18,18 @@ import pycds
 import pycds.weather_anomaly
 from pycds import Contact, Network, Station, History, Variable, Obs, \
     NativeFlag, PCICFlag
+from pycds.views import \
+    CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
+    ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
 
+
+all_views = [
+    CrmpNetworkGeoserver,
+    HistoryStationNetwork,
+    ObsCountPerDayHistory,
+    ObsWithFlags
+]
 
 # Set up database environment before testing. This is triggered each time a
 # database is created; in these tests, by `.metadata.create_all()` calls.
@@ -80,6 +90,7 @@ def blank_postgis_session():
         engine.execute("create extension postgis")
         engine.execute(CreateSchema('crmp'))
         sesh = sessionmaker(bind=engine)()
+        sesh.execute('SET search_path TO crmp, public')
 
         yield sesh
 
@@ -88,7 +99,6 @@ def test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
-    pycds.DeferredBase.metadata.create_all(bind=engine)
 
     moti = Network(name='MoTIe')
     ec = Network(name='EC')
@@ -122,15 +132,22 @@ def large_test_session(blank_postgis_session):
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
     engine = blank_postgis_session.get_bind()
     pycds.Base.metadata.create_all(bind=engine)
-    pycds.DeferredBase.metadata.create_all(bind=engine)
 
     with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
         sql = f.read()
     blank_postgis_session.execute(sql)
 
+    # Hmmm... this should have been created by
+    # `pycds.Base.metadata.create_all(bind=engine)` above
+    for view in all_views:
+        view.create(blank_postgis_session)
+
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
 
     yield blank_postgis_session
+
+    for view in reversed(all_views):
+        view.drop(blank_postgis_session)
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
 #   Network

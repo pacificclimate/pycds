@@ -1,9 +1,10 @@
 import datetime
 
 __all__ = [
+    'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
-    'CrmpNetworkGeoserver', 'ObsCountPerMonthHistory', 'VarsPerHistory',
-    'ObsWithFlags', 'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
+    'ObsCountPerMonthHistory', 'VarsPerHistory',
+    'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
     'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
 ]
 
@@ -95,6 +96,11 @@ class History(Base):
     small distances (e.g. from one end of the airport runway to
     another) or change the frequency of its observations, this table
     records the details of those changes.
+
+    WARNING: The GeoAlchemy2 `Geometry` column (attribute `the_geom`) forces
+    all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
+    This may or may not be desirable for all use cases, specifically views.
+    See the GeoAlchemy2 documentation for details.
     '''
     __tablename__ = 'meta_history'
     id = Column('history_id', Integer, primary_key=True)
@@ -314,90 +320,15 @@ class DerivedValue(Base):
     )
 
 
-# "Improper" views - defined in crmp repo, and accessed in ORM by referring to
-# them as tables.
-# DeferredBase is currently used for these views.
-# When testing, not using proper views may create issues
-# TODO: Implement as proper views using pycds.view_helpers
-
-DeferredBase = declarative_base(metadata=metadata, cls=DeferredReflection)
-deferred_metadata = DeferredBase.metadata
-
-
-class CrmpNetworkGeoserver(DeferredBase):
-    """This table maps to a convenience view that is used by geoserver for
-    mapping.
-    """
-    __tablename__ = 'crmp_network_geoserver'
-    __table_args__ = {'info': {'is_view': True}}
-    network_name = Column(String)
-    native_id = Column(String)
-    station_name = Column(String)
-    lon = Column(Numeric)
-    lat = Column(Numeric)
-    elevation = Column('elev', Float)
-    min_obs_time = Column(DateTime)
-    max_obs_time = Column(DateTime)
-    freq = Column(String)
-    tz_offset = Column(Interval)
-    province = Column(String)
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
-    country = Column(String)
-    comments = Column(String)
-    sensor_id = Column(Integer)
-    description = Column(String(255))
-    network_id = Column(Integer)
-    col_hex = Column(String(7))
-    vars = Column(String)
-    display_names = Column(String)
-    the_geom = Column(Geometry('GEOMETRY', 4326))
-
-
-class ObsWithFlags(DeferredBase):
-    '''This class maps to a convenience view that is used to construct a
-    table of flagged observations; i.e. one row per observation with
-    additional columns for each attached flag.
-    '''
-    __tablename__ = 'obs_with_flags'
-    __table_args__ = {'info': {'is_view': True}}
-    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
-    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
-    unit = Column(String)
-    standard_name = Column(String)
-    cell_method = Column(String)
-    net_var_name = Column(String)
-    obs_raw_id = Column(Integer, ForeignKey(
-        'obs_raw.obs_raw_id'), primary_key=True)
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
-    obs_time = Column(DateTime)
-    mod_time = Column(DateTime)
-    datum = Column(Float)
-    native_flag_id = Column(Integer, ForeignKey(
-        'meta_native_flag.native_flag_id'))
-    flag_name = Column(String)
-    description = Column(String)
-    flag_value = Column(String)
-
-
-# "External manual materialized views": CRMP contains a set of auxiliary tables,
-# views, functions, and triggers that implement simulated or manually
-# maintained materialized views (as opposed to natively supported matviews).
-# For some details, see
-# https://github.com/pacificclimate/crmp/tree/master/database/manual-matviews.
-# The following classes map onto the manual matviews defined in CRMP.
-# NOTE: There are *no* mappings in PyCDS for the infrastructure for
-# implementing manual matviews.
-
-class ObsCountPerMonthHistory(DeferredBase):
+class ObsCountPerMonthHistory(Base):
     """This class maps to a manual materialized view that is required for web
     app performance. It is used for approximating the number of
     observations which will be returned by station selection criteria.
     """
     __tablename__ = 'obs_count_per_month_history_mv'
     count = Column(Integer)
-    date_trunc = Column(DateTime)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    date_trunc = Column(DateTime, primary_key=True)
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
 
     # Relationships
     history = relationship("History")
@@ -407,7 +338,7 @@ class ObsCountPerMonthHistory(DeferredBase):
         Index('obs_count_per_month_history_idx', 'date_trunc', 'history_id')
 
 
-class ClimoObsCount(DeferredBase):
+class ClimoObsCount(Base):
     """This class maps to a manual materialized view that is required for
     web app performance. It is used for approximating the number of
     climatologies which will be returned by station selection
@@ -415,7 +346,7 @@ class ClimoObsCount(DeferredBase):
     """
     __tablename__ = 'climo_obs_count_mv'
     count = Column(BigInteger)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
 
     # Indexes
     climo_obs_count_idx = Index('climo_obs_count_idx', 'history_id')
@@ -442,11 +373,11 @@ class VarsPerHistory(Base):
     var_hist_idx = Index('var_hist_idx', 'history_id', 'vars_id')
 
 
-class CollapsedVariables(DeferredBase):
+class CollapsedVariables(Base):
     """This class maps to a manual materialized view that supports the
     view CrmpNetworkGeoserver."""
     __tablename__ = 'collapsed_vars_mv'
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
     vars = Column(String)
     display_names = Column(String)
 
@@ -454,9 +385,9 @@ class CollapsedVariables(DeferredBase):
     collapsed_vars_idx = Index('collapsed_vars_idx', 'history_id')
 
 
-class StationObservationStats(DeferredBase):
+class StationObservationStats(Base):
     __tablename__ = 'station_obs_stats_mv'
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'))
+    station_id = Column(Integer, ForeignKey('meta_station.station_id'), primary_key=True)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
