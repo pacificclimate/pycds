@@ -37,9 +37,13 @@ from pycds.weather_anomaly import \
     MonthlyTotalPrecipitation
 
 
-views_to_refresh = [DailyMaxTemperature, DailyMinTemperature,
-                     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature,
-                     MonthlyTotalPrecipitation]
+views_to_refresh = [
+    DailyMaxTemperature,
+    DailyMinTemperature,
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
+    # MonthlyTotalPrecipitation,
+]
 views = views_to_refresh
 
 
@@ -47,7 +51,7 @@ views = views_to_refresh
 def with_views_sesh(session):
     for view in views:
         view.create(session)
-    yield (session)
+    yield session
     for view in reversed(views):
         view.drop(session)
 
@@ -69,6 +73,13 @@ def id(param):
         MonthlyTotalPrecipitation: 'Precip',
     }
     return abbrev.get(param, None)
+
+
+def test_view_definitions():
+    for view in views_to_refresh:
+        print()
+        print('--', view.__name__)
+        print(view.__selectable__.compile(compile_kwargs={"literal_binds": True}))
 
 
 def describe_with_1_network():

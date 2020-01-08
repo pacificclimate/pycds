@@ -2,6 +2,7 @@ import os
 import datetime
 
 __all__ = [
+    'get_schema_name',
     'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'ObsCountPerMonthHistory', 'VarsPerHistory',
@@ -255,6 +256,9 @@ class Variable(Base):
     # Indexes
     fki_meta_vars_network_id_fkey = \
         Index('fki_meta_vars_network_id_fkey', 'network_id')
+
+    def __repr__(self):
+        return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(self.__class__.__name__, **self.__dict__)
 
 
 class ClimatologyAttributes(Base):

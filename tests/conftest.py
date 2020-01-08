@@ -47,10 +47,13 @@ def schema_name():
 # database is created; in these tests, by `.metadata.create_all()` calls.
 @event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
 def do_before_create(target, connection, **kw):
+    print('############### do_before_create')
     # Add required functions
     # TODO: Verify that functions are created in schema specified in metadata!
-    connection.execute(daysinmonth)
-    connection.execute(effective_day)
+    d = daysinmonth()
+    print('######### ', d)
+    connection.execute(d)
+    connection.execute(effective_day())
 
 
 def pytest_runtest_setup():
@@ -83,6 +86,7 @@ def engine(schema_name):
 @fixture(scope='function')
 def session(engine, schema_name):
     """Single-test database session. All session actions are rolled back on teardown"""
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
     session = sessionmaker(bind=engine)()
     set_search_path(session, ['public'])
     yield session
