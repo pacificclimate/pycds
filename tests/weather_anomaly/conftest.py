@@ -5,22 +5,22 @@ from pytest import fixture
 
 from pycds import Network, Station, History, Variable, Obs
 from pycds.util import generic_sesh
-# from pycds.weather_anomaly import \
-#     DailyMaxTemperature, DailyMinTemperature, \
-#     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
-#     MonthlyTotalPrecipitation
+from pycds.weather_anomaly import \
+    DailyMaxTemperature, DailyMinTemperature, \
+    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
+    MonthlyTotalPrecipitation
+
 
 
 @fixture
 def views():
-    return ()
-    # return (
-    #     DailyMaxTemperature,
-    #     DailyMinTemperature,
-    #     MonthlyAverageOfDailyMaxTemperature,
-    #     MonthlyAverageOfDailyMinTemperature,
-    #     # MonthlyTotalPrecipitation,
-    # )
+    return (
+        DailyMaxTemperature,
+        DailyMinTemperature,
+        MonthlyAverageOfDailyMaxTemperature,
+        MonthlyAverageOfDailyMinTemperature,
+        MonthlyTotalPrecipitation,
+    )
 
 
 @fixture
@@ -57,9 +57,14 @@ def variable1_sesh(history1_sesh, var_temp_point):
 
 
 @fixture
+def obs1_months():
+    return (1, 6, 8, 12)
+
+
+@fixture
 def obs1_days():
     # TODO: Does this need to be converted to a tuple? Factory, though.
-    return range(1, 32, 2)
+    return range(1, 29, 2)
 
 
 @fixture
@@ -93,15 +98,32 @@ def obs1_hours():
 @fixture
 def obs1_temp_sesh(
         variable1_sesh,
-        obs1_days, obs1_hours,
-        var_temp_point, var_precip_net1_1, history_stn1_hourly
+        obs1_months, obs1_days, obs1_hours,
+        var_temp_point, history_stn1_hourly
 ):
     """Yield a session with particular observations added to variable1_sesh.
     """
     observations = [
         Obs(variable=var_temp_point, history=history_stn1_hourly,
-            time=datetime.datetime(2000, 1, day, hour), datum=float(hour))
-        for day in obs1_days for hour in obs1_hours
+            time=datetime.datetime(2000, month, day, hour), datum=float(hour))
+        for month in obs1_months for day in obs1_days for hour in obs1_hours
+    ]
+    for sesh in generic_sesh(variable1_sesh , observations):
+        yield sesh
+
+
+@fixture
+def obs1_precip_sesh(
+        variable1_sesh,
+        obs1_months, obs1_days, obs1_hours,
+        var_precip_net1_1, history_stn1_hourly
+):
+    """Yield a session with particular observations added to variable1_sesh.
+    """
+    observations = [
+        Obs(variable=var_precip_net1_1, history=history_stn1_hourly,
+            time=datetime.datetime(2000, month, day, hour), datum=1.0)
+        for month in obs1_months for day in obs1_days for hour in obs1_hours
     ]
     for sesh in generic_sesh(variable1_sesh , observations):
         yield sesh

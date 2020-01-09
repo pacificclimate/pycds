@@ -62,7 +62,7 @@ def pytest_runtest_setup():
     # logging.debug('pytest_runtest_setup debug')
     # logging.info('pytest_runtest_setup info')
     # logging.warning('pytest_runtest_setup warning')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
     logger.debug('pytest_runtest_setup debug')
     logger.info('pytest_runtest_setup info')
     logger.warning('pytest_runtest_setup warning')
@@ -78,15 +78,17 @@ def engine(schema_name):
         engine.execute(CreateSchema(schema_name))
         pycds.Base.metadata.schema = schema_name
         pycds.Base.metadata.create_all(bind=engine)
-        pycds.weather_anomaly.Base.metadata.schema = schema_name
-        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+        # pycds.weather_anomaly.Base.metadata.schema = schema_name
+        # pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+        engine.execute(daysinmonth())
+        engine.execute(effective_day())
         yield engine
 
 
 @fixture(scope='function')
 def session(engine, schema_name):
     """Single-test database session. All session actions are rolled back on teardown"""
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
     session = sessionmaker(bind=engine)()
     set_search_path(session, ['public'])
     yield session

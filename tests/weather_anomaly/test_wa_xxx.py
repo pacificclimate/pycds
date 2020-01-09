@@ -4,85 +4,29 @@ from pycds import \
     get_schema_name, \
     History, Obs, ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag, \
     Variable
-# from pycds.weather_anomaly import \
-#     good_obs
+from pycds.weather_anomaly import \
+    good_obs, daily_temperature_extremum, \
+    DailyMaxTemperature, DailyMinTemperature, \
+    monthly_average_of_daily_temperature_extremum_with_total_coverage, \
+    monthly_average_of_daily_temperature_extremum_with_avg_coverage, \
+    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
+    monthly_total_precipitation_with_total_coverage, \
+    monthly_total_precipitation_with_avg_coverage, \
+    MonthlyTotalPrecipitation
 
 from sqlalchemy.orm import Query
 from sqlalchemy.sql import text, column
 from sqlalchemy import MetaData, func, and_, not_, case
 
 
-good_obs = (
-    Query([
-        # Obs
-        Obs.id.label('id'),
-        Obs.time.label('time'),
-        Obs.mod_time.label('mod_time'),
-        Obs.datum.label('datum'),
-        Obs.vars_id.label('vars_id'),
-        Obs.history_id.label('history_id'),
-    ])
-    .select_from(Obs)
-        .outerjoin(ObsRawNativeFlags)
-        .outerjoin(NativeFlag)
-        .outerjoin(ObsRawPCICFlags)
-        .outerjoin(PCICFlag)
-    .group_by(Obs.id)
-    .having(
-        and_(
-            not_(func.bool_or(func.coalesce(NativeFlag.discard, False))),
-            not_(func.bool_or(func.coalesce(PCICFlag.discard, False))),
-        )
-    )
-).subquery('good_obs')
-
-
-def daily_temperature_extremum(extremum):
-    """Return a SQLAlchemy selector for a specified extremum of daily
-    temperature.
-
-    Args:
-        extremum (str): 'max' | 'min'
-
-    Returns:
-        sqlalchemy.sql.expression.FromClause
-    """
-    extremum_func = getattr(func, extremum)
-    func_schema = getattr(func, get_schema_name())
-    return (
-        Query([
-            History.id.label('history_id'),
-            good_obs.c.vars_id.label('vars_id'),
-            func_schema.effective_day(good_obs.c.time, extremum, History.freq)
-                .label('obs_day'),
-            extremum_func(good_obs.c.datum).label('statistic'),
-            func.sum(
-                case({
-                    'daily': 1.0,
-                    '12-hourly': 0.5,
-                    '1-hourly': 1/24,
-                },
-                value=History.freq)
-            ).label('data_coverage')
-        ])
-        .select_from(good_obs)
-            .join(Variable)
-            .join(History)
-        .filter(Variable.standard_name == 'air_temperature')
-        .filter(Variable.cell_method.in_(
-            ('time: {0}imum'.format(extremum), 'time: point', 'time: mean')))
-        .filter(History.freq.in_(('1-hourly', '12-hourly', 'daily')))
-        .group_by(History.id, good_obs.c.vars_id, 'obs_day')
-    )
-
 
 # TODO: Remove
-# def test_good_obs_defn():
-#     print('Query')
-#     print(good_obs.compile(compile_kwargs={"literal_binds": True}))
-#     print()
-#     # print ('text')
-#     # print(good_obs_text)
+def test_good_obs_defn():
+    print('Query')
+    print(good_obs.compile(compile_kwargs={"literal_binds": True}))
+    print()
+    # print ('text')
+    # print(good_obs_text)
 
 
 def test_good_obs(obs1_temp_sesh):
@@ -97,25 +41,54 @@ def test_good_obs(obs1_temp_sesh):
 
 
 # TODO: Remove
-# @pytest.mark.parametrize('extremum', ('max', 'min'))
-# def test_daily_extreme_temperature_defn(extremum):
-#     selectable = daily_temperature_extremum(extremum).selectable
-#     print(selectable.compile(compile_kwargs={"literal_binds": True}))
+@pytest.mark.parametrize('extremum', ('max', 'min'))
+def test_daily_extreme_temperature_defn(extremum):
+    selectable = daily_temperature_extremum(extremum).selectable
+    print(selectable.compile(compile_kwargs={"literal_binds": True}))
 
 
 @pytest.mark.parametrize('extremum', ('max', 'min'))
-def test_daily_extreme_temperature(extremum, obs1_temp_sesh, obs1_days):
+def test_daily_temperature_extremum_query(
+        extremum, obs1_temp_sesh, obs1_months, obs1_days, obs1_hours,
+        var_temp_point
+):
     sesh = obs1_temp_sesh
-    thing = daily_temperature_extremum(extremum).subquery()
-    daily_extreme_temps = sesh.query(thing)
-    print('# daily_extreme_temps', daily_extreme_temps.count())
-    for row in daily_extreme_temps:
-        print(row)
-    print('# variables')
-    for v in sesh.query(Variable).all():
-        print(v)
-    assert daily_extreme_temps.count() == len(obs1_days)
-    assert daily_extreme_temps.group_by('vars_id').join(Variable)
+    daily_extreme_temps = \
+        daily_temperature_extremum(extremum).with_session(sesh).all()
+    # print('# daily_extreme_temps', len(daily_extreme_temps))
+    # for row in daily_extreme_temps:
+    #     print(row)
+    # print('# variables')
+    # for v in sesh.query(Variable).all():
+    #     print(v)
+    assert len(daily_extreme_temps) == len(obs1_months) * len(obs1_days)
+    assert {r.obs_day.month for r in daily_extreme_temps} == set(obs1_months)
+    assert {r.obs_day.day for r in daily_extreme_temps} == set(obs1_days)
+    assert {r.vars_id for r in daily_extreme_temps} == {var_temp_point.id}
+    ext_value = max(obs1_hours) if extremum == 'max' else min(obs1_hours)
+    assert all(r.statistic == ext_value for r in daily_extreme_temps)
+
+
+@pytest.mark.parametrize('Matview', (DailyMaxTemperature, DailyMinTemperature))
+def test_daily_extreme_temperature_matview(
+        Matview, obs1_temp_sesh, obs1_months, obs1_days, obs1_hours,
+        var_temp_point
+):
+    sesh = obs1_temp_sesh
+    Matview.refresh(sesh)
+    daily_extreme_temps = sesh.query(Matview).all()
+    # print('# daily_extreme_temps', len(daily_extreme_temps))
+    # for row in daily_extreme_temps:
+    #     print(row)
+    # print('# variables')
+    # for v in sesh.query(Variable).all():
+    #     print(v)
+    assert len(daily_extreme_temps) == len(obs1_months) * len(obs1_days)
+    assert {r.obs_day.month for r in daily_extreme_temps} == set(obs1_months)
+    assert {r.obs_day.day for r in daily_extreme_temps} == set(obs1_days)
+    assert {r.vars_id for r in daily_extreme_temps} == {var_temp_point.id}
+    ext_value = max(obs1_hours) if Matview == DailyMaxTemperature else min(obs1_hours)
+    assert all(r.statistic == ext_value for r in daily_extreme_temps)
 
 
 def test_functions(schema_name, obs1_temp_sesh):
@@ -131,3 +104,98 @@ def test_functions(schema_name, obs1_temp_sesh):
         print(f)
 
 
+@pytest.mark.parametrize('extremum', ('max', 'min'))
+def test_monthly_average_of_daily_temperature_extremum_with_total_coverage_query(
+        extremum, obs1_temp_sesh, obs1_months, var_temp_point
+):
+    sesh = obs1_temp_sesh
+    DailyExtremeTemp = \
+        DailyMaxTemperature if extremum == 'max' \
+            else DailyMinTemperature
+    DailyExtremeTemp.refresh(sesh)
+    ma_daily_extreme_temps = \
+        monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum)\
+            .with_session(sesh).all()
+    print('# ma_daily_extreme_temps', len(ma_daily_extreme_temps))
+    for row in ma_daily_extreme_temps:
+        print(row)
+    assert {r.vars_id for r in ma_daily_extreme_temps} == {var_temp_point.id}
+    assert {r.obs_month.month for r in ma_daily_extreme_temps} == set(obs1_months)
+
+
+@pytest.mark.parametrize('extremum', ('max', 'min'))
+def test_monthly_average_of_daily_temperature_extremum_with_avg_coverage_query(
+        extremum, obs1_temp_sesh, obs1_months, var_temp_point
+):
+    sesh = obs1_temp_sesh
+    DailyExtremeTemp = \
+        DailyMaxTemperature if extremum == 'max' \
+            else DailyMinTemperature
+    DailyExtremeTemp.refresh(sesh)
+    ma_daily_extreme_temps = \
+        monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum)\
+            .with_session(sesh).all()
+    print('# ma_daily_extreme_temps', len(ma_daily_extreme_temps))
+    for row in ma_daily_extreme_temps:
+        print(row)
+    assert {r.vars_id for r in ma_daily_extreme_temps} == {var_temp_point.id}
+    assert {r.obs_month.month for r in ma_daily_extreme_temps} == set(obs1_months)
+
+
+@pytest.mark.parametrize('Matview', (MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature))
+def test_monthly_average_of_daily_extreme_temperature_matview(
+        Matview, obs1_temp_sesh, obs1_months, var_temp_point
+):
+    sesh = obs1_temp_sesh
+    DailyExtremeTemp = \
+        DailyMaxTemperature if Matview == MonthlyAverageOfDailyMaxTemperature \
+            else DailyMinTemperature
+    DailyExtremeTemp.refresh(sesh)
+    Matview.refresh(sesh)
+    ma_daily_extreme_temps = sesh.query(Matview).all()
+    print('# ma_daily_extreme_temps', len(ma_daily_extreme_temps))
+    for row in ma_daily_extreme_temps:
+        print(row)
+    assert {r.vars_id for r in ma_daily_extreme_temps} == {var_temp_point.id}
+    assert {r.obs_month.month for r in ma_daily_extreme_temps} == set(obs1_months)
+
+
+def test_monthly_total_precipitation_with_total_coverage_query(
+        obs1_precip_sesh, obs1_months, var_precip_net1_1
+):
+    sesh = obs1_precip_sesh
+    monthly_total_precip = \
+        monthly_total_precipitation_with_total_coverage() \
+            .with_session(sesh).all()
+    print('# monthly_total_precip', len(monthly_total_precip))
+    for row in monthly_total_precip:
+        print(row)
+    assert {r.vars_id for r in monthly_total_precip} == {var_precip_net1_1.id}
+    assert {r.obs_month.month for r in monthly_total_precip} == set(obs1_months)
+
+
+def test_monthly_total_precipitation_with_avg_coverage_query(
+        obs1_precip_sesh, obs1_months, var_precip_net1_1
+):
+    sesh = obs1_precip_sesh
+    monthly_total_precip = \
+        monthly_total_precipitation_with_avg_coverage() \
+            .with_session(sesh).all()
+    print('# monthly_total_precip', len(monthly_total_precip))
+    for row in monthly_total_precip:
+        print(row)
+    assert {r.vars_id for r in monthly_total_precip} == {var_precip_net1_1.id}
+    assert {r.obs_month.month for r in monthly_total_precip} == set(obs1_months)
+
+
+def test_monthly_total_precipitation_matview(
+        obs1_precip_sesh, obs1_months, var_precip_net1_1
+):
+    sesh = obs1_precip_sesh
+    MonthlyTotalPrecipitation.refresh(sesh)
+    monthly_total_precip = sesh.query(MonthlyTotalPrecipitation).all()
+    print('# monthly_total_precip', len(monthly_total_precip))
+    for row in monthly_total_precip:
+        print(row)
+    assert {r.vars_id for r in monthly_total_precip} == {var_precip_net1_1.id}
+    assert {r.obs_month.month for r in monthly_total_precip} == set(obs1_months)

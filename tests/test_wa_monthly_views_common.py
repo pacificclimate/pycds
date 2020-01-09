@@ -42,7 +42,7 @@ views_to_refresh = [
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    # MonthlyTotalPrecipitation,
+    MonthlyTotalPrecipitation,
 ]
 views = views_to_refresh
 
