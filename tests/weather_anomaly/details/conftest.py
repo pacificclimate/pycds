@@ -7,10 +7,16 @@ from pycds.weather_anomaly import \
 
 
 @fixture
-def all_views():
+def daily_views():
     return [
         DailyMaxTemperature,
         DailyMinTemperature,
+    ]
+
+
+@fixture
+def monthly_views():
+    return [
         MonthlyAverageOfDailyMaxTemperature,
         MonthlyAverageOfDailyMinTemperature,
         MonthlyTotalPrecipitation
@@ -18,9 +24,14 @@ def all_views():
 
 
 @fixture
-def refresh_views(all_views):
-    def f(sesh):
-        for view in all_views:
+def all_views(daily_views, monthly_views):
+    return daily_views + monthly_views
+
+
+@fixture
+def refresh_views():
+    def f(views, sesh):
+        for view in views:
             view.refresh(sesh)
     return f
 
