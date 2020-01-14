@@ -1,12 +1,15 @@
+# TODO: Given that the only test is permanently skipped, as "broken", this
+#  whole test file should be removed.
+
 import pytest
 
 from datetime import datetime
 
 from pycds.util import orm_station_table
 
-@pytest.mark.skipif(1, reason="Broken") # Tests should check the validity of the model (relationships, table), not the test data itself.
-def test_station_table(test_session):
-    table = orm_station_table(test_session, 5534)
+@pytest.mark.skipif(True, reason="Broken") # Tests should check the validity of the model (relationships, table), not the test data itself.
+def test_station_table(tfs_pycds_sesh_with_small_data):
+    table = orm_station_table(tfs_pycds_sesh_with_small_data, 5534)
     values = [ x for x in table ]
 
     last_time = datetime(1950, 1, 1)
