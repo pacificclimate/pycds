@@ -1,8 +1,12 @@
-def test_can_create_postgis_db(blank_postgis_session):
-    res = blank_postgis_session.execute("SELECT PostGIS_full_version()")
+# TODO: This entire test module seems redundant -- remove if so
+
+def test_can_create_postgis_db(tfs_empty_sesh):
+    res = tfs_empty_sesh.execute("SELECT PostGIS_full_version()")
     assert 'POSTGIS="2.' in res.fetchall()[0][0]
 
-def test_can_create_postgis_geometry_table_model(blank_postgis_session):
+
+# TODO: Redundant? Check other tests
+def test_can_create_postgis_geometry_table_model(tfs_empty_sesh):
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.orm import sessionmaker
@@ -15,23 +19,25 @@ def test_can_create_postgis_geometry_table_model(blank_postgis_session):
         name = Column(String)
         geom = Column(Geometry('POLYGON'))
 
-    Lake.__table__.create(blank_postgis_session.get_bind())
-    res = blank_postgis_session.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+    Lake.__table__.create(tfs_empty_sesh.get_bind())
+    res = tfs_empty_sesh.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables
 
-def test_can_create_postgis_geometry_table_manual(blank_postgis_session):
+
+# TODO: Redundant? Check other tests
+def test_can_create_postgis_geometry_table_manual(tfs_empty_sesh):
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.orm import sessionmaker
     from geoalchemy2 import Geometry
 
-    blank_postgis_session.execute('''CREATE TABLE lake (
+    tfs_empty_sesh.execute('''CREATE TABLE lake (
     id SERIAL NOT NULL,
     name VARCHAR,
     geom geometry(POLYGON,-1),
     PRIMARY KEY (id))''')
 
-    res = blank_postgis_session.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'crmp'")
+    res = tfs_empty_sesh.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
     tables = [x[0] for x in res.fetchall()]
     assert 'lake' in tables
