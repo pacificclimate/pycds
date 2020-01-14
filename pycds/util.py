@@ -158,9 +158,7 @@ def create_reflected_test_database(read_engine, write_engine):
     meta.create_all(tables=to_create)
 
 
-def create_test_data(write_engine):
-    sesh = sessionmaker(bind=write_engine)()
-
+def create_test_data(sesh):
     moti = Network(**TestNetwork(
         'MOTI', 'Ministry of Transportation and Infrastructure', '000000'
     )._asdict())
@@ -229,8 +227,6 @@ def create_test_data(write_engine):
     for variable in variables:
         sesh.add(Variable(**variable._asdict()))
 
-    sesh.commit()
-
 
 def insert_crmp_data(sesh):
     fname = resource_filename('pycds', 'data/crmp_subset_data.sql')
@@ -240,6 +236,7 @@ def insert_crmp_data(sesh):
     sesh.execute(data)
 
 
+# TODO: Find out where this is used. If nowhere, remove
 def create_test_data_from_reflection(read_engine, write_engine):
     rSession = sessionmaker(bind=read_engine)()
     wSession = sessionmaker(bind=write_engine)()
