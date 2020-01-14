@@ -38,6 +38,12 @@ all_views = [
 
 #################################################################
 
+# These fixtures are intended to replace the welter of existing fixtures.
+# They are intended to be minimal in number and to perform a common sequence
+# of actions (e.g., create schema, set search path) in a common ordering,
+# and as much as possible with a common fixture breakdown or dependency pattern
+# (e.g., engine <-- sesh)
+
 @fixture(scope='session')
 def set_search_path():
     def f(executor):
