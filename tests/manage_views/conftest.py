@@ -13,16 +13,16 @@ from pycds.manage_views import daily_views, monthly_views
 
 
 @fixture
-def sesh_with_views(tfs_sesh):
+def sesh_with_views(tfs_pycds_sesh):
     """Test fixture for manage_views('refresh'): Session with views defined."""
     logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
     views = daily_views + monthly_views
     for view in views:
-        view.create(tfs_sesh)
-    tfs_sesh.flush()
-    yield tfs_sesh
+        view.create(tfs_pycds_sesh)
+    tfs_pycds_sesh.flush()
+    yield tfs_pycds_sesh
     for view in reversed(views):
-        view.drop(tfs_sesh)
+        view.drop(tfs_pycds_sesh)
 
 
 @fixture(scope='function')
