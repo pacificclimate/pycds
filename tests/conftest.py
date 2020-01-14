@@ -24,6 +24,10 @@ from pycds.views import \
 from pycds.functions import daysinmonth, effective_day
 
 
+def pytest_runtest_setup():
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
+
 all_views = [
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
@@ -31,18 +35,65 @@ all_views = [
     ObsWithFlags
 ]
 
+
+#################################################################
+
+@fixture(scope='session')
+def set_search_path():
+    def f(executor):
+        executor.execute('SET search_path TO crmp, public')
+    return f
+
+
+@fixture(scope='session')
+def add_functions():
+    def f(executor):
+        executor.execute(daysinmonth)
+        executor.execute(effective_day)
+    return f
+
+
+@fixture(scope='session')
+def tss_engine(set_search_path, add_functions):
+    """Test-session scoped (tss) database engine"""
+    with testing.postgresql.Postgresql() as pg:
+        engine = create_engine(pg.url())
+        engine.execute("create extension postgis")
+        engine.execute(CreateSchema('crmp'))
+        set_search_path(engine)
+        add_functions(engine)
+        pycds.Base.metadata.create_all(bind=engine)
+        # pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
+        yield engine
+
+
+@fixture(scope='function')
+def tfs_sesh(tss_engine, set_search_path):
+    """Test-function scoped (tfs) database session.
+    All session actions are rolled back on teardown.
+
+    NOTE: We use the term 'sesh' throughout for database sessions, to
+    disambiguate it from test sessions, for which we use the term 'session'.
+    """
+    sesh = sessionmaker(bind=tss_engine)()
+    set_search_path(sesh)
+    yield sesh
+    sesh.rollback()
+    sesh.close()
+
+
+
+#################################################################
+
 # Set up database environment before testing. This is triggered each time a
 # database is created; in these tests, by `.metadata.create_all()` calls.
 @event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
 def do_before_create(target, connection, **kw):
+    return
     connection.execute('SET search_path TO crmp, public')
     # Add required functions
     connection.execute(daysinmonth)
     connection.execute(effective_day)
-
-
-def pytest_runtest_setup():
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 
 @fixture(scope='session')
