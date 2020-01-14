@@ -32,29 +32,17 @@ from pytest import fixture, mark, approx
 from pycds.util import generic_sesh
 from pycds import Network, Station, History, Variable, Obs
 from pycds.weather_anomaly import \
-    DailyMaxTemperature, DailyMinTemperature, \
     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
     MonthlyTotalPrecipitation
 
 
-views_to_refresh = [DailyMaxTemperature, DailyMinTemperature,
-                     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature,
-                     MonthlyTotalPrecipitation]
-views = views_to_refresh
-
-
 @fixture(scope='function')
-def with_views_sesh(session):
-    for view in views:
-        view.create(session)
-    yield (session)
-    for view in reversed(views):
-        view.drop(session)
-
-
-def refresh_views(sesh):
-    for view in views_to_refresh:
-        view.refresh(sesh)
+def with_views_sesh(tfs_sesh, all_views):
+    for view in all_views:
+        view.create(tfs_sesh)
+    yield tfs_sesh
+    for view in reversed(all_views):
+        view.drop(tfs_sesh)
 
 
 def id(param):
@@ -141,7 +129,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_a_single_row(View, obs_sesh):
+                    def it_returns_a_single_row(View, obs_sesh, refresh_views):
                         refresh_views(obs_sesh)
                         assert obs_sesh.query(View).count() == 1
 
@@ -150,7 +138,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh', 'variable'], ids=id)
-                    def it_returns_the_expected_history_variable_and_day(View, obs_sesh, history_stn1_hourly, variable):
+                    def it_returns_the_expected_history_variable_and_day(View, obs_sesh, history_stn1_hourly, variable, refresh_views):
                         refresh_views(obs_sesh)
                         result = obs_sesh.query(View).first()
                         assert result.history_id == history_stn1_hourly.id
@@ -162,7 +150,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature, min(hours)),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation, float(len(days) * len(hours))),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_the_expected_extreme_value(View, obs_sesh, statistic):
+                    def it_returns_the_expected_extreme_value(View, obs_sesh, statistic, refresh_views):
                         refresh_views(obs_sesh)
                         assert obs_sesh.query(View).first().statistic == statistic
 
@@ -171,7 +159,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_the_expected_data_coverage(View, obs_sesh):
+                    def it_returns_the_expected_data_coverage(View, obs_sesh, refresh_views):
                         refresh_views(obs_sesh)
                         assert obs_sesh.query(View).first().data_coverage == approx(len(hours)/24.0 * len(days)/31.0)
 
@@ -221,7 +209,8 @@ def describe_with_1_network():
                     def it_returns_exactly_the_expected_variables(
                             View, obs_sesh,
                             var_temp_point, var_temp_max, var_temp_min, var_temp_mean,
-                            var_precip_net1_1, var_precip_net1_2
+                            var_precip_net1_1, var_precip_net1_2,
+                            refresh_views
                     ):
                         refresh_views(obs_sesh)
                         expected_variables = {
@@ -274,7 +263,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_the_expected_number_of_rows(View, obs_sesh):
+                    def it_returns_the_expected_number_of_rows(View, obs_sesh, refresh_views):
                         refresh_views(obs_sesh)
                         assert obs_sesh.query(View).count() == len(months)
 
@@ -283,7 +272,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_the_expected_months(View, obs_sesh):
+                    def it_returns_the_expected_months(View, obs_sesh, refresh_views):
                         refresh_views(obs_sesh)
                         assert set([r.obs_month for r in obs_sesh.query(View)]) == \
                                set([datetime.datetime(2000, month, 1) for month in months])
@@ -293,7 +282,7 @@ def describe_with_1_network():
                         (MonthlyAverageOfDailyMinTemperature, MonthlyAverageOfDailyMinTemperature),
                         (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation),
                     ], indirect=['obs_sesh'], ids=id)
-                    def it_returns_the_expected_coverage(View, obs_sesh):
+                    def it_returns_the_expected_coverage(View, obs_sesh, refresh_views):
                         refresh_views(obs_sesh)
                         assert all(map(lambda r: r.data_coverage == approx(len(days)/30.0),
                                        obs_sesh.query(View)))
@@ -368,7 +357,9 @@ def describe_with_2_networks():
                             View, obs_sesh,
                             history_stn1_hourly, history_stn2_hourly,
                             var_temp_point, var_temp_point2,
-                            var_precip_net1_1, var_precip_net2_1):
+                            var_precip_net1_1, var_precip_net2_1,
+                            refresh_views
+                    ):
                         refresh_views(obs_sesh)
                         if View in [MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature]:
                             var_stn = [(var_temp_point, history_stn1_hourly),
