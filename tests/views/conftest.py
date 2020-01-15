@@ -1,4 +1,3 @@
-from pkg_resources import resource_filename
 from pytest import fixture
 from ..helpers import create_then_drop_views, insert_crmp_data
 from pycds.views import \

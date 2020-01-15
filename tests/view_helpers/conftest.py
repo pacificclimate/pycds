@@ -3,9 +3,10 @@ from sqlalchemy.orm import sessionmaker
 from ..helpers import generic_sesh
 from ..helpers import create_then_drop_views
 from .content import \
-    ContentBase, Thing, Description, \
+    ContentBase, \
     SimpleThingView, ThingWithDescriptionView, ThingCountView, \
-    SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview
+    SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview, \
+    content
 
 
 @fixture(scope='session')
@@ -22,18 +23,6 @@ def tst_orm_sesh(tst_orm_engine, set_search_path):
     yield sesh
     sesh.rollback()
     sesh.close()
-
-
-content = [
-    Description(id=1, desc='alpha'),
-    Description(id=2, desc='beta'),
-    Description(id=3, desc='gamma'),
-    Thing(id=1, name='one', description_id=1),
-    Thing(id=2, name='two', description_id=2),
-    Thing(id=3, name='three', description_id=3),
-    Thing(id=4, name='four', description_id=2),
-    Thing(id=5, name='five', description_id=1),
-]
 
 
 @fixture

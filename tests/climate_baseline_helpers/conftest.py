@@ -11,6 +11,7 @@ from pycds import Network, Station, History, Variable, DerivedValue
 def other_network():
     return Network(name='Other Network')
 
+
 @fixture
 def other_climatology_variables(other_network):
     return [Variable(name=name, network=other_network) for name in climatology_var_names]

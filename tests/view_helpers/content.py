@@ -38,6 +38,21 @@ class Description(ContentBase):
     def __repr__(self):
         return '<Description(id={}, desc={})>'.format(self.id, self.desc)
 
+
+# Table objects
+
+content = [
+    Description(id=1, desc='alpha'),
+    Description(id=2, desc='beta'),
+    Description(id=3, desc='gamma'),
+    Thing(id=1, name='one', description_id=1),
+    Thing(id=2, name='two', description_id=2),
+    Thing(id=3, name='three', description_id=3),
+    Thing(id=4, name='four', description_id=2),
+    Thing(id=5, name='five', description_id=1),
+]
+
+
 # Selectables for defining views and matviews
 
 simple_thing_sqla_selectable = \

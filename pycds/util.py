@@ -1,6 +1,8 @@
 import pycds
 
-
+# TODO: Does this have any current utility? It is not used in any current code.
+#  Also its result can be achieved with 1 line:
+#   ...statement.compile(compile_kwargs={"literal_binds": True}))
 # http://stackoverflow.com/questions/5631078/sqlalchemy-print-the-actual-query
 def compile_query(statement, bind=None):
     """
