@@ -6,7 +6,7 @@ from pytest import fixture, mark, raises, fail
 
 from .common import climatology_var_names
 
-from pycds.util import generic_sesh
+from ..helpers import generic_sesh
 from pycds import Network, Station, History, Variable, DerivedValue
 from pycds.climate_baseline_helpers import \
     pcic_climate_variable_network_name, \

@@ -1,6 +1,6 @@
 from pytest import fixture
 from sqlalchemy.orm import sessionmaker
-from pycds.util import generic_sesh
+from ..helpers import generic_sesh
 from ..helpers import create_then_drop_views
 from .content import \
     ContentBase, Thing, Description, \

@@ -136,36 +136,3 @@ def insert_crmp_data(sesh):
     sesh.execute(data)
 
 
-def generic_sesh(sesh, sa_objects):
-    '''All session fixtures follow a common pattern, abstracted in this generator function.
-
-    Args:
-        sesh (sqlalchemy.orm.session.Session): database session
-
-        sa_objects: list of SQLAlchemy ORM objects to be added to database for setup and removed on teardown
-            Order within list is respected for setup and teardown, so that dependencies can be respected.
-
-    Returns:
-        yields sesh after setup
-
-    To use this generator correctly, i.e., so that the teardown after the yield is also performed,
-    a fixture must first yield the result of next(g), then call next(g) again. This can be done two ways:
-
-      gs = generic_sesh(...)
-      yield next(gs)
-      next(gs)
-
-    or, slightly shorter:
-
-      for sesh in generic_sesh(...):
-          yield sesh
-
-    The shorter method is used throughout.
-    '''
-    for sao in sa_objects:
-        sesh.add(sao)
-        sesh.flush()
-    yield sesh
-    for sao in reversed(sa_objects):
-        sesh.delete(sao)
-        sesh.flush()

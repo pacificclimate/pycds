@@ -16,8 +16,7 @@ import datetime
 
 from pytest import fixture, mark, approx
 
-from ...helpers import create_then_drop_views
-from pycds.util import generic_sesh
+from ...helpers import generic_sesh, create_then_drop_views
 from pycds import Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
