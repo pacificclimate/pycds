@@ -2,7 +2,6 @@ import logging
 from pytest import fixture
 import testing.postgresql
 
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
@@ -59,11 +58,7 @@ def per_test_engine(set_search_path, add_functions):
 @fixture
 def per_test_session(per_test_engine, set_search_path):
     sesh = sessionmaker(bind=per_test_engine)()
-    # Default search path is `"$user", public`. Need to reset that to search
-    # crmp (for our db/orm content) and public (for postgis functions)
     set_search_path(sesh)
-    # session.execute('SET search_path TO crmp, public')
-    # print('\nsearch_path', [r for r in session.execute('SHOW search_path')])
     yield sesh
 
 

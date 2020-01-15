@@ -1,6 +1,6 @@
 import datetime
 
-from pytest import fixture, mark, raises, fail
+from pytest import fixture
 
 from .common import climatology_var_names
 

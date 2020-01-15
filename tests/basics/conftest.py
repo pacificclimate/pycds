@@ -1,7 +1,6 @@
 from pytest import fixture
 from sqlalchemy.orm import sessionmaker
-from pycds import Contact, Network, Station, History, Variable, Obs, \
-    NativeFlag, PCICFlag
+from pycds import Contact, Network, Station, History, Variable
 
 
 @fixture

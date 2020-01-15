@@ -1,42 +1,21 @@
 import logging, logging.config
 import sys
 
-import testing.postgresql
 from sqlalchemy import create_engine
-from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
 
-import pytest
 from pytest import fixture
+import testing.postgresql
 
 import pycds
 import pycds.weather_anomaly
-from pycds.views import \
-    CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
-    ObsWithFlags
 from pycds.functions import daysinmonth, effective_day
 
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
-
-all_views = [
-    CrmpNetworkGeoserver,
-    HistoryStationNetwork,
-    ObsCountPerDayHistory,
-    ObsWithFlags
-]
-
-
-#################################################################
-
-# These fixtures are intended to replace the welter of existing fixtures.
-# They are intended to be minimal in number and to perform a common sequence
-# of actions (e.g., create schema, set search path) in a common ordering,
-# and as much as possible with a common fixture breakdown or dependency pattern
-# (e.g., engine <-- sesh)
 
 @fixture(scope='session')
 def set_search_path():
@@ -90,17 +69,3 @@ def tfs_pycds_sesh(tss_pycds_engine, set_search_path):
     yield sesh
     sesh.rollback()
     sesh.close()
-
-
-
-#################################################################
-
-# Set up database environment before testing. This is triggered each time a
-# database is created; in these tests, by `.metadata.create_all()` calls.
-@event.listens_for(pycds.weather_anomaly.Base.metadata, 'before_create')
-def do_before_create(target, connection, **kw):
-    return
-    connection.execute('SET search_path TO crmp, public')
-    # Add required functions
-    connection.execute(daysinmonth)
-    connection.execute(effective_day)
