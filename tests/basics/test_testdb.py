@@ -1,4 +1,4 @@
-from pycds.util import create_test_data, insert_crmp_data
+from ..helpers import insert_test_data, insert_crmp_data
 from pycds import Contact, History, Obs
 
 
@@ -19,7 +19,7 @@ def test_reflect_tables_into_session(tfs_pycds_sesh):
 
 
 def test_can_create_test_db(tfs_pycds_sesh):
-    create_test_data(tfs_pycds_sesh)
+    insert_test_data(tfs_pycds_sesh)
     q = tfs_pycds_sesh.query(Contact)
     assert len(q.all()) == 2
 

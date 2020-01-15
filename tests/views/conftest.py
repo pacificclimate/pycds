@@ -1,6 +1,6 @@
 from pkg_resources import resource_filename
 from pytest import fixture
-from ..helpers import create_then_drop_views
+from ..helpers import create_then_drop_views, insert_crmp_data
 from pycds.views import \
     CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
     ObsWithFlags
@@ -8,10 +8,7 @@ from pycds.views import \
 
 @fixture
 def tfs_pycds_sesh_with_large_data(tfs_pycds_sesh):
-    with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') \
-            as f:
-        sql = f.read()
-    tfs_pycds_sesh.execute(sql)
+    insert_crmp_data(tfs_pycds_sesh)
     yield tfs_pycds_sesh
 
 
