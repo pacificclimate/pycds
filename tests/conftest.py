@@ -1,11 +1,7 @@
-import datetime
-
-from pkg_resources import resource_filename
 import logging, logging.config
 import sys
 
 import testing.postgresql
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import event
 from sqlalchemy.orm import sessionmaker
@@ -111,110 +107,6 @@ def do_before_create(target, connection, **kw):
     connection.execute(daysinmonth)
     connection.execute(effective_day)
 
-
-@fixture(scope='session')
-def engine():
-    """Test-session-wide database engine"""
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
-        pycds.Base.metadata.create_all(bind=engine)
-        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
-        yield engine
-
-
-@fixture(scope='function')
-def session(engine):
-    """Single-test database session. All session actions are rolled back on teardown"""
-    session = sessionmaker(bind=engine)()
-    yield session
-    session.rollback()
-    session.close()
-
-
-@fixture(scope='module')
-def mod_blank_postgis_session():
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
-        sesh = sessionmaker(bind=engine)()
-        yield sesh
-
-@fixture(scope='module')
-def mod_empty_database_session(mod_blank_postgis_session):
-    sesh = mod_blank_postgis_session
-    engine = sesh.get_bind()
-    pycds.Base.metadata.create_all(bind=engine)
-    pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
-    yield sesh
-
-@pytest.yield_fixture(scope='function')
-def blank_postgis_session():
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
-        sesh = sessionmaker(bind=engine)()
-        sesh.execute('SET search_path TO crmp, public')
-
-        yield sesh
-
-@pytest.yield_fixture(scope='function')
-def test_session(blank_postgis_session):
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
-    engine = blank_postgis_session.get_bind()
-    pycds.Base.metadata.create_all(bind=engine)
-
-    moti = Network(name='MoTIe')
-    ec = Network(name='EC')
-    wmb = Network(name='FLNROW-WMB')
-    blank_postgis_session.add_all([moti, ec, wmb])
-
-    simon = Contact(name='Simon', networks=[moti])
-    eric = Contact(name='Eric', networks=[wmb])
-    pat = Contact(name='Pat', networks=[ec])
-    blank_postgis_session.add_all([simon, eric, pat])
-
-    stations = [
-        Station(native_id='11091', network=moti, histories=[History(station_name='Brandywine', the_geom='SRID=4326;POINT(-123.11806 50.05417)')]),
-        Station(native_id='1029', network=wmb, histories=[History(station_name='FIVE MILE', the_geom='SRID=4326;POINT(-122.68889 50.91089)')]),
-        Station(native_id='2100160', network=ec, histories=[History(station_name='Beaver Creek Airport', the_geom='SRID=4326;POINT(-140.866667 62.416667)')])
-        ]
-    blank_postgis_session.add_all(stations)
-
-    variables = [Variable(name='CURRENT_AIR_TEMPERATURE1', unit='celsius', network=moti),
-                 Variable(name='precipitation', unit='mm', network=ec),
-                 Variable(name='relative_humidity', unit='percent', network=wmb)
-                 ]
-    blank_postgis_session.add_all(variables)
-
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
-
-    yield blank_postgis_session
-
-@pytest.yield_fixture(scope='function')
-def large_test_session(blank_postgis_session):
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
-    engine = blank_postgis_session.get_bind()
-    pycds.Base.metadata.create_all(bind=engine)
-
-    with open(resource_filename('pycds', 'data/crmp_subset_data.sql'), 'r') as f:
-        sql = f.read()
-    blank_postgis_session.execute(sql)
-
-    # Hmmm... this should have been created by
-    # `pycds.Base.metadata.create_all(bind=engine)` above
-    for view in all_views:
-        view.create(blank_postgis_session)
-
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO) # Let's not log all the db setup stuff...
-
-    yield blank_postgis_session
-
-    for view in reversed(all_views):
-        view.drop(blank_postgis_session)
 
 # To maintain database consistency, objects must be added (and flushed) in this order:
 #   Network
