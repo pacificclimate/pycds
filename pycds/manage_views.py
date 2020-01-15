@@ -29,5 +29,5 @@ def manage_views(session, operation, which_set):
 
     for view in views:
         if operation == 'create' or issubclass(view, MaterializedViewMixin):
-            logger.info("{} '{}'".format(operation.capitalize(), view.viewname()))
+            logger.info("{} '{}'".format(operation.capitalize(), view.qualfied_viewname()))
             getattr(view, operation)(session)

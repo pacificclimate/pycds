@@ -18,29 +18,34 @@ def pytest_runtest_setup():
 
 
 @fixture(scope='session')
-def set_search_path():
+def schema_name():
+    return pycds.get_schema_name()
+
+
+@fixture(scope='session')
+def set_search_path(schema_name):
     def f(executor):
-        executor.execute('SET search_path TO crmp, public')
+        executor.execute(f'SET search_path TO {schema_name}, public')
     return f
 
 
 @fixture(scope='session')
 def add_functions():
     def f(executor):
-        executor.execute(daysinmonth)
-        executor.execute(effective_day)
+        executor.execute(daysinmonth())
+        executor.execute(effective_day())
     return f
 
 
 @fixture(scope='session')
-def base_engine(set_search_path, add_functions):
+def base_engine(schema_name, set_search_path, add_functions):
     """Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
+        engine.execute(CreateSchema(schema_name))
         set_search_path(engine)
         add_functions(engine)
         yield engine

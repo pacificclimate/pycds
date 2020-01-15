@@ -1,6 +1,34 @@
+"""ORM for the CRMP database.
+
+**Note: Tables only.**
+
+Functions, views, and materialized views are defined in separate modules.
+
+
+**Note: Schema name:**
+
+SQLAlchemy does not make it easy to set the schema name of
+a declarative base to a value determined at run-time. It must be specified
+when the metadata for the declarative base is created, and once set it cannot
+be changed. This happens declaratively, not procedurally, so the value of
+the name must be determined externally to the code.
+
+The most convenient way to do specify the schema name externally is via an
+environment variable, which in this case is named `PYCDS_SCHEMA_NAME`.
+If `PYCDS_SCHEMA_NAME` is not specified, the default value of `crmp` is used,
+making this backward compatible with all existing code. The function
+`get_schema_name()` implements this design.
+
+Clients of this package must take care to specify `PYCDS_SCHEMA_NAME` correctly
+when performing any database operations with it. Otherwise the operations will
+fail with errors of the form "could not find object X in schema Y".
+"""
+
+import os
 import datetime
 
 __all__ = [
+    'get_schema_name',
     'Base',
     'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
     'ObsCountPerMonthHistory', 'VarsPerHistory',
@@ -8,7 +36,6 @@ __all__ = [
     'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
 ]
 
-import sqlalchemy
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Index
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
@@ -18,7 +45,11 @@ from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
 
-Base = declarative_base(metadata=MetaData(schema='crmp'))
+def get_schema_name():
+    return os.environ.get('PYCDS_SCHEMA_NAME', 'crmp')
+
+
+Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 metadata = Base.metadata
 
 
@@ -249,6 +280,9 @@ class Variable(Base):
     # Indexes
     fki_meta_vars_network_id_fkey = \
         Index('fki_meta_vars_network_id_fkey', 'network_id')
+
+    def __repr__(self):
+        return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(self.__class__.__name__, **self.__dict__)
 
 
 class ClimatologyAttributes(Base):
