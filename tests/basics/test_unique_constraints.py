@@ -6,8 +6,8 @@ from pycds import Obs, History, Variable, Network, NativeFlag
 import pytest
 
 
-def test_obs_raw_unique(tfs_pycds_sesh_with_small_data):
-    sesh = tfs_pycds_sesh_with_small_data
+def test_obs_raw_unique(pycds_sesh_with_small_data):
+    sesh = pycds_sesh_with_small_data
     # Find any variable and history to link to
     hist = sesh.query(History).first()
     var = sesh.query(Variable).first()
@@ -21,8 +21,8 @@ def test_obs_raw_unique(tfs_pycds_sesh_with_small_data):
         sesh.commit()
 
 
-def test_native_flag_unique(tfs_pycds_sesh_with_small_data):
-    sesh = tfs_pycds_sesh_with_small_data
+def test_native_flag_unique(pycds_sesh_with_small_data):
+    sesh = pycds_sesh_with_small_data
     # Pick a network, any network
     net = sesh.query(Network).first()
     for _ in range(2):

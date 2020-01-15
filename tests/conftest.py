@@ -33,8 +33,8 @@ def add_functions():
 
 
 @fixture(scope='session')
-def tss_base_engine(set_search_path, add_functions):
-    """Test-session scoped (tss) database engine.
+def base_engine(set_search_path, add_functions):
+    """Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
     with testing.postgresql.Postgresql() as pg:
@@ -47,24 +47,20 @@ def tss_base_engine(set_search_path, add_functions):
 
 
 @fixture(scope='session')
-def tss_pycds_engine(tss_base_engine):
-    """Test-session scoped (tss) database engine,
-    with pycds ORM created in it.
+def pycds_engine(base_engine):
+    """Test-session scoped database engine, with pycds ORM created in it.
     """
-    pycds.Base.metadata.create_all(bind=tss_base_engine)
+    pycds.Base.metadata.create_all(bind=base_engine)
     # pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
-    yield tss_base_engine
+    yield base_engine
 
 
 @fixture(scope='function')
-def tfs_pycds_sesh(tss_pycds_engine, set_search_path):
-    """Test-function scoped (tfs) database session.
+def pycds_sesh(pycds_engine, set_search_path):
+    """Test-function scoped database session.
     All session actions are rolled back on teardown.
-
-    NOTE: We use the term 'sesh' throughout for database sessions, to
-    disambiguate it from test sessions, for which we use the term 'session'.
     """
-    sesh = sessionmaker(bind=tss_pycds_engine)()
+    sesh = sessionmaker(bind=pycds_engine)()
     set_search_path(sesh)
     yield sesh
     sesh.rollback()

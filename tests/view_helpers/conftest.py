@@ -10,10 +10,10 @@ from .content import \
 
 
 @fixture(scope='session')
-def tst_orm_engine(tss_base_engine):
+def tst_orm_engine(base_engine):
     """Database engine with test content created in it."""
-    ContentBase.metadata.create_all(bind=tss_base_engine)
-    yield tss_base_engine
+    ContentBase.metadata.create_all(bind=base_engine)
+    yield base_engine
 
 
 @fixture

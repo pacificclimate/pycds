@@ -37,8 +37,8 @@ from pycds.weather_anomaly import \
 
 
 @fixture(scope='function')
-def with_views_sesh(tfs_pycds_sesh, all_views):
-    for s in create_then_drop_views(tfs_pycds_sesh, all_views):
+def with_views_sesh(pycds_sesh, all_views):
+    for s in create_then_drop_views(pycds_sesh, all_views):
         yield s
 
 

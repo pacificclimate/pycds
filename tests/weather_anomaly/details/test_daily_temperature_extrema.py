@@ -22,8 +22,8 @@ from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 
 @fixture(scope='function')
-def with_views_sesh(tfs_pycds_sesh, daily_views):
-    for s in create_then_drop_views(tfs_pycds_sesh, daily_views):
+def with_views_sesh(pycds_sesh, daily_views):
+    for s in create_then_drop_views(pycds_sesh, daily_views):
         yield s
 
 

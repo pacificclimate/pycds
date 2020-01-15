@@ -6,9 +6,9 @@ from pycds.views import \
 
 
 @fixture
-def tfs_pycds_sesh_with_large_data(tfs_pycds_sesh):
-    insert_crmp_data(tfs_pycds_sesh)
-    yield tfs_pycds_sesh
+def tfs_pycds_sesh_with_large_data(pycds_sesh):
+    insert_crmp_data(pycds_sesh)
+    yield pycds_sesh
 
 
 all_views = [

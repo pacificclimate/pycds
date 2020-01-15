@@ -19,8 +19,8 @@ from pycds.climate_baseline_helpers import \
 
 
 @fixture
-def sesh_with_other_network_and_climatology_variables(tfs_pycds_sesh, other_network, other_climatology_variables):
-    for sesh in generic_sesh(tfs_pycds_sesh, [other_network] + other_climatology_variables):
+def sesh_with_other_network_and_climatology_variables(pycds_sesh, other_network, other_climatology_variables):
+    for sesh in generic_sesh(pycds_sesh, [other_network] + other_climatology_variables):
         yield sesh
 
 
@@ -38,19 +38,19 @@ def sesh_with_station_and_history_records(sesh_with_climate_baseline_variables, 
 
 def describe_get__or__create__pcic__climate__variables__network():
 
-    def it_creates_the_expected_new_network_record(tfs_pycds_sesh):
-        network = get_or_create_pcic_climate_variables_network(tfs_pycds_sesh)
-        results = tfs_pycds_sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
+    def it_creates_the_expected_new_network_record(pycds_sesh):
+        network = get_or_create_pcic_climate_variables_network(pycds_sesh)
+        results = pycds_sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
         result = results.first()
         assert network.id == result.id
         assert result.publish is True
         assert 'PCIC' in result.long_name
 
-    def it_creates_no_more_than_one_of_them(tfs_pycds_sesh):
-        get_or_create_pcic_climate_variables_network(tfs_pycds_sesh)
-        get_or_create_pcic_climate_variables_network(tfs_pycds_sesh)
-        results = tfs_pycds_sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
+    def it_creates_no_more_than_one_of_them(pycds_sesh):
+        get_or_create_pcic_climate_variables_network(pycds_sesh)
+        get_or_create_pcic_climate_variables_network(pycds_sesh)
+        results = pycds_sesh.query(Network).filter(Network.name == pcic_climate_variable_network_name)
         assert results.count() == 1
 
 
@@ -101,8 +101,8 @@ def describe_create__pcic__climate__baseline__variables():
         assert result.description == 'Climatological mean of monthly total precipitation'
         assert result.display_name == 'Precipitation Climatology'
 
-    def it_creates_no_more_than_one_of_each(tfs_pycds_sesh):
-        sesh = tfs_pycds_sesh
+    def it_creates_no_more_than_one_of_each(pycds_sesh):
+        sesh = pycds_sesh
         get_or_create_pcic_climate_baseline_variables(sesh)
         get_or_create_pcic_climate_baseline_variables(sesh)
         results = sesh.query(Variable).filter(Variable.name.like('%_Climatology'))
@@ -247,9 +247,9 @@ def describe_load__pcic__climate__baseline__values():
                     
 def describe_verify__baseline__network__and__variables():
     def describe_without_baseline_network():
-        def it_raises_an_exception(tfs_pycds_sesh):
+        def it_raises_an_exception(pycds_sesh):
             with raises(AssertionError) as excinfo:
-                verify_baseline_network_and_variables(tfs_pycds_sesh)
+                verify_baseline_network_and_variables(pycds_sesh)
             assert pcic_climate_variable_network_name in str(excinfo.value)
             assert 'not found in database' in str(excinfo.value)
 

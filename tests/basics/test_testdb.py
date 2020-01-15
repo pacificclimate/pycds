@@ -2,8 +2,8 @@ from ..helpers import insert_test_data, insert_crmp_data
 from pycds import Contact, History, Obs
 
 
-def test_reflect_tables_into_session(tfs_pycds_sesh):
-    res = tfs_pycds_sesh.execute('''
+def test_reflect_tables_into_session(pycds_sesh):
+    res = pycds_sesh.execute('''
         SELECT table_name 
         FROM information_schema.tables 
         WHERE table_schema = 'crmp';
@@ -18,13 +18,13 @@ def test_reflect_tables_into_session(tfs_pycds_sesh):
     }
 
 
-def test_can_create_test_db(tfs_pycds_sesh):
-    insert_test_data(tfs_pycds_sesh)
-    q = tfs_pycds_sesh.query(Contact)
+def test_can_create_test_db(pycds_sesh):
+    insert_test_data(pycds_sesh)
+    q = pycds_sesh.query(Contact)
     assert len(q.all()) == 2
 
 
-def test_can_create_crmp_subset_db(tfs_pycds_sesh):
-    insert_crmp_data(tfs_pycds_sesh)
-    q = tfs_pycds_sesh.query(History)
+def test_can_create_crmp_subset_db(pycds_sesh):
+    insert_crmp_data(pycds_sesh)
+    q = pycds_sesh.query(History)
     assert q.count() > 0
