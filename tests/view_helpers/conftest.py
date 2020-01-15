@@ -7,14 +7,14 @@ from .content import \
     SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview
 
 
-@fixture  # TODO: scope?
+@fixture(scope='session')
 def tst_orm_engine(tss_base_engine):
     """Database engine with test content created in it."""
     ContentBase.metadata.create_all(bind=tss_base_engine)
     yield tss_base_engine
 
 
-@fixture  # TODO: scope?
+@fixture
 def tst_orm_sesh(tst_orm_engine, set_search_path):
     sesh = sessionmaker(bind=tst_orm_engine)()
     set_search_path(sesh)
@@ -35,7 +35,7 @@ content = [
 ]
 
 
-@fixture  # TODO: scope?
+@fixture
 def view_sesh(tst_orm_sesh):
     sesh = tst_orm_sesh
     views = [SimpleThingView, ThingWithDescriptionView, ThingCountView]
@@ -47,7 +47,7 @@ def view_sesh(tst_orm_sesh):
         view.drop(sesh)
 
 
-@fixture  # TODO: scope?
+@fixture
 def matview_sesh(tst_orm_sesh):
     sesh = tst_orm_sesh
     views = [SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview]
