@@ -34,6 +34,3 @@ def refresh_views():
         for view in views:
             view.refresh(sesh)
     return f
-
-
-
