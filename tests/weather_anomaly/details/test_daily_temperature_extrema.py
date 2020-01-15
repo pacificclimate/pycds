@@ -16,6 +16,7 @@ import datetime
 
 from pytest import fixture, mark, approx
 
+from ...helpers import create_then_drop_views
 from pycds.util import generic_sesh
 from pycds import Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
@@ -23,11 +24,8 @@ from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 @fixture(scope='function')
 def with_views_sesh(tfs_pycds_sesh, daily_views):
-    for view in daily_views:
-        view.create(tfs_pycds_sesh)
-    yield tfs_pycds_sesh
-    for view in reversed(daily_views):
-        view.drop(tfs_pycds_sesh)
+    for s in create_then_drop_views(tfs_pycds_sesh, daily_views):
+        yield s
 
 
 def describe_with_1_network():

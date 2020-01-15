@@ -29,6 +29,7 @@ import datetime
 
 from pytest import fixture, mark, approx
 
+from ...helpers import create_then_drop_views
 from pycds.util import generic_sesh
 from pycds import Obs
 from pycds.weather_anomaly import \
@@ -38,11 +39,8 @@ from pycds.weather_anomaly import \
 
 @fixture(scope='function')
 def with_views_sesh(tfs_pycds_sesh, all_views):
-    for view in all_views:
-        view.create(tfs_pycds_sesh)
-    yield tfs_pycds_sesh
-    for view in reversed(all_views):
-        view.drop(tfs_pycds_sesh)
+    for s in create_then_drop_views(tfs_pycds_sesh, all_views):
+        yield s
 
 
 def id(param):

@@ -1,5 +1,6 @@
 from pkg_resources import resource_filename
 from pytest import fixture
+from ..helpers import create_then_drop_views
 from pycds.views import \
     CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
     ObsWithFlags
@@ -24,9 +25,5 @@ all_views = [
 
 @fixture
 def views_sesh(tfs_pycds_sesh_with_large_data):
-    sesh = tfs_pycds_sesh_with_large_data
-    for view in all_views:
-        view.create(sesh)
-    yield sesh
-    for view in reversed(all_views):
-        view.drop(sesh)
+    for s in create_then_drop_views(tfs_pycds_sesh_with_large_data, all_views):
+        yield s

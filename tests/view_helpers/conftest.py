@@ -1,6 +1,7 @@
 from pytest import fixture
 from sqlalchemy.orm import sessionmaker
 from pycds.util import generic_sesh
+from ..helpers import create_then_drop_views
 from .content import \
     ContentBase, Thing, Description, \
     SimpleThingView, ThingWithDescriptionView, ThingCountView, \
@@ -37,25 +38,17 @@ content = [
 
 @fixture
 def view_sesh(tst_orm_sesh):
-    sesh = tst_orm_sesh
     views = [SimpleThingView, ThingWithDescriptionView, ThingCountView]
-    for view in views:
-        view.create(sesh)
-    for s in generic_sesh(tst_orm_sesh, content):
-        yield s
-    for view in reversed(views):
-        view.drop(sesh)
+    for s0 in create_then_drop_views(tst_orm_sesh, views):
+        for s1 in generic_sesh(s0, content):
+            yield s1
 
 
 @fixture
 def matview_sesh(tst_orm_sesh):
-    sesh = tst_orm_sesh
     views = [SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview]
     # Matviews must be created before content is added in order to test
-    # refreshed functionality.
-    for view in views:
-        view.create(sesh)
-    for s in generic_sesh(tst_orm_sesh, content):
-        yield s
-    for view in reversed(views):
-        view.drop(sesh)
+    # refreshed functionality. The nested loops do this.
+    for s0 in create_then_drop_views(tst_orm_sesh, views):
+        for s1 in generic_sesh(s0, content):
+            yield s1
