@@ -2,10 +2,6 @@ from collections import namedtuple
 from datetime import datetime
 from pkg_resources import resource_filename
 
-from sqlalchemy import not_, and_, or_, Integer, Column
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import MetaData
-
 from pycds import *
 from pycds import Base
 
@@ -46,61 +42,6 @@ def compile_query(statement, bind=None):
     return compiler.process(statement)
 
 
-def orm_station_table(sesh, stn_id, raw=True):
-    '''Construct a 'station table' i.e. a table such that each row
-       corresponds to a single timestep and each column corresponds to
-       a separate variable or flag
-
-       :param sesh: sqlalchemy session
-       :param stn_id: id corresponding to meta_station.station_id or Station.id
-       :type stn_id: int
-       :param raw: Should this query be for raw observations? Setting this to False will fetch climatologies.
-       :type raw: bool
-       :rtype: :py:class:`sqlalchemy.orm.query.Query`
-
-    '''
-    if raw:
-        raw_filter = not_(and_(ObsWithFlags.cell_method.like(
-            '%within%'), ObsWithFlags.cell_method.like('%over%')))
-    else:
-        raw_filter = or_(ObsWithFlags.cell_method.like(
-            '%within%'), ObsWithFlags.cell_method.like('%over%'))
-
-    # Get all of the variables for which observations exist
-    # and iterate over them
-    vars_ = sesh.query(ObsWithFlags.vars_id, ObsWithFlags.net_var_name)\
-        .filter(ObsWithFlags.station_id == stn_id).filter(raw_filter)\
-        .distinct().order_by(ObsWithFlags.vars_id)
-
-    # Start with all of the times for which observations exist
-    # and then use this as a basis for a left join
-    # (sqlite doesn't support full outer joins
-    times = sesh.query(ObsWithFlags.obs_time.label('flag_time'))\
-        .filter(ObsWithFlags.station_id == stn_id)\
-        .order_by(ObsWithFlags.obs_time).distinct()
-    stmt = times.subquery()
-
-    for vars_id, var_name in vars_.all():
-
-        # Construct a query for all values of this variable
-        right = sesh.query(
-            ObsWithFlags.obs_time.label('obs_time'),
-            ObsWithFlags.datum.label(var_name),
-            ObsWithFlags.flag_name.label(var_name + '_flag')
-        ).filter(ObsWithFlags.vars_id == vars_id)\
-            .filter(ObsWithFlags.station_id == stn_id).subquery()
-
-        # Then join it to the query we're already building
-        join_query = sesh.query(stmt, right).outerjoin(
-            right, stmt.c.obs_time == right.c.obs_time)
-
-        stmt = join_query.subquery()
-
-    return sesh.query(stmt)
-
-
-def sql_station_table(sesh, stn_id):
-    return compile_query(orm_station_table(sesh, stn_id))
 
 TestContact = namedtuple('TestContact', 'name title organization email phone')
 TestNetwork = namedtuple('TestNetwork', 'name long_name color')
@@ -115,47 +56,6 @@ TestVariable = namedtuple(
 
 def create_test_database(engine):
     Base.metadata.create_all(bind=engine)
-
-
-# This is fragile, fragile code
-# Kind of assumes a postgres read_engine and an sqlite write_engine
-
-
-def create_reflected_test_database(read_engine, write_engine):
-    meta = MetaData(bind=write_engine)
-    meta.reflect(bind=read_engine)
-
-    for tablename in ('matviews'):
-        meta.remove(meta.tables[tablename])
-
-    logger.info("Overriding PG types that are unknown to sqlite")
-    meta.tables['meta_history'].columns['tz_offset'].type = Integer()
-    meta.tables['obs_raw'].columns['mod_time'].server_default = None
-    meta.tables['meta_history'].columns['the_geom'].type = Integer()
-    # These are all BIGINT in postgres
-    meta.tables['obs_raw'].columns['obs_raw_id'].type = Integer()
-    meta.tables['obs_raw_native_flags'].columns['obs_raw_id'].type = Integer()
-    meta.tables['obs_raw_pcic_flags'].columns['obs_raw_id'].type = Integer()
-
-    logger.info("Unsetting all of the sequence defaults")
-    for tablename, table in meta.tables.iteritems():
-        if hasattr(table, 'primary_key'):
-            for column in table.primary_key.columns.values():
-                if column.server_default:
-                    column.server_default = None
-
-    logger.info("Creating a subset of the tables")
-    to_search = [
-        'obs_raw', 'meta_history', 'meta_station', 'meta_network', 'meta_vars',
-        'meta_contact'
-    ]
-    to_create = [
-        table for tablename, table in meta.tables.iteritems()
-        if tablename in to_search
-    ]
-    # Don't have contact in the postgres database yet 2013.12.04
-    meta.tables['meta_network'].append_column(Column('contact_id', Integer))
-    meta.create_all(tables=to_create)
 
 
 def create_test_data(sesh):
@@ -234,33 +134,6 @@ def insert_crmp_data(sesh):
         data = f.read()
 
     sesh.execute(data)
-
-
-# TODO: Find out where this is used. If nowhere, remove
-def create_test_data_from_reflection(read_engine, write_engine):
-    rSession = sessionmaker(bind=read_engine)()
-    wSession = sessionmaker(bind=write_engine)()
-
-    q = rSession.query(Variable)
-    for var in q.all():
-        merged_object = wSession.merge(var)
-        wSession.add(merged_object)
-
-    logger.info("Querying the networks")
-    q = rSession.query(Network.name, Network.long_name, Network.color)
-    for name, long_name, color in q.all():
-        new_object = Network(name=name, long_name=long_name, color=color)
-        wSession.add(new_object)
-
-    q = rSession.query(Station)
-    for station in q.all():
-        merged_object = wSession.merge(station)
-        wSession.add(merged_object)
-        for hist in station.histories:
-            new_hist = wSession.merge(hist)
-            wSession.add(new_hist)
-
-    wSession.commit()
 
 
 def generic_sesh(sesh, sa_objects):
