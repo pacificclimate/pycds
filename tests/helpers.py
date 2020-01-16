@@ -200,3 +200,13 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
 
     with_schema_name(sesh, schema_name, action)
 
+
+# Test helpers
+
+def get_items_in_schema(sesh, item_type, schema_name=get_schema_name()):
+    r = sesh.execute(f'''
+        SELECT table_name 
+        FROM information_schema.{item_type} 
+        WHERE table_schema = '{schema_name}';
+    ''')
+    return {x[0] for x in r.fetchall()}

@@ -12,6 +12,7 @@ https://gist.github.com/techniq/5174412
 import re
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
+from sqlalchemy import Table, Column
 from sqlalchemy.sql import table
 from sqlalchemy.ext.declarative import declared_attr
 
@@ -93,9 +94,9 @@ class ViewMixin(object):
 
     @declared_attr
     def __table__(cls):
-        t = table(cls.viewname())
+        t = Table(cls.base_viewname(), cls.metadata)
         for c in cls.__selectable__.c:
-            c._make_proxy(t)
+            t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
         return t
 
     @declared_attr
@@ -107,17 +108,24 @@ class ViewMixin(object):
             return {}
 
     @classmethod
-    def viewname(cls):
+    def base_viewname(cls):
         try:
             return cls.__viewname__
         except AttributeError:
             return snake_case(cls.__name__)
 
     @classmethod
+    def qualfied_viewname(cls):
+        prefix = '' if cls.metadata.schema is None \
+            else cls.metadata.schema + '.'
+        return prefix + cls.base_viewname()
+
+    @classmethod
     def create(cls, sesh):
-        return sesh.execute(CreateView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(CreateView(
+            cls.qualfied_viewname(), cls.__selectable__)
+        )
 
     @classmethod
     def drop(cls, sesh):
-        return sesh.execute(DropView(cls.viewname()))
-
+        return sesh.execute(DropView(cls.qualfied_viewname()))
