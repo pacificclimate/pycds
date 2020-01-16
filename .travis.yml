@@ -12,4 +12,4 @@ install:
   - pip install -U pip
   - pip install -i https://pypi.pacificclimate.org/simple/ -r requirements.txt -r test_requirements.txt
   - pip install -i https://pypi.pacificclimate.org/simple/ .
-script: py.test -v --tb=short tests
+script: PYCDS_SCHEMA_NAME=other py.test -v --tb=short tests
