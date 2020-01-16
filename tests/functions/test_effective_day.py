@@ -2,33 +2,33 @@ import datetime
 from sqlalchemy.sql import text
 from pytest import mark
 
-
+morning = '2000-01-01 07:23'
+afternoon = '2000-01-01 16:18'
 expected_day = {
     'max': {
         '1-hourly': {
-            '2000-01-01 07:23': datetime.datetime(2000, 1, 1),
-            '2000-01-01 16:18': datetime.datetime(2000, 1, 1)
+            morning: datetime.datetime(2000, 1, 1),
+            afternoon: datetime.datetime(2000, 1, 1)
         },
         '12-hourly': {
-            '2000-01-01 07:23': datetime.datetime(2000, 1, 1),
-            '2000-01-01 16:18': datetime.datetime(2000, 1, 2)
+            morning: datetime.datetime(2000, 1, 1),
+            afternoon: datetime.datetime(2000, 1, 2)
         },
     },
     'min': {
         '1-hourly': {
-            '2000-01-01 07:23': datetime.datetime(2000, 1, 1),
-            '2000-01-01 16:18': datetime.datetime(2000, 1, 1)
+            morning: datetime.datetime(2000, 1, 1),
+            afternoon: datetime.datetime(2000, 1, 1)
         },
         '12-hourly': {
-            '2000-01-01 07:23': datetime.datetime(2000, 1, 1),
-            '2000-01-01 16:18': datetime.datetime(2000, 1, 1)
+            morning: datetime.datetime(2000, 1, 1),
+            afternoon: datetime.datetime(2000, 1, 1)
         },
     }
 }
 
 
-# morning and afternoon
-@mark.parametrize('obs_time', ['2000-01-01 07:23', '2000-01-01 16:18'])
+@mark.parametrize('obs_time', [morning, afternoon])
 @mark.parametrize('freq', ['1-hourly', '12-hourly'])
 @mark.parametrize('extremum', ['max', 'min'])
 def test_day_of_observation(schema_name, pycds_sesh, obs_time, extremum, freq):

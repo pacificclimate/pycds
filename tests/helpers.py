@@ -43,7 +43,7 @@ from pycds import get_schema_name, Contact, Network, Station, History, Variable
 #
 # The shorter method is preferred.
 
-def generic_sesh(sesh, sa_objects):
+def add_then_delete_objs(sesh, sa_objects):
     """Add objects to session, yield session, drop objects from session (in
     reverse order. For correct usage, see notes above.
 
