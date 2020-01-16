@@ -7,6 +7,25 @@ For details on view creation in SQLAlchemy see:
 https://github.com/sqlalchemy/sqlalchemy/wiki/Views
 http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
 https://gist.github.com/techniq/5174412
+
+See also the docstring in pycds/materialized_view_helpers.py for additional
+information. In particular, note that we use the materialized-view style
+implementation based on `sqlalchemy.Table`, not the one advised in
+https://github.com/sqlalchemy/sqlalchemy/wiki/Views based on
+`sqlalchemy.sql.table`. The implementation chosen makes it easy to place a view
+in schema, but it has the following disadvantage:
+
+WARNING: Views should be declared using a declarative base separate from the
+PyCDS tables declarative base `pycds.Base`. (Typically the views declarative
+base will use the same schema name as the PyCDS tables declarative base.)
+
+Why? If a view is declared using the PyCDS tables declarative base, then
+`pycds.Base.metadata.create_all()` causes an error as the view's intermediary
+table is (incorrectly) created.
+
+NOTE: It may be possible to implement views differently so that the issue with
+declarative bases does not arise, but the exact form of that implementation
+is not clear at the moment. This will do.
 """
 
 import re

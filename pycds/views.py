@@ -8,7 +8,8 @@ the ORM, or to be maintained and migrated.
 
 This module defines views in the ORM as SQL views in the database, using
 a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
-for more information.
+for more information. In particular, see the note about using a separate
+declarative base for views; here it is `ViewBase`.
 
 WARNING: The `History` class defines column `the_geom` using GeoAlchemy2
 data type `Geometry`. This forces
@@ -17,14 +18,18 @@ This may or may not be desirable for all use cases, specifically views.
 If views are behaving oddly with respect to geometry, this is worth looking at.
 """
 
-from sqlalchemy import func, text
+from sqlalchemy import MetaData, func, text
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
-from pycds import Base, Network, Station, History, Variable, Obs, \
+from pycds import get_schema_name, Network, Station, History, Variable, Obs, \
     StationObservationStats, CollapsedVariables
 from pycds.view_helpers import ViewMixin
 
 
-class CrmpNetworkGeoserver(Base, ViewMixin):
+ViewBase = declarative_base(metadata=MetaData(schema=get_schema_name()))
+
+
+class CrmpNetworkGeoserver(ViewBase, ViewMixin):
     """
     This view is used by the PDP Geoserver backend for generating station
     map layers.
@@ -67,7 +72,7 @@ class CrmpNetworkGeoserver(Base, ViewMixin):
     __primary_key__ = ['station_id']
 
 
-class HistoryStationNetwork(Base, ViewMixin):
+class HistoryStationNetwork(ViewBase, ViewMixin):
     """
     This view, as its name suggests, is a convenience view that joins
     History, Station, and Network tables.
@@ -102,7 +107,7 @@ class HistoryStationNetwork(Base, ViewMixin):
     __primary_key__ = ['history_id']
 
 
-class ObsCountPerDayHistory(Base, ViewMixin):
+class ObsCountPerDayHistory(ViewBase, ViewMixin):
     """
     This view provides counts of observations grouped by day (date) and
     history_id
@@ -120,7 +125,7 @@ class ObsCountPerDayHistory(Base, ViewMixin):
     __primary_key__ = ['history_id']
 
 
-class ObsWithFlags(Base, ViewMixin):
+class ObsWithFlags(ViewBase, ViewMixin):
     """
     This view joins Obs with History and Variable.
     """
