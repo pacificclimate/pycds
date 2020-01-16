@@ -17,6 +17,8 @@ def empty_sesh(base_engine, set_search_path):
 
 @fixture
 def pycds_sesh_with_small_data(pycds_sesh):
+    # TODO: Use generic_sesh (which ought to be renamed) here so that objects
+    #   are removed after test
     moti = Network(name='MoTIe')
     ec = Network(name='EC')
     wmb = Network(name='FLNROW-WMB')

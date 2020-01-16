@@ -7,11 +7,6 @@ def test_schema_content(view_sesh):
     assert get_items_in_schema(view_sesh, 'tables') >= {
         'things', 'descriptions'
     }
-    # Wrong
-    # assert get_items_in_schema(view_sesh, 'views', schema_name='public') >= {
-    #     'simple_thing_view', 'thing_with_description_view',
-    #     'thing_count_view'
-    # }
     assert get_items_in_schema(view_sesh, 'views') >= {
         'simple_thing_view', 'thing_with_description_view',
         'thing_count_view'
