@@ -15,54 +15,16 @@ Idiosyncracies:
 import datetime
 
 from pytest import fixture, mark, approx
-from sqlalchemy.sql import text
 
-from pycds.util import generic_sesh
-from pycds import Network, Station, History, Variable, Obs, NativeFlag, PCICFlag
+from ...helpers import generic_sesh, create_then_drop_views
+from pycds import Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
 
-def describe_function_effective__day():
-    expected_day = {
-        'max': {
-            '1-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
-            '12-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 2)},
-        },
-        'min': {
-            '1-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
-            '12-hourly': {'2000-01-01 07:23': datetime.datetime(2000, 1, 1), '2000-01-01 16:18': datetime.datetime(2000, 1, 1)},
-        }
-    }
-
-    @mark.parametrize('obs_time', ['2000-01-01 07:23', '2000-01-01 16:18'])  # morning and afternoon
-    @mark.parametrize('freq', ['1-hourly', '12-hourly'])
-    @mark.parametrize('extremum', ['max', 'min'])
-    def it_returns_the_expected_day_of_observation(mod_empty_database_session, obs_time, extremum, freq):
-        mod_empty_database_session.execute('SET search_path TO crmp')
-        result = mod_empty_database_session.execute(
-            text('SELECT effective_day(:obs_time, :extremum, :freq) AS eday'),
-            {'obs_time': obs_time, 'extremum': extremum, 'freq': freq}
-        ).fetchall()
-        assert len(result) == 1
-        assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
-
-
-views = [DailyMaxTemperature, DailyMinTemperature]
-refreshable_views = [DailyMaxTemperature, DailyMinTemperature]
-
-
 @fixture(scope='function')
-def with_views_sesh(session):
-    for view in views:
-        view.create(session)
-    yield session
-    for view in reversed(views):
-        view.drop(session)
-
-
-def refresh_views(sesh):
-    for view in refreshable_views:
-        view.refresh(sesh)
+def with_views_sesh(pycds_sesh, daily_views):
+    for s in create_then_drop_views(pycds_sesh, daily_views):
+        yield s
 
 
 def describe_with_1_network():
@@ -106,8 +68,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -147,8 +109,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -289,9 +251,9 @@ def describe_with_1_network():
                                 'both'
                             ], indirect=True)
                             @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
-                            def it_excludes_all_and_only_discarded_observations(flag_assoc_sesh, DailyExtremeTemperature):
+                            def it_excludes_all_and_only_discarded_observations(flag_assoc_sesh, DailyExtremeTemperature, refresh_views, daily_views):
                                 sesh = flag_assoc_sesh
-                                refresh_views(sesh)
+                                refresh_views(daily_views, sesh)
                                 results = sesh.query(DailyExtremeTemperature)
                                 num_actually_discarded = sesh.query(Obs)\
                                     .filter(Obs.native_flags.any(NativeFlag.discard == True) |
@@ -325,8 +287,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -370,8 +332,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -420,8 +382,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])
@@ -482,8 +444,8 @@ def describe_with_1_network():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature, expected', [
@@ -555,8 +517,8 @@ def describe_with_2_networks():
                             yield sesh
 
                     @fixture
-                    def refreshed_sesh(obs_sesh):
-                        refresh_views(obs_sesh)
+                    def refreshed_sesh(obs_sesh, refresh_views, daily_views):
+                        refresh_views(daily_views, obs_sesh)
                         yield obs_sesh
 
                     @mark.parametrize('DailyExtremeTemperature', [DailyMaxTemperature, DailyMinTemperature])

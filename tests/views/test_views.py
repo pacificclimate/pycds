@@ -6,8 +6,8 @@ from pycds.views import \
     ObsWithFlags
 
 
-def test_crmp_network_geoserver(large_test_session):
-    q = large_test_session.query(CrmpNetworkGeoserver.network_name)
+def test_crmp_network_geoserver(views_sesh):
+    q = views_sesh.query(CrmpNetworkGeoserver.network_name)
     rv = q.all()
 
     # Test that the number of rows is not zero
@@ -34,13 +34,13 @@ def test_crmp_network_geoserver(large_test_session):
     assert filtered_nrows < nrows
 
 
-def test_history_station_network(large_test_session):
+def test_history_station_network(views_sesh):
     hsn_q = (
-        large_test_session.query(HistoryStationNetwork)
+        views_sesh.query(HistoryStationNetwork)
         .order_by(HistoryStationNetwork.history_id)
     )
     hx_q = (
-        large_test_session.query(History)
+        views_sesh.query(History)
         .order_by(History.id)
     )
 
@@ -52,9 +52,9 @@ def test_history_station_network(large_test_session):
         assert hsn.network_id == hx.station.network.id
 
 
-def test_obs_count_per_day_history(large_test_session):
+def test_obs_count_per_day_history(views_sesh):
     ocdh_count_over_hx_q = (
-        large_test_session.query(
+        views_sesh.query(
             ObsCountPerDayHistory.history_id.label('history_id'),
             func.sum(ObsCountPerDayHistory.count).label('count')
         )
@@ -64,7 +64,7 @@ def test_obs_count_per_day_history(large_test_session):
     )
 
     obs_count_over_hx_q = (
-        large_test_session.query(
+        views_sesh.query(
             Obs.history_id.label('history_id'),
             func.count(Obs.id).label('count')
         )
@@ -81,9 +81,9 @@ def test_obs_count_per_day_history(large_test_session):
         assert ocdh_count.count == obs_count.count
 
 
-def test_obs_with_flags(large_test_session):
+def test_obs_with_flags(views_sesh):
     # extensions = (
-    #     large_test_session.execute('''
+    #     views_sesh.execute('''
     #         SELECT * FROM pg_extension
     #     ''')
     # )
@@ -92,11 +92,11 @@ def test_obs_with_flags(large_test_session):
     # })
 
     obs_with_flags_q = (
-        large_test_session.query(ObsWithFlags)
+        views_sesh.query(ObsWithFlags)
             .order_by(ObsWithFlags.obs_raw_id)
     )
     obs_q = (
-        large_test_session.query(Obs)
+        views_sesh.query(Obs)
             .order_by(Obs.id)
     )
 
