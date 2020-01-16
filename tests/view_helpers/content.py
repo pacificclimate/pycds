@@ -5,17 +5,18 @@ To separate view creation from creation of non-view (content) tables, they
 are given different ORM declarative bases.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import MetaData, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import select, text, literal_column
 from sqlalchemy.sql import column
 
+from pycds import get_schema_name
 from pycds.view_helpers import ViewMixin
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
-
-ContentBase = declarative_base()
-ViewBase = declarative_base()
+schema_name = get_schema_name()
+ContentBase = declarative_base(metadata=MetaData(schema=schema_name))
+ViewBase = declarative_base(metadata=MetaData(schema=schema_name))
 
 
 # Tables
@@ -60,21 +61,23 @@ simple_thing_sqla_selectable = \
 
 # less delightful but applicable to cases where we use text queries for
 # selectable:
-simple_thing_text_selectable = text('''
+simple_thing_text_selectable = text(f'''
     SELECT *
-    FROM things
+    FROM {schema_name}.things
     WHERE things.id <= 3
 ''').columns(Thing.id, Thing.name, Thing.description_id)
 
 
-thing_with_description_text_selectable = text('''
-    SELECT things.id, things.name, descriptions.desc
-    FROM things JOIN descriptions ON (things.description_id = descriptions.id)
+thing_with_description_text_selectable = text(f'''
+    SELECT t.id, t.name, d.desc
+    FROM {schema_name}.things AS t
+        JOIN {schema_name}.descriptions AS d ON (t.description_id = d.id)
 ''').columns(column('id'), column('name'), column('desc'))
 
-thing_count_text_selectable = text('''
-    SELECT d.desc as desc, count(things.id) as num
-    FROM things JOIN descriptions as d ON (things.description_id = d.id)
+thing_count_text_selectable = text(f'''
+    SELECT d.desc as desc, count(t.id) as num
+    FROM {schema_name}.things AS t 
+        JOIN {schema_name}.descriptions AS d ON (t.description_id = d.id)
     GROUP BY d.desc
 ''').columns(column('desc'), column('num'))
 

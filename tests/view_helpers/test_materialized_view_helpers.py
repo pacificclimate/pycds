@@ -2,8 +2,10 @@ from .content import \
     Thing, SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview
 
 
-def test_viewname():
-    assert SimpleThingMatview.viewname() == 'simple_thing_matview_mv'
+def test_viewname(schema_name):
+    assert SimpleThingMatview.base_viewname() == 'simple_thing_matview_mv'
+    assert SimpleThingMatview.qualfied_viewname() == \
+           f'{schema_name}.simple_thing_matview_mv'
 
 def test_simple_view(matview_sesh):
     sesh = matview_sesh

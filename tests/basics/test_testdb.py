@@ -2,11 +2,11 @@ from ..helpers import insert_test_data, insert_crmp_data
 from pycds import Contact, History, Obs
 
 
-def test_reflect_tables_into_session(pycds_sesh):
-    res = pycds_sesh.execute('''
+def test_reflect_tables_into_session(schema_name, pycds_sesh):
+    res = pycds_sesh.execute(f'''
         SELECT table_name 
         FROM information_schema.tables 
-        WHERE table_schema = 'crmp';
+        WHERE table_schema = '{schema_name}';
     ''')
 
     assert {x[0] for x in res.fetchall()} >= {

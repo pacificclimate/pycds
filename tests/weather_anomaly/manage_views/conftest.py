@@ -23,7 +23,7 @@ def sesh_with_views(pycds_sesh):
 
 
 @fixture(scope='function')
-def per_test_engine(set_search_path, add_functions):
+def per_test_engine(schema_name, set_search_path, add_functions):
     """Single-test database engine, so that we are starting with a clean
     database for each individual test. Somewhat slow (computationally
     expensive) but simple. We need this mechanism because:
@@ -45,11 +45,10 @@ def per_test_engine(set_search_path, add_functions):
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
         engine.execute("create extension postgis")
-        engine.execute(CreateSchema('crmp'))
-        set_search_path(engine)  # for functions, but does not carry over to seshs
+        engine.execute(CreateSchema(schema_name))
+        set_search_path(engine)
         add_functions(engine)
         pycds.Base.metadata.create_all(bind=engine)
-        pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
         yield engine
 
 

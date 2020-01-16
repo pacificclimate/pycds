@@ -23,9 +23,9 @@ def schema_name():
 
 
 @fixture(scope='session')
-def set_search_path(schema_name):
+def set_search_path():
     def f(executor):
-        executor.execute(f'SET search_path TO {schema_name}, public')
+        executor.execute(f'SET search_path TO public')
     return f
 
 
