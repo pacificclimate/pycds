@@ -9,7 +9,7 @@ the ORM, or to be maintained and migrated.
 This module defines views in the ORM as SQL views in the database, using
 a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
 for more information. In particular, see the note about using a separate
-declarative base for views; here it is `ViewBase`.
+declarative base for views; here it is `Base`.
 
 WARNING: The `History` class defines column `the_geom` using GeoAlchemy2
 data type `Geometry`. This forces
@@ -26,10 +26,10 @@ from pycds import get_schema_name, Network, Station, History, Variable, Obs, \
 from pycds.view_helpers import ViewMixin
 
 
-ViewBase = declarative_base(metadata=MetaData(schema=get_schema_name()))
+Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 
 
-class CrmpNetworkGeoserver(ViewBase, ViewMixin):
+class CrmpNetworkGeoserver(Base, ViewMixin):
     """
     This view is used by the PDP Geoserver backend for generating station
     map layers.
@@ -72,7 +72,7 @@ class CrmpNetworkGeoserver(ViewBase, ViewMixin):
     __primary_key__ = ['station_id']
 
 
-class HistoryStationNetwork(ViewBase, ViewMixin):
+class HistoryStationNetwork(Base, ViewMixin):
     """
     This view, as its name suggests, is a convenience view that joins
     History, Station, and Network tables.
@@ -107,7 +107,7 @@ class HistoryStationNetwork(ViewBase, ViewMixin):
     __primary_key__ = ['history_id']
 
 
-class ObsCountPerDayHistory(ViewBase, ViewMixin):
+class ObsCountPerDayHistory(Base, ViewMixin):
     """
     This view provides counts of observations grouped by day (date) and
     history_id
@@ -125,7 +125,7 @@ class ObsCountPerDayHistory(ViewBase, ViewMixin):
     __primary_key__ = ['history_id']
 
 
-class ObsWithFlags(ViewBase, ViewMixin):
+class ObsWithFlags(Base, ViewMixin):
     """
     This view joins Obs with History and Variable.
     """
