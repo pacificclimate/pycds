@@ -32,10 +32,6 @@ from sqlalchemy.schema import DDL
 from pycds import get_schema_name
 
 
-def prefix(schema=None):
-    return '' if schema is None else schema + '.'
-
-
 # Define DDL statements for each function. In order to define a function
 # in the database, its statement must be executed.
 #
@@ -44,8 +40,8 @@ def prefix(schema=None):
 # documentation. Caveat emptor.
 
 def closest_stns_within_threshold(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}closest_stns_within_threshold(
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.closest_stns_within_threshold(
         IN x numeric,
         IN y numeric,
         IN thres integer)
@@ -74,12 +70,12 @@ def closest_stns_within_threshold(schema=get_schema_name()):
       LANGUAGE plpgsql VOLATILE SECURITY DEFINER
       COST 100
       ROWS 1000;    
-    '''.format(prefix(schema)))
+    ''')
 
 
 def daily_ts(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}daily_ts(
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.daily_ts(
         IN station_id integer,
         IN vars_id integer,
         IN percent_obs real,
@@ -109,13 +105,13 @@ def daily_ts(schema=get_schema_name()):
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Return the number of days in the month of the given date.
 def daysinmonth(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}daysinmonth(d timestamp)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.daysinmonth(d timestamp)
       RETURNS double precision AS
     $BODY$
     SELECT EXTRACT(DAY FROM CAST(date_trunc('month', d) + interval '1 month'
@@ -123,14 +119,14 @@ def daysinmonth(schema=get_schema_name()):
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Execute function `query_one_station`. This function does not appear to be
 # in use in any production code. Possibly it is in use ad-hoc.
 def do_query_one_station(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}do_query_one_station(station_id integer)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.do_query_one_station(station_id integer)
       RETURNS refcursor AS
     $BODY$
     DECLARE
@@ -144,7 +140,7 @@ def do_query_one_station(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Returns the day that should be used (the effective day) for computing daily
@@ -168,8 +164,8 @@ def do_query_one_station(schema=get_schema_name()):
 #   effective day does not depend on observation frequency; it is always the
 #   day of observation
 def effective_day(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}effective_day(
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.effective_day(
         obs_time timestamp without time zone,
         extremum character varying,
         freq character varying DEFAULT ''::character varying)
@@ -193,7 +189,7 @@ def effective_day(schema=get_schema_name()):
             $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-      '''.format(prefix(schema)))
+      ''')
 
 
 # Returns the text of a SELECT statement for a table containing the values
@@ -213,8 +209,8 @@ def effective_day(schema=get_schema_name()):
 # NOTE: Production code: This function is called by functions
 # `query_one_station` and `query_one_station_climo` .
 def getstationvariabletable(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}getstationvariabletable(
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.getstationvariabletable(
         station_id integer,
         climo boolean)
       RETURNS text AS
@@ -232,25 +228,25 @@ def getstationvariabletable(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Returns the last day of the month, as a date, of the month of the input date.
 def lastdateofmonth(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}lastdateofmonth(date)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.lastdateofmonth(date)
       RETURNS date AS
     $BODY$
     SELECT CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day' as date);
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 def monthly_ts(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}monthly_ts(
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.monthly_ts(
         IN station_id integer,
         IN vars_id integer,
         IN percent_obs real,
@@ -282,7 +278,7 @@ def monthly_ts(schema=get_schema_name()):
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Returns a row set containing the values of all the non-climatological
@@ -290,8 +286,8 @@ def monthly_ts(schema=get_schema_name()):
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
 def query_one_station(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}query_one_station(station_id integer)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.query_one_station(station_id integer)
       RETURNS text AS
     $BODY$
         stn_query = "SELECT * FROM getStationVariableTable(" + str(station_id) + ", false)"
@@ -301,7 +297,7 @@ def query_one_station(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 # Returns a row set containing the values of all the climatological
@@ -309,8 +305,8 @@ def query_one_station(schema=get_schema_name()):
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
 def query_one_station_climo(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}query_one_station_climo(station_id integer)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.query_one_station_climo(station_id integer)
       RETURNS text AS
     $BODY$
         stn_query = "SELECT * FROM getStationVariableTable(" + str(station_id) + ", true)"
@@ -320,12 +316,12 @@ def query_one_station_climo(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 def season(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}season(d timestamp without time zone)
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.season(d timestamp without time zone)
       RETURNS date AS
     $BODY$
     DECLARE
@@ -342,12 +338,12 @@ def season(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
 
 
 def updatesdateedate(schema=get_schema_name()):
-    return DDL('''
-    CREATE OR REPLACE FUNCTION {}updatesdateedate()
+    return DDL(f'''
+    CREATE OR REPLACE FUNCTION {schema}.updatesdateedate()
       RETURNS void AS
     $BODY$
     DECLARE
@@ -369,4 +365,4 @@ def updatesdateedate(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    '''.format(prefix(schema)))
+    ''')
