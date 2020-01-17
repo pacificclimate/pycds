@@ -1,6 +1,6 @@
 # PyCDS
 
-The PyCDS package is a Python package that provides an 
+PyCDS is a Python package that provides an 
 [Object Relational Mapping (ORM)](http://en.wikipedia.org/wiki/Object-relational_mapping)
 layer for accessing meteorological observations stored in a relational database
 in a standard database model, referred to variously as a CRMP database or a PCDS database.
@@ -14,7 +14,7 @@ With this package, one can recreate the database schema in [PostgreSQL](http://w
 and/or use the package as an object mapper for programmatic database access.
 PyCDS uses [SQLAlchemy](http://www.sqlalchemy.org) to provide the ORM layer.
 
-# Installation
+## Installation
 
 One can install PyCDS using the standard methods of any other Python package.
 
@@ -78,8 +78,11 @@ If `PYCDS_SCHEMA_NAME` is not specified, the default value of `crmp` is used,
 making this backward compatible with all existing code. The function
 `pycds.get_schema_name()` returns this value.
 
-Clients of this package must take care to specify `PYCDS_SCHEMA_NAME` correctly
-when performing any database operations with it. Otherwise the operations will
+**IMPORTANT:** `PYCDS_SCHEMA_NAME` must agree with the name of the schema targeted in
+an existing database, or with the intended name for the creation of a new database. 
+
+In the case of an existing database, a mismatch between `PYCDS_SCHEMA_NAME` and the
+actual database schema name will cause operations to
 fail with errors of the form "could not find object X in schema Y".
 
 
@@ -106,7 +109,7 @@ executor.execute(pycds.functions.<func>())
 ```
 
 where `executor` is a SQLAlchemy connection, engine, or session. 
-(Note function invocation in the above code.)
+(Note the function invocation in the above code.)
 
 A database function created in this way is accessed in the same way as all other database functions in SQLAlchemy,
 namely through the `sqlalchemy.func` mechanism in queries. 
