@@ -13,11 +13,13 @@ when the metadata for the declarative base is created, and once set it cannot
 be changed. This happens declaratively, not procedurally, so the value of
 the name must be determined externally to the code.
 
-The most convenient way to do specify the schema name externally is via an
+The most convenient way to specify the schema name externally is via an
 environment variable, which in this case is named `PYCDS_SCHEMA_NAME`.
 If `PYCDS_SCHEMA_NAME` is not specified, the default value of `crmp` is used,
 making this backward compatible with all existing code. The function
-`get_schema_name()` implements this design.
+`get_schema_name()` returns this value and is used throughout as the
+source of the schema name in all contexts (database function definitions,
+tables, views, materialized views).
 
 Clients of this package must take care to specify `PYCDS_SCHEMA_NAME` correctly
 when performing any database operations with it. Otherwise the operations will
