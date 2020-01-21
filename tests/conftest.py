@@ -44,7 +44,8 @@ def base_engine(schema_name, set_search_path, add_functions):
     """
     with testing.postgresql.Postgresql() as pg:
         engine = create_engine(pg.url())
-        engine.execute("create extension postgis")
+        engine.execute('CREATE EXTENSION postgis')
+        engine.execute('CREATE EXTENSION plpythonu')
         engine.execute(CreateSchema(schema_name))
         set_search_path(engine)
         add_functions(engine)
