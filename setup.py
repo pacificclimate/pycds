@@ -38,7 +38,7 @@ setup(
         'scripts/verify-load-climate-baseline-values.py',
         'scripts/manage-views.py'
     ],
-    install_requires=['SQLAlchemy', 'geoalchemy2', 'psycopg2'],
+    install_requires=['SQLAlchemy', 'geoalchemy2', 'psycopg2', 'alembic'],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
 
