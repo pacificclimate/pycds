@@ -1,9 +1,21 @@
+from ..helpers import get_items_in_schema
 from .content import \
     Thing, SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview
 
 
-def test_viewname():
-    assert SimpleThingMatview.viewname() == 'simple_thing_matview_mv'
+def test_schema_content(matview_sesh):
+    assert get_items_in_schema(matview_sesh, 'tables') >= {
+        'things', 'descriptions',
+        'simple_thing_matview_mv', 'thing_with_description_matview_mv',
+        'thing_count_matview_mv'
+    }
+
+
+def test_viewname(schema_name):
+    assert SimpleThingMatview.base_viewname() == 'simple_thing_matview_mv'
+    assert SimpleThingMatview.qualfied_viewname() == \
+           f'{schema_name}.simple_thing_matview_mv'
+
 
 def test_simple_view(matview_sesh):
     sesh = matview_sesh

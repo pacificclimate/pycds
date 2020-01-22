@@ -8,8 +8,8 @@ from pycds import Obs
 from pycds.manage_views import daily_views, monthly_views, manage_views
 
 
-daily_view_names = [v.viewname() for v in daily_views]
-monthly_view_names = [v.viewname() for v in monthly_views]
+daily_view_names = [v.base_viewname() for v in daily_views]
+monthly_view_names = [v.base_viewname() for v in monthly_views]
 
 
 @mark.parametrize('what, exp_matview_names', [
@@ -18,7 +18,9 @@ monthly_view_names = [v.viewname() for v in monthly_views]
     # we don't bother setting up the test machinery to test that
     ('all', daily_view_names + monthly_view_names),
 ])
-def test_create(per_test_engine, per_test_session, what, exp_matview_names):
+def test_create(
+        schema_name, per_test_engine, per_test_session, what, exp_matview_names
+):
 
     # print('>>>> search_path', [r.search_path for r in per_test_session.execute('SHOW search_path')])
 
@@ -27,7 +29,7 @@ def test_create(per_test_engine, per_test_session, what, exp_matview_names):
             for name in expected_names:
                 assert (present and (name in actual_names)) or (not present and (name not in actual_names))
 
-        check(exp_matview_names, inspect(per_test_engine).get_table_names(schema='crmp'))
+        check(exp_matview_names, inspect(per_test_engine).get_table_names(schema=schema_name))
 
     check_views_and_tables(False)
     manage_views(per_test_session, 'create', what)

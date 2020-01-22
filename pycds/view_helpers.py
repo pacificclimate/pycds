@@ -7,11 +7,31 @@ For details on view creation in SQLAlchemy see:
 https://github.com/sqlalchemy/sqlalchemy/wiki/Views
 http://stackoverflow.com/questions/9766940/how-to-create-an-sql-view-with-sqlalchemy
 https://gist.github.com/techniq/5174412
+
+See also the docstring in pycds/materialized_view_helpers.py for additional
+information. In particular, note that we use the materialized-view style
+implementation based on `sqlalchemy.Table`, not the one advised in
+https://github.com/sqlalchemy/sqlalchemy/wiki/Views based on
+`sqlalchemy.sql.table`. The implementation chosen makes it easy to place a view
+in schema, but it has the following disadvantage:
+
+WARNING: Views should be declared using a declarative base separate from the
+PyCDS tables declarative base `pycds.Base`. (Typically the views declarative
+base will use the same schema name as the PyCDS tables declarative base.)
+
+Why? If a view is declared using the PyCDS tables declarative base, then
+`pycds.Base.metadata.create_all()` causes an error as the view's intermediary
+table is (incorrectly) created.
+
+NOTE: It may be possible to implement views differently so that the issue with
+declarative bases does not arise, but the exact form of that implementation
+is not clear at the moment. This will do.
 """
 
 import re
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
+from sqlalchemy import Table, Column
 from sqlalchemy.sql import table
 from sqlalchemy.ext.declarative import declared_attr
 
@@ -93,9 +113,9 @@ class ViewMixin(object):
 
     @declared_attr
     def __table__(cls):
-        t = table(cls.viewname())
+        t = Table(cls.base_viewname(), cls.metadata)
         for c in cls.__selectable__.c:
-            c._make_proxy(t)
+            t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
         return t
 
     @declared_attr
@@ -107,17 +127,24 @@ class ViewMixin(object):
             return {}
 
     @classmethod
-    def viewname(cls):
+    def base_viewname(cls):
         try:
             return cls.__viewname__
         except AttributeError:
             return snake_case(cls.__name__)
 
     @classmethod
+    def qualfied_viewname(cls):
+        prefix = '' if cls.metadata.schema is None \
+            else cls.metadata.schema + '.'
+        return prefix + cls.base_viewname()
+
+    @classmethod
     def create(cls, sesh):
-        return sesh.execute(CreateView(cls.viewname(), cls.__selectable__))
+        return sesh.execute(CreateView(
+            cls.qualfied_viewname(), cls.__selectable__)
+        )
 
     @classmethod
     def drop(cls, sesh):
-        return sesh.execute(DropView(cls.viewname()))
-
+        return sesh.execute(DropView(cls.qualfied_viewname()))

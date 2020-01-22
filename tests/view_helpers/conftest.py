@@ -1,6 +1,6 @@
 from pytest import fixture
 from sqlalchemy.orm import sessionmaker
-from ..helpers import generic_sesh
+from ..helpers import add_then_delete_objs
 from ..helpers import create_then_drop_views
 from .content import \
     ContentBase, \
@@ -29,7 +29,7 @@ def tst_orm_sesh(tst_orm_engine, set_search_path):
 def view_sesh(tst_orm_sesh):
     views = [SimpleThingView, ThingWithDescriptionView, ThingCountView]
     for s0 in create_then_drop_views(tst_orm_sesh, views):
-        for s1 in generic_sesh(s0, content):
+        for s1 in add_then_delete_objs(s0, content):
             yield s1
 
 
@@ -39,5 +39,5 @@ def matview_sesh(tst_orm_sesh):
     # Matviews must be created before content is added in order to test
     # refreshed functionality. The nested loops do this.
     for s0 in create_then_drop_views(tst_orm_sesh, views):
-        for s1 in generic_sesh(s0, content):
+        for s1 in add_then_delete_objs(s0, content):
             yield s1

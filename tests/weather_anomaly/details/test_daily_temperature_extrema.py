@@ -16,7 +16,7 @@ import datetime
 
 from pytest import fixture, mark, approx
 
-from ...helpers import generic_sesh, create_then_drop_views
+from ...helpers import add_then_delete_objs, create_then_drop_views
 from pycds import Obs, NativeFlag, PCICFlag
 from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
 
@@ -31,28 +31,28 @@ def describe_with_1_network():
 
     @fixture
     def network_sesh(with_views_sesh, network1):
-        for sesh in generic_sesh(with_views_sesh, [network1]):
+        for sesh in add_then_delete_objs(with_views_sesh, [network1]):
             yield sesh
 
     def describe_with_1_station():
 
         @fixture
         def station_sesh(network_sesh, station1):
-            for sesh in generic_sesh(network_sesh, [station1]):
+            for sesh in add_then_delete_objs(network_sesh, [station1]):
                 yield sesh
 
         def describe_with_1_history_hourly():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in generic_sesh(station_sesh, [history_stn1_hourly]):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh, [var_temp_point]):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_in_one_day():
@@ -64,7 +64,7 @@ def describe_with_1_network():
                                 time=datetime.datetime(2000, 1, 1, 12+i), datum=float(i))
                             for i in range(1, 4)
                         ]
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -105,7 +105,7 @@ def describe_with_1_network():
                                        [Obs(variable=var_temp_point, history=history_stn1_hourly,
                                             time=datetime.datetime(2000, 1, 2, 8+i), datum=float(i))
                                         for i in range(4,8)]
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -163,7 +163,7 @@ def describe_with_1_network():
                                 time=datetime.datetime(2000, 1, 1, i), datum=float(i))
                             for i in range(num_obs)
                             ]
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     def describe_with_flags():
@@ -174,7 +174,7 @@ def describe_with_1_network():
                         @fixture
                         def flag_sesh(obs_sesh, native_flag_discard, native_flag_non_discard,
                                       pcic_flag_discard, pcic_flag_non_discard):
-                            for sesh in generic_sesh(obs_sesh, [native_flag_discard, native_flag_non_discard,
+                            for sesh in add_then_delete_objs(obs_sesh, [native_flag_discard, native_flag_non_discard,
                                                                 pcic_flag_discard, pcic_flag_non_discard]):
                                 yield sesh
 
@@ -267,7 +267,7 @@ def describe_with_1_network():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo):
-                    for sesh in generic_sesh(history_sesh,
+                    for sesh in add_then_delete_objs(history_sesh,
                                              [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]):
                         yield sesh
 
@@ -283,7 +283,7 @@ def describe_with_1_network():
                                 id += 1
                                 observations.append(Obs(variable=var, history=history_stn1_hourly,
                                              time=datetime.datetime(2000, 1, 1, 12, id), datum=float(id)))
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -307,14 +307,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in generic_sesh(station_sesh, [history_stn1_daily]):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh, [var_temp_point]):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -328,7 +328,7 @@ def describe_with_1_network():
                                   time=datetime.datetime(2000, 1, i+10, 12), datum=float(i+10))
                              for i in range(0,n_days)
                             ]
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -353,14 +353,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly, history_stn1_daily):
-                for sesh in generic_sesh(station_sesh, [history_stn1_hourly, history_stn1_daily]):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_hourly, history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh, [var_temp_point]):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_observations_in_both_histories():
@@ -378,7 +378,7 @@ def describe_with_1_network():
                         # daily observation
                         observations.append(Obs(variable=var_temp_point, history=history_stn1_daily,
                                      time=datetime.datetime(2000, 1, 2, 12), datum=10.0))
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -403,14 +403,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_12_hourly):
-                for sesh in generic_sesh(station_sesh, [history_stn1_12_hourly]):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_12_hourly]):
                     yield sesh
 
             def describe_with_Tmax_and_Tmin_variables():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_max, var_temp_min):
-                    for sesh in generic_sesh(history_sesh, [var_temp_max, var_temp_min]):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_max, var_temp_min]):
                         yield sesh
 
                 def describe_with_observations_for_both_variables():
@@ -440,7 +440,7 @@ def describe_with_1_network():
                                         for hour, temp in iter(hours.items())
                                        ]
 
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -470,28 +470,28 @@ def describe_with_2_networks():
 
     @fixture
     def network_sesh(with_views_sesh, network1, network2):
-        for sesh in generic_sesh(with_views_sesh, [network1, network2]):
+        for sesh in add_then_delete_objs(with_views_sesh, [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
 
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in generic_sesh(network_sesh, [station1, station2]):
+            for sesh in add_then_delete_objs(network_sesh, [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
-                for sesh in generic_sesh(station_sesh, [history_stn1_hourly, history_stn2_hourly]):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_hourly, history_stn2_hourly]):
                     yield sesh
 
             def describe_with_1_variable_per_network(): # temp: point
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
-                    for sesh in generic_sesh(history_sesh, [var_temp_point, var_temp_point2]):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point, var_temp_point2]):
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
@@ -513,7 +513,7 @@ def describe_with_2_networks():
                                         Obs(variable=var, history=hx,
                                               time=datetime.datetime(2000, 1, day, 12+hour), datum=float(id))
                                     )
-                        for sesh in generic_sesh(variable_sesh, observations):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture

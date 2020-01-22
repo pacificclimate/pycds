@@ -8,7 +8,8 @@ the ORM, or to be maintained and migrated.
 
 This module defines views in the ORM as SQL views in the database, using
 a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
-for more information.
+for more information. In particular, see the note about using a separate
+declarative base for views; here it is `Base`.
 
 WARNING: The `History` class defines column `the_geom` using GeoAlchemy2
 data type `Geometry`. This forces
@@ -17,11 +18,15 @@ This may or may not be desirable for all use cases, specifically views.
 If views are behaving oddly with respect to geometry, this is worth looking at.
 """
 
-from sqlalchemy import func, text
+from sqlalchemy import MetaData, func, text
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
-from pycds import Base, Network, Station, History, Variable, Obs, \
+from pycds import get_schema_name, Network, Station, History, Variable, Obs, \
     StationObservationStats, CollapsedVariables
 from pycds.view_helpers import ViewMixin
+
+
+Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 
 
 class CrmpNetworkGeoserver(Base, ViewMixin):

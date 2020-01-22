@@ -29,7 +29,7 @@ import datetime
 
 from pytest import fixture, mark, approx
 
-from ...helpers import generic_sesh, create_then_drop_views
+from ...helpers import add_then_delete_objs, create_then_drop_views
 from pycds import Obs
 from pycds.weather_anomaly import \
     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
@@ -60,28 +60,28 @@ def describe_with_1_network():
 
     @fixture
     def network_sesh(with_views_sesh, network1):
-        for sesh in generic_sesh(with_views_sesh , [network1]):
+        for sesh in add_then_delete_objs(with_views_sesh , [network1]):
             yield sesh
 
     def describe_with_1_station():
 
         @fixture
         def station_sesh(network_sesh, station1):
-            for sesh in generic_sesh(network_sesh , [station1]):
+            for sesh in add_then_delete_objs(network_sesh , [station1]):
                 yield sesh
 
         def describe_with_1_history_hourly():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in generic_sesh(station_sesh , [history_stn1_hourly]):
+                for sesh in add_then_delete_objs(station_sesh , [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh , [var_temp_point]):
+                    for sesh in add_then_delete_objs(history_sesh , [var_temp_point]):
                         yield sesh
 
                 def describe_with_a_partial_set_of_observations_for_one_month():
@@ -104,7 +104,7 @@ def describe_with_1_network():
                             observations = [Obs(variable=var_precip_net1_1, history=history_stn1_hourly,
                                                 time=datetime.datetime(2000, 1, day, hour), datum=1.0)
                                             for day in days for hour in hours]
-                        for sesh in generic_sesh(variable_sesh , observations):
+                        for sesh in add_then_delete_objs(variable_sesh , observations):
                             yield sesh
 
                     @fixture
@@ -164,7 +164,7 @@ def describe_with_1_network():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo):
-                    for sesh in generic_sesh(history_sesh ,
+                    for sesh in add_then_delete_objs(history_sesh ,
                                              [var_temp_point, var_temp_max, var_temp_min, var_temp_mean, var_foo]):
                         yield sesh
 
@@ -195,7 +195,7 @@ def describe_with_1_network():
                                 for var in [var_precip_net1_1, var_precip_net1_2, var_temp_point, var_foo]
                                 for day in days for hour in hours
                             ]
-                        for sesh in generic_sesh(variable_sesh , observations):
+                        for sesh in add_then_delete_objs(variable_sesh , observations):
                             yield sesh
 
                     @mark.parametrize('View, obs_sesh', [
@@ -221,14 +221,14 @@ def describe_with_1_network():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in generic_sesh(station_sesh , [history_stn1_daily]):
+                for sesh in add_then_delete_objs(station_sesh , [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in generic_sesh(history_sesh , [var_temp_point]):
+                    for sesh in add_then_delete_objs(history_sesh , [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -252,7 +252,7 @@ def describe_with_1_network():
                                 for month in months
                                 for day in days
                             ]
-                        for sesh in generic_sesh(variable_sesh , observations):
+                        for sesh in add_then_delete_objs(variable_sesh , observations):
                             yield sesh
 
                     @mark.parametrize('View, obs_sesh', [
@@ -288,28 +288,28 @@ def describe_with_2_networks():
 
     @fixture
     def network_sesh(with_views_sesh, network1, network2):
-        for sesh in generic_sesh(with_views_sesh , [network1, network2]):
+        for sesh in add_then_delete_objs(with_views_sesh , [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
 
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in generic_sesh(network_sesh , [station1, station2]):
+            for sesh in add_then_delete_objs(network_sesh , [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
 
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
-                for sesh in generic_sesh(station_sesh , [history_stn1_hourly, history_stn2_hourly]):
+                for sesh in add_then_delete_objs(station_sesh , [history_stn1_hourly, history_stn2_hourly]):
                     yield sesh
 
             def describe_with_1_variable_per_network(): # temp: point
 
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
-                    for sesh in generic_sesh(history_sesh , [var_temp_point, var_temp_point2]):
+                    for sesh in add_then_delete_objs(history_sesh , [var_temp_point, var_temp_point2]):
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
@@ -342,7 +342,7 @@ def describe_with_2_networks():
                                 for day in days
                                 for hour in hours
                             ]
-                        for sesh in generic_sesh(variable_sesh , observations):
+                        for sesh in add_then_delete_objs(variable_sesh , observations):
                             yield sesh
 
                     @mark.parametrize('View, obs_sesh', [

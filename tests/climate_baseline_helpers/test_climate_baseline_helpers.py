@@ -6,7 +6,7 @@ from pytest import fixture, mark, raises, fail
 
 from .common import climatology_var_names
 
-from ..helpers import generic_sesh
+from ..helpers import add_then_delete_objs
 from pycds import Network, Station, History, Variable, DerivedValue
 from pycds.climate_baseline_helpers import \
     pcic_climate_variable_network_name, \
@@ -20,7 +20,7 @@ from pycds.climate_baseline_helpers import \
 
 @fixture
 def sesh_with_other_network_and_climatology_variables(pycds_sesh, other_network, other_climatology_variables):
-    for sesh in generic_sesh(pycds_sesh, [other_network] + other_climatology_variables):
+    for sesh in add_then_delete_objs(pycds_sesh, [other_network] + other_climatology_variables):
         yield sesh
 
 
@@ -32,7 +32,7 @@ def sesh_with_climate_baseline_variables(sesh_with_other_network_and_climatology
 
 @fixture
 def sesh_with_station_and_history_records(sesh_with_climate_baseline_variables, stations, histories):
-    for sesh in generic_sesh(sesh_with_climate_baseline_variables, stations + histories):
+    for sesh in add_then_delete_objs(sesh_with_climate_baseline_variables, stations + histories):
         yield sesh
 
 
@@ -114,7 +114,7 @@ def describe_load__pcic__climate__baseline__values():
 
         @fixture
         def sesh_with_station_and_history_records(sesh_with_climate_baseline_variables, stations, histories):
-            for sesh in generic_sesh(sesh_with_climate_baseline_variables, stations + histories):
+            for sesh in add_then_delete_objs(sesh_with_climate_baseline_variables, stations + histories):
                 yield sesh
 
         def describe_with_an_invalid_climate_network_or_variable_name():
@@ -346,7 +346,7 @@ def describe_verify__baseline__values():
                     for h in range(2)
                     for month in range(1, 13, h+1)  # a bit tricky: for history[1], leave out every other month
                 ]
-                for s in generic_sesh(sesh, derived_values):
+                for s in add_then_delete_objs(sesh, derived_values):
                     yield s
 
             def describe_with_compatible_value_expectations():
