@@ -2,3 +2,4 @@ geoalchemy2
 SQLAlchemy
 psycopg2
 alembic
+black
