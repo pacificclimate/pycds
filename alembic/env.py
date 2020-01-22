@@ -41,7 +41,7 @@ if is_live_env:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from modelmeta.v2 import Base
+from pycds import Base
 target_metadata = Base.metadata
 # target_metadata = None
 

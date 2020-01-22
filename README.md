@@ -5,7 +5,10 @@ PyCDS is a Python package that provides an
 layer for accessing meteorological observations stored in a relational database
 in a standard database model, referred to variously as a CRMP database or a PCDS database.
 
-This type of database (i.e., databases with this model) is currently being used at PCIC to
+This package also uses [Alembic](https://alembic.sqlalchemy.org/) to manage database creation and migration 
+(see section below).
+
+This type of database (i.e., with the PCDS/CRMP model) is currently being used at PCIC to
 store BC's long-term weather archive, the Provincial Climate Data Set (PCDS), and 
 the Northern Climate Database (dbnorth). For details, see Background below.
 
@@ -216,12 +219,78 @@ To refresh a materialized view, execute code like the following:
 pycds.weather_anomaly.<Matview>.refresh(session)
 ```
 
+## Database creation and migration
+
+### Introduction
+
+Modifications to the PyCDS schema definition are managed using
+[Alembic](https://alembic.sqlalchemy.org/), a database migration management tool based on SQLAlchemy.
+
+In short, Alembic supports and disciplines two processes of database schema change:
+
+- Creation of database migration scripts (Python programs) that modify the schema of a database.
+
+- Application of migrations to specific database instances.
+
+  - In particular, Alembic can be used to *create* a new instance of a ``modelmeta`` database by migrating an
+    empty database to the current state. This is described in detail below.
+
+For more information, see the [Alembic tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html).
+
 
 ## Testing
 
-### Test data from production
+### Creating a local test database
 
-Some testing data was sourced from a production database. The steps to produce this were:
+It is particularly convenient for testing database migrations to have a local test database running.
+This is now fortunately quite easy, courtesy of Docker.
+
+This repo contains a Dockerfile, `dev.Dockerfile`, which creates a Docker image with PostgreSQL 9.3,
+PostGIS 2.4, and PL/Python installed. This configuration matches our test environment, 
+and approximately matches our production environment, which currently runs PostgreSQL 9.1 and some
+compatible version of PostGIS. 
+(It seems that it is not possible to replicate the production environment environment exactly 
+in test environments.)
+
+To build the Docker image locally:
+
+```shell script
+docker build -t pycds-test-db -f dev.Dockerfile .
+```
+
+The image name `pycds-test-db` is arbitrary, but it
+is used in the run script:
+
+To start a local Docker container from this image:
+
+```shell script
+./run-docker-test-db.sh <port> <password> 
+```
+
+This script starts a container mapped to port `<port>` on `localhost`.
+
+The container creates:
+- a PostgreSQL 9.3 database named `crmp`,
+- with extensions PL/Postgres, PL/Python, and PostGIS 2.4 installed,
+- with a user `postgres` with the password `<password>`,
+- with a user `crmp` with password `crmp`,
+- with an empty schema `crmp`.
+
+To connect to this database on the command line:
+
+```shell script
+psql -h localhost -p <port> -U {postgres,crmp}
+```
+
+The DSN for this database is:
+
+```
+postgresql://crmp@localhost/crmp
+```
+
+### Unit test data from production
+
+Some data used in the unit tests was sourced from a production database. The steps to produce this were:
 
 1. As database superuser, run CREATE SCHEMA subset AUTHORIZATION <username>;
 2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp`. 
