@@ -8,6 +8,7 @@ Create Date: 2020-01-21 17:25:40.000843
 from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
+from pycds import get_schema_name
 
 
 # revision identifiers, used by Alembic.
@@ -16,6 +17,11 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+
+schema_name = get_schema_name()
+
+# - [ ] TODO: Verify index handling
+# - [ ] TODO: Add sequences
 
 def upgrade():
     op.create_table(
@@ -27,7 +33,7 @@ def upgrade():
         sa.Column("email", sa.String(), nullable=True),
         sa.Column("phone", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("contact_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_pcic_flag",
@@ -36,14 +42,14 @@ def upgrade():
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("discard", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("pcic_flag_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_sensor",
         sa.Column("sensor_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint("sensor_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_network",
@@ -58,7 +64,7 @@ def upgrade():
             ["contact_id"], ["crmp.meta_contact.contact_id"],
         ),
         sa.PrimaryKeyConstraint("network_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_native_flag",
@@ -75,7 +81,7 @@ def upgrade():
         sa.UniqueConstraint(
             "network_id", "value", name="meta_native_flag_unique"
         ),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_station",
@@ -88,7 +94,7 @@ def upgrade():
             ["network_id"], ["crmp.meta_network.network_id"],
         ),
         sa.PrimaryKeyConstraint("station_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_vars",
@@ -106,7 +112,7 @@ def upgrade():
             ["network_id"], ["crmp.meta_network.network_id"],
         ),
         sa.PrimaryKeyConstraint("vars_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_climo_attrs",
@@ -120,7 +126,7 @@ def upgrade():
         ),
         sa.ForeignKeyConstraint(["vars_id"], ["crmp.meta_vars.vars_id"],),
         sa.PrimaryKeyConstraint("vars_id", "station_id", "month"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "meta_history",
@@ -146,7 +152,7 @@ def upgrade():
             ["station_id"], ["crmp.meta_station.station_id"],
         ),
         sa.PrimaryKeyConstraint("history_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "climo_obs_count_mv",
@@ -156,7 +162,7 @@ def upgrade():
             ["history_id"], ["crmp.meta_history.history_id"],
         ),
         sa.PrimaryKeyConstraint("history_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "collapsed_vars_mv",
@@ -167,7 +173,7 @@ def upgrade():
             ["history_id"], ["crmp.meta_history.history_id"],
         ),
         sa.PrimaryKeyConstraint("history_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "obs_count_per_month_history_mv",
@@ -178,7 +184,7 @@ def upgrade():
             ["history_id"], ["crmp.meta_history.history_id"],
         ),
         sa.PrimaryKeyConstraint("date_trunc", "history_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "obs_derived_values",
@@ -199,7 +205,7 @@ def upgrade():
             "vars_id",
             name="obs_derived_value_time_place_variable_unique",
         ),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "obs_raw",
@@ -220,7 +226,7 @@ def upgrade():
             "vars_id",
             name="time_place_variable_unique",
         ),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "station_obs_stats_mv",
@@ -235,7 +241,7 @@ def upgrade():
             ["station_id"], ["crmp.meta_station.station_id"],
         ),
         sa.PrimaryKeyConstraint("station_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "vars_per_history_mv",
@@ -246,7 +252,7 @@ def upgrade():
         ),
         sa.ForeignKeyConstraint(["vars_id"], ["crmp.meta_vars.vars_id"],),
         sa.PrimaryKeyConstraint("history_id", "vars_id"),
-        schema="crmp",
+        schema=schema_name,
     )
     op.create_table(
         "obs_raw_native_flags",
@@ -259,10 +265,10 @@ def upgrade():
         sa.UniqueConstraint(
             "obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"
         ),
-        schema="crmp",
+        schema=schema_name,
     )
     with op.batch_alter_table(
-        "obs_raw_native_flags", schema="crmp"
+        "obs_raw_native_flags", schema=schema_name
     ) as batch_op:
         batch_op.create_index("flag_index", ["obs_raw_id"], unique=False)
 
@@ -277,9 +283,9 @@ def upgrade():
         sa.UniqueConstraint(
             "obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"
         ),
-        schema="crmp",
+        schema=schema_name,
     )
-    with op.batch_alter_table("obs_raw_pcic_flags", schema="crmp") as batch_op:
+    with op.batch_alter_table("obs_raw_pcic_flags", schema=schema_name) as batch_op:
         batch_op.create_index("pcic_flag_index", ["obs_raw_id"], unique=False)
 
     op.create_table(
@@ -289,35 +295,35 @@ def upgrade():
         sa.Column("end", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["obs_raw_id"], ["crmp.obs_raw.obs_raw_id"],),
         sa.PrimaryKeyConstraint("obs_raw_id"),
-        schema="crmp",
+        schema=schema_name,
     )
 
 
 def downgrade():
-    op.drop_table("time_bounds", schema="crmp")
-    with op.batch_alter_table("obs_raw_pcic_flags", schema="crmp") as batch_op:
+    op.drop_table("time_bounds", schema=schema_name)
+    with op.batch_alter_table("obs_raw_pcic_flags", schema=schema_name) as batch_op:
         batch_op.drop_index("pcic_flag_index")
 
-    op.drop_table("obs_raw_pcic_flags", schema="crmp")
+    op.drop_table("obs_raw_pcic_flags", schema=schema_name)
     with op.batch_alter_table(
-        "obs_raw_native_flags", schema="crmp"
+        "obs_raw_native_flags", schema=schema_name
     ) as batch_op:
         batch_op.drop_index("flag_index")
 
-    op.drop_table("obs_raw_native_flags", schema="crmp")
-    op.drop_table("vars_per_history_mv", schema="crmp")
-    op.drop_table("station_obs_stats_mv", schema="crmp")
-    op.drop_table("obs_raw", schema="crmp")
-    op.drop_table("obs_derived_values", schema="crmp")
-    op.drop_table("obs_count_per_month_history_mv", schema="crmp")
-    op.drop_table("collapsed_vars_mv", schema="crmp")
-    op.drop_table("climo_obs_count_mv", schema="crmp")
-    op.drop_table("meta_history", schema="crmp")
-    op.drop_table("meta_climo_attrs", schema="crmp")
-    op.drop_table("meta_vars", schema="crmp")
-    op.drop_table("meta_station", schema="crmp")
-    op.drop_table("meta_native_flag", schema="crmp")
-    op.drop_table("meta_network", schema="crmp")
-    op.drop_table("meta_sensor", schema="crmp")
-    op.drop_table("meta_pcic_flag", schema="crmp")
-    op.drop_table("meta_contact", schema="crmp")
+    op.drop_table("obs_raw_native_flags", schema=schema_name)
+    op.drop_table("vars_per_history_mv", schema=schema_name)
+    op.drop_table("station_obs_stats_mv", schema=schema_name)
+    op.drop_table("obs_raw", schema=schema_name)
+    op.drop_table("obs_derived_values", schema=schema_name)
+    op.drop_table("obs_count_per_month_history_mv", schema=schema_name)
+    op.drop_table("collapsed_vars_mv", schema=schema_name)
+    op.drop_table("climo_obs_count_mv", schema=schema_name)
+    op.drop_table("meta_history", schema=schema_name)
+    op.drop_table("meta_climo_attrs", schema=schema_name)
+    op.drop_table("meta_vars", schema=schema_name)
+    op.drop_table("meta_station", schema=schema_name)
+    op.drop_table("meta_native_flag", schema=schema_name)
+    op.drop_table("meta_network", schema=schema_name)
+    op.drop_table("meta_sensor", schema=schema_name)
+    op.drop_table("meta_pcic_flag", schema=schema_name)
+    op.drop_table("meta_contact", schema=schema_name)
