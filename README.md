@@ -285,7 +285,7 @@ psql -h localhost -p <port> -U {postgres,crmp}
 The DSN for this database is:
 
 ```
-postgresql://crmp@localhost/crmp
+postgresql://crmp@localhost:<port>/crmp
 ```
 
 ### Unit test data from production
