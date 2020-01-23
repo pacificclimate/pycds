@@ -258,34 +258,35 @@ To build the Docker image locally:
 docker build -t pycds-test-db -f dev.Dockerfile .
 ```
 
-The image name `pycds-test-db` is arbitrary, but it
-is used in the run script:
+The image name `pycds-test-db` is arbitrary, but it is used in the run script:
 
 To start a local Docker container from this image:
 
 ```shell script
-./run-docker-test-db.sh <port> <password> 
+./alembic/development/run-docker-test-db.sh <port> <password> 
 ```
 
 This script starts a container mapped to port `<port>` on `localhost`.
 
 The container creates:
-- a PostgreSQL 9.3 database named `crmp`,
+- a PostgreSQL 9.3 server
+- with users:
+  - user `postgres`, password `<password>`,
+  - user `tester`, password `tester`,
+- with database `pycds_test`, owned by `tester`,
 - with extensions PL/Postgres, PL/Python, and PostGIS 2.4 installed,
-- with a user `postgres` with the password `<password>`,
-- with a user `crmp` with password `crmp`,
-- with an empty schema `crmp`.
+- with empty schemas `crmp` and `other`, both owned by `tester`.
 
 To connect to this database on the command line:
 
 ```shell script
-psql -h localhost -p <port> -U {postgres,crmp}
+psql -h localhost -p <port> -U {postgres,tester} -d {crmp,other}
 ```
 
 The DSN for this database is:
 
 ```
-postgresql://crmp@localhost:<port>/crmp
+postgresql://tester@localhost:<port>/pycds_test
 ```
 
 ### Unit test data from production
