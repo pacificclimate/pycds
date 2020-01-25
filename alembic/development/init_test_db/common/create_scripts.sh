@@ -9,7 +9,7 @@ actions=$here/../actions
 
 rm "$actions"/*.sql 2> /dev/null
 
-"$here"/create_roles.sh $owner >> "$actions"/01_create_roles.sql
+"$here"/create_role.sh $owner >> "$actions"/01_create_roles.sql
 "$here"/create_db.sh $database $owner >> "$actions"/02_create_db.sql
 "$here"/create_schema.sh $database $owner $schema1 >> "$actions"/03_create_schemas.sql
 "$here"/create_schema.sh $database $owner $schema2 >> "$actions"/03_create_schemas.sql
