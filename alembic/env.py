@@ -21,6 +21,22 @@ For example, to use `alembic -x db=test upgrade ...`::
     [test]
     sqlalchemy.url = sqlite:////path/to/database/test.sqlite
 """
+# TODO: Respect schema name for `revision --autogenerate` functionality.
+#   Currently, the schema name is respected for upgrade and downgrade, but
+#   Alembic fails when revision --autogenerate is used. Which is a problem.
+#
+# Part of the problem is for revision --autogenerate, Alembic looks for
+# an `alembic_version` table, and in an empty database can't find one.
+# That can be solved by running `alembic -x db=dev stamp head` (crmp schema
+# implicit). Following that, revision --autogenerate works. (for crmp schema).
+#
+# Next test is to see if this works for other schema.
+# (1) `PYCDS_SCHEMA_NAME=other alembic -x db=dev stamp head` works.
+# (2) `PYCDS_SCHEMA_NAME=other alembic -x db=dev revision --autogenerate ...` works
+#
+# Now to test if it works when crmp contains an upgraded schema and other
+# does not. This works.
+
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
@@ -43,7 +59,6 @@ if is_live_env:
 # for 'autogenerate' support
 from pycds import Base
 target_metadata = Base.metadata
-# target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -61,6 +76,43 @@ if is_live_env:
     db_name = cmd_kwargs['db']
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    """Include only objects that belong to the specified schema."""
+    if type_ == "table":
+        include = (not reflected and
+                   object.metadata.schema == target_metadata.schema)
+        print(f'include_object: '
+              f'name = {name} type_ = {type_}, '
+              f'reflected = {reflected}, '
+              f'schema = {object.metadata.schema}, '
+              f'include = {include}')
+        return include
+    elif type_ == 'column':
+        include = (not reflected and
+                   object.table.metadata.schema == target_metadata.schema)
+        print(f'include_object: '
+              f'name = {name} type_ = {type_}, '
+              f'reflected = {reflected}, '
+              f'schema = {object.table.metadata.schema}, '
+              f'include = {include}')
+        return include
+    elif type_ == 'index':
+        include = (not reflected and
+                   object.table.metadata.schema == target_metadata.schema)
+        print(f'include_object: '
+              f'name = {name} type_ = {type_}, '
+              f'reflected = {reflected}, '
+              f'schema = {object.table.metadata.schema}, '
+              f'include = {include}')
+        return include
+    else:
+        print(f'include_object: '
+              f'name = {name} type_ = {type_}, '
+              f'reflected = {reflected}, '
+              f'include = {False}')
+        raise ValueError(f'Unexpected object type: {type_}')
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -73,9 +125,16 @@ def run_migrations_offline():
     script output.
 
     """
+    # TODO: Use the same mechanism for loading the db config on top of the
+    #   alembic config (see `run_migrations_online()`) here?
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+        url=url,
+        target_metadata=target_metadata,
+        version_table_schema=target_metadata.schema,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -99,14 +158,17 @@ def run_migrations_online():
     connectable = engine_from_config(
         alembic_config,
         prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+        poolclass=pool.NullPool
+    )
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             version_table_schema=target_metadata.schema,
-            render_as_batch=True
+            include_schemas=True,
+            include_object=include_object,
+            # render_as_batch=True,  # ??
         )
 
         with context.begin_transaction():
