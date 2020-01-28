@@ -1,3 +1,5 @@
 pytest <4.0
 pytest-describe <0.12
 testing.postgresql
+alembic
+alembic-verify

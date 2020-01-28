@@ -41,7 +41,13 @@ setup(
     install_requires=[
         'SQLAlchemy', 'geoalchemy2', 'psycopg2', 'alembic', 'black'
     ],
-    tests_require=['pytest'],
+    tests_require=[
+        'pytest  <4.0',
+        'pytest-describe <0.12' 
+        'testing.postgresql',
+        'alembic',
+        'alembic-verify'
+    ],
     cmdclass={'test': PyTest},
 
     classifiers='''Development Status :: 5 - Production/Stable
