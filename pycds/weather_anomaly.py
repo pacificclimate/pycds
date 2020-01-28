@@ -209,11 +209,8 @@ class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
 
 
 def monthly_total_precipitation_with_total_coverage():
-    """Return a SQLAlchemy query for a monthly average of a specified
-    extremum of daily temperature, with monthly average data coverage.
-
-    Args:
-        extremum (str): 'max' | 'min'
+    """Return a SQLAlchemy query for monthly total of precipitation,
+    with monthly total data coverage.
 
     Returns:
         sqlalchemy.sql.expression.Query
@@ -245,7 +242,7 @@ def monthly_total_precipitation_with_total_coverage():
 
 
 def monthly_total_precipitation_with_avg_coverage():
-    """Return a SQLAlchemy query for monthly total preciptiation,
+    """Return a SQLAlchemy query for monthly total precipitation,
     with monthly average data coverage.
 
     Returns:
