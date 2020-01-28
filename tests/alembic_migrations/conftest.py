@@ -41,5 +41,6 @@ def db_setup(schema_name):
 @pytest.fixture(scope='module')
 def env_config(schema_name):
     return {
+        'version_table': "alembic_version",
         'version_table_schema': schema_name
     }
