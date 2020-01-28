@@ -14,7 +14,21 @@ from pycds.functions import daysinmonth, effective_day
 
 
 def pytest_runtest_setup():
+    print('pytest_runtest_setup')
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logger = logging.getLogger('tests')
+    logger.setLevel(logging.DEBUG)
+    # handler = logging.StreamHandler()
+    # handler.setLevel(logging.DEBUG)
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # handler.setFormatter(formatter)
+    # logger.addHandler(handler)
+    logger.debug('debug message')
+    logger.info('info message')
+    logger.warning('warn message')
+    logger.error('error message')
+    logger.critical('critical message')
 
 
 @fixture(scope='session')
@@ -38,18 +52,27 @@ def add_functions():
 
 
 @fixture(scope='session')
-def base_engine(schema_name, set_search_path, add_functions):
+def base_database_uri():
+    """Test-session scoped base database.
+    """
+    with testing.postgresql.Postgresql() as pg:
+        yield pg.url()
+
+
+# TODO: Separate out add_functions
+@fixture(scope='session')
+def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     """Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute('CREATE EXTENSION postgis')
-        engine.execute('CREATE EXTENSION plpythonu')
-        engine.execute(CreateSchema(schema_name))
-        set_search_path(engine)
-        add_functions(engine)
-        yield engine
+    print('# base_engine')
+    engine = create_engine(base_database_uri)
+    engine.execute('CREATE EXTENSION postgis')
+    engine.execute('CREATE EXTENSION plpythonu')
+    engine.execute(CreateSchema(schema_name))
+    set_search_path(engine)
+    add_functions(engine)
+    yield engine
 
 
 @fixture(scope='session')
