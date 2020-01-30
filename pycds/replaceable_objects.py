@@ -3,9 +3,14 @@ stored procedures, views, and triggers, that must be created and dropped
 all at once.
 
 This code is adapted from
-https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects
-See that article for much more information on how this works.
+https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects,
+plus information on how to incorporate schema name gleaned from
+https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
+
+TODO: Split out into separate modules: ReplaceableObject, ReversibleOp,
+  stored_procedure operations.
 """
+import re
 from alembic.operations import Operations, MigrateOperation
 
 
@@ -25,12 +30,13 @@ class ReversibleOp(MigrateOperation):
     which makes use of references to other migration files in order to refer
     to the “previous” version of an object.
     """
-    def __init__(self, target):
+    def __init__(self, target, schema=None):
         self.target = target
+        self.schema = schema
 
     @classmethod
-    def invoke_for_target(cls, operations, target):
-        op = cls(target)
+    def invoke_for_target(cls, operations, target, **kw):
+        op = cls(target, **kw)
         return operations.invoke(op)
 
     def reverse(self):
@@ -45,7 +51,7 @@ class ReversibleOp(MigrateOperation):
         return obj
 
     @classmethod
-    def replace(cls, operations, target, replaces=None, replace_with=None):
+    def replace(cls, operations, target, replaces=None, replace_with=None, **kw):
         """
         Migration upgrade uses `replaces`.
         Migration downgrade uses `replace_with`.
@@ -53,12 +59,12 @@ class ReversibleOp(MigrateOperation):
 
         if replaces:
             old_obj = cls._get_object_from_version(operations, replaces)
-            drop_old = cls(old_obj).reverse()
-            create_new = cls(target)
+            drop_old = cls(old_obj, **kw).reverse()
+            create_new = cls(target, **kw)
         elif replace_with:
             old_obj = cls._get_object_from_version(operations, replace_with)
-            drop_old = cls(target).reverse()
-            create_new = cls(old_obj)
+            drop_old = cls(target, **kw).reverse()
+            create_new = cls(old_obj, **kw)
         else:
             raise TypeError("replaces or replace_with is required")
 
@@ -66,29 +72,35 @@ class ReversibleOp(MigrateOperation):
         operations.invoke(create_new)
 
 
-# Stored procedure operations
-# TODO: Move out to separate module?
-
-@Operations.register_operation("create_sp", "invoke_for_target")
-@Operations.register_operation("replace_sp", "replace")
+@Operations.register_operation("create_stored_procedure", "invoke_for_target")
+@Operations.register_operation("replace_stored_procedure", "replace")
 class CreateSPOp(ReversibleOp):
     def reverse(self):
-        return DropSPOp(self.target)
+        return DropSPOp(self.target, schema=self.schema)
 
 
-@Operations.register_operation("drop_sp", "invoke_for_target")
+@Operations.register_operation("drop_stored_procedure", "invoke_for_target")
 class DropSPOp(ReversibleOp):
     def reverse(self):
-        return CreateSPOp(self.target)
+        return CreateSPOp(self.target, schema=self.schema)
 
 
 @Operations.implementation_for(CreateSPOp)
-def create_sp(operations, operation):
+def create_stored_procedure(operations, operation):
     operations.execute(
-        f"CREATE FUNCTION {operation.target.name} {operation.target.sqltext}"
+        f"CREATE FUNCTION {operation.schema}.{operation.target.name} "
+        f"{operation.target.sqltext}"
     )
 
 
 @Operations.implementation_for(DropSPOp)
-def drop_sp(operations, operation):
-    operations.execute(f"DROP FUNCTION {operation.target.name}")
+def drop_stored_procedure(operations, operation):
+    # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
+    # signature is included in the DROP FUNCTION statement. So ditch it.
+    name = re.sub(
+        r" (DEFAULT|=) [^,)]*([,)])",
+        r"\2",
+        operation.target.name,
+        flags=re.MULTILINE
+    )
+    operations.execute(f"DROP FUNCTION {operation.schema}.{name}")
