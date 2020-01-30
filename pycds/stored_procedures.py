@@ -1,12 +1,19 @@
 from alembic.operations import Operations, MigrateOperation
 
 
+class ReplaceableObject(object):
+    """A very simple way to represent a named set of SQL."""
+    def __init__(self, name, sqltext):
+        self.name = name
+        self.sqltext = sqltext
+
+
 @Operations.register_operation("create_stored_procedure")
 class CreateStoredProcedureOp(MigrateOperation):
     """Create a FUNCTION."""
 
     def __init__(self, target, schema=None):
-        self.name, self.sqltext = target
+        self.target = target
         self.schema = schema
 
     @classmethod
@@ -18,7 +25,7 @@ class CreateStoredProcedureOp(MigrateOperation):
 
     def reverse(self):
         # only needed to support autogenerate
-        return DropStoredProcedureOp((self.name, self.sqltext), schema=self.schema)
+        return DropStoredProcedureOp(self.target, schema=self.schema)
 
 
 @Operations.register_operation("drop_stored_procedure")
@@ -26,7 +33,7 @@ class DropStoredProcedureOp(MigrateOperation):
     """Drop a FUNCTION."""
 
     def __init__(self, target, schema=None):
-        self.name, self.sqltext = target
+        self.target = target
         self.schema = schema
 
     @classmethod
@@ -38,22 +45,22 @@ class DropStoredProcedureOp(MigrateOperation):
 
     def reverse(self):
         # only needed to support autogenerate
-        return CreateStoredProcedureOp((self.name, self.sqltext), schema=self.schema)
+        return CreateStoredProcedureOp(self.target, schema=self.schema)
 
 
 @Operations.implementation_for(CreateStoredProcedureOp)
 def create_stored_procedure(operations, operation):
     if operation.schema is not None:
-        name = "%s.%s" % (operation.schema, operation.name)
+        name = "%s.%s" % (operation.schema, operation.target.name)
     else:
         name = operation.name
-    operations.execute(f"CREATE FUNCTION {name} {operation.sqltext}")
+    operations.execute(f"CREATE FUNCTION {name} {operation.target.sqltext}")
 
 
 @Operations.implementation_for(DropStoredProcedureOp)
 def drop_stored_procedure(operations, operation):
     if operation.schema is not None:
-        name = "%s.%s" % (operation.schema, operation.name)
+        name = "%s.%s" % (operation.schema, operation.target.name)
     else:
-        name = operation.name
+        name = operation.target.name
     operations.execute(f"DROP FUNCTION {name}")
