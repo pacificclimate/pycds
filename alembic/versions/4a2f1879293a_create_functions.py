@@ -74,11 +74,11 @@ daily_ts = ReplaceableObject(
     $BODY$
     DECLARE
     BEGIN
-        RAISE DEBUG 'Running daily_ts "%%" "%%" "%%"', station_id, vars_id, percent_obs;
+        RAISE DEBUG 'Running daily_ts "%" "%" "%"', station_id, vars_id, percent_obs;
         FOR daily_time, daily_mean, daily_count IN EXECUTE
             'SELECT date_trunc(''day'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema_name}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
         LOOP
-            RAISE DEBUG 'In loop, Row: "%%" "%%" "%%"', daily_time, daily_mean, daily_count;
+            RAISE DEBUG 'In loop, Row: "%" "%" "%"', daily_time, daily_mean, daily_count;
             percent_obs_available := daily_count / 24.0;
                 IF percent_obs_available >= percent_obs THEN
                RAISE DEBUG 'Conditional is TRUE';
@@ -264,11 +264,11 @@ monthly_ts = ReplaceableObject(
     DECLARE
         the_month date;
     BEGIN
-        RAISE DEBUG 'Running monthly_ts "%%" "%%" "%%"', station_id, vars_id, percent_obs;
+        RAISE DEBUG 'Running monthly_ts "%" "%" "%"', station_id, vars_id, percent_obs;
         FOR monthly_time, monthly_mean, monthly_count IN EXECUTE
             'SELECT date_trunc(''month'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema_name}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
         LOOP
-            RAISE DEBUG 'In loop, Row: "%%" "%%" "%%"', monthly_time, monthly_mean, monthly_count;
+            RAISE DEBUG 'In loop, Row: "%" "%" "%"', monthly_time, monthly_mean, monthly_count;
             the_month := CAST(monthly_time AS date);
             percent_obs_available := monthly_count / ({schema_name}.DaysInMonth(the_month));
                 IF percent_obs_available >= percent_obs THEN
@@ -294,7 +294,7 @@ query_one_station = ReplaceableObject(
     """
     query_one_station(station_id integer)
     """,
-    """
+    f"""
     RETURNS text AS
     $BODY$
         stn_query = "SELECT * FROM {schema_name}.getStationVariableTable(" + str(station_id) + ", false)"
