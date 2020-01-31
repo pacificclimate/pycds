@@ -1,13 +1,13 @@
-from ..helpers import get_items_in_schema
+from ..helpers import get_schema_item_names
 from .content import \
     Thing, SimpleThingView, ThingWithDescriptionView, ThingCountView
 
 
 def test_schema_content(view_sesh):
-    assert get_items_in_schema(view_sesh, 'tables') >= {
+    assert get_schema_item_names(view_sesh, 'tables') >= {
         'things', 'descriptions'
     }
-    assert get_items_in_schema(view_sesh, 'views') >= {
+    assert get_schema_item_names(view_sesh, 'views') >= {
         'simple_thing_view', 'thing_with_description_view',
         'thing_count_view'
     }

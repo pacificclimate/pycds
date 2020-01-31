@@ -1,9 +1,9 @@
-from ..helpers import get_items_in_schema, insert_test_data, insert_crmp_data
+from ..helpers import get_schema_item_names, insert_test_data, insert_crmp_data
 from pycds import Contact, History, Obs
 
 
 def test_schema_content(pycds_sesh):
-   assert get_items_in_schema(pycds_sesh, 'tables') >= {
+   assert get_schema_item_names(pycds_sesh, 'tables') >= {
         'meta_sensor', 'meta_contact', 'climo_obs_count_mv',
         'obs_count_per_month_history_mv',
         'vars_per_history_mv', 'meta_history',
