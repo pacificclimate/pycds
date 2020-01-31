@@ -203,10 +203,25 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
 
 # Test helpers
 
-def get_items_in_schema(sesh, item_type, schema_name=get_schema_name()):
-    r = sesh.execute(f'''
-        SELECT table_name 
-        FROM information_schema.{item_type} 
-        WHERE table_schema = '{schema_name}';
-    ''')
+def get_schema_item_names(executor, item_type, schema_name=get_schema_name()):
+    if item_type == 'routines':
+        r = executor.execute(f"""
+            SELECT routine_name 
+            FROM information_schema.routines 
+            WHERE specific_schema = '{schema_name}'
+        """)
+    elif item_type == 'tables':
+        r = executor.execute(f"""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = '{schema_name}';
+        """)
+    elif item_type == 'tables':
+        r = executor.execute(f"""
+            SELECT table_name 
+            FROM information_schema.views 
+            WHERE table_schema = '{schema_name}';
+        """)
+    else:
+        raise ValueError('invalid item type')
     return {x[0] for x in r.fetchall()}

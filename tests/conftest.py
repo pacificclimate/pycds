@@ -1,7 +1,7 @@
 import logging, logging.config
 import sys
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
 
@@ -18,9 +18,15 @@ def pytest_runtest_setup():
     logger = logging.getLogger('tests')
     logger.setLevel(logging.DEBUG)
 
+
 @fixture(scope='session')
 def schema_name():
     return pycds.get_schema_name()
+
+
+@fixture(scope='session')
+def schema_func(schema_name):
+    return getattr(func, schema_name)
 
 
 @fixture(scope='session')
