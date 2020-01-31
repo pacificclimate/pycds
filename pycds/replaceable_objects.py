@@ -85,10 +85,15 @@ class DropSPOp(ReversibleOp):
         return CreateSPOp(self.target, schema=self.schema)
 
 
+def schema_prefix(schema):
+    return (schema and f"{schema}.") or ""
+
+
 @Operations.implementation_for(CreateSPOp)
 def create_stored_procedure(operations, operation):
     operations.execute(
-        f"CREATE FUNCTION {operation.schema}.{operation.target.name} "
+        f"CREATE FUNCTION "
+        f"{schema_prefix(operation.schema)}{operation.target.name} "
         f"{operation.target.sqltext}"
     )
 
@@ -103,4 +108,4 @@ def drop_stored_procedure(operations, operation):
         operation.target.name,
         flags=re.MULTILINE
     )
-    operations.execute(f"DROP FUNCTION {operation.schema}.{name}")
+    operations.execute(f"DROP FUNCTION {schema_prefix(operation.schema)}{name}")
