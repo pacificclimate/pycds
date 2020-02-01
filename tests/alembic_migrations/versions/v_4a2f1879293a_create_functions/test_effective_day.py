@@ -49,5 +49,4 @@ def test_day_of_observation(
     ).fetchall()
     assert len(result) == 1
     assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
-
-
+    sesh.close()

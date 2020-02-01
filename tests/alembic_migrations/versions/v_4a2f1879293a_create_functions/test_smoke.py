@@ -88,8 +88,10 @@ def test_executable(
 
     # Set up database to version 4a2f1879293a
     engine, script = prepared_schema_from_migrations_left
-    sesh = sessionmaker(bind=engine)()
 
+    # Execute the function. We're good if it doesn't blow up.
+    sesh = sessionmaker(bind=engine)()
     fn = getattr(schema_func, func)
     q = sesh.query(fn(*args))
     q.all()
+    sesh.close()
