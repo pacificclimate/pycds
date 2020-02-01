@@ -216,7 +216,7 @@ def get_schema_item_names(executor, item_type, schema_name=get_schema_name()):
             FROM information_schema.tables 
             WHERE table_schema = '{schema_name}';
         """)
-    elif item_type == 'tables':
+    elif item_type == 'views':
         r = executor.execute(f"""
             SELECT table_name 
             FROM information_schema.views 
