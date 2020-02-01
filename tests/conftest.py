@@ -10,7 +10,6 @@ import testing.postgresql
 
 import pycds
 import pycds.weather_anomaly
-from pycds.functions import daysinmonth, effective_day
 
 
 def pytest_runtest_setup():
@@ -36,11 +35,13 @@ def set_search_path():
     return f
 
 
+# TODO: Remove altogether after transfer of matviews to migration
 @fixture(scope='session')
 def add_functions():
     def f(executor):
-        executor.execute(daysinmonth())
-        executor.execute(effective_day())
+        # executor.execute(daysinmonth())
+        # executor.execute(effective_day())
+        pass
     return f
 
 

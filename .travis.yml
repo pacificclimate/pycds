@@ -13,4 +13,8 @@ install:
   - pip install -U pip
   - pip install -i https://pypi.pacificclimate.org/simple/ -r requirements.txt -r test_requirements.txt
   - pip install -i https://pypi.pacificclimate.org/simple/ .
-script: PYCDS_SCHEMA_NAME=other py.test -v --tb=short tests
+# We are currently not running the weather_anomaly tests because the functions
+# they depend on have been moved into a migration. Once views and matviews have
+# been moved into migrations, these tests will be transferred into specific
+# migration tests.
+script: PYCDS_SCHEMA_NAME=other py.test -v --tb=short -k "not weather_anomal" tests
