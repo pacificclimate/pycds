@@ -7,8 +7,9 @@ Create Date: 2020-01-28 16:43:12.112378
 """
 from alembic import op
 import sqlalchemy as sa
-from pycds.replaceable_objects import ReplaceableObject
 from pycds import get_schema_name
+from pycds.replaceable_objects import ReplaceableObject
+import pycds.replaceable_objects.stored_procedures
 
 
 schema_name = get_schema_name()
