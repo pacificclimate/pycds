@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.orm import sessionmaker
 from ...alembicverify_util import prepare_schema_from_migrations
 
 
@@ -18,3 +19,11 @@ def prepared_schema_from_migrations_left(
     engine.dispose()
 
 
+@pytest.fixture(scope='function')
+def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
+    engine, script = prepared_schema_from_migrations_left
+    sesh = sessionmaker(bind=engine)()
+
+    yield sesh
+
+    sesh.close()

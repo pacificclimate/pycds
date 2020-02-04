@@ -7,14 +7,9 @@
 # -*- coding: utf-8 -*-
 from _datetime import datetime, date
 import logging
-
 import pytest
-
-from sqlalchemy.orm import sessionmaker
 from alembic import command
-
 from ....helpers import get_schema_item_names
-from ...alembicverify_util import prepare_schema_from_migrations
 
 
 logger = logging.getLogger('tests')
@@ -79,19 +74,12 @@ def test_downgrade(prepared_schema_from_migrations_left, alembic_config_left, sc
     ('updatesdateedate', ()),
 ])
 def test_executable(
-        func, args, prepared_schema_from_migrations_left, schema_func,
+        func, args, sesh_in_prepared_schema_left, schema_func,
 ):
     """Smoke test that a function invoked with the given arguments doesn't raise
     an exception. This proves nothing much except that (part of) the function
     is executable.
     """
-
-    # Set up database to version 4a2f1879293a
-    engine, script = prepared_schema_from_migrations_left
-
-    # Execute the function. We're good if it doesn't blow up.
-    sesh = sessionmaker(bind=engine)()
     fn = getattr(schema_func, func)
-    q = sesh.query(fn(*args))
+    q = sesh_in_prepared_schema_left.query(fn(*args))
     q.all()
-    sesh.close()

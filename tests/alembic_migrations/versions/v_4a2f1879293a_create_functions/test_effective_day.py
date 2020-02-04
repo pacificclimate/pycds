@@ -35,11 +35,9 @@ expected_day = {
 @mark.parametrize('extremum', ['max', 'min'])
 def test_day_of_observation(
         obs_time, extremum, freq,
-        schema_name, prepared_schema_from_migrations_left,
+        schema_name, sesh_in_prepared_schema_left,
 ):
-    engine, script = prepared_schema_from_migrations_left
-    sesh = sessionmaker(bind=engine)()
-    result = sesh.execute(
+    result = sesh_in_prepared_schema_left.execute(
         text(f'''
             SELECT {schema_name}.effective_day(
                 :obs_time, :extremum, :freq) 
@@ -49,4 +47,3 @@ def test_day_of_observation(
     ).fetchall()
     assert len(result) == 1
     assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
-    sesh.close()
