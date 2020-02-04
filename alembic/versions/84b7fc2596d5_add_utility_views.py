@@ -8,7 +8,7 @@ Create Date: 2020-01-31 16:54:35.636097
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
-from pycds.views import (
+from pycds.utility_views.version_84b7fc2596d5 import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
     ObsCountPerDayHistory,
