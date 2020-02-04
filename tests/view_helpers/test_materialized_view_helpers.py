@@ -1,10 +1,10 @@
-from ..helpers import get_items_in_schema
+from ..helpers import get_schema_item_names
 from .content import \
     Thing, SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview
 
 
 def test_schema_content(matview_sesh):
-    assert get_items_in_schema(matview_sesh, 'tables') >= {
+    assert get_schema_item_names(matview_sesh, 'tables') >= {
         'things', 'descriptions',
         'simple_thing_matview_mv', 'thing_with_description_matview_mv',
         'thing_count_matview_mv'

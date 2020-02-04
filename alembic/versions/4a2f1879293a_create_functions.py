@@ -1,81 +1,49 @@
-"""
-This module defines SQL functions in the database.
+"""create functions
 
-SQLAlchemy does not directly support functions. However, it does support
-arbitrary DDL statements, which are the usual route for actions that are not
-directly supported, such as defining functions.
-See https://docs.sqlalchemy.org/en/13/core/ddl
-
-It's not clear how best to manage the creation of these functions. There are
-at least the following options:
-
-1. (As originally done for `effective_day`.) Add an event listener for
-   event `before_create`, and execute `CREATE OR REPLACE fn ...` on that event.
-   Question is where to place this. Probably not buried in a place where
-   views and tables are defined, as originally. See
-   https://docs.sqlalchemy.org/en/13/core/events.html#sqlalchemy.events.DDLEvents.before_create
-
-2. By script invoked from the command line. This has some advantages (amongst
-   them, simplicity), but it places the functions outside of the migration
-   path, which in some cases might be undesirable (e.g., in case a function
-   depends on a particular table or view).
-
-3. Use Alembic (not yet introduced, but it will be soon). See Alembic Cookbook,
-   Replaceable Objects:
-   https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects
-   for a way to proceed. This also has some bearing on the creation of views
-   and matviews. This is currently the preferred approach.
+Revision ID: 4a2f1879293a
+Revises: 522eed334c85
+Create Date: 2020-01-28 16:43:12.112378
 
 """
-__all__ = [
-    'closest_stns_within_threshold',
-    'daily_ts',
-    'daysinmonth',
-    'do_query_one_station',
-    'effective_day',
-    'getstationvariabletable',
-    'lastdateofmonth',
-    'monthly_ts',
-    'query_one_station',
-    'query_one_station_climo',
-    'season',
-    'updatesdateedate',
-]
-
-
-from sqlalchemy.schema import DDL
+from alembic import op
+import sqlalchemy as sa
+from pycds.replaceable_objects import ReplaceableObject
 from pycds import get_schema_name
 
 
-# Define DDL statements for each function. In order to define a function
-# in the database, its statement must be executed.
-#
-# Only a few of these functions are properly documented. The remainder were
-# copied from the original CRMP database, where there is little or no
-# documentation. Caveat emptor.
+schema_name = get_schema_name()
 
-def closest_stns_within_threshold(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.closest_stns_within_threshold(
+# revision identifiers, used by Alembic.
+revision = "4a2f1879293a"
+down_revision = "522eed334c85"
+branch_labels = None
+depends_on = None
+
+
+closest_stns_within_threshold = ReplaceableObject(
+    """
+    closest_stns_within_threshold(
         IN x numeric,
         IN y numeric,
-        IN thres integer)
-      RETURNS TABLE(
-        history_id integer, 
-        lat numeric, 
-        lon numeric, 
+        IN thres integer
+    )""",
+    f"""
+    RETURNS TABLE(
+        history_id integer,
+        lat numeric,
+        lon numeric,
         dist double precision
     ) AS
     $BODY$
-    
+
     DECLARE
         mystr TEXT;
     BEGIN
         mystr = 'WITH stns_in_thresh AS (
-        SELECT history_id, lat, lon, 
-            Geography(ST_Transform(the_geom,4326)) as p_existing, 
+        SELECT history_id, lat, lon,
+            Geography(ST_Transform(the_geom,4326)) as p_existing,
             Geography(ST_SetSRID(ST_MakePoint('|| X ||','|| Y ||'),4326)) as p_new
-        FROM {schema}.meta_history
+        FROM {schema_name}.meta_history
         WHERE the_geom && ST_Buffer(Geography(ST_SetSRID(ST_MakePoint('|| X || ','|| Y ||'),4326)),'|| thres ||')
         )
         SELECT history_id, lat, lon, ST_Distance(p_existing,p_new) as dist
@@ -86,17 +54,13 @@ def closest_stns_within_threshold(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE SECURITY DEFINER
       COST 100
-      ROWS 1000;    
-    ''')
-
-
-def daily_ts(schema=get_schema_name()):
-    """Note: This function has an error in it: The table `obs_raw` has no
-    column `station_id`. It seems likely that the statement executed should
-    contain a join to `meta_history`.
+      ROWS 1000;
     """
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.daily_ts(
+)
+
+daily_ts = ReplaceableObject(
+    """
+    daily_ts(
         IN station_id integer,
         IN vars_id integer,
         IN percent_obs real,
@@ -104,15 +68,17 @@ def daily_ts(schema=get_schema_name()):
         OUT daily_mean real,
         OUT percent_obs_available real,
         OUT daily_count integer)
-      RETURNS SETOF record AS
+    """,
+    f"""
+    RETURNS SETOF record AS
     $BODY$
     DECLARE
     BEGIN
-        RAISE DEBUG 'Running daily_ts "%%" "%%" "%%"', station_id, vars_id, percent_obs;
+        RAISE DEBUG 'Running daily_ts "%" "%" "%"', station_id, vars_id, percent_obs;
         FOR daily_time, daily_mean, daily_count IN EXECUTE
-            'SELECT date_trunc(''day'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
+            'SELECT date_trunc(''day'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema_name}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
         LOOP
-            RAISE DEBUG 'In loop, Row: "%%" "%%" "%%"', daily_time, daily_mean, daily_count;
+            RAISE DEBUG 'In loop, Row: "%" "%" "%"', daily_time, daily_mean, daily_count;
             percent_obs_available := daily_count / 24.0;
                 IF percent_obs_available >= percent_obs THEN
                RAISE DEBUG 'Conditional is TRUE';
@@ -126,42 +92,49 @@ def daily_ts(schema=get_schema_name()):
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    ''')
+    """
+)
 
 
 # Return the number of days in the month of the given date.
-def daysinmonth(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.daysinmonth(d timestamp)
-      RETURNS double precision AS
+daysinmonth = ReplaceableObject(
+    """
+    daysinmonth(d timestamp)
+    """,
+    """
+    RETURNS double precision AS
     $BODY$
     SELECT EXTRACT(DAY FROM CAST(date_trunc('month', d) + interval '1 month'
     - interval '1 day' as timestamp));
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
 # Execute function `query_one_station`. This function does not appear to be
 # in use in any production code. Possibly it is in use ad-hoc.
-def do_query_one_station(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.do_query_one_station(station_id integer)
-      RETURNS refcursor AS
+do_query_one_station = ReplaceableObject(
+    """
+    do_query_one_station(station_id integer)
+    """,
+    f"""
+    RETURNS refcursor AS
     $BODY$
     DECLARE
         query text;
         result refcursor := 'result';
     BEGIN
-        query := {schema}.query_one_station(station_id);
+        query := {schema_name}.query_one_station(station_id);
         OPEN result NO SCROLL FOR EXECUTE query;
         RETURN result;
     END;
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
 # Returns the day that should be used (the effective day) for computing daily
@@ -184,13 +157,15 @@ def do_query_one_station(schema=get_schema_name()):
 # For minimum temperature:
 #   effective day does not depend on observation frequency; it is always the
 #   day of observation
-def effective_day(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.effective_day(
+effective_day = ReplaceableObject(
+    """
+    effective_day(
         obs_time timestamp without time zone,
         extremum character varying,
         freq character varying DEFAULT ''::character varying)
-      RETURNS timestamp without time zone AS
+    """,
+    """
+    RETURNS timestamp without time zone AS
     $BODY$
     DECLARE
       offs INTERVAL; -- 'offset' is a reserved word
@@ -210,7 +185,8 @@ def effective_day(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
 # Returns the text of a SELECT statement for a table containing the values
@@ -229,45 +205,51 @@ def effective_day(schema=get_schema_name()):
 #
 # NOTE: Production code: This function is called by functions
 # `query_one_station` and `query_one_station_climo` .
-def getstationvariabletable(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.getstationvariabletable(
+getstationvariabletable = ReplaceableObject(
+    """
+    getstationvariabletable(
         station_id integer,
         climo boolean)
-      RETURNS text AS
+    """,
+    f"""
+    RETURNS text AS
     $BODY$
-        query = "SELECT vars_id, net_var_name FROM {schema}.meta_vars NATURAL JOIN {schema}.meta_station WHERE cell_method " + ("" if climo else "!") + "~ '(within|over)' AND station_id = " + str(station_id) + ' ORDER BY net_var_name'
+        query = "SELECT vars_id, net_var_name FROM {schema_name}.meta_vars NATURAL JOIN {schema_name}.meta_station WHERE cell_method " + ("" if climo else "!") + "~ '(within|over)' AND station_id = " + str(station_id) + ' ORDER BY net_var_name'
         data = plpy.execute(query)
         bits = [ 'obs_time' ] + [ ("MAX(CASE WHEN vars_id=" + str(x['vars_id']) + " THEN datum END) as " + x['net_var_name']) for x in data ]
         vars_ids = [ str(x['vars_id']) for x in data ]
     
-        hid_query = "SELECT history_id FROM {schema}.meta_history WHERE station_id=" + str(station_id)
+        hid_query = "SELECT history_id FROM {schema_name}.meta_history WHERE station_id=" + str(station_id)
         hid_data = plpy.execute(hid_query)
         hid_clauses = [ "history_id = " + str(x['history_id']) for x in hid_data ]
     
-        return "SELECT "+ ",".join(bits) + " from {schema}.obs_raw WHERE (" + " OR ".join(hid_clauses) + ") AND vars_id IN (" + ",".join(vars_ids) + ") GROUP BY obs_time ORDER BY obs_time"
+        return "SELECT "+ ",".join(bits) + " from {schema_name}.obs_raw WHERE (" + " OR ".join(hid_clauses) + ") AND vars_id IN (" + ",".join(vars_ids) + ") GROUP BY obs_time ORDER BY obs_time"
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
 # Returns the last day of the month, as a date, of the month of the input date.
-def lastdateofmonth(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.lastdateofmonth(date)
-      RETURNS date AS
+lastdateofmonth = ReplaceableObject(
+    """
+    lastdateofmonth(date)
+    """,
+    """
+    RETURNS date AS
     $BODY$
     SELECT CAST(date_trunc('month', $1) + interval '1 month' - interval '1 day' as date);
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
-def monthly_ts(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.monthly_ts(
+monthly_ts = ReplaceableObject(
+    """
+    monthly_ts(
         IN station_id integer,
         IN vars_id integer,
         IN percent_obs real,
@@ -275,18 +257,20 @@ def monthly_ts(schema=get_schema_name()):
         OUT monthly_mean real,
         OUT percent_obs_available real,
         OUT monthly_count integer)
-      RETURNS SETOF record AS
+    """,
+    f"""
+    RETURNS SETOF record AS
     $BODY$
     DECLARE
         the_month date;
     BEGIN
-        RAISE DEBUG 'Running monthly_ts "%%" "%%" "%%"', station_id, vars_id, percent_obs;
+        RAISE DEBUG 'Running monthly_ts "%" "%" "%"', station_id, vars_id, percent_obs;
         FOR monthly_time, monthly_mean, monthly_count IN EXECUTE
-            'SELECT date_trunc(''month'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
+            'SELECT date_trunc(''month'', obs_time) as obs_time_trunc, avg(datum) as obs_datum, count(datum) as obs_count FROM {schema_name}.obs_raw WHERE station_id = ' || station_id || ' AND vars_id = ' || vars_id || ' GROUP BY obs_time_trunc ORDER BY obs_time_trunc'
         LOOP
-            RAISE DEBUG 'In loop, Row: "%%" "%%" "%%"', monthly_time, monthly_mean, monthly_count;
+            RAISE DEBUG 'In loop, Row: "%" "%" "%"', monthly_time, monthly_mean, monthly_count;
             the_month := CAST(monthly_time AS date);
-            percent_obs_available := monthly_count / ({schema}.DaysInMonth(the_month));
+            percent_obs_available := monthly_count / ({schema_name}.DaysInMonth(the_month));
                 IF percent_obs_available >= percent_obs THEN
                RAISE DEBUG 'Conditional is TRUE';
                RETURN NEXT;
@@ -298,51 +282,60 @@ def monthly_ts(schema=get_schema_name()):
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    ''')
+    """
+)
 
 
 # Returns a row set containing the values of all the non-climatological
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-def query_one_station(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.query_one_station(station_id integer)
-      RETURNS text AS
+query_one_station = ReplaceableObject(
+    """
+    query_one_station(station_id integer)
+    """,
+    f"""
+    RETURNS text AS
     $BODY$
-        stn_query = "SELECT * FROM {schema}.getStationVariableTable(" + str(station_id) + ", false)"
+        stn_query = "SELECT * FROM {schema_name}.getStationVariableTable(" + str(station_id) + ", false)"
         data = plpy.execute(stn_query)
         #plpy.warning(data)
         return data[0]['getstationvariabletable']
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
 # Returns a row set containing the values of all the climatological
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-def query_one_station_climo(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.query_one_station_climo(station_id integer)
-      RETURNS text AS
+query_one_station_climo = ReplaceableObject(
+    """
+    query_one_station_climo(station_id integer)
+    """,
+    f"""
+    RETURNS text AS
     $BODY$
-        stn_query = "SELECT * FROM {schema}.getStationVariableTable(" + str(station_id) + ", true)"
+        stn_query = "SELECT * FROM {schema_name}.getStationVariableTable(" + str(station_id) + ", true)"
         data = plpy.execute(stn_query)
         #plpy.warning(data)
         return data[0]['getstationvariabletable']
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
-def season(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.season(d timestamp without time zone)
-      RETURNS date AS
+season = ReplaceableObject(
+    """
+    season(d timestamp without time zone)
+    """,
+    """
+    RETURNS date AS
     $BODY$
     DECLARE
         m DOUBLE PRECISION;
@@ -358,26 +351,29 @@ def season(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
 
-def updatesdateedate(schema=get_schema_name()):
-    return DDL(f'''
-    CREATE OR REPLACE FUNCTION {schema}.updatesdateedate()
-      RETURNS void AS
+updatesdateedate = ReplaceableObject(
+    """
+    updatesdateedate()
+    """,
+    f"""
+    RETURNS void AS
     $BODY$
     DECLARE
         sid  integer;
         min_date timestamp without time zone;
         max_date timestamp without time zone;
     BEGIN
-        FOR sid IN SELECT DISTINCT station_id FROM {schema}.meta_history
+        FOR sid IN SELECT DISTINCT station_id FROM {schema_name}.meta_history
         LOOP
             SELECT min(obs_time), max(obs_time) INTO min_date, max_date
-            FROM {schema}.obs_raw NATURAL JOIN {schema}.meta_history 
+            FROM {schema_name}.obs_raw NATURAL JOIN {schema_name}.meta_history 
             WHERE station_id = sid;
     
-            UPDATE {schema}.meta_station
+            UPDATE {schema_name}.meta_station
             SET (min_obs_time, max_obs_time) = (min_date, max_date)
             WHERE station_id = sid;
     END LOOP;
@@ -386,5 +382,31 @@ def updatesdateedate(schema=get_schema_name()):
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    ''')
+    """
+)
 
+
+definitions = (
+    closest_stns_within_threshold,
+    daily_ts,
+    daysinmonth,
+    do_query_one_station,
+    effective_day,
+    getstationvariabletable,
+    lastdateofmonth,
+    monthly_ts,
+    query_one_station,
+    query_one_station_climo,
+    season,
+    updatesdateedate,
+)
+
+
+def upgrade():
+    for sp in definitions:
+        op.create_stored_procedure(sp, schema=schema_name)
+
+
+def downgrade():
+    for sp in definitions:
+        op.drop_stored_procedure(sp, schema=schema_name)

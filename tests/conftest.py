@@ -1,7 +1,7 @@
 import logging, logging.config
 import sys
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import DDL, CreateSchema
 
@@ -10,7 +10,6 @@ import testing.postgresql
 
 import pycds
 import pycds.weather_anomaly
-from pycds.functions import daysinmonth, effective_day
 
 
 def pytest_runtest_setup():
@@ -18,9 +17,15 @@ def pytest_runtest_setup():
     logger = logging.getLogger('tests')
     logger.setLevel(logging.DEBUG)
 
+
 @fixture(scope='session')
 def schema_name():
     return pycds.get_schema_name()
+
+
+@fixture(scope='session')
+def schema_func(schema_name):
+    return getattr(func, schema_name)
 
 
 @fixture(scope='session')
@@ -30,11 +35,13 @@ def set_search_path():
     return f
 
 
+# TODO: Remove altogether after transfer of matviews to migration
 @fixture(scope='session')
 def add_functions():
     def f(executor):
-        executor.execute(daysinmonth())
-        executor.execute(effective_day())
+        # executor.execute(daysinmonth())
+        # executor.execute(effective_day())
+        pass
     return f
 
 

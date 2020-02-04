@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 from pytest import mark
 
@@ -28,11 +29,15 @@ expected_day = {
 }
 
 
+@mark.usefixtures('new_db_left')
 @mark.parametrize('obs_time', [morning, afternoon])
 @mark.parametrize('freq', ['1-hourly', '12-hourly'])
 @mark.parametrize('extremum', ['max', 'min'])
-def test_day_of_observation(schema_name, pycds_sesh, obs_time, extremum, freq):
-    result = pycds_sesh.execute(
+def test_day_of_observation(
+        obs_time, extremum, freq,
+        schema_name, sesh_in_prepared_schema_left,
+):
+    result = sesh_in_prepared_schema_left.execute(
         text(f'''
             SELECT {schema_name}.effective_day(
                 :obs_time, :extremum, :freq) 
@@ -42,5 +47,3 @@ def test_day_of_observation(schema_name, pycds_sesh, obs_time, extremum, freq):
     ).fetchall()
     assert len(result) == 1
     assert result[0]['eday'] == expected_day[extremum][freq][obs_time]
-
-
