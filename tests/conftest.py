@@ -15,7 +15,8 @@ from pycds.functions import daysinmonth, effective_day
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
+    logger = logging.getLogger('tests')
+    logger.setLevel(logging.DEBUG)
 
 @fixture(scope='session')
 def schema_name():
@@ -38,18 +39,26 @@ def add_functions():
 
 
 @fixture(scope='session')
-def base_engine(schema_name, set_search_path, add_functions):
+def base_database_uri():
+    """Test-session scoped base database.
+    """
+    with testing.postgresql.Postgresql() as pg:
+        yield pg.url()
+
+
+# TODO: Separate out add_functions
+@fixture(scope='session')
+def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     """Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
-    with testing.postgresql.Postgresql() as pg:
-        engine = create_engine(pg.url())
-        engine.execute('CREATE EXTENSION postgis')
-        engine.execute('CREATE EXTENSION plpythonu')
-        engine.execute(CreateSchema(schema_name))
-        set_search_path(engine)
-        add_functions(engine)
-        yield engine
+    engine = create_engine(base_database_uri)
+    engine.execute('CREATE EXTENSION postgis')
+    engine.execute('CREATE EXTENSION plpythonu')
+    engine.execute(CreateSchema(schema_name))
+    set_search_path(engine)
+    add_functions(engine)
+    yield engine
 
 
 @fixture(scope='session')
@@ -57,7 +66,6 @@ def pycds_engine(base_engine):
     """Test-session scoped database engine, with pycds ORM created in it.
     """
     pycds.Base.metadata.create_all(bind=base_engine)
-    # pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
     yield base_engine
 
 

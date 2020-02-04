@@ -38,8 +38,16 @@ setup(
         'scripts/verify-load-climate-baseline-values.py',
         'scripts/manage-views.py'
     ],
-    install_requires=['SQLAlchemy', 'geoalchemy2', 'psycopg2'],
-    tests_require=['pytest'],
+    install_requires=[
+        'SQLAlchemy', 'geoalchemy2', 'psycopg2', 'alembic', 'black'
+    ],
+    tests_require=[
+        'pytest  <4.0',
+        'pytest-describe <0.12' 
+        'testing.postgresql',
+        'alembic',
+        'alembic-verify'
+    ],
     cmdclass={'test': PyTest},
 
     classifiers='''Development Status :: 5 - Production/Stable
