@@ -7,8 +7,8 @@ a view. The views present in one migration version of the database can be
 different than those in another version.
 
 To enable Alembic to work properly, it is necessary retain all
-versions of views, not just the latest. The views modified in a migration
-with version SHA `<version>` are stored in the module `version_<version>`.py
+versions of views, not just the latest. The views defined in migration
+version `<version>` are stored in the module `version_<version>.py`
 in this directory.
 
 This file, the top level of the views module, exports the most recent version
@@ -22,9 +22,7 @@ this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
 """
 
-from .version_84b7fc2596d5 import (
-    CrmpNetworkGeoserver,
-    HistoryStationNetwork,
-    ObsCountPerDayHistory,
-    ObsWithFlags,
-)
+from .version_84b7fc2596d5 import CrmpNetworkGeoserver
+from .version_84b7fc2596d5 import HistoryStationNetwork
+from .version_84b7fc2596d5 import ObsCountPerDayHistory
+from .version_84b7fc2596d5 import ObsWithFlags

@@ -2,7 +2,8 @@
 dropping stored procedures (functions).
 
 A stored procedures is expected to be defined using a `ReplaceableObject`.
-If this changes, then the operation implementations must change correspondingly.
+If this changes, then the operation implementations must change correspondingly,
+namely, `operation.target` will be a different kind of object.
 """
 
 import re

@@ -3,7 +3,8 @@ dropping views.
 
 A view is expected to be defined using an instance of a class descended from
 `pycds.view_helpers.ViewMixin`.
-If this changes, then the operation implementations must change correspondingly.
+If this changes, then the operation implementations must change correspondingly,
+namely, `operation.target` will be a different kind of object.
 """
 
 from alembic.operations import Operations
