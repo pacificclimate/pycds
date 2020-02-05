@@ -26,7 +26,7 @@ RUN apt-get install -y wget \
 	sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/postgresql.list' && \
 	apt-get -y update
 
-# Install modelmeta requirements
+# Install pycds requirements
 RUN apt-get install -y postgresql-plpython-9.4 \
 	postgresql-9.4-postgis-2.4 \
 	postgresql-server-dev-9.4
