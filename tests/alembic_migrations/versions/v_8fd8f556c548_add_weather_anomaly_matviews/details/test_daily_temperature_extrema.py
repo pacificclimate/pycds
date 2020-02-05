@@ -4,13 +4,11 @@ Please see README for a description of the test framework used here.
 
 Idiosyncracies:
 
-- The various `refreshed_sesh` fixtures look as if they could exploit the autouse feature of pytest
-  (http://doc.pytest.org/en/latest/fixture.html#autouse-fixtures-xunit-setup-on-steroids), but unfortunately they
-  can't: Each one is the terminus of a different cascade of fixtures. (Different fixtures may have the same name
-  in different contexts, but they are actually different objects, embodying different test conditions, and that
-  prevents us from using autouse.
-- We use a workaround for the absent but desirable ability to parametrize tests over fixtures. See
-  docstring in tests/test_wa_monthly_views_common.py for a more complete explanation of this technique.
+- We use a workaround for the absent but desirable ability to parametrize
+  tests over fixtures. See docstring in `tests/alembic_migrations/versions/
+  v_8fd8f556c548_add_weather_anomaly_matviews/details/
+  test_monthly_views_common.py`
+  for a more complete explanation of this technique.
 """
 import datetime
 
@@ -209,12 +207,10 @@ def describe_with_1_network():
                                     DailyExtremeTemperature
                                 )
                             ]
-                        ) == set(
-                            [
-                                datetime.datetime(2000, 1, 1),
-                                datetime.datetime(2000, 1, 2),
-                            ]
-                        )
+                        ) == {
+                            datetime.datetime(2000, 1, 1),
+                            datetime.datetime(2000, 1, 2),
+                        }
 
                     @mark.parametrize(
                         "DailyExtremeTemperature, statistics",
@@ -247,12 +243,16 @@ def describe_with_1_network():
 
                 def describe_with_many_observations_in_one_day_bis():
                     """Set up observations for flag tests.
-                    24 observations total, one for each hour in the single day Jan 1, 2000.
-                    Therefore daily temperature extrema views will have one row - for that date.
-                    Flags will be associated to these observations that cause a certain number of observations
-                    to be excluded from the daily temperature extrema calculations.
-                    This exclusion will affect the data_coverage figure for the (one) row returned - discards will
-                    cause data_coverage to be less than 1.0 by the fraction of observations excluded."""
+                    24 observations total, one for each hour in the single day
+                    Jan 1, 2000. Therefore daily temperature extrema views will
+                    have one row - for that date. Flags will be associated to
+                    these observations that cause a certain number of
+                    observations to be excluded from the daily temperature
+                    extrema calculations. This exclusion will affect the
+                    data_coverage figure for the (one) row returned - discards
+                    will cause data_coverage to be less than 1.0 by the
+                    fraction of observations excluded.
+                    """
 
                     num_obs_for_native = 12
                     num_obs_for_pcic = 12
@@ -303,19 +303,25 @@ def describe_with_1_network():
                                 yield sesh
 
                         def describe_with_flag_associations():
-                            """Associate flags to various subsets of the observations. Specifically:
+                            """Associate flags to various subsets of the
+                            observations. Specifically:
 
                             For native flags:
-                            - associate discard flags to num_discarded (=5) observations (id = 0..4)
-                            - associate non-discard flags to num_non_discarded (=5) observations,
+                            - associate discard flags to num_discarded (=5)
+                              observations (id = 0..4)
+                            - associate non-discard flags to num_non_discarded
+                              (=5) observations,
                               some overlapping discards (id = 3..7)
 
                             For pcic flags:
-                            - associate discard flags to num_discarded (=5) observations (id = 12..16)
-                            - associate non-discard flags to num_non_discarded (=5) observations,
+                            - associate discard flags to num_discarded (=5)
+                              observations (id = 12..16)
+                            - associate non-discard flags to num_non_discarded
+                              (=5) observations,
                               some overlapping discards (id = 15..19)
 
-                            Note that native and pcic flag associations do not overlap. That would be better to test,
+                            Note that native and pcic flag associations do not
+                            overlap. That would be better to test,
                             but also harder ... lazy/pragmatic
                             """
 
@@ -332,15 +338,21 @@ def describe_with_1_network():
                                 pcic_flag_discard,
                                 pcic_flag_non_discard,
                             ):
-                                """This fixture is used as an indirect fixture for parametrized tests.
-                                Its behaviour depends on the value of request.param, which tells whether
-                                to add associations to native flags, pcic flags, or both. Associations to
-                                native flags and to pcic flags do not overlap.
+                                """This fixture is used as an indirect fixture
+                                for parametrized tests. Its behaviour depends
+                                on the value of request.param, which tells
+                                whether to add associations to native flags,
+                                pcic flags, or both. Associations to native
+                                flags and to pcic flags do not overlap.
 
-                                This kind of indirect parameterization is a substitute for the absent ability of pytest
-                                to parametrize over fixtures, which would make this whole thing somewhat simpler to
-                                code and understand. In any case, it enables us to perform the same tests for several
-                                different combinations of flagging of observations without repetitive code.
+                                This kind of indirect parameterization is a
+                                substitute for the absent ability of pytest to
+                                parametrize over fixtures, which would make
+                                this whole thing somewhat simpler to code and
+                                understand. In any case, it enables us to
+                                perform the same tests for several different
+                                combinations of flagging of observations
+                                without repetitive code.
                                 """
                                 sesh = flag_sesh
                                 obs = sesh.query(Obs)

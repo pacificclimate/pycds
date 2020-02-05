@@ -1,4 +1,5 @@
-"""Test all features common to weather anomaly monthly temperature and precipitation views, namely
+"""Test all features common to weather anomaly monthly temperature and
+precipitation views, namely
 
   MonthlyAverageOfDailyMaxTemperature
   MonthlyAverageOfDailyMinTemperature
@@ -7,22 +8,30 @@
 Please see README for a description of the test framework used here.
 
 
-Because all tests are common to the 3 views, the tests are parametrized over those views.
+Because all tests are common to the 3 views, the tests are parametrized over
+those views.
 
-Temperature and precipitation views require different database contents (observations).
-Ideally we could parameterize over separate fixtures giving these contents, but pytest does not yet support that
+Temperature and precipitation views require different database contents
+(observations). Ideally we could parameterize over separate fixtures giving
+these contents, but pytest does not yet support that
 (see https://github.com/pytest-dev/pytest/issues/349).
 
-As a workaround for this, we use argument indirection (see http://doc.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments)
-in the parameterization of fixtures. This enables a fixture (with the same name as the parameter) to intervene between
-the argument (parameter value) proper and the value passed in to the test. The intervening fixture has access to the
-argument value, and can therefore behave differently depending on that argument. In this case, the different behaviour
-is to set up the database with different contents depending on the view to be tested.
+As a workaround for this, we use argument indirection
+(see http://doc.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments)
+in the parameterization of fixtures. This enables a fixture (with the same name
+as the parameter) to intervene between the argument (parameter value) proper
+and the value passed in to the test. The intervening fixture has access to the
+argument value, and can therefore behave differently depending on that argument.
+In this case, the different behaviour is to set up the database with different
+contents depending on the view to be tested.
 
-(Note: Parametrization over database setups is not strictly necessary in this particular set of tests, since the
-database contents for temperature and precipitation are completely independent and could therefore all be loaded for all
-tests. However, there are situations where this is not the case and it seemed worth working this out here. And perhaps
-a feeble efficiency argument could be made not to load up more information into the database per test than necessary.)
+(Note: Parametrization over database setups is not strictly necessary in this
+particular set of tests, since the database contents for temperature and
+precipitation are completely independent and could therefore all be loaded
+for all tests. However, there are situations where this is not the case and
+it seemed worth working this out here. And perhaps a feeble efficiency argument
+could be made not to load up more information into the database per test than
+necessary.)
 """
 
 import datetime
@@ -38,17 +47,13 @@ from pycds.weather_anomaly import (
 )
 
 
-# @fixture(scope='function')
-# def prepared_sesh_left(pycds_sesh, all_views):
-#     for s in create_then_drop_views(pycds_sesh, all_views):
-#         yield s
-
-
 def id(param):
     """Return a representation for a test parameter.
 
-    The long and frequently-used view-class parameters that are the keys of `abbrev` are represented as indicated;
-    otherwise None is returned, which causes the standard pytest-generated representation of the parameter to be used.
+    The long and frequently-used view-class parameters that are the keys of
+    `abbrev` are represented as indicated; otherwise None is returned, which
+    causes the standard pytest-generated representation of the parameter to be
+    used.
     """
     abbrev = {
         MonthlyAverageOfDailyMaxTemperature: "Tmax",
@@ -99,10 +104,14 @@ def describe_with_1_network():
                         var_precip_net1_1,
                         history_stn1_hourly,
                     ):
-                        """Yield a session with particular observations added to variable_sesh.
-                        Observations added depend on the value of request.param: 
-                        MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, or MonthlyTotalPrecipitation.
-                        This fixture is used as an indirect fixture for parametrized tests.
+                        """Yield a session with particular observations added
+                        to variable_sesh. Observations added depend on the
+                        value of request.param:
+                        MonthlyAverageOfDailyMaxTemperature,
+                        MonthlyAverageOfDailyMinTemperature, or
+                        MonthlyTotalPrecipitation.
+                        This fixture is used as an indirect fixture for
+                        parametrized tests.
                         """
                         if request.param in [
                             MonthlyAverageOfDailyMaxTemperature,
@@ -136,10 +145,14 @@ def describe_with_1_network():
 
                     @fixture
                     def variable(request, var_temp_point, var_precip_net1_1):
-                        """Yield a Variable object (which is a fixture), dependent on the value of request.param:
-                         MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, or MonthlyTotalPrecipitation.
-                        The variable yielded is the one expected for the type of view/test indicated by request.param.
-                        This fixture is used as an indirect fixture for parametrized tests.
+                        """Yield a Variable object (which is a fixture),
+                        dependent on the value of request.param:
+                        MonthlyAverageOfDailyMaxTemperature,
+                        MonthlyAverageOfDailyMinTemperature, or
+                        MonthlyTotalPrecipitation.
+                        The variable yielded is the one expected for the type
+                        of view/test indicated by request.param. This fixture
+                        is used as an indirect fixture for parametrized tests.
                         """
                         variable = {
                             MonthlyAverageOfDailyMaxTemperature: var_temp_point,
@@ -310,9 +323,14 @@ def describe_with_1_network():
                         var_precip_net1_1,
                         var_precip_net1_2,
                     ):
-                        """Yield a session with particular observations added to variable_sesh.
-                        Observations added depend on the value of request.param: MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, or MonthlyTotalPrecipitation.
-                        This fixture is used as an indirect fixture for parametrized tests.
+                        """Yield a session with particular observations added
+                        to variable_sesh. Observations added depend on the
+                        value of request.param:
+                        MonthlyAverageOfDailyMaxTemperature,
+                        MonthlyAverageOfDailyMinTemperature, or
+                        MonthlyTotalPrecipitation.
+                        This fixture is used as an indirect fixture for
+                        parametrized tests.
                         """
                         if request.param in [
                             MonthlyAverageOfDailyMaxTemperature,

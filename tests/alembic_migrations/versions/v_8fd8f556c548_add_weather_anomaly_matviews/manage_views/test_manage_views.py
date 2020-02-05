@@ -14,8 +14,9 @@ monthly_view_names = [v.base_viewname() for v in monthly_views]
     "what, exp_views",
     [
         ("daily", daily_views),
-        # `refresh monthly-only` will fail if the daily views haven't been refreshed, succeed if they do;
-        # we don't bother setting up the test machinery to test that
+        # `refresh monthly-only` will fail if the daily views haven't been
+        # refreshed, succeed if they do; we don't bother setting up the test
+        # machinery to test that
         ("all", daily_views + monthly_views),
     ],
 )
