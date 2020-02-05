@@ -8,7 +8,7 @@ node {
 
     stage('Testing') {
         def requirements = ['requirements.txt', 'test_requirements.txt']
-        def pytestArgs = '-v --tb=short tests'
+        def pytestArgs = 'PYCDS_SCHEMA_NAME=other -v --tb=short -k "not weather_anomal" tests'
         def options =  [containerData: 'crmprtd']
 
         parallel "Python 3.6": {
