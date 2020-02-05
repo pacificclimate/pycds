@@ -1,13 +1,18 @@
+import pytest
 from sqlalchemy import func, text
 
 from pycds import Obs, History
-from pycds.views import \
-    CrmpNetworkGeoserver, HistoryStationNetwork, ObsCountPerDayHistory, \
-    ObsWithFlags
+from pycds.utility_views.version_84b7fc2596d5 import (
+    CrmpNetworkGeoserver,
+    HistoryStationNetwork,
+    ObsCountPerDayHistory,
+    ObsWithFlags,
+)
 
 
-def test_crmp_network_geoserver(views_sesh):
-    q = views_sesh.query(CrmpNetworkGeoserver.network_name)
+@pytest.mark.usefixtures('new_db_left')
+def test_crmp_network_geoserver(sesh_with_large_data):
+    q = sesh_with_large_data.query(CrmpNetworkGeoserver.network_name)
     rv = q.all()
 
     # Test that the number of rows is not zero
@@ -34,13 +39,14 @@ def test_crmp_network_geoserver(views_sesh):
     assert filtered_nrows < nrows
 
 
-def test_history_station_network(views_sesh):
+@pytest.mark.usefixtures('new_db_left')
+def test_history_station_network(sesh_with_large_data):
     hsn_q = (
-        views_sesh.query(HistoryStationNetwork)
+        sesh_with_large_data.query(HistoryStationNetwork)
         .order_by(HistoryStationNetwork.history_id)
     )
     hx_q = (
-        views_sesh.query(History)
+        sesh_with_large_data.query(History)
         .order_by(History.id)
     )
 
@@ -52,9 +58,10 @@ def test_history_station_network(views_sesh):
         assert hsn.network_id == hx.station.network.id
 
 
-def test_obs_count_per_day_history(views_sesh):
+@pytest.mark.usefixtures('new_db_left')
+def test_obs_count_per_day_history(sesh_with_large_data):
     ocdh_count_over_hx_q = (
-        views_sesh.query(
+        sesh_with_large_data.query(
             ObsCountPerDayHistory.history_id.label('history_id'),
             func.sum(ObsCountPerDayHistory.count).label('count')
         )
@@ -64,7 +71,7 @@ def test_obs_count_per_day_history(views_sesh):
     )
 
     obs_count_over_hx_q = (
-        views_sesh.query(
+        sesh_with_large_data.query(
             Obs.history_id.label('history_id'),
             func.count(Obs.id).label('count')
         )
@@ -81,22 +88,14 @@ def test_obs_count_per_day_history(views_sesh):
         assert ocdh_count.count == obs_count.count
 
 
-def test_obs_with_flags(views_sesh):
-    # extensions = (
-    #     views_sesh.execute('''
-    #         SELECT * FROM pg_extension
-    #     ''')
-    # )
-    # print('### extensions', {
-    #     '{}: {}'.format(e.extname, e.extversion) for e in extensions
-    # })
-
+@pytest.mark.usefixtures('new_db_left')
+def test_obs_with_flags(sesh_with_large_data):
     obs_with_flags_q = (
-        views_sesh.query(ObsWithFlags)
+        sesh_with_large_data.query(ObsWithFlags)
             .order_by(ObsWithFlags.obs_raw_id)
     )
     obs_q = (
-        views_sesh.query(Obs)
+        sesh_with_large_data.query(Obs)
             .order_by(Obs.id)
     )
 

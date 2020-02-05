@@ -6,12 +6,8 @@ This code is adapted from
 https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects,
 plus information on how to incorporate schema name gleaned from
 https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
-
-TODO: Split out into separate modules: ReplaceableObject, ReversibleOp,
-  stored_procedure operations.
 """
-import re
-from alembic.operations import Operations, MigrateOperation
+from alembic.operations import MigrateOperation
 
 
 class ReplaceableObject(object):
@@ -72,40 +68,5 @@ class ReversibleOp(MigrateOperation):
         operations.invoke(create_new)
 
 
-@Operations.register_operation("create_stored_procedure", "invoke_for_target")
-@Operations.register_operation("replace_stored_procedure", "replace")
-class CreateSPOp(ReversibleOp):
-    def reverse(self):
-        return DropSPOp(self.target, schema=self.schema)
-
-
-@Operations.register_operation("drop_stored_procedure", "invoke_for_target")
-class DropSPOp(ReversibleOp):
-    def reverse(self):
-        return CreateSPOp(self.target, schema=self.schema)
-
-
 def schema_prefix(schema):
     return (schema and f"{schema}.") or ""
-
-
-@Operations.implementation_for(CreateSPOp)
-def create_stored_procedure(operations, operation):
-    operations.execute(
-        f"CREATE FUNCTION "
-        f"{schema_prefix(operation.schema)}{operation.target.name} "
-        f"{operation.target.sqltext}"
-    )
-
-
-@Operations.implementation_for(DropSPOp)
-def drop_stored_procedure(operations, operation):
-    # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
-    # signature is included in the DROP FUNCTION statement. So ditch it.
-    name = re.sub(
-        r" (DEFAULT|=) [^,)]*([,)])",
-        r"\2",
-        operation.target.name,
-        flags=re.MULTILINE
-    )
-    operations.execute(f"DROP FUNCTION {schema_prefix(operation.schema)}{name}")

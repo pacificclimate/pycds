@@ -100,15 +100,14 @@ class ViewMixin(object):
         be defined otherwise (e.g., text selectables with anonymous columns; see tests).
 
     To create a view in the database:
-        Base.metadata.create_all()
-    or
         Thing.create()
 
     To drop a view from the database:
-        Base.metadata.drop_all()
-    or
         Thing.drop()
 
+    TODO: Remove methods `create` and `drop`? View management is now handled
+      through Alembic migrations, so these methods are redundant and unlikely
+      to be used. If so, then remove `qualified_viewname` as well. Remove tests.
     """
 
     @declared_attr
