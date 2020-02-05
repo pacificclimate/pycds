@@ -24,10 +24,10 @@ def manage_views(session, operation, which_set):
     views = {
         'daily': daily_views,
         'monthly-only': monthly_views,
-        'all': daily_views + monthly_views, # Order of view updating matters
+        'all': daily_views + monthly_views,  # Order of view updating matters
     }[which_set]
 
     for view in views:
-        if operation == 'create' or issubclass(view, MaterializedViewMixin):
+        if issubclass(view, MaterializedViewMixin):
             logger.info("{} '{}'".format(operation.capitalize(), view.qualfied_viewname()))
             getattr(view, operation)(session)

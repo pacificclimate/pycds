@@ -28,7 +28,7 @@ Examples:
     parser.add_argument('-e', '--dbengloglevel', help='Database engine logging level',
                         choices=log_level_choices, default='WARNING')
     parser.add_argument('operation', help="Operation to perform",
-                        choices=['create', 'refresh'])
+                        choices=['refresh'])
     parser.add_argument('views', help="Views to affect",
                         choices=['daily', 'monthly-only', 'all'])
     args = parser.parse_args()
@@ -48,18 +48,13 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    mv_logger.debug('creating all ORM objects')
+    mv_logger.debug('Creating all ORM objects')
     pycds.Base.metadata.create_all(bind=engine)
     pycds.weather_anomaly.Base.metadata.create_all(bind=engine)
 
-    def search_path():
-        sp = session.execute('SHOW search_path')
-        return ','.join([r.search_path for r in sp])
-
-    mv_logger.debug('search_path before: {}'.format(search_path()))
-    session.execute('SET search_path TO crmp, public')
-    mv_logger.debug('search_path after: {}'.format(search_path()))
-
+    mv_logger.debug(
+        f"Executing '{args.operation}' on views {args.views}"
+    )
     manage_views(session, args.operation, args.views)
 
     session.commit()
