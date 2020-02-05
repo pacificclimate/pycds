@@ -12,18 +12,18 @@ node {
         def options =  [containerData: 'crmprtd']
 
         parallel "Python 3.6": {
-            runPythonTestSuite('pycds-test-python3.6', requirements, pytestArgs,
+            runPythonTestSuite('pcic/pycds-test-env:python-3.6', requirements, pytestArgs,
                                options)
         },
         "Python 3.7": {
-            runPythonTestSuite('pycds-test-python3.7', requirements, pytestArgs,
+            runPythonTestSuite('pcic/pycds-test-env:python-3.7', requirements, pytestArgs,
                                options)
         }
     }
 
     if (isPypiPublishable()) {
         stage('Push to PYPI') {
-            publishPythonPackage('pycds-test-python3.6', 'PCIC_PYPI_CREDS')
+            publishPythonPackage('pcic/pycds-test-env:python-3.6', 'PCIC_PYPI_CREDS')
         }
     }
 
