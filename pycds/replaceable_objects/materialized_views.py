@@ -10,7 +10,8 @@ namely, `operation.target` will be a different kind of object.
 from alembic.operations import Operations
 from . import ReversibleOp, schema_prefix
 from pycds.materialized_view_helpers import (
-    create_materialized_view, drop_materialized_view
+    create_materialized_view,
+    drop_materialized_view,
 )
 
 
@@ -28,8 +29,10 @@ class DropMaterializedViewOp(ReversibleOp):
 
 
 def target_name(operation):
-    return f"{schema_prefix(operation.schema)}" \
-           f"{operation.target.base_viewname()}"
+    return (
+        f"{schema_prefix(operation.schema)}"
+        f"{operation.target.base_viewname()}"
+    )
 
 
 @Operations.implementation_for(CreateMaterializedViewOp)
@@ -39,7 +42,7 @@ def create_materialized_view_op(operations, operation):
             target_name(operation),
             operation.target.__selectable__.compile(
                 compile_kwargs={"literal_binds": True}
-            )
+            ),
         )
     )
 

@@ -1,9 +1,12 @@
 from pytest import fixture
 
-from pycds.weather_anomaly import \
-    DailyMaxTemperature, DailyMinTemperature, \
-    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
-    MonthlyTotalPrecipitation
+from pycds.weather_anomaly import (
+    DailyMaxTemperature,
+    DailyMinTemperature,
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
+    MonthlyTotalPrecipitation,
+)
 
 
 # All tests in this directory need fixture `new_db_left`
@@ -25,7 +28,7 @@ def monthly_views():
     return [
         MonthlyAverageOfDailyMaxTemperature,
         MonthlyAverageOfDailyMinTemperature,
-        MonthlyTotalPrecipitation
+        MonthlyTotalPrecipitation,
     ]
 
 
@@ -39,4 +42,5 @@ def refresh_views():
     def f(views, sesh):
         for view in views:
             view.refresh(sesh)
+
     return f
