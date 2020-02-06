@@ -1,9 +1,10 @@
 """Tests of the `good_obs` query"""
-
+import pytest
 from pycds import Obs
-from pycds.weather_anomaly import good_obs
+from pycds.weather_anomaly.version_8fd8f556c548 import good_obs
 
 
+@pytest.mark.usefixtures("new_db_left")
 def test_good_obs(obs1_temp_sesh):
     """At present, there are only good observations in this session,
     so the test is simple."""
@@ -11,5 +12,3 @@ def test_good_obs(obs1_temp_sesh):
     observations = sesh.query(Obs)
     goods = sesh.query(good_obs)
     assert goods.count() == observations.count()
-
-

@@ -10,11 +10,19 @@ For an explanation of why we use `append_column` instead of `_make_proxy`, see. 
 for materialized views in SQLAlchemy, from its author:
 https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
 
-The current version of these helpers has been modified simply to create and update regular tables instead
-of true materialized views. This enables these helpers to be used in with Postgresql versions < 9.3 (when
-materialized views were introduced). To restore the true materialized view functionality, revert the merge
-commit for the branch "fake-materialized-views".
+The current version of these helpers creates and updates regular tables instead
+of true materialized views. This enables these helpers to be used in with
+Postgresql versions < 9.3 (when materialized views were introduced).
+To restore the true materialized view functionality, revert the merge commit
+for the branch "fake-materialized-views".
 
+TODO: Clean this up a bit. It's not clear the SQLAlchemy commands
+  `CreateMaterializedView`, etc. are necessary, since the selectable can be
+  compiled by invoking `selectable.compile(...)`. In that case, they can be
+  removed and their usage replaced by the simpler functions
+  `create_materialized_view` etc.
+
+TODO:
 """
 
 from sqlalchemy.ext import compiler
@@ -24,6 +32,8 @@ from sqlalchemy import Table, Column, MetaData
 from sqlalchemy.ext.declarative import declared_attr
 from pycds.view_helpers import snake_case
 
+
+# SQLAlchemy "commands"
 
 class CreateMaterializedView(DDLElement):
     def __init__(self, name, selectable):
@@ -42,16 +52,29 @@ class RefreshMaterializedView(DDLElement):
         self.selectable = selectable
 
 
+# SQL implementation (compilation) of commands
+# Note: Functions `create_materialized_view` and `drop_materialized_view`
+# are also used to implement Alembic matview operations. Hence their existence.
+
+def create_materialized_view(name, body):
+    return f"CREATE TABLE {name} AS {body}"
+
+
 @compiler.compiles(CreateMaterializedView)
 def compile(element, compiler, **kw):
-    return 'CREATE TABLE {} AS {}'.format(
+    return create_materialized_view(
         element.name,
-        compiler.sql_compiler.process(element.selectable, literal_binds=True))
+        compiler.sql_compiler.process(element.selectable, literal_binds=True),
+    )
+
+
+def drop_materialized_view(name):
+    return f"DROP TABLE {name}"
 
 
 @compiler.compiles(DropMaterializedView)
 def compile(element, compiler, **kw):
-    return 'DROP TABLE {}'.format(element.name)
+    return drop_materialized_view(element.name)
 
 
 @compiler.compiles(RefreshMaterializedView)
@@ -60,6 +83,8 @@ def compile(element, compiler, **kw):
         element.name,
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
+
+# Implementation of materialized view in declarative base style.
 
 class MaterializedViewMixin(object):
     """Mixin for ORM classes that are materialized views. Defines the two key attributes of an ORM class,
@@ -89,18 +114,17 @@ class MaterializedViewMixin(object):
 
 
     To create a materialized view in the database:
-        Base.metadata.create_all()
-    or
         Thing.create()
 
     To drop a materialized view from the database:
-        Base.metadata.drop_all()
-    or
         Thing.drop()
 
     To refresh a materialized view in the database:
         Thing.refresh()
 
+    TODO: Remove methods `create` and `drop`? View management is now handled
+      through Alembic migrations, so these methods are redundant and unlikely
+      to be used. Remove corresponding tests.
     """
 
     @declared_attr

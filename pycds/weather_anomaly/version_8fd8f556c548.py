@@ -48,10 +48,16 @@ from sqlalchemy import MetaData, func, and_, not_, case
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 
-from pycds import \
-    get_schema_name, \
-    History, Obs, ObsRawNativeFlags, NativeFlag, ObsRawPCICFlags, PCICFlag, \
-    Variable
+from pycds import (
+    get_schema_name,
+    History,
+    Obs,
+    ObsRawNativeFlags,
+    NativeFlag,
+    ObsRawPCICFlags,
+    PCICFlag,
+    Variable,
+)
 from pycds.materialized_view_helpers import MaterializedViewMixin
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
@@ -61,19 +67,21 @@ metadata = Base.metadata
 # Subquery used in daily temperature extrema and monthly total precip queries
 # This query returns all Obs items with no `discard==True` flags attached.
 good_obs = (
-    Query([
-        Obs.id.label('id'),
-        Obs.time.label('time'),
-        Obs.mod_time.label('mod_time'),
-        Obs.datum.label('datum'),
-        Obs.vars_id.label('vars_id'),
-        Obs.history_id.label('history_id'),
-    ])
+    Query(
+        [
+            Obs.id.label("id"),
+            Obs.time.label("time"),
+            Obs.mod_time.label("mod_time"),
+            Obs.datum.label("datum"),
+            Obs.vars_id.label("vars_id"),
+            Obs.history_id.label("history_id"),
+        ]
+    )
     .select_from(Obs)
-        .outerjoin(ObsRawNativeFlags)
-        .outerjoin(NativeFlag)
-        .outerjoin(ObsRawPCICFlags)
-        .outerjoin(PCICFlag)
+    .outerjoin(ObsRawNativeFlags)
+    .outerjoin(NativeFlag)
+    .outerjoin(ObsRawPCICFlags)
+    .outerjoin(PCICFlag)
     .group_by(Obs.id)
     .having(
         and_(
@@ -81,7 +89,7 @@ good_obs = (
             not_(func.bool_or(func.coalesce(PCICFlag.discard, False))),
         )
     )
-).subquery('good_obs')
+).subquery("good_obs")
 
 
 def daily_temperature_extremum(extremum):
@@ -96,40 +104,49 @@ def daily_temperature_extremum(extremum):
     extremum_func = getattr(func, extremum)
     func_schema = getattr(func, get_schema_name())
     return (
-        Query([
-            History.id.label('history_id'),
-            good_obs.c.vars_id.label('vars_id'),
-            func_schema.effective_day(good_obs.c.time, extremum, History.freq)
-                .label('obs_day'),
-            extremum_func(good_obs.c.datum).label('statistic'),
-            func.sum(case({
-                'daily': 1.0,
-                '12-hourly': 0.5,
-                '1-hourly': 1 / 24,
-            }, value=History.freq)).label('data_coverage')
-        ])
+        Query(
+            [
+                History.id.label("history_id"),
+                good_obs.c.vars_id.label("vars_id"),
+                func_schema.effective_day(
+                    good_obs.c.time, extremum, History.freq
+                ).label("obs_day"),
+                extremum_func(good_obs.c.datum).label("statistic"),
+                func.sum(
+                    case(
+                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24,},
+                        value=History.freq,
+                    )
+                ).label("data_coverage"),
+            ]
+        )
         .select_from(good_obs)
-            .join(Variable)
-            .join(History)
-        .filter(Variable.standard_name == 'air_temperature')
-        .filter(Variable.cell_method.in_(
-            (f'time: {extremum}imum', 'time: point', 'time: mean')))
-        .filter(History.freq.in_(('1-hourly', '12-hourly', 'daily')))
-        .group_by(History.id, good_obs.c.vars_id, 'obs_day')
+        .join(Variable)
+        .join(History)
+        .filter(Variable.standard_name == "air_temperature")
+        .filter(
+            Variable.cell_method.in_(
+                (f"time: {extremum}imum", "time: point", "time: mean")
+            )
+        )
+        .filter(History.freq.in_(("1-hourly", "12-hourly", "daily")))
+        .group_by(History.id, good_obs.c.vars_id, "obs_day")
     )
 
 
 class DailyMaxTemperature(Base, MaterializedViewMixin):
-    __selectable__ = daily_temperature_extremum('max').selectable
-    __primary_key__ = 'history_id vars_id obs_day'.split()
+    __selectable__ = daily_temperature_extremum("max").selectable
+    __primary_key__ = "history_id vars_id obs_day".split()
 
 
 class DailyMinTemperature(Base, MaterializedViewMixin):
-    __selectable__ = daily_temperature_extremum('min').selectable
-    __primary_key__ = 'history_id vars_id obs_day'.split()
+    __selectable__ = daily_temperature_extremum("min").selectable
+    __primary_key__ = "history_id vars_id obs_day".split()
 
 
-def monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum):
+def monthly_average_of_daily_temperature_extremum_with_total_coverage(
+    extremum,
+):
     """Return a SQLAlchemy query for a monthly average of a specified
     extremum of daily temperature, with monthly total data coverage.
 
@@ -141,26 +158,27 @@ def monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum):
     """
     # TODO: Rename. Geez.
 
-    DailyExtremeTemp = \
-        DailyMaxTemperature if extremum == 'max' \
-            else DailyMinTemperature
+    DailyExtremeTemp = (
+        DailyMaxTemperature if extremum == "max" else DailyMinTemperature
+    )
 
-    obs_month = func.date_trunc('month', DailyExtremeTemp.obs_day)
+    obs_month = func.date_trunc("month", DailyExtremeTemp.obs_day)
 
     return (
-        Query([
-            DailyExtremeTemp.history_id.label('history_id'),
-            DailyExtremeTemp.vars_id.label('vars_id'),
-            obs_month.label('obs_month'),
-            func.avg(DailyExtremeTemp.statistic).label('statistic'),
-            func.sum(DailyExtremeTemp.data_coverage)
-                .label('total_data_coverage'),
-        ])
+        Query(
+            [
+                DailyExtremeTemp.history_id.label("history_id"),
+                DailyExtremeTemp.vars_id.label("vars_id"),
+                obs_month.label("obs_month"),
+                func.avg(DailyExtremeTemp.statistic).label("statistic"),
+                func.sum(DailyExtremeTemp.data_coverage).label(
+                    "total_data_coverage"
+                ),
+            ]
+        )
         .select_from(DailyExtremeTemp)
         .group_by(
-            DailyExtremeTemp.history_id,
-            DailyExtremeTemp.vars_id,
-            'obs_month'
+            DailyExtremeTemp.history_id, DailyExtremeTemp.vars_id, "obs_month"
         )
     )
 
@@ -177,35 +195,42 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     """
     # TODO: Rename. Geez.
 
-    avg_daily_extreme_temperature = \
-        monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum)\
-            .subquery('avg_daily_extreme_temperature')
+    avg_daily_extreme_temperature = monthly_average_of_daily_temperature_extremum_with_total_coverage(
+        extremum
+    ).subquery(
+        "avg_daily_extreme_temperature"
+    )
 
     func_schema = getattr(func, get_schema_name())
 
-    return (
-        Query([
-            avg_daily_extreme_temperature.c.history_id.label('history_id'),
-            avg_daily_extreme_temperature.c.vars_id.label('vars_id'),
-            avg_daily_extreme_temperature.c.obs_month.label('obs_month'),
-            avg_daily_extreme_temperature.c.statistic.label('statistic'),
+    return Query(
+        [
+            avg_daily_extreme_temperature.c.history_id.label("history_id"),
+            avg_daily_extreme_temperature.c.vars_id.label("vars_id"),
+            avg_daily_extreme_temperature.c.obs_month.label("obs_month"),
+            avg_daily_extreme_temperature.c.statistic.label("statistic"),
             (
-                avg_daily_extreme_temperature.c.total_data_coverage /
-                func_schema.DaysInMonth(avg_daily_extreme_temperature.c.obs_month)
-            ).label('data_coverage')
-        ])
-        .select_from(avg_daily_extreme_temperature)
-    )
+                avg_daily_extreme_temperature.c.total_data_coverage
+                / func_schema.DaysInMonth(
+                    avg_daily_extreme_temperature.c.obs_month
+                )
+            ).label("data_coverage"),
+        ]
+    ).select_from(avg_daily_extreme_temperature)
 
 
 class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
-    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage('max').selectable
-    __primary_key__ = 'history_id vars_id obs_month'.split()
+    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+        "max"
+    ).selectable
+    __primary_key__ = "history_id vars_id obs_month".split()
 
 
 class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
-    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage('min').selectable
-    __primary_key__ = 'history_id vars_id obs_month'.split()
+    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+        "min"
+    ).selectable
+    __primary_key__ = "history_id vars_id obs_month".split()
 
 
 def monthly_total_precipitation_with_total_coverage():
@@ -216,28 +241,35 @@ def monthly_total_precipitation_with_total_coverage():
         sqlalchemy.sql.expression.Query
     """
     return (
-        Query([
-            History.id.label('history_id'),
-            good_obs.c.vars_id.label('vars_id'),
-            func.date_trunc('month', good_obs.c.time).label('obs_month'),
-            func.sum(good_obs.c.datum).label('statistic'),
-            func.sum(case({
-                'daily': 1.0,
-                '12-hourly': 0.5,
-                '1-hourly': 1 / 24,
-            }, value=History.freq)).label('total_data_coverage')
-        ])
+        Query(
+            [
+                History.id.label("history_id"),
+                good_obs.c.vars_id.label("vars_id"),
+                func.date_trunc("month", good_obs.c.time).label("obs_month"),
+                func.sum(good_obs.c.datum).label("statistic"),
+                func.sum(
+                    case(
+                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24,},
+                        value=History.freq,
+                    )
+                ).label("total_data_coverage"),
+            ]
+        )
         .select_from(good_obs)
-            .join(History)
-            .join(Variable)
-        .filter(Variable.standard_name.in_((
-            'lwe_thickness_of_precipitation_amount',
-            'thickness_of_rainfall_amount',
-            'thickness_of_snowfall_amount'
-        )))
-        .filter(Variable.cell_method == 'time: sum')
-        .filter(History.freq.in_(('1-hourly', 'daily')))
-        .group_by(History.id, good_obs.c.vars_id, 'obs_month')
+        .join(History)
+        .join(Variable)
+        .filter(
+            Variable.standard_name.in_(
+                (
+                    "lwe_thickness_of_precipitation_amount",
+                    "thickness_of_rainfall_amount",
+                    "thickness_of_snowfall_amount",
+                )
+            )
+        )
+        .filter(Variable.cell_method == "time: sum")
+        .filter(History.freq.in_(("1-hourly", "daily")))
+        .group_by(History.id, good_obs.c.vars_id, "obs_month")
     )
 
 
@@ -250,27 +282,26 @@ def monthly_total_precipitation_with_avg_coverage():
     """
     # TODO: Rename. Geez.
 
-    monthly_total_precip = \
-        monthly_total_precipitation_with_total_coverage() \
-            .subquery('monthly_total_precip')
+    monthly_total_precip = monthly_total_precipitation_with_total_coverage().subquery(
+        "monthly_total_precip"
+    )
 
     func_schema = getattr(func, get_schema_name())
 
-    return (
-        Query([
-            monthly_total_precip.c.history_id.label('history_id'),
-            monthly_total_precip.c.vars_id.label('vars_id'),
-            monthly_total_precip.c.obs_month.label('obs_month'),
-            monthly_total_precip.c.statistic.label('statistic'),
+    return Query(
+        [
+            monthly_total_precip.c.history_id.label("history_id"),
+            monthly_total_precip.c.vars_id.label("vars_id"),
+            monthly_total_precip.c.obs_month.label("obs_month"),
+            monthly_total_precip.c.statistic.label("statistic"),
             (
-                monthly_total_precip.c.total_data_coverage /
-                func_schema.DaysInMonth(monthly_total_precip.c.obs_month)
-            ).label('data_coverage')
-        ])
-        .select_from(monthly_total_precip)
-    )
+                monthly_total_precip.c.total_data_coverage
+                / func_schema.DaysInMonth(monthly_total_precip.c.obs_month)
+            ).label("data_coverage"),
+        ]
+    ).select_from(monthly_total_precip)
 
 
 class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
     __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable
-    __primary_key__ = 'history_id vars_id obs_month'.split()
+    __primary_key__ = "history_id vars_id obs_month".split()
