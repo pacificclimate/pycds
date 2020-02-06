@@ -8,22 +8,25 @@ node {
 
     stage('Testing') {
         def requirements = ['requirements.txt', 'test_requirements.txt']
-        def pytestArgs = 'PYCDS_SCHEMA_NAME=other -v --tb=short -k "not weather_anomal" tests'
+        def pytestArgs = '-v --tb=short -k "not weather_anomal" tests'
         def options =  [containerData: 'crmprtd']
 
-        parallel "Python 3.6": {
-            runPythonTestSuite('pcic/pycds-test-env:python-3.6', requirements, pytestArgs,
-                               options)
-        },
-        "Python 3.7": {
-            runPythonTestSuite('pcic/pycds-test-env:python-3.7', requirements, pytestArgs,
-                               options)
+        withEnv(['PYCDS_SCHEMA_NAME=other']) {
+            parallel "Python 3.6": {
+                    runPythonTestSuite('pcic/pycds-test-env:python-3.6',
+                                       requirements, pytestArgs, options)
+                },
+                "Python 3.7": {
+                    runPythonTestSuite('pcic/pycds-test-env:python-3.7',
+                                       requirements, pytestArgs, options)
+                }
         }
     }
 
     if (isPypiPublishable()) {
         stage('Push to PYPI') {
-            publishPythonPackage('pcic/pycds-test-env:python-3.6', 'PCIC_PYPI_CREDS')
+            publishPythonPackage('pcic/pycds-test-env:python-3.6',
+                                 'PCIC_PYPI_CREDS')
         }
     }
 
