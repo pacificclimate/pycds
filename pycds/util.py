@@ -37,14 +37,3 @@ def compile_query(statement, bind=None):
 
     compiler = LiteralCompiler(dialect, statement)
     return compiler.process(statement)
-
-
-def create_test_database(engine):
-    pycds.Base.metadata.create_all(bind=engine)
-
-
-
-
-
-
-
