@@ -46,11 +46,11 @@ setup(
         "black==19.10b0",
     ],
     tests_require=[
-        'pytest<4.0',
-        'pytest-describe<0.12' 
-        'testing.postgresql==1.3.0',
-        'alembic==1.3.2',
-        'alembic-verify==0.1.4'
+        "pytest<4.0",
+        "pytest-describe<0.12",
+        "testing.postgresql==1.3.0",
+        "alembic==1.3.2",
+        "alembic-verify==0.1.4"
     ],
     cmdclass={'test': PyTest},
 
