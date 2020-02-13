@@ -2,7 +2,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-__version__ = (2, 2, 1)
+__version__ = (3, 0, 0)
 
 
 class PyTest(TestCommand):
@@ -39,14 +39,18 @@ setup(
         'scripts/manage-views.py'
     ],
     install_requires=[
-        'SQLAlchemy', 'geoalchemy2', 'psycopg2', 'alembic', 'black'
+        "geoalchemy2==0.6.3",
+        "SQLAlchemy==1.3.10",
+        "psycopg2==2.8.4",
+        "alembic==1.3.2",
+        "black==19.10b0",
     ],
     tests_require=[
-        'pytest  <4.0',
-        'pytest-describe <0.12' 
-        'testing.postgresql',
-        'alembic',
-        'alembic-verify'
+        'pytest<4.0',
+        'pytest-describe<0.12' 
+        'testing.postgresql==1.3.0',
+        'alembic==1.3.2',
+        'alembic-verify==0.1.4'
     ],
     cmdclass={'test': PyTest},
 
