@@ -39,18 +39,18 @@ setup(
         'scripts/manage-views.py'
     ],
     install_requires=[
-        "geoalchemy2==0.6.3",
-        "SQLAlchemy==1.3.10",
-        "psycopg2==2.8.4",
-        "alembic==1.3.2",
-        "black==19.10b0",
+        "alembic",
+        "black",
+        "geoalchemy2",
+        "psycopg2",
+        "SQLAlchemy",
     ],
     tests_require=[
-        "pytest<4.0",
-        "pytest-describe<0.12",
-        "testing.postgresql==1.3.0",
-        "alembic==1.3.2",
-        "alembic-verify==0.1.4"
+        "pytest",
+        "pytest-describe",
+        "testing.postgresql",
+        "alembic",
+        "alembic-verify"
     ],
     cmdclass={'test': PyTest},
 
