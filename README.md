@@ -61,8 +61,8 @@ utilize them for long-term climate monitoring.
 PyCDS defines the following contents of a CRMP/PCDS database:
 
 - schema name
-- functions
 - tables
+- stored procedures
 - views
 - materialized views
 
@@ -71,9 +71,17 @@ PyCDS defines the following contents of a CRMP/PCDS database:
 
 All contents of a PyCDS database are defined in a named schema.
 
-SQLAlchemy does not make it easy to set the schema name at run-time. Since SQLAlchemy ORMs are defined
-declaratively, not procedurally, the schema name must be determined externally to the code using
-PyCDS, which is done most conveniently via an environment variable.
+SQLAlchemy documentation [recommends](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path) 
+against using the `search_path` to establish schema name: 
+
+> keep the `search_path` variable set to its default of `public`, name schemas other than `public` 
+explicitly within `Table` definitions.
+
+Unfortunately, SQLAlchemy does not make it easy to set the schema name at run-time. 
+Since SQLAlchemy ORMs are defined declaratively, not procedurally, the schema name must be determined at 
+"declare time" (i.e., when SQLAlchemy table classes are processed), which is done most conveniently
+by fetching the name from an environment variable. Once classes are declared, the schema name
+cannot be (re)set.
 
 **The schema name is specified by the environment variable `PYCDS_SCHEMA_NAME`.**
 
@@ -88,41 +96,12 @@ In the case of an existing database, a mismatch between `PYCDS_SCHEMA_NAME` and 
 actual database schema name will cause operations to
 fail with errors of the form "could not find object X in schema Y".
 
-
-### Functions
-
-A selection of database functions is defined in module `pycds.functions`. They comprise those database functions
-important to the functioning and usage of a CRMP database, either because they support views or
-materialized views defined in PyCDS, or because they are judged important to core users of a database.
-
-Database functions, unlike the other database objects defined PyCDS, are defined by DDL objects rather than by
-declarative base classes. Such a DDL object is, in turn, returned by a Python function, `pycds.functions.<func>`.
-The function definition is a function because it is parametrized
-with the name of the schema in which the function should be defined, which defaults to the value of
-`pycds.get_schema_name()`. The DDL object returned can be executed to cause the database function to be defined.
-(Note: This function-based arrangement may in the near future be converted to a declarative base arrangement.)
-
-The name of the PyCDS function definition function (`pycds.functions.<func>`) is the same as the name of the database
-function (`<schema name>.<func>`) it causes to be defined when its return value is executed.
-
-To add a database function to a database, you must execute code like the following:
-
-```python
-executor.execute(pycds.functions.<func>())
-```
-
-where `executor` is a SQLAlchemy connection, engine, or session. 
-(Note the function invocation in the above code.)
-
-A database function created in this way is accessed in the same way as all other database functions in SQLAlchemy,
-namely through the `sqlalchemy.func` mechanism in queries. 
-
-
 ### Tables
 
-Tables are the core of PyCDS. The tables defined are all those found in a standard CRMP database.
+The tables defined in PyCDS are all those found in a standard CRMP database.
 
-Tables are defined using the SQLAlchemy declarative base method, in `pycds` proper (i.e., in `pycds/__init__.py`).
+Tables are defined using the SQLAlchemy declarative base method, in the root `pycds` module. 
+
 The declarative base for the tables, `pycds.Base`, automatically receives the schema name returned 
 `pycds.get_schema_name()`. The schema name can only be
 modified by specifying the environment variable `PYCDS_SCHEMA_NAME` in the execution environment of the code.
@@ -133,7 +112,7 @@ clearly related. For example, the database table `meta_stations` is represented 
 `pycds.Station`. 
 Column names within tables bear a similarly close but not always identical relationship.
 
-To create tables in an empty database schema or to map onto tables already defined in a database, execute
+To map onto tables already defined in a database, execute
 
 ```python
 pycds.Base.metadata.create_all(engine)
@@ -141,45 +120,77 @@ pycds.Base.metadata.create_all(engine)
 
 where `engine` is a SQLAlchemy database engine.
 
+### Note: Replaceable objects
+
+Database tables can be mutated "in place": for example, columns can be added, dropped, or renamed. 
+
+Other items, including stored procedures and views, are not mutable. 
+When a change to them is required they must be replaced in their entirety, i.e., dropped and
+recreated. Such objects are called replaceable objects, and PyCDS manages them accordingly.
+
+All important changes to a CRMP/PCDS database are now managed by Alembic migrations, including
+changes to replaceable objects. (Older versions of PyCDS did not use Alembic, and a different,
+now deprecated mechanism was used to make changes.)
+
+### Stored procedures
+
+A stored procedure is a replaceable object (see above), and all such objects are managed 
+via Alembic migrations. A migration may add, drop, or change a stored procedure. 
+The stored procedures present in one 
+migration version of the database can be different than those in another version.
+
+Because of this, it is not
+straightforward to get from PyCDS the list of stored procedures that will be present in 
+any given version of a database. The easiest way to do that is to examine a database at the
+migration version of interest. 
+
+TODO: Build a tool for this. Existing infrastructure will make this easy. 
+Alternative: Extract SP definitions to a version-structured sub-module as for views,
+and maintain its `__init__.py`.
+
+A stored procedure in the database is is accessed in SQLAlchemy through the standard 
+`sqlalchemy.func` mechanism in queries.
+
 ### Views
 
-A selection of views is defined in module `pycds.views`. 
-They comprise those views judged important to core users of a database.
+A view is a replaceable object (see above), and all such objects are managed via
+Alembic migrations. A migration may add, drop, or change a view. The views present in one 
+migration version of the database can be different than those in another version.
+
+To enable Alembic to work properly, it is necessary retain all
+versions of views, not just the latest. The views defined in migration
+version `<version>` are stored in the module `pycds.utility_views.version_<version>`
+in this directory. The most recent version of each view (frozen in a given release of PyCDS)
+is exported by `pycds.utility_views`.
 
 Views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy 
 implemented in `pycds/view_helpers.py`.
-The declarative base for views, `pycds.views.Base`, automatically receives the schema name returned 
+The declarative base for views, `pycds.utility_views.Base`, automatically receives the schema name returned 
 `pycds.get_schema_name()`. The schema name can only be
 modified by specifying the environment variable `PYCDS_SCHEMA_NAME` in the execution environment of the code.
 
-A view in the database is represented by the class `pycds.views.<View>`, where `<View>` is the name of
+A view in the database is represented by the class `pycds.utility_views.<View>`, where `<View>` is the name of
 the ORM object corresponding to the view in the database. The ORM name and the view name are different but
 clearly related. For example, the database view `crmp_network_geoserver` is represented by the ORM class
 `pycds.views.CrmpNetworkGeoserver`. 
 Column names within views bear a similarly close but not always identical relationship.
 
-To add a view to a database, execute code like the following:
-
-```python
-pycds.views.<View>.create(session)
-```
-
-where `session` is a SQLAlchemy database session.
-
-To drop a view from a database, execute code like the following:
-
-```python
-pycds.views.<View>.drop(session)
-```
-
 
 ### Materialized views
+
+A materialized view is a replaceable object (see above), and all such objects are managed via
+Alembic migrations. A migration may add, drop, or change a materialized view. The materialized views present in one 
+migration version of the database can be different than those in another version.
 
 A selection of materialized views is defined in module `pycds.weather_anomaly`. These views support the PCIC
 Weather Anomaly application. At present, _all_ predefined materialized views are for the Weather Anomaly application.
 Additional materialized views, possibly for other purposes, may be added in future.
 
-
+To enable Alembic to work properly, it is necessary retain all
+versions of materialized views, not just the latest. The materialized views defined in migration
+version `<version>` are stored in the module `pycds.weather_anomaly.version_<version>`
+in this directory. The most recent version of each view (frozen in a given release of PyCDS)
+is exported by `pycds.weather_anomaly`.
 
 Materialized views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy 
 in `pycds/materialized_view_helpers.py`. This extension does not at the moment support native materialized views,
@@ -198,20 +209,6 @@ The ORM name and the materialized view name are different but clearly related.
 For example, the database materialized view `daily_max_temperature_mv` is represented by the ORM class
 `pycds.weather_anomaly.DailyMaxTemperature`. 
 Column names within materialized views bear a similarly close but not always identical relationship.
-
-To add a materialized view to a database, execute code like the following:
-
-```python
-pycds.weather_anomaly.<Matview>.create(session)
-```
-
-where `session` is a SQLAlchemy database session.
-
-To drop a materialized view from a database, execute code like the following:
-
-```python
-pycds.weather_anomaly.<Matview>.drop(session)
-```
 
 To refresh a materialized view, execute code like the following:
 
@@ -265,7 +262,8 @@ For example:
 sqlalchemy.url = postgresql://tester@localhost:30599/pycds_test
 ```
 
-The file `alembic.ini` already contains several such db-names.
+The file `alembic.ini` already contains several such db-names. 
+We expect to expand this list as more CRMP-type databases are added to the PCIC stable.
 
 ### Specifying the schema within the database
 
