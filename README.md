@@ -71,9 +71,17 @@ PyCDS defines the following contents of a CRMP/PCDS database:
 
 All contents of a PyCDS database are defined in a named schema.
 
-SQLAlchemy does not make it easy to set the schema name at run-time. Since SQLAlchemy ORMs are defined
-declaratively, not procedurally, the schema name must be determined externally to the code using
-PyCDS, which is done most conveniently via an environment variable.
+SQLAlchemy documentation [recommends](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path) 
+against using the `search_path` to establish schema name: 
+
+> keep the `search_path` variable set to its default of `public`, name schemas other than `public` 
+explicitly within `Table` definitions.
+
+Unfortunately, SQLAlchemy does not make it easy to set the schema name at run-time. 
+Since SQLAlchemy ORMs are defined declaratively, not procedurally, the schema name must be determined at 
+"declare time" (i.e., when SQLAlchemy table classes are processed), which is done most conveniently
+by fetching the name from an environment variable. Once classes are declared, the schema name
+cannot be (re)set.
 
 **The schema name is specified by the environment variable `PYCDS_SCHEMA_NAME`.**
 
@@ -90,10 +98,9 @@ fail with errors of the form "could not find object X in schema Y".
 
 ### Tables
 
-Tables are the core of PyCDS. The tables defined are all those found in a standard CRMP database.
+The tables defined in PyCDS are all those found in a standard CRMP database.
 
-Tables are defined using the SQLAlchemy declarative base method, in `pycds` proper 
-(i.e., in `pycds/__init__.py`).
+Tables are defined using the SQLAlchemy declarative base method, in the root `pycds` module. 
 
 The declarative base for the tables, `pycds.Base`, automatically receives the schema name returned 
 `pycds.get_schema_name()`. The schema name can only be
@@ -105,7 +112,7 @@ clearly related. For example, the database table `meta_stations` is represented 
 `pycds.Station`. 
 Column names within tables bear a similarly close but not always identical relationship.
 
-To create tables in an empty database schema or to map onto tables already defined in a database, execute
+To map onto tables already defined in a database, execute
 
 ```python
 pycds.Base.metadata.create_all(engine)
@@ -113,7 +120,7 @@ pycds.Base.metadata.create_all(engine)
 
 where `engine` is a SQLAlchemy database engine.
 
-## Note: Replaceable objects
+### Note: Replaceable objects
 
 Database tables can be mutated "in place": for example, columns can be added, dropped, or renamed. 
 
