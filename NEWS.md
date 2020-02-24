@@ -18,23 +18,17 @@ Major / dominant changes:
 * [Add migration version-check function](https://github.com/pacificclimate/pycds/pull/58)
 * [Add migration for weather anomaly materialized views](https://github.com/pacificclimate/pycds/pull/55)
 * [Add migration for utility views](https://github.com/pacificclimate/pycds/pull/53)
-* [Add migration for functions ](https://github.com/pacificclimate/pycds/pull/52)
+* [Add migration for functions (stored procedures)](https://github.com/pacificclimate/pycds/pull/52)
 * [Initialize migration management](https://github.com/pacificclimate/pycds/pull/50)
 * [Make PyCDS schema name agnostic](https://github.com/pacificclimate/pycds/pull/44)
 * [Rationalize test fixtures](https://github.com/pacificclimate/pycds/pull/42)
 * [Drop support for Python <3.6](https://github.com/pacificclimate/pycds/pull/40)
 * [Modify PyCDS table definitions to bring it to canonical current state of CRMP](https://github.com/pacificclimate/pycds/pull/35)
 
-Minor / superseded changes:
+Minor changes:
 
-* [Add utility native views (superseded by migration based view management)](https://github.com/pacificclimate/pycds/pull/37)
-* [Add stored procedure definitions to match canonical current state of CRMP (superseded by migration based stored procedure management)](https://github.com/pacificclimate/pycds/pull/35)
 * [Add index definitions to the obs_raw table](https://github.com/pacificclimate/pycds/pull/24)
 * [Prod fixes for load and verify baseline](https://github.com/pacificclimate/pycds/pull/18)
-* [Fixes for production use of manage-views (superseded by later PRs)](https://github.com/pacificclimate/pycds/pull/17)
-* [Fake materialized views with regular tables (superseded by migration based matview management, but the core of this remains)](https://github.com/pacificclimate/pycds/pull/16)
-
-
 
 # 2.2.1
 
