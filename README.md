@@ -1,18 +1,21 @@
 # PyCDS
 
-PyCDS is a Python package that provides an 
+![Python CI](https://github.com/pacificclimate/pycds/workflows/Python%20CI/badge.svg)
+![Pypi Publishing](https://github.com/pacificclimate/pycds/workflows/Pypi%20Publishing/badge.svg)
+
+PyCDS is a Python package that provides an
 [Object Relational Mapping (ORM)](http://en.wikipedia.org/wiki/Object-relational_mapping)
 layer for accessing meteorological observations stored in a relational database
 in a standard database model, referred to variously as a CRMP database or a PCDS database.
 
-This package also uses [Alembic](https://alembic.sqlalchemy.org/) to manage database creation and migration 
+This package also uses [Alembic](https://alembic.sqlalchemy.org/) to manage database creation and migration
 (see section below).
 
 This type of database (i.e., with the PCDS/CRMP model) is currently being used at PCIC to
-store BC's long-term weather archive, the Provincial Climate Data Set (PCDS), and 
+store BC's long-term weather archive, the Provincial Climate Data Set (PCDS), and
 the Northern Climate Database (dbnorth). For details, see Background below.
 
-With this package, one can recreate the database schema in [PostgreSQL](http://www.postgresql.org) or 
+With this package, one can recreate the database schema in [PostgreSQL](http://www.postgresql.org) or
 [SQLite](http://www.sqlite.org)
 and/or use the package as an object mapper for programmatic database access.
 PyCDS uses [SQLAlchemy](http://www.sqlalchemy.org) to provide the ORM layer.
@@ -40,18 +43,18 @@ One can install PyCDS using the standard methods of any other Python package.
 ### Provincial Climate Data Set (PCDS)
 
 The Provincial Climate Data Set (PCDS), is a collaboration between the BC Government's
-[Climate Related Monitoring Program (CRMP)](https://www2.gov.bc.ca/gov/content/environment/research-monitoring-reporting/monitoring/climate-related-monitoring) 
-and the 
+[Climate Related Monitoring Program (CRMP)](https://www2.gov.bc.ca/gov/content/environment/research-monitoring-reporting/monitoring/climate-related-monitoring)
+and the
 [Pacific Climate Impacts Consortium (PCIC)](http://www.pacificclimate.org/).
 
 PCDS is an archive of meteorological observations for BC collected by federal agencies,
 BC ministries and crown corporations and dating back to the late 1800's. The archive consists of a relational database
-that models the data collected by multiple agencies (each of which are represented by one or more "networks" in the 
+that models the data collected by multiple agencies (each of which are represented by one or more "networks" in the
 database) at multiple locations (represented by "stations").
 
 ### Climate Related Monitoring Program (CRMP)
 
-The [Climate Related Monitoring Program (CRMP)](https://www2.gov.bc.ca/gov/content/environment/research-monitoring-reporting/monitoring/climate-related-monitoring) 
+The [Climate Related Monitoring Program (CRMP)](https://www2.gov.bc.ca/gov/content/environment/research-monitoring-reporting/monitoring/climate-related-monitoring)
 is a collaborative effort between several BC ministries, crown corporations, and PCIC.
 Its purpose is to opportunistically leverage weather observations that are being collected for operational uses and
 utilize them for long-term climate monitoring.
@@ -71,14 +74,14 @@ PyCDS defines the following contents of a CRMP/PCDS database:
 
 All contents of a PyCDS database are defined in a named schema.
 
-SQLAlchemy documentation [recommends](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path) 
-against using the `search_path` to establish schema name: 
+SQLAlchemy documentation [recommends](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path)
+against using the `search_path` to establish schema name:
 
-> keep the `search_path` variable set to its default of `public`, name schemas other than `public` 
+> keep the `search_path` variable set to its default of `public`, name schemas other than `public`
 explicitly within `Table` definitions.
 
-Unfortunately, SQLAlchemy does not make it easy to set the schema name at run-time. 
-Since SQLAlchemy ORMs are defined declaratively, not procedurally, the schema name must be determined at 
+Unfortunately, SQLAlchemy does not make it easy to set the schema name at run-time.
+Since SQLAlchemy ORMs are defined declaratively, not procedurally, the schema name must be determined at
 "declare time" (i.e., when SQLAlchemy table classes are processed), which is done most conveniently
 by fetching the name from an environment variable. Once classes are declared, the schema name
 cannot be (re)set.
@@ -90,7 +93,7 @@ making this backward compatible with all existing code. The function
 `pycds.get_schema_name()` returns this value.
 
 **IMPORTANT:** `PYCDS_SCHEMA_NAME` must agree with the name of the schema targeted in
-an existing database, or with the intended name for the creation of a new database. 
+an existing database, or with the intended name for the creation of a new database.
 
 In the case of an existing database, a mismatch between `PYCDS_SCHEMA_NAME` and the
 actual database schema name will cause operations to
@@ -100,16 +103,16 @@ fail with errors of the form "could not find object X in schema Y".
 
 The tables defined in PyCDS are all those found in a standard CRMP database.
 
-Tables are defined using the SQLAlchemy declarative base method, in the root `pycds` module. 
+Tables are defined using the SQLAlchemy declarative base method, in the root `pycds` module.
 
-The declarative base for the tables, `pycds.Base`, automatically receives the schema name returned 
+The declarative base for the tables, `pycds.Base`, automatically receives the schema name returned
 `pycds.get_schema_name()`. The schema name can only be
 modified by specifying the environment variable `PYCDS_SCHEMA_NAME` in the execution environment of the code.
 
 A table in the database is represented by the class `pycds.<Table>`, where `<Table>` is the name of
 the ORM object corresponding to the table in the database. The ORM name and the table name are different but
 clearly related. For example, the database table `meta_stations` is represented by the ORM class
-`pycds.Station`. 
+`pycds.Station`.
 Column names within tables bear a similarly close but not always identical relationship.
 
 To map onto tables already defined in a database, execute
@@ -122,9 +125,9 @@ where `engine` is a SQLAlchemy database engine.
 
 ### Note: Replaceable objects
 
-Database tables can be mutated "in place": for example, columns can be added, dropped, or renamed. 
+Database tables can be mutated "in place": for example, columns can be added, dropped, or renamed.
 
-Other items, including stored procedures and views, are not mutable. 
+Other items, including stored procedures and views, are not mutable.
 When a change to them is required they must be replaced in their entirety, i.e., dropped and
 recreated. Such objects are called replaceable objects, and PyCDS manages them accordingly.
 
@@ -134,27 +137,27 @@ now deprecated mechanism was used to make changes.)
 
 ### Stored procedures
 
-A stored procedure is a replaceable object (see above), and all such objects are managed 
-via Alembic migrations. A migration may add, drop, or change a stored procedure. 
-The stored procedures present in one 
+A stored procedure is a replaceable object (see above), and all such objects are managed
+via Alembic migrations. A migration may add, drop, or change a stored procedure.
+The stored procedures present in one
 migration version of the database can be different than those in another version.
 
 Because of this, it is not
-straightforward to get from PyCDS the list of stored procedures that will be present in 
+straightforward to get from PyCDS the list of stored procedures that will be present in
 any given version of a database. The easiest way to do that is to examine a database at the
-migration version of interest. 
+migration version of interest.
 
-TODO: Build a tool for this. Existing infrastructure will make this easy. 
+TODO: Build a tool for this. Existing infrastructure will make this easy.
 Alternative: Extract SP definitions to a version-structured sub-module as for views,
 and maintain its `__init__.py`.
 
-A stored procedure in the database is is accessed in SQLAlchemy through the standard 
+A stored procedure in the database is is accessed in SQLAlchemy through the standard
 `sqlalchemy.func` mechanism in queries.
 
 ### Views
 
 A view is a replaceable object (see above), and all such objects are managed via
-Alembic migrations. A migration may add, drop, or change a view. The views present in one 
+Alembic migrations. A migration may add, drop, or change a view. The views present in one
 migration version of the database can be different than those in another version.
 
 To enable Alembic to work properly, it is necessary retain all
@@ -163,23 +166,23 @@ version `<version>` are stored in the module `pycds.utility_views.version_<versi
 in this directory. The most recent version of each view (frozen in a given release of PyCDS)
 is exported by `pycds.utility_views`.
 
-Views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy 
+Views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy
 implemented in `pycds/view_helpers.py`.
-The declarative base for views, `pycds.utility_views.Base`, automatically receives the schema name returned 
+The declarative base for views, `pycds.utility_views.Base`, automatically receives the schema name returned
 `pycds.get_schema_name()`. The schema name can only be
 modified by specifying the environment variable `PYCDS_SCHEMA_NAME` in the execution environment of the code.
 
 A view in the database is represented by the class `pycds.utility_views.<View>`, where `<View>` is the name of
 the ORM object corresponding to the view in the database. The ORM name and the view name are different but
 clearly related. For example, the database view `crmp_network_geoserver` is represented by the ORM class
-`pycds.views.CrmpNetworkGeoserver`. 
+`pycds.views.CrmpNetworkGeoserver`.
 Column names within views bear a similarly close but not always identical relationship.
 
 
 ### Materialized views
 
 A materialized view is a replaceable object (see above), and all such objects are managed via
-Alembic migrations. A migration may add, drop, or change a materialized view. The materialized views present in one 
+Alembic migrations. A migration may add, drop, or change a materialized view. The materialized views present in one
 migration version of the database can be different than those in another version.
 
 A selection of materialized views is defined in module `pycds.weather_anomaly`. These views support the PCIC
@@ -192,22 +195,22 @@ version `<version>` are stored in the module `pycds.weather_anomaly.version_<ver
 in this directory. The most recent version of each view (frozen in a given release of PyCDS)
 is exported by `pycds.weather_anomaly`.
 
-Materialized views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy 
+Materialized views are defined using the SQLAlchemy declarative base method, based on an extension to SQLAlchemy
 in `pycds/materialized_view_helpers.py`. This extension does not at the moment support native materialized views,
 which appeared in PostgreSQL 9.3. Instead, materialized views are at present ordinary database tables, and their
 contents are maintained by the ORM matview function `refresh()` (see below).
 A future release of PyCDS will support native matviews.
 
-The declarative base for materialized views, `pycds.weather_anomaly.Base`, automatically receives the schema name 
+The declarative base for materialized views, `pycds.weather_anomaly.Base`, automatically receives the schema name
 returned `pycds.get_schema_name()`. The schema name can only be
 modified by specifying the environment variable `PYCDS_SCHEMA_NAME` in the execution environment of the code.
 
-A predefined materialized view in the database is represented by the class `pycds.weather_anomaly.<Matview>`, 
+A predefined materialized view in the database is represented by the class `pycds.weather_anomaly.<Matview>`,
 where `<Matview>` is the name of
-the ORM object corresponding to the materialized view in the database. 
-The ORM name and the materialized view name are different but clearly related. 
+the ORM object corresponding to the materialized view in the database.
+The ORM name and the materialized view name are different but clearly related.
 For example, the database materialized view `daily_max_temperature_mv` is represented by the ORM class
-`pycds.weather_anomaly.DailyMaxTemperature`. 
+`pycds.weather_anomaly.DailyMaxTemperature`.
 Column names within materialized views bear a similarly close but not always identical relationship.
 
 To refresh a materialized view, execute code like the following:
@@ -237,7 +240,7 @@ For more information, see the [Alembic tutorial](https://alembic.sqlalchemy.org/
 ### Specifying the database to operate on
 
 We have customized the Alembic environment manager (`alembic/env.py`) so that it is
-possible to operate on any of an arbitrary number of databases defined in `alembic.ini`, 
+possible to operate on any of an arbitrary number of databases defined in `alembic.ini`,
 according an `alembic` command line argument. This argument takes the form
 
 ```shell script
@@ -262,7 +265,7 @@ For example:
 sqlalchemy.url = postgresql://tester@localhost:30599/pycds_test
 ```
 
-The file `alembic.ini` already contains several such db-names. 
+The file `alembic.ini` already contains several such db-names.
 We expect to expand this list as more CRMP-type databases are added to the PCIC stable.
 
 ### Specifying the schema within the database
@@ -272,11 +275,11 @@ using the environment variable `PYCDS_SCHEMA_NAME`.
 
 This has been accomplished in two ways:
 
-- By creating a modified Alembic environment that uses the specified schema name 
+- By creating a modified Alembic environment that uses the specified schema name
   (see `env.py#run_migrations_online()` and `env.py#run_migrations_offline()`;
   specifically, `context.configure(version_table_schema=target_metadata.schema)`).
-- By using the specified schema name in all migrations. See note below. 
-  
+- By using the specified schema name in all migrations. See note below.
+
 **IMPORTANT:** Autogenerated migrations **must** be edited to replace the specific schema name (e.g., `schema='crmp'`)
 with the specified schema name (`schema=pycds.get_schema_name()`) wherever it occurs.
 
@@ -288,20 +291,20 @@ PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> ...
 
 ### Creating a new database
 
-1. On the server or in the container of your choice: 
+1. On the server or in the container of your choice:
    1. Create a new database with the desired database name, `<db-name>`
    1. Install extensions PL/Postgres, PL/Python, and PostGIS 2.4
    1. Create an empty schema with the desired name, `<schema-name`
    1. Grant the desired user (name `<user-name>`) write permission to the schema.
       (You may need to created the desired user first.)
-   1. For an example of such an arrangement, run the shell script 
+   1. For an example of such an arrangement, run the shell script
       `alembic/development/init_test_db/common/create_scripts.sh` and examine
       the SQL scripts it writes to `alembic/development/init_test_db/common`.
-      
-1. Add a new DSN for the database, including the appropriate user name, 
+
+1. Add a new DSN for the database, including the appropriate user name,
    to `alembic.ini`. Choose a name by which to refer to it in the Alembic CLI,
    `<db-label>`.
-   
+
    ```ini
    [<db-label>]
    sqlalchemy.url = postgresql://<user-name>@<server-name>/<db-name>
@@ -315,7 +318,7 @@ PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> ...
 
 ### Upgrading an existing PyCDS database (schema)
 
-Once a PyCDS database has been initialized, subsequently created migrations are 
+Once a PyCDS database has been initialized, subsequently created migrations are
 simple to apply
 
 To apply all migrations subsequent to the databases's current migration:
@@ -330,19 +333,19 @@ To apply migrations up to a specific migration with revision identifier `<rev-id
 PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> upgrade <rev-id>
 ```
 
-For information on revision identifiers, 
+For information on revision identifiers,
 see [Partial Revision Identifiers](https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers).
 
 ### Downgrading an existing PyCDS database (schema)
 
-Migrations can also be undone, by downgrading the database schema to a 
+Migrations can also be undone, by downgrading the database schema to a
 migration preceding its current one:
 
 ```shell script
 PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> downgrade <rev-id>
 ```
 
-For information on revision identifiers, 
+For information on revision identifiers,
 see [Partial Revision Identifiers](https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers).
 
 ### Creating a new migration
@@ -353,14 +356,14 @@ migration script to enable existing databases to be upgraded to the new model.
 The easiest and likely most reliable way to create a migration script is to autogenerate it using Alembic.
 For more details, see the [Alembic documentation](https://alembic.sqlalchemy.org/en/latest/autogenerate.html).
 
-To autogenerate a migration script, you must have a reference database schema for Alembic to compare 
+To autogenerate a migration script, you must have a reference database schema for Alembic to compare
 to the modified PyCDS ORM.
 After Alembic autogenerates the script, you must edit it to ensure completeness, correctness, and
 that it respects the specified schema name (see instructions below).
 
 Instructions:
 
-1. Choose or create a reference database schema that is at the latest migration. 
+1. Choose or create a reference database schema that is at the latest migration.
    (Or a database schema at an otherwise desired "base" migration, which is unusual but not necessarily wrong.)
    To serve as a reference, a schema need not contain any data.
 
@@ -382,15 +385,15 @@ Instructions:
 
 1. Alembic writes a new script to the directory `alembic/versions`. Its name includes
    a unique revision identifier (a SHA) and a version of `<message>`.
-   
-1. Review and edit the script to ensure correctness, completeness, 
+
+1. Review and edit the script to ensure correctness, completeness,
    and that it respects the specified schema name. Specifically:
-   
+
    1. Review to ensure that it picks up all changes to tables and implements them appropriately.
       In particular, Alembic does not pick up on changes of table or column name, which must be manually converted
       from "drop old name, add new name" to "rename". Some other schema changes are also not detected.
       For more information, see
-      [What does Autogenerate Detect (and what does it not detect?)](https://alembic.sqlalchemy.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect). 
+      [What does Autogenerate Detect (and what does it not detect?)](https://alembic.sqlalchemy.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect).
 
    1. Manually add creation or dropping of the following things not handled by Alembic autogenerate:
       1. Functions
@@ -406,18 +409,18 @@ Instructions:
          but it is worth verifying.
 
    1. Do this for both upgrade and downgrade functions in the script!
-         
+
 1. Write some tests for the migration. Examples can be found in the existing code.
 
 1. Commit the new migration script and its tests to the repo.
 
 ### Creating the initial migration
 
-Since this only needed to be done once and is preserved in the migration 
-`alembic/versions/522eed334c85_create_initial_database.py`, 
+Since this only needed to be done once and is preserved in the migration
+`alembic/versions/522eed334c85_create_initial_database.py`,
 this information is largely for archival purposes.
 
-Our modified Alembic environment generally respects the schema name (see above), 
+Our modified Alembic environment generally respects the schema name (see above),
 but fails in one case: when the specified schema does not (yet) contain an `alembic_version` table.
 To remedy this, issue the command
 
@@ -437,15 +440,15 @@ PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> revision --autogenerate
 
 ### Creating a local test database
 
-It is particularly convenient for testing the Alembic customization (`alembic/env.py`) 
-and database migrations to have a local test database running. 
+It is particularly convenient for testing the Alembic customization (`alembic/env.py`)
+and database migrations to have a local test database running.
 This is fortunately quite easy, courtesy of Docker.
 
 This repo contains a Dockerfile, `dev.Dockerfile`, which creates a Docker image with PostgreSQL 9.3,
-PostGIS 2.4, and PL/Python installed. This configuration matches our test environment, 
+PostGIS 2.4, and PL/Python installed. This configuration matches our test environment,
 and approximately matches our production environment, which currently runs PostgreSQL 9.1 and some
-compatible version of PostGIS. 
-(It seems that it is not possible to replicate the production environment environment exactly 
+compatible version of PostGIS.
+(It seems that it is not possible to replicate the production environment environment exactly
 in test environments.)
 
 #### Build test database docker image
@@ -463,7 +466,7 @@ The image name `pycds-test-db` is arbitrary, but it is used in the run script.
 To start a local Docker container from this image, use the run script:
 
 ```shell script
-./alembic/development/run-docker-test-db.sh <port> <password> 
+./alembic/development/run-docker-test-db.sh <port> <password>
 ```
 
 This script starts a container mapped to port `<port>` on `localhost`.
@@ -504,12 +507,12 @@ This is a pretty trivial convenience, but it's a _convenient_ convenience.
 Some data used in the unit tests was sourced from a production database. The steps to produce this were:
 
 1. As database superuser, run CREATE SCHEMA subset AUTHORIZATION <username>;
-2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp`. 
+2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp`.
    This insert a selection of data into the `subset` schema.
 3. Then, `pg_dump -h <db_host> -d crmp --schema=subset --data-only --no-owner --no-privileges --no-tablespaces --column-inserts -f pycds/data/crmp_subset_data.sql`
-4. Edit this file to remove the `SET search_path...` line, 
-5. Re-order the data inserts to respect foreign key constraints. 
-    Default sort is alphabetical and the only changes that should need to be made are ordering `meta_network`, 
+4. Edit this file to remove the `SET search_path...` line,
+5. Re-order the data inserts to respect foreign key constraints.
+    Default sort is alphabetical and the only changes that should need to be made are ordering `meta_network`,
     `meta_station`, and `meta_history` first and leaving the remaining inserts ordered as is.
 
 ### BDD Test Framework `(pytest-describe`)
@@ -526,7 +529,7 @@ Widely adopoted BDD frameworks are [RSpec for Ruby](http://rspec.info/) and [Jas
 BDD references:
 
 * https://en.wikipedia.org/wiki/Behavior-driven_development
-* [Introducing Behaviour Driven Development](https://dannorth.net/introducing-bdd/) - a core document on BDD; clear, 
+* [Introducing Behaviour Driven Development](https://dannorth.net/introducing-bdd/) - a core document on BDD; clear,
 well-written, informative
 
 BDD is a behaviourally focused version of TDD. TDD and BDD are rarely practiced purely, but their principles and
