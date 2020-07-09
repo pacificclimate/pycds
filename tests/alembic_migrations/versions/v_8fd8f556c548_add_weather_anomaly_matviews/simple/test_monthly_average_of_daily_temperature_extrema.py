@@ -22,6 +22,7 @@ def check(results, months, variable):
     assert {r.obs_month.month for r in results} == set(months)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_monthly_average_of_daily_temperature_extremum_with_total_coverage_query(
     extremum, obs1_temp_sesh, obs1_months, var_temp_point
@@ -39,6 +40,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_total_coverage_query
     check(ma_daily_extreme_temps, obs1_months, var_temp_point)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_monthly_average_of_daily_temperature_extremum_with_avg_coverage_query(
     extremum, obs1_temp_sesh, obs1_months, var_temp_point
@@ -56,6 +58,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_avg_coverage_query(
     check(ma_daily_extreme_temps, obs1_months, var_temp_point)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_monthly_average_of_daily_extreme_temperature_matview(
     extremum, obs1_temp_sesh, obs1_months, var_temp_point

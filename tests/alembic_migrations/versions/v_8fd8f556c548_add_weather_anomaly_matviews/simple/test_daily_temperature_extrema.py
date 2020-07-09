@@ -16,6 +16,7 @@ def check(results, extremum, months, days, hours, variable):
     assert all(r.statistic == ext_value for r in results)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_daily_temperature_extremum_query(
     extremum,
@@ -39,6 +40,7 @@ def test_daily_temperature_extremum_query(
     )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_daily_extreme_temperature_matview(
     extremum,
