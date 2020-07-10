@@ -4,12 +4,15 @@ from pycds.weather_anomaly.version_8fd8f556c548 import (
     MonthlyTotalPrecipitation,
 )
 
+import pytest
+
 
 def check(results, months, variable):
     assert {r.vars_id for r in results} == {variable.id}
     assert {r.obs_month.month for r in results} == set(months)
 
 
+@pytest.mark.slow
 def test_monthly_total_precipitation_with_total_coverage_query(
     obs1_precip_sesh, obs1_months, var_precip_net1_1
 ):
@@ -22,6 +25,7 @@ def test_monthly_total_precipitation_with_total_coverage_query(
     check(monthly_total_precip, obs1_months, var_precip_net1_1)
 
 
+@pytest.mark.slow
 def test_monthly_total_precipitation_with_avg_coverage_query(
     obs1_precip_sesh, obs1_months, var_precip_net1_1
 ):
@@ -34,6 +38,7 @@ def test_monthly_total_precipitation_with_avg_coverage_query(
     check(monthly_total_precip, obs1_months, var_precip_net1_1)
 
 
+@pytest.mark.slow
 def test_monthly_total_precipitation_matview(
     obs1_precip_sesh, obs1_months, var_precip_net1_1
 ):

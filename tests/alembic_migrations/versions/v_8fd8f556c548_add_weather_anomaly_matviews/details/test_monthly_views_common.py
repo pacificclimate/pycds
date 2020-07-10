@@ -63,6 +63,7 @@ def id(param):
     return abbrev.get(param, None)
 
 
+@mark.slow
 def describe_with_1_network():
     @fixture
     def network_sesh(prepared_sesh_left, network1):
@@ -579,7 +580,7 @@ def describe_with_1_network():
                             )
                         )
 
-
+@mark.slow
 def describe_with_2_networks():
     @fixture
     def network_sesh(prepared_sesh_left, network1, network2):
