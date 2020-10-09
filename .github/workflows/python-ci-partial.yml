@@ -35,4 +35,4 @@ jobs:
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        py.test -s -v tests/basics
+        py.test -s -v tests/alembic_migrations/versions/v_8fd8f556c548_add_weather_anomaly_matviews/manage_views/test_manage_views.py
