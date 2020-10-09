@@ -21,18 +21,6 @@ jobs:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
         sudo apt-get install postgresql-plpython-9.5 postgresql-9.5-postgis-2.4
-        pip install -U pip pytest
-        pip install -r requirements.txt -r test_requirements.txt
-        pip install .
-    - name: Test with pytest (full)
-      if: github.ref == 'refs/heads/master'
-      env:
-        PYCDS_SCHEMA_NAME: other
+    - name: Explore
       run: |
-        py.test -v --tb=short -k "not weather_anomal" tests
-    - name: Test with pytest (fast)
-      if: github.ref != 'refs/heads/master'
-      env:
-        PYCDS_SCHEMA_NAME: other
-      run: |
-        py.test -s -v tests/basics
+        sudo apt-cache showpkg postgresql-plpython-9.5
