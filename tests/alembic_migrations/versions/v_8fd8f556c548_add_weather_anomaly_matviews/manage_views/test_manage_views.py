@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from pytest import mark
 
@@ -29,7 +30,9 @@ def test_refresh(
     history_stn1_hourly,
     var_temp_point,
     var_precip_net1_1,
+    caplog,
 ):
+    caplog.set_level(logging.DEBUG)
 
     # Initially, each view should be empty, because no data
     for view in exp_views:
