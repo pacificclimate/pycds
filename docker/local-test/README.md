@@ -41,7 +41,36 @@ We don't, however mount the codebase read-only because we might want
 some of the effects of the test runs to be written to our local codebase. 
 (E.g., redirected output.)
 
-## Build image
+## Pull image
+
+The GitHub Action docker-publish automatically builds the image.
+Pull it from Dockerhub:
+
+```
+docker pull pcic/pycds:local-test
+```
+
+## Run image (container)
+
+Run it from the project root directory:
+
+```
+py3clean .
+docker run -it -v $(pwd):/codebase pcic/pycds:local-test
+```
+
+When the container starts, it installs the local codebase as described above.
+After that, you are in interactive mode, in a bash shell, so you can issue 
+commands, such as `py.test ....` as normal.
+
+Leave the container running for as long as you want. You can do multiple
+rounds of modification and testing using a single container, without
+restarting (which was the justification for creating it).
+
+## Build image (manual)
+
+Since this image is built automatically by the GitHub Action docker-publish,
+you should not need to do this. However, just in case:
 
 From the _project root directory_ (important Docker context location):
 
@@ -51,13 +80,4 @@ docker build -t pycds-local-test -f docker/local-test/Dockerfile .
 
 You'll only need to do this once unless the Dockerfile is updated.
 
-## Run image (container)
 
-```
-py3clean .
-docker run -it -v <local project root dir>:/codebase pycds-local-test
-```
-
-When the container starts, it installs the local codebase as described above.
-After that, you are in interactive mode, in a bash shell, so you can issue 
-commands, such as `py.test ....` as normal.
