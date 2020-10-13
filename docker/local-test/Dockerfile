@@ -1,8 +1,17 @@
 FROM ubuntu:18.04
 
+# Get set to install packages
 ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update
+
+# Set the locale
+RUN apt-get -y install locales
+RUN locale-gen en_CA.utf8
+ENV LANG en_CA.utf8
+ENV LANGUAGE en_CA:en
+ENV LC_ALL en_CA.UTF-8
+
+
 RUN apt-get install -y curl ca-certificates gnupg
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt bionic-pgdg main' >/etc/apt/sources.list.d/pgdg.list
