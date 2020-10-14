@@ -103,7 +103,7 @@ def daily_temperature_extremum(extremum):
     """
     extremum_func = getattr(func, extremum)
     func_schema = getattr(func, get_schema_name())
-    query = (
+    return (
         Query(
             [
                 History.id.label("history_id"),
@@ -134,8 +134,6 @@ def daily_temperature_extremum(extremum):
         .filter(History.freq.in_(("1-hourly", "12-hourly", "daily")))
         .group_by(History.id, good_obs.c.vars_id, "obs_day")
     )
-    print(f"daily_temperature_extremum('{extremum}').selectable", query.selectable)
-    return query
 
 
 class DailyMaxTemperature(Base, MaterializedViewMixin):
