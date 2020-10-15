@@ -111,7 +111,3 @@ From the _project root directory_ (important Docker context location):
 ```
 docker build -t pcic/pycds:local-test -f docker/local-test/Dockerfile .
 ```
-
-You'll only need to do this once unless the Dockerfile is updated.
-
-
