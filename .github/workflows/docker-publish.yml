@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  publish:
+  publish-local-pytest:
 
     runs-on: ubuntu-20.04
 
@@ -20,11 +20,11 @@ jobs:
         with:
           username: ${{ secrets.pcicdevops_at_dockerhub_username }}
           password: ${{ secrets.pcicdevops_at_dockerhub_password }}
-          dockerfile: ./dev.Dockerfile
-          repository: pcic/pycds
+          dockerfile: ./docker/local-pytest/Dockerfile
+          repository: pcic/pycds-local-pytest
           tag_with_ref: true
 
-  publish-local:
+  publish-test-db:
 
     runs-on: ubuntu-20.04
 
@@ -35,6 +35,6 @@ jobs:
         with:
           username: ${{ secrets.pcicdevops_at_dockerhub_username }}
           password: ${{ secrets.pcicdevops_at_dockerhub_password }}
-          dockerfile: ./docker/local-test/Dockerfile
-          repository: pcic/pycds
-          tags: local-test
+          dockerfile: ./docker/test-db/Dockerfile
+          repository: pcic/pycds-test-db
+          tag_with_ref: true
