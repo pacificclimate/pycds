@@ -1,21 +1,22 @@
-# PyCDS docker local-test environment
+# PyCDS docker local (py)test environment
 
 ## What
 
 The files in this directory allow you to build and run a test environment
-for PyCDS equivalent to that in the GitHub Actions CI.
+for PyCDS equivalent to that in the GitHub Actions CI. Within this environment
+you can run part or all of the test suite, or do other dev/debug activities.
 
 ## Why
 
 1. We are currently running CI tests in a very antiquated environment which 
 is difficult if not impossible to reproduce on an up-to-date dev machine. 
-Docker containers to the rescue.
+Plus it messes up your machine. Docker containers to the rescue.
 
 1. We could just let the CI do the work, but it can take from 2 to 5 minutes
-to run tests ... most of that consumed by setting up the docker container
-for the test run.
+to run a single test ... most of that consumed by setting up the docker 
+container for the test run.
 
-1. So let's just build that environment once, locally, run it interactively, 
+1. So let's just build that environment once, run it interactively, 
 run our tests from inside there, and wow zippy. Debugging now feasible.
 
 ## How
@@ -81,7 +82,7 @@ The GitHub Action docker-publish automatically builds the image.
 Pull it from Dockerhub:
 
 ```
-docker pull pcic/pycds:local-test
+docker pull pcic/pycds-local-pytest
 ```
 
 ## Run image (container)
@@ -90,7 +91,7 @@ Run it from the project root directory:
 
 ```
 py3clean .
-docker run -it -v $(pwd):/codebase pcic/pycds:local-test
+docker run -it -v $(pwd):/codebase pcic/pycds-local-pytest
 ```
 
 When the container starts, it installs the local codebase as described above.
@@ -109,5 +110,5 @@ you should not need to do this. However, just in case:
 From the _project root directory_ (important Docker context location):
 
 ```
-docker build -t pcic/pycds:local-test -f docker/local-test/Dockerfile .
+docker build -t pcic/pycds-local-pytest -f docker/local-test/Dockerfile .
 ```
