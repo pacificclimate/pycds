@@ -44,7 +44,7 @@ delays association of the session to the matview until it is explicitly created
 (i.e., Matview.create(session)).
 """
 
-from sqlalchemy import MetaData, func, and_, not_, case
+from sqlalchemy import MetaData, func, and_, not_, case, cast, String, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 
@@ -109,7 +109,9 @@ def daily_temperature_extremum(extremum):
                 History.id.label("history_id"),
                 good_obs.c.vars_id.label("vars_id"),
                 func_schema.effective_day(
-                    good_obs.c.time, extremum, History.freq
+                    good_obs.c.time,
+                    cast(extremum, String),
+                    cast(History.freq, String)
                 ).label("obs_day"),
                 extremum_func(good_obs.c.datum).label("statistic"),
                 func.sum(
@@ -212,7 +214,7 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
             (
                 avg_daily_extreme_temperature.c.total_data_coverage
                 / func_schema.DaysInMonth(
-                    avg_daily_extreme_temperature.c.obs_month
+                    cast(avg_daily_extreme_temperature.c.obs_month, Date)
                 )
             ).label("data_coverage"),
         ]
@@ -296,7 +298,7 @@ def monthly_total_precipitation_with_avg_coverage():
             monthly_total_precip.c.statistic.label("statistic"),
             (
                 monthly_total_precip.c.total_data_coverage
-                / func_schema.DaysInMonth(monthly_total_precip.c.obs_month)
+                / func_schema.DaysInMonth(cast(monthly_total_precip.c.obs_month, Date))
             ).label("data_coverage"),
         ]
     ).select_from(monthly_total_precip)

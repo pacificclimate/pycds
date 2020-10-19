@@ -438,93 +438,31 @@ PYCDS_SCHEMA_NAME=<schema-name> alembic -x db=<db-label> revision --autogenerate
 
 ## Testing
 
-### Creating a local test database
+There are two types of testing we need to do with PyCDS: 
+automated (unit) tests and more-or-less live tests. 
+Two different docker images serve those purposes:
+- [`pcic/pycds-local-pytest`](docker/local-pytest/README.md): 
+for running unit tests in the same environment
+our CI provides, which is difficult if not impossible to establish
+on a local dev machine.
+- [`pcic/pycds-test-db`](docker/test-db/README.md): 
+for establishing a test database to experiment and test on.
 
-It is particularly convenient for testing the Alembic customization (`alembic/env.py`)
-and database migrations to have a local test database running.
-This is fortunately quite easy, courtesy of Docker.
+See the linked READMEs for details.
 
-This repo contains a Dockerfile, `dev.Dockerfile`, which creates a Docker image with PostgreSQL 9.3,
-PostGIS 2.4, and PL/Python installed. This configuration matches our test environment,
-and approximately matches our production environment, which currently runs PostgreSQL 9.1 and some
-compatible version of PostGIS.
-(It seems that it is not possible to replicate the production environment environment exactly
-in test environments.)
-
-#### Build test database docker image
-
-To build the Docker image locally:
-
-```shell script
-docker build -t pycds-test-db -f dev.Dockerfile .
-```
-
-The image name `pycds-test-db` is arbitrary, but it is used in the run script.
-
-#### Start test database container and create database, etc.
-
-To start a local Docker container from this image, use the run script:
-
-```shell script
-./alembic/development/run-docker-test-db.sh <port> <password>
-```
-
-This script starts a container mapped to port `<port>` on `localhost`.
-
-The container creates:
-- a PostgreSQL 9.3 server
-- with users:
-  - user `postgres`, password `<password>`,
-  - user `tester`, password `tester`,
-- with database `pycds_test`, owned by `tester`,
-- with extensions PL/Postgres, PL/Python, and PostGIS 2.4 installed,
-- with empty schemas `crmp` and `other`, both owned by `tester`.
-
-To connect to this database on the command line:
-
-```shell script
-psql -h localhost -p <port> -U {postgres,tester} -d {crmp,other}
-```
-
-The DSN for this database is:
-
-```
-postgresql://tester@localhost:<port>/pycds_test
-```
-
-#### Stop and remove test database container
-
-To stop the local Docker test database container:
-
-```shell script
-./alembic/development/down-docker-test-db.sh
-```
-
-This is a pretty trivial convenience, but it's a _convenient_ convenience.
-
-### Unit test data from production
-
-Some data used in the unit tests was sourced from a production database. The steps to produce this were:
-
-1. As database superuser, run CREATE SCHEMA subset AUTHORIZATION <username>;
-2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp`.
-   This insert a selection of data into the `subset` schema.
-3. Then, `pg_dump -h <db_host> -d crmp --schema=subset --data-only --no-owner --no-privileges --no-tablespaces --column-inserts -f pycds/data/crmp_subset_data.sql`
-4. Edit this file to remove the `SET search_path...` line,
-5. Re-order the data inserts to respect foreign key constraints.
-    Default sort is alphabetical and the only changes that should need to be made are ordering `meta_network`,
-    `meta_station`, and `meta_history` first and leaving the remaining inserts ordered as is.
-
-### BDD Test Framework `(pytest-describe`)
+### BDD Test Framework (`pytest-describe`)
 
 #### Behaviour Driven Development
 
 Many tests (specifically those for climate baseline helpers and scripts, and for weather anomaly daily and monthly
 aggregate views)
-are defined with the help of `pytest-describe](https://github.com/ropez/pytest-describe), a pytest plugin
+are defined with the help of [`pytest-describe`](https://github.com/ropez/pytest-describe), a pytest plugin
 which provides syntactic sugar for the coding necessary to set up Behaviour Driven Development (BDD)-style tests.
 
-Widely adopoted BDD frameworks are [RSpec for Ruby](http://rspec.info/) and [Jasmine for Javascript](https://jasmine.github.io/). pytest-describe implements a simple subset of these frameworks for pytest in Python.
+Widely adopoted BDD frameworks are [RSpec for Ruby](http://rspec.info/) and 
+[Jasmine for JavaScript](https://jasmine.github.io/). 
+`pytest-describe` implements a subset of these frameworks for pytest in 
+Python.
 
 BDD references:
 
@@ -545,7 +483,9 @@ practices even impurely applied can greatly improve unit testing. Specifically, 
       behaviour (output) of the SUT
 
 - Each combination of test conditions and test should read like a sentence, e.g.,
-  "when A is true, when B is true, when C is true, it (SUT) does an expected thing"
+  "when A is true, and B is true, and C is true, the SUT does the following
+   expected thing(s)", where A, B, and C are test conditions established
+   (typically) hierarchically.
 
 - Code tests for the SUT, structured to set up and tear down test conditions exactly parallel to the identified
   test cases, following the hierarchy of test conditions

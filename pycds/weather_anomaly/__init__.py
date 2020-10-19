@@ -20,6 +20,7 @@ this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
 """
 
+from .version_8fd8f556c548 import Base
 from .version_8fd8f556c548 import DailyMaxTemperature
 from .version_8fd8f556c548 import DailyMinTemperature
 from .version_8fd8f556c548 import MonthlyAverageOfDailyMaxTemperature
