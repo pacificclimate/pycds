@@ -6,7 +6,6 @@ on:
       - '*'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-  pull_request:
 
 jobs:
   publish-local-pytest:
@@ -14,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - name: Publish to Registry
         uses: docker/build-push-action@v1
         with:
@@ -29,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - name: Publish to Registry
         uses: docker/build-push-action@v1
         with:
