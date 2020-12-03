@@ -32,4 +32,4 @@ RUN apt-get install -yq \
 WORKDIR /codebase
 
 # Install the local codebase when the container starts.
-ENTRYPOINT ./docker/local-test/entrypoint.sh
+ENTRYPOINT ./docker/local-pytest/entrypoint.sh
