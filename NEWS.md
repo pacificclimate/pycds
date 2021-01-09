@@ -1,5 +1,12 @@
 # News / Release Notes
 
+## 3.1.0
+
+*Release Date: 2021-Jan-08*
+
+- [Fix weather anomaly matviews refresh](https://github.com/pacificclimate/pycds/pull/65)
+- [Establish GitHub Actions for CI, Docker publishing, and PyPI publishing](https://github.com/pacificclimate/pycds/pull/62)
+
 ## 3.0.0
 
 *Release Date: 2020-Feb-13*
