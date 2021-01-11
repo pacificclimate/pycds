@@ -1,5 +1,11 @@
 # News / Release Notes
 
+## 3.1.1
+
+*Release Date: 2021-Jan-11*
+
+- Publish all subpackages (using `find_packages`).
+
 ## 3.1.0
 
 *Release Date: 2021-Jan-08*
