@@ -22,7 +22,7 @@ setup(
     name="PyCDS",
     description="An ORM representation of the PCDS and CRMP database",
     keywords="sql database pcds crmp climate meteorology",
-    packages=["pycds", "pycds.alembic", "pycds.alembic.versions"],
+    packages=find_packages(include=['pycds*']),
     version='.'.join(str(d) for d in __version__),
     url="http://www.pacificclimate.org/",
     author="James Hiebert",
