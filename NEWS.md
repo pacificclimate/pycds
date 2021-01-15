@@ -1,5 +1,11 @@
 # News / Release Notes
 
+## 3.2.0
+
+*Release Date: 2021-Jan-11*
+
+- [Repackage so that Alembic migrations can be performed from client apps](https://github.com/pacificclimate/pycds/pull/70)
+
 ## 3.1.1
 
 *Release Date: 2021-Jan-11*
