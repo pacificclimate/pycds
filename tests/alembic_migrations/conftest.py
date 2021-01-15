@@ -13,7 +13,7 @@ from sqlalchemydiff.util import get_temporary_uri
 def alembic_root():
     return os.path.normpath(
         os.path.join(
-            os.path.dirname(__file__), '..', '..', 'alembic'
+            os.path.dirname(__file__), '..', '..', 'pycds', 'alembic'
         )
     )
 

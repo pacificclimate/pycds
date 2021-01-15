@@ -2,7 +2,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-__version__ = (3, 1, 1)
+__version__ = (3, 2, 0)
 
 
 class PyTest(TestCommand):
@@ -22,7 +22,7 @@ setup(
     name="PyCDS",
     description="An ORM representation of the PCDS and CRMP database",
     keywords="sql database pcds crmp climate meteorology",
-    packages=find_packages(),
+    packages=["pycds", "pycds.alembic", "pycds.alembic.versions"],
     version='.'.join(str(d) for d in __version__),
     url="http://www.pacificclimate.org/",
     author="James Hiebert",
