@@ -10,22 +10,22 @@ namely, `operation.target` will be a different kind of object.
 from alembic.operations import Operations
 from . import ReversibleOp, schema_prefix
 from pycds.materialized_view_helpers import (
-    create_materialized_view,
-    drop_materialized_view,
+    create_manual_materialized_view,
+    drop_manual_materialized_view,
 )
 
 
-@Operations.register_operation("create_materialized_view", "invoke_for_target")
-@Operations.register_operation("replace_materialized_view", "replace")
-class CreateMaterializedViewOp(ReversibleOp):
+@Operations.register_operation("create_manual_materialized_view", "invoke_for_target")
+@Operations.register_operation("replace_manual_materialized_view", "replace")
+class CreateManualMaterializedViewOp(ReversibleOp):
     def reverse(self):
-        return DropMaterializedViewOp(self.target, schema=self.schema)
+        return DropManualMaterializedViewOp(self.target, schema=self.schema)
 
 
-@Operations.register_operation("drop_materialized_view", "invoke_for_target")
-class DropMaterializedViewOp(ReversibleOp):
+@Operations.register_operation("drop_manual_materialized_view", "invoke_for_target")
+class DropManualMaterializedViewOp(ReversibleOp):
     def reverse(self):
-        return CreateMaterializedViewOp(self.target, schema=self.schema)
+        return CreateManualMaterializedViewOp(self.target, schema=self.schema)
 
 
 def target_name(operation):
@@ -35,10 +35,10 @@ def target_name(operation):
     )
 
 
-@Operations.implementation_for(CreateMaterializedViewOp)
-def create_materialized_view_op(operations, operation):
+@Operations.implementation_for(CreateManualMaterializedViewOp)
+def create_manual_materialized_view_op(operations, operation):
     operations.execute(
-        create_materialized_view(
+        create_manual_materialized_view(
             target_name(operation),
             operation.target.__selectable__.compile(
                 compile_kwargs={"literal_binds": True}
@@ -47,6 +47,6 @@ def create_materialized_view_op(operations, operation):
     )
 
 
-@Operations.implementation_for(DropMaterializedViewOp)
-def drop_materialized_view_op(operations, operation):
-    operations.execute(drop_materialized_view(target_name(operation)))
+@Operations.implementation_for(DropManualMaterializedViewOp)
+def drop_manual_materialized_view_op(operations, operation):
+    operations.execute(drop_manual_materialized_view(target_name(operation)))
