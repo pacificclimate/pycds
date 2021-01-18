@@ -12,7 +12,10 @@ from sqlalchemy.sql import column
 
 from pycds import get_schema_name
 from pycds.view_helpers import ViewMixin
-from pycds.materialized_view_helpers import ManualMaterializedViewMixin
+from pycds.materialized_view_helpers import (
+    ManualMaterializedViewMixin,
+    NativeMaterializedViewMixin,
+)
 
 schema_name = get_schema_name()
 ContentBase = declarative_base(metadata=MetaData(schema=schema_name))
@@ -109,8 +112,8 @@ class ThingCountView(ViewBase, ViewMixin):
 class SimpleThingManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = simple_thing_text_selectable
 
-    def __repr__(self):
-        return '<SimpleThingMatview(id={}, desc={})>'.format(self.id, self.name)
+    def __str__(self):
+        return f"<SimpleManualThingMatview(id={self.id}, name={self.name})>"
 
 
 class ThingWithDescriptionManualMatview(ViewBase, ManualMaterializedViewMixin):
@@ -122,13 +125,33 @@ class ThingCountManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_count_text_selectable
     __primary_key__ = ['desc']
 
-    def __repr__(self):
+    def __str__(self):
         return (
-            f"<ThingWithDescriptionMatview("
+            f"<ThingCountManualMatview("
             f"id={self.id}, name={self.name}, desc={self.desc})>"
         )
 
 
+# Native materialized views
+
+class SimpleThingNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = simple_thing_text_selectable
+
+    def __str__(self):
+        return f"<SimpleNativeThingMatview(id={self.id}, name={self.name})>"
 
 
+class ThingWithDescriptionNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = thing_with_description_text_selectable
+    __primary_key__ = ['id']
 
+
+class ThingCountNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = thing_count_text_selectable
+    __primary_key__ = ['desc']
+
+    def __str__(self):
+        return (
+            f"<ThingCountNativeMatview("
+            f"id={self.id}, name={self.name}, desc={self.desc})>"
+        )

@@ -222,6 +222,12 @@ def get_schema_item_names(executor, item_type, schema_name=get_schema_name()):
             FROM information_schema.views 
             WHERE table_schema = '{schema_name}';
         """)
+    elif item_type == 'matviews':
+        r = executor.execute(f"""
+            SELECT matviewname 
+            FROM pg_matviews
+            WHERE schemaname = '{schema_name}';
+        """)
     else:
         raise ValueError('invalid item type')
     return {x[0] for x in r.fetchall()}

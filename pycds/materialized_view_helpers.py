@@ -63,7 +63,9 @@ class DropNativeMaterializedView(MaterializedViewCommand):
 
 
 class RefreshNativeMaterializedView(MaterializedViewCommand):
-    pass
+    def __init__(self, name, concurrently=False):
+        super().__init__(name)
+        self.concurrently = concurrently
 
 
 # SQL implementation (compilation) of commands
@@ -260,7 +262,9 @@ class NativeMaterializedViewMixin(MaterializedViewMixinBase):
     @classmethod
     def create(cls, sesh):
         return sesh.execute(
-            CreateNativeMaterializedView(cls.viewname(), cls.__selectable__)
+            CreateNativeMaterializedView(
+                cls.qualfied_viewname(), cls.__selectable__
+            )
         )
         # TODO: Add index creation code here?
 
