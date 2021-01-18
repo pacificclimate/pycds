@@ -104,26 +104,29 @@ class ThingCountView(ViewBase, ViewMixin):
         return '<ThingWithDescriptionView(id={}, name={}, desc={})>'.format(self.id, self.name, self.desc)
 
 
-# Materialized views
+# Manual materialized views
 
-class SimpleThingMatview(ViewBase, ManualMaterializedViewMixin):
+class SimpleThingManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = simple_thing_text_selectable
 
     def __repr__(self):
         return '<SimpleThingMatview(id={}, desc={})>'.format(self.id, self.name)
 
 
-class ThingWithDescriptionMatview(ViewBase, ManualMaterializedViewMixin):
+class ThingWithDescriptionManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_with_description_text_selectable
     __primary_key__ = ['id']
 
 
-class ThingCountMatview(ViewBase, ManualMaterializedViewMixin):
+class ThingCountManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_count_text_selectable
     __primary_key__ = ['desc']
 
     def __repr__(self):
-        return '<ThingWithDescriptionMatview(id={}, name={}, desc={})>'.format(self.id, self.name, self.desc)
+        return (
+            f"<ThingWithDescriptionMatview("
+            f"id={self.id}, name={self.name}, desc={self.desc})>"
+        )
 
 
 
