@@ -35,49 +35,51 @@ from pycds.view_helpers import snake_case
 
 # SQLAlchemy "commands"
 
-class CreateMaterializedView(DDLElement):
-    def __init__(self, name, selectable):
+
+class MaterializedViewCommand(DDLElement):
+    def __init__(self, name, selectable=None):
         self.name = name
         self.selectable = selectable
 
 
-class DropMaterializedView(DDLElement):
-    def __init__(self, name):
-        self.name = name
+class CreateManualMaterializedView(MaterializedViewCommand):
+    pass
 
 
-class RefreshMaterializedView(DDLElement):
-    def __init__(self, name, selectable):
-        self.name = name
-        self.selectable = selectable
+class DropManualMaterializedView(MaterializedViewCommand):
+    pass
+
+
+class RefreshManualMaterializedView(MaterializedViewCommand):
+    pass
 
 
 # SQL implementation (compilation) of commands
 # Note: Functions `create_materialized_view` and `drop_materialized_view`
 # are also used to implement Alembic matview operations. Hence their existence.
 
-def create_materialized_view(name, body):
+def create_manual_materialized_view(name, body):
     return f"CREATE TABLE {name} AS {body}"
 
 
-@compiler.compiles(CreateMaterializedView)
+@compiler.compiles(CreateManualMaterializedView)
 def compile(element, compiler, **kw):
-    return create_materialized_view(
+    return create_manual_materialized_view(
         element.name,
         compiler.sql_compiler.process(element.selectable, literal_binds=True),
     )
 
 
-def drop_materialized_view(name):
+def drop_manual_materialized_view(name):
     return f"DROP TABLE {name}"
 
 
-@compiler.compiles(DropMaterializedView)
+@compiler.compiles(DropManualMaterializedView)
 def compile(element, compiler, **kw):
-    return drop_materialized_view(element.name)
+    return drop_manual_materialized_view(element.name)
 
 
-@compiler.compiles(RefreshMaterializedView)
+@compiler.compiles(RefreshManualMaterializedView)
 def compile(element, compiler, **kw):
     return 'TRUNCATE TABLE {0}; INSERT INTO {0} {1}'.format(
         element.name,
@@ -85,6 +87,14 @@ def compile(element, compiler, **kw):
 
 
 # Implementation of materialized view in declarative base style.
+
+# TODO: Extend this to handle native matviews:
+#   - Rename compiler classes etc. to "manual matview"
+#   - Add new compiler classes for native matview
+#   - Split MaterializedViewMixin into a base and two derived classes,
+#       ManualMatviewMixin and NativeMatviewMixin, differing in the defs for
+#       class methods create, drop, refresh
+#   - Deploy appropriately in code that uses it.
 
 class MaterializedViewMixin(object):
     """Mixin for ORM classes that are materialized views. Defines the two key attributes of an ORM class,
@@ -168,17 +178,17 @@ class MaterializedViewMixin(object):
 
     @classmethod
     def create(cls, sesh):
-        return sesh.execute(CreateMaterializedView(
+        return sesh.execute(CreateManualMaterializedView(
             cls.qualfied_viewname(), cls.__selectable__)
         )
         # TODO: Add index creation code here?
 
     @classmethod
     def drop(cls, sesh):
-        return sesh.execute(DropMaterializedView(cls.qualfied_viewname()))
+        return sesh.execute(DropManualMaterializedView(cls.qualfied_viewname()))
 
     @classmethod
     def refresh(cls, sesh):
-        return sesh.execute(RefreshMaterializedView(
+        return sesh.execute(RefreshManualMaterializedView(
             cls.qualfied_viewname(), cls.__selectable__)
         )
