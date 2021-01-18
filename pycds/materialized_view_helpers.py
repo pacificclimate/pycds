@@ -98,6 +98,24 @@ def compile(element, compiler, **kw):
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
 
+@compiler.compiles(CreateNativeMaterializedView)
+def compile(element, compiler, **kw):
+    return 'CREATE MATERIALIZED VIEW {} AS {}'.format(
+        element.name,
+        compiler.sql_compiler.process(element.selectable, literal_binds=True))
+
+
+@compiler.compiles(DropNativeMaterializedView)
+def compile(element, compiler, **kw):
+    return 'DROP MATERIALIZED VIEW {}'.format(element.name)
+
+
+@compiler.compiles(RefreshNativeMaterializedView)
+def compile(element, compiler, **kw):
+    return 'REFRESH MATERIALIZED VIEW {} {}'.format(
+        ('CONCURRENTLY' if element.concurrently else ''), element.name)
+
+
 # Implementation of materialized view in declarative base style.
 
 # TODO: Extend this to handle native matviews:
@@ -235,4 +253,23 @@ class ManualMaterializedViewMixin(MaterializedViewMixinBase):
     def refresh(cls, sesh):
         return sesh.execute(RefreshManualMaterializedView(
             cls.qualfied_viewname(), cls.__selectable__)
+        )
+
+
+class NativeMaterializedViewMixin(MaterializedViewMixinBase):
+    @classmethod
+    def create(cls, sesh):
+        return sesh.execute(
+            CreateNativeMaterializedView(cls.viewname(), cls.__selectable__)
+        )
+        # TODO: Add index creation code here?
+
+    @classmethod
+    def drop(cls, sesh):
+        return sesh.execute(DropNativeMaterializedView(cls.qualfied_viewname()))
+
+    @classmethod
+    def refresh(cls, sesh, concurrently=False):
+        return sesh.execute(RefreshNativeMaterializedView(
+            cls.qualfied_viewname(), concurrently)
         )
