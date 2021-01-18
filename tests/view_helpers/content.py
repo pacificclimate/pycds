@@ -12,7 +12,7 @@ from sqlalchemy.sql import column
 
 from pycds import get_schema_name
 from pycds.view_helpers import ViewMixin
-from pycds.materialized_view_helpers import MaterializedViewMixin
+from pycds.materialized_view_helpers import ManualMaterializedViewMixin
 
 schema_name = get_schema_name()
 ContentBase = declarative_base(metadata=MetaData(schema=schema_name))
@@ -106,19 +106,19 @@ class ThingCountView(ViewBase, ViewMixin):
 
 # Materialized views
 
-class SimpleThingMatview(ViewBase, MaterializedViewMixin):
+class SimpleThingMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = simple_thing_text_selectable
 
     def __repr__(self):
         return '<SimpleThingMatview(id={}, desc={})>'.format(self.id, self.name)
 
 
-class ThingWithDescriptionMatview(ViewBase, MaterializedViewMixin):
+class ThingWithDescriptionMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_with_description_text_selectable
     __primary_key__ = ['id']
 
 
-class ThingCountMatview(ViewBase, MaterializedViewMixin):
+class ThingCountMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_count_text_selectable
     __primary_key__ = ['desc']
 

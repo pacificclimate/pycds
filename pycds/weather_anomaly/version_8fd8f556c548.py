@@ -58,7 +58,7 @@ from pycds import (
     PCICFlag,
     Variable,
 )
-from pycds.materialized_view_helpers import MaterializedViewMixin
+from pycds.materialized_view_helpers import ManualMaterializedViewMixin
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 metadata = Base.metadata
@@ -136,12 +136,12 @@ def daily_temperature_extremum(extremum):
     )
 
 
-class DailyMaxTemperature(Base, MaterializedViewMixin):
+class DailyMaxTemperature(Base, ManualMaterializedViewMixin):
     __selectable__ = daily_temperature_extremum("max").selectable
     __primary_key__ = "history_id vars_id obs_day".split()
 
 
-class DailyMinTemperature(Base, MaterializedViewMixin):
+class DailyMinTemperature(Base, ManualMaterializedViewMixin):
     __selectable__ = daily_temperature_extremum("min").selectable
     __primary_key__ = "history_id vars_id obs_day".split()
 
@@ -221,14 +221,14 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     ).select_from(avg_daily_extreme_temperature)
 
 
-class MonthlyAverageOfDailyMaxTemperature(Base, MaterializedViewMixin):
+class MonthlyAverageOfDailyMaxTemperature(Base, ManualMaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
         "max"
     ).selectable
     __primary_key__ = "history_id vars_id obs_month".split()
 
 
-class MonthlyAverageOfDailyMinTemperature(Base, MaterializedViewMixin):
+class MonthlyAverageOfDailyMinTemperature(Base, ManualMaterializedViewMixin):
     __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
         "min"
     ).selectable
@@ -304,6 +304,6 @@ def monthly_total_precipitation_with_avg_coverage():
     ).select_from(monthly_total_precip)
 
 
-class MonthlyTotalPrecipitation(Base, MaterializedViewMixin):
+class MonthlyTotalPrecipitation(Base, ManualMaterializedViewMixin):
     __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable
     __primary_key__ = "history_id vars_id obs_month".split()
