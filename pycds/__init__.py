@@ -388,27 +388,6 @@ class ClimoObsCount(Base):
     climo_obs_count_idx = Index('climo_obs_count_idx', 'history_id')
 
 
-class VarsPerHistory(Base):
-    """This class maps to a manual materialized view that is required for
-    web app performance. It is used to link recorded quantities (variables) to
-    the station/history level, rather than just the network level
-    (just because one station in the network records a quantity,
-    doesn't mean that all stations in the network do). To some extent,
-    this view is an add on to compensate for poor database
-    normalization, but it's close enough to get by.
-    """
-    __tablename__ = 'vars_per_history_mv'
-    # TODO: These columns are not primary keys in the CRMP database.
-    #  Which is right?
-    history_id = Column(Integer, ForeignKey(
-        'meta_history.history_id'), primary_key=True)
-    vars_id = Column(Integer, ForeignKey(
-        'meta_vars.vars_id'), primary_key=True)
-
-    # Indexes
-    var_hist_idx = Index('var_hist_idx', 'history_id', 'vars_id')
-
-
 class CollapsedVariables(Base):
     """This class maps to a manual materialized view that supports the
     view CrmpNetworkGeoserver."""
