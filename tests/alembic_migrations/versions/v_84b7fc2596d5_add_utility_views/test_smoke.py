@@ -1,7 +1,6 @@
 """Smoke tests:
-- Upgrade creates functions
-- Downgrade drops functions
-- Created functions are executable
+- Upgrade creates views
+- Downgrade drops views
 """
 
 # -*- coding: utf-8 -*-
