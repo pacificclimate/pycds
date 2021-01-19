@@ -1,28 +1,32 @@
 """Materialized view creation tools
 
 SQLAlchemy does not have out-of-the-box support for views or materialized views.
-This module adds materialized view functionality.
+This module adds materialized view functionality, and supports both native
+matviews and "manual" matviews.
+
+(Manual matviews are conventional tables whose content is updated manually to
+reflect the content we'd like to see in a matview. We use manual matviews in
+environments running PostgreSQL < 9.3. There is a
+variety of strategies by which such manual matviews can be maintained and
+updated. The one embodied here is the very simple, and typically incurs a
+higher cost than more sophisticated strategies. However, we expect to transition
+materialized matviews to native matviews in the near future, and it is not worth
+the effort to provide for more sophisticated manual strategies in the meantime.)
 
 For info on materialized view creation in SQLAlchemy see:
 http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
-but note this depends on flask. Essence is the same as a view.
-For an explanation of why we use `append_column` instead of `_make_proxy`, see. This is the core stuff
-for materialized views in SQLAlchemy, from its author:
-https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
+but note this depends on Flask. In essence it is the same as the approach
+for views.
+For an explanation of why we use `append_column` instead of `_make_proxy`, see.
 
-The current version of these helpers creates and updates regular tables instead
-of true materialized views. This enables these helpers to be used in with
-Postgresql versions < 9.3 (when materialized views were introduced).
-To restore the true materialized view functionality, revert the merge commit
-for the branch "fake-materialized-views".
+This is the core stuff for materialized views in SQLAlchemy, from its author:
+https://bitbucket.org/zzzeek/sqlalchemy/issues/3616/calling-index-on-a-materialized-view
 
 TODO: Clean this up a bit. It's not clear the SQLAlchemy commands
   `CreateMaterializedView`, etc. are necessary, since the selectable can be
   compiled by invoking `selectable.compile(...)`. In that case, they can be
   removed and their usage replaced by the simpler functions
   `create_materialized_view` etc.
-
-TODO:
 """
 
 from sqlalchemy.ext import compiler
@@ -100,35 +104,36 @@ def compile(element, compiler, **kw):
         compiler.sql_compiler.process(element.selectable, literal_binds=True))
 
 
+def create_native_materialized_view(name, body):
+    return f"CREATE MATERIALIZED VIEW {name} AS {body}"
+
+
 @compiler.compiles(CreateNativeMaterializedView)
 def compile(element, compiler, **kw):
-    return 'CREATE MATERIALIZED VIEW {} AS {}'.format(
+    return create_native_materialized_view(
         element.name,
-        compiler.sql_compiler.process(element.selectable, literal_binds=True))
+        compiler.sql_compiler.process(element.selectable, literal_binds=True),
+    )
+
+
+def drop_native_materialized_view(name):
+    return f"DROP MATERIALIZED VIEW {name}"
 
 
 @compiler.compiles(DropNativeMaterializedView)
 def compile(element, compiler, **kw):
-    return 'DROP MATERIALIZED VIEW {}'.format(element.name)
+    return drop_native_materialized_view(element.name)
 
 
 @compiler.compiles(RefreshNativeMaterializedView)
 def compile(element, compiler, **kw):
-    return 'REFRESH MATERIALIZED VIEW {} {}'.format(
-        ('CONCURRENTLY' if element.concurrently else ''), element.name)
+    concurrently = ('CONCURRENTLY' if element.concurrently else '')
+    return f"REFRESH MATERIALIZED VIEW {concurrently} {element.name}"
 
 
 # Implementation of materialized view in declarative base style.
 
-# TODO: Extend this to handle native matviews:
-#   - Rename compiler classes etc. to "manual matview"
-#   - Add new compiler classes for native matview
-#   - Split MaterializedViewMixin into a base and two derived classes,
-#       ManualMatviewMixin and NativeMatviewMixin, differing in the defs for
-#       class methods create, drop, refresh
-#   - Deploy appropriately in code that uses it.
-
-class MaterializedViewMixinBase:
+class MaterializedViewMixin:
     """
     Base class for mixins for ORM classes that are materialized views.
 
@@ -239,7 +244,7 @@ class MaterializedViewMixinBase:
         raise NotImplementedError
 
 
-class ManualMaterializedViewMixin(MaterializedViewMixinBase):
+class ManualMaterializedViewMixin(MaterializedViewMixin):
     @classmethod
     def create(cls, sesh):
         return sesh.execute(CreateManualMaterializedView(
@@ -258,7 +263,7 @@ class ManualMaterializedViewMixin(MaterializedViewMixinBase):
         )
 
 
-class NativeMaterializedViewMixin(MaterializedViewMixinBase):
+class NativeMaterializedViewMixin(MaterializedViewMixin):
     @classmethod
     def create(cls, sesh):
         return sesh.execute(
