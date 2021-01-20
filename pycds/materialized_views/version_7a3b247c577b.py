@@ -13,7 +13,7 @@ See that module for more information. In particular, see the note about using
 a separate declarative base for views; here it is `Base`.
 """
 
-from sqlalchemy import MetaData, func, text
+from sqlalchemy import (MetaData, Column, Integer, ForeignKey)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 from pycds import get_schema_name, Obs
@@ -23,7 +23,7 @@ from pycds.materialized_view_helpers import NativeMaterializedViewMixin
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 
 
-class VarsPerHistory(NativeMaterializedViewMixin):
+class VarsPerHistory(Base, NativeMaterializedViewMixin):
     """This materialized view is used by the PDP backend to give feasible
     web app performance. It is used to link recorded quantities (variables)
     to the station/history level, rather than just the network level (just
@@ -42,6 +42,7 @@ class VarsPerHistory(NativeMaterializedViewMixin):
     FROM obs_raw;
     """
     __viewname__ = "vars_per_history_mv"
+
     __selectable__ = (
         Query([
             Obs.history_id.label("history_id"),
@@ -49,4 +50,10 @@ class VarsPerHistory(NativeMaterializedViewMixin):
         ])
         .distinct()
     ).selectable
+
     __primary_key__ = ["history_id", "vars_id"]
+
+    # history_id = Column(Integer, ForeignKey(
+    #     'meta_history.history_id'), primary_key=True)
+    # vars_id = Column(Integer, ForeignKey(
+    #     'meta_vars.vars_id'), primary_key=True)
