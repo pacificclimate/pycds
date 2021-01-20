@@ -6,7 +6,7 @@ from ....helpers import insert_crmp_data
 
 @pytest.fixture(scope='function')
 def prepared_schema_from_migrations_left(
-        uri_left, alembic_config_left, db_setup
+    uri_left, alembic_config_left, db_setup
 ):
     engine, script =  prepare_schema_from_migrations(
         uri_left,
