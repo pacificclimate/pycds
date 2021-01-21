@@ -13,7 +13,7 @@ See that module for more information. In particular, see the note about using
 a separate declarative base for views; here it is `Base`.
 """
 
-from sqlalchemy import (MetaData, Column, Integer, ForeignKey)
+from sqlalchemy import (MetaData, Index)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 from pycds import get_schema_name, Obs
@@ -53,7 +53,5 @@ class VarsPerHistory(Base, NativeMaterializedViewMixin):
 
     __primary_key__ = ["history_id", "vars_id"]
 
-    # history_id = Column(Integer, ForeignKey(
-    #     'meta_history.history_id'), primary_key=True)
-    # vars_id = Column(Integer, ForeignKey(
-    #     'meta_vars.vars_id'), primary_key=True)
+
+Index("var_hist_idx", VarsPerHistory.history_id, VarsPerHistory.vars_id)
