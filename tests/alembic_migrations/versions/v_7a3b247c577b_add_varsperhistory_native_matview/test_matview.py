@@ -1,9 +1,12 @@
 import pytest
+from sqlalchemy.engine.reflection import Inspector
 from pycds.materialized_views.version_7a3b247c577b import VarsPerHistory
 
 
-@pytest.mark.usefixtures('new_db_left')
-def test_vars_per_history(sesh_with_large_data):
+@pytest.mark.usefixtures("new_db_left")
+def test_vars_content(sesh_with_large_data):
+    """Test that VarsPerHistory definition is correct."""
+
     # No content before matview is refreshed
     q = sesh_with_large_data.query(VarsPerHistory)
     assert q.count() == 0
@@ -31,3 +34,19 @@ def test_vars_per_history(sesh_with_large_data):
         (5816, 519),
     ):
         assert pair in pairs
+
+
+@pytest.mark.usefixtures("new_db_left")
+def test_index(schema_name, prepared_schema_from_migrations_left):
+    """Test that VarsPerHistory has the expected index."""
+    engine, script = prepared_schema_from_migrations_left
+    inspector = Inspector(engine)
+    viewname = VarsPerHistory.base_viewname()
+    indexes = inspector.get_indexes(table_name=viewname, schema=schema_name)
+    assert indexes == [
+        {
+            "name": "var_hist_idx",
+            "column_names": ["history_id", "vars_id"],
+            "unique": False,
+        }
+    ]

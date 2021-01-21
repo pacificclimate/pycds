@@ -13,7 +13,12 @@ from ....helpers import get_schema_item_names
 logger = logging.getLogger("tests")
 
 
-matview_names = {"vars_per_history_mv"}
+matviews = {
+    "vars_per_history_mv": {
+        "indexes": {"var_hist_idx"}
+    },
+}
+matview_names = set(matviews)
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -28,6 +33,13 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
     assert names & matview_names == set()
     names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
     assert names >= matview_names
+
+    # Check that indexes were installed too
+    for table_name, contents in matviews.items():
+        names = get_schema_item_names(
+            engine, "indexes", table_name=table_name, schema_name=schema_name
+        )
+        assert names == contents["indexes"]
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -47,3 +59,10 @@ def test_downgrade(
     assert names & matview_names == set()
     names = get_schema_item_names(engine, "tables", schema_name=schema_name)
     assert names >= matview_names
+
+    # Check that indexes were dropped
+    for table_name, contents in matviews.items():
+        names = get_schema_item_names(
+            engine, "indexes", table_name=table_name, schema_name=schema_name
+        )
+        assert names & contents["indexes"] == set()
