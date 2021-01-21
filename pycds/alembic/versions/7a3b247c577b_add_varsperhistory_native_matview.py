@@ -21,10 +21,24 @@ def upgrade():
     schema_name = get_schema_name()
     op.drop_table("vars_per_history_mv", schema=schema_name)
     op.create_native_materialized_view(VarsPerHistory, schema=schema_name)
+    for index in VarsPerHistory.__table__.indexes:
+        op.create_index(
+            index_name=index.name,
+            table_name=index.table.name,
+            columns=[col.name for col in index.columns],
+            unique=index.unique,
+            schema=schema_name
+        )
 
 
 def downgrade():
     schema_name = get_schema_name()
+    for index in VarsPerHistory.__table__.indexes:
+        op.drop_index(
+            index_name=index.name,
+            table_name=index.table.name,
+            schema=schema_name
+        )
     op.drop_native_materialized_view(VarsPerHistory, schema=schema_name)
     op.create_table(
         "vars_per_history_mv",
