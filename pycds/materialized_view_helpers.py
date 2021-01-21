@@ -193,17 +193,6 @@ class MaterializedViewMixin:
         for c in cls.__selectable__.c:
             t.append_column(Column(c.name, c.type, primary_key=c.primary_key))
 
-        # Not sure if this will work, but it reproduces the setting above ...
-        # This event listener causes indexes defined for the materialized view
-        # to be created after the matview table is created by calling
-        # `metadata.create_all()`.
-        # However, this is no the only way to create this table, and so it
-        # may be necessary to add index creation code to method create() below.
-        @event.listens_for(cls.metadata, "after_create")
-        def create_indexes(target, connection, **kw):
-            for idx in t.indexes:
-                idx.create(connection)
-
         return t
 
     @declared_attr
@@ -217,6 +206,20 @@ class MaterializedViewMixin:
             }
         except AttributeError:
             return {}
+
+
+    @classmethod
+    def create_indexes(cls, executor, table=None):
+        """
+        Cause any defined indexes to be created.
+        This method probably has no use, as the correct place to create indexes
+        is in the migration script, and it is done in a different way there.
+        """
+        if table is None:
+            table = cls.__table__
+        for idx in table.indexes:
+            idx.create(executor)
+
 
     @classmethod
     def base_viewname(cls):
