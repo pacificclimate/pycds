@@ -20,11 +20,11 @@ depends_on = None
 
 logger = logging.getLogger("alembic")
 
-engine = op.get_bind().engine
 schema_name = get_schema_name()
 
 
 def upgrade():
+    engine = op.get_bind().engine
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
         op.drop_table("vars_per_history_mv", schema=schema_name)
@@ -42,6 +42,7 @@ def upgrade():
 
 
 def downgrade():
+    engine = op.get_bind().engine
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
         for index in VarsPerHistory.__table__.indexes:
