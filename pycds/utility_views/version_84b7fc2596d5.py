@@ -21,8 +21,16 @@ If views are behaving oddly with respect to geometry, this is worth looking at.
 from sqlalchemy import MetaData, func, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
-from pycds import get_schema_name, Network, Station, History, Variable, Obs, \
-    StationObservationStats, CollapsedVariables
+from pycds.util import get_schema_name
+from pycds.orm import (
+    Network,
+    Station,
+    History,
+    Variable,
+    Obs,
+    StationObservationStats,
+    CollapsedVariables
+)
 from pycds.view_helpers import ViewMixin
 
 

@@ -16,9 +16,12 @@ a separate declarative base for views; here it is `Base`.
 from sqlalchemy import (MetaData, Index)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
-from pycds import get_schema_name, Obs
+from pycds.util import get_schema_name
+from pycds.orm import Obs
 from pycds.materialized_view_helpers import NativeMaterializedViewMixin
 
+
+print(f"version_7a3b247c577b: get_schema_name() = {get_schema_name()}")
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 

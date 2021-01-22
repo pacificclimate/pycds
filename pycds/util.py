@@ -1,9 +1,13 @@
-import pycds
+import os
+
+
+def get_schema_name():
+    return os.environ.get('PYCDS_SCHEMA_NAME', 'crmp')
 
 
 def check_migration_version(
     executor,
-    schema_name=pycds.get_schema_name(),
+    schema_name=get_schema_name(),
     # `version` must be kept up to date with latest migration
     # a test checks it, however, in case you don't
     version="7a3b247c577b",

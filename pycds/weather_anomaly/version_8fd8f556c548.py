@@ -48,8 +48,8 @@ from sqlalchemy import MetaData, func, and_, not_, case, cast, String, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 
-from pycds import (
-    get_schema_name,
+from pycds.util import get_schema_name
+from pycds.orm import (
     History,
     Obs,
     ObsRawNativeFlags,
