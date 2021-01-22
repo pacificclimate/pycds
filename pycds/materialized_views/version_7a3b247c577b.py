@@ -7,10 +7,10 @@ SQLAlchemy does not directly support matviews. A view can be represented simply
 as a table in the ORM, but this does not permit its definition to be part of
 the ORM, or to be maintained and migrated.
 
-This module defines views in the ORM as SQL views in the database, using
+This module defines matviews in the ORM as SQL views in the database, using
 a SQLAlchemy compiler extension provided by `./materialized_view_helpers`.
 See that module for more information. In particular, see the note about using
-a separate declarative base for views; here it is `Base`.
+a separate declarative base for matviews; here it is `Base`.
 """
 
 from sqlalchemy import (MetaData, Index)
@@ -20,8 +20,6 @@ from pycds.util import get_schema_name
 from pycds.orm import Obs
 from pycds.materialized_view_helpers import NativeMaterializedViewMixin
 
-
-print(f"version_7a3b247c577b: get_schema_name() = {get_schema_name()}")
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 
