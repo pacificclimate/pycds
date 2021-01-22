@@ -67,7 +67,7 @@ postgresql://tester@localhost:<port>/pycds_test
 To stop the local Docker test database container:
 
 ```shell script
-./alembic/development/down-db.sh
+./docker/test-db/down-db.sh
 ```
 
 This is a pretty trivial convenience, but it's a _convenient_ convenience.

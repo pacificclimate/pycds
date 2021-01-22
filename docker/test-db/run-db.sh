@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: run-db.sh <password> <port>
+# Usage: run-db.sh <port> <password>
 
 ${BASH_SOURCE%/*}/init_test_db/common/create_scripts.sh
 docker run -d \
