@@ -26,17 +26,56 @@ when performing any database operations with it. Otherwise the operations will
 fail with errors of the form "could not find object X in schema Y".
 """
 
+# TODO: Do we really need __all__? Its only use is for `from <package> import *`
+#   which is officially not recommended practice.
+__all__ = [
+    # Utility methods
+    "get_schema_name",
+    
+    # Tables
+    "Base",
+    "Network",
+    "Contact",
+    "Variable",
+    "Station",
+    "History",
+    "Obs",
+    "MetaSensor",
+    "TimeBound",
+    "ClimatologyAttributes",
+    "ObsRawNativeFlags",
+    "NativeFlag",
+    "ObsRawPCICFlags",
+    "PCICFlag",
+    "DerivedValue",
+    "CollapsedVariables",
+    "StationObservationStats",
+    
+    # Internally managed native matviews
+    "VarsPerHistory",
+    
+    # Internally managed manual matviews
+    "DailyMaxTemperature",
+    "DailyMinTemperature",
+    "MonthlyAverageOfDailyMaxTemperature",
+    "MonthlyAverageOfDailyMinTemperature",
+    "MonthlyTotalPrecipitation",
+    
+    # Internally managed views
+    "CrmpNetworkGeoserver",
+    "HistoryStationNetwork",
+    "ObsCountPerDayHistory",
+    "ObsWithFlags",
+
+    # Externally managed manual matviews
+    "ObsCountPerMonthHistory",
+    "ClimoObsCount",
+    "CollapsedVariables",
+    "StationObservationStats",
+]
+
 import os
 import datetime
-
-__all__ = [
-    'get_schema_name',
-    'Base',
-    'Network', 'Contact', 'Variable', 'Station', 'History', 'Obs',
-    'ObsCountPerMonthHistory', 'VarsPerHistory',
-    'ObsRawNativeFlags', 'NativeFlag', 'ObsRawPCICFlags', 'PCICFlag',
-    'MetaSensor', 'CollapsedVariables', 'StationObservationStats'
-]
 
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Index
@@ -45,6 +84,22 @@ from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
+
+# Import the definitions of views and matviews from their "home" packages.
+from pycds.utility_views import (
+    CrmpNetworkGeoserver,
+    HistoryStationNetwork,
+    ObsCountPerDayHistory,
+    ObsWithFlags,
+)
+from pycds.weather_anomaly import (
+    DailyMaxTemperature,
+    DailyMinTemperature,
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
+    MonthlyTotalPrecipitation,
+)
+from pycds.materialized_views import VarsPerHistory
 
 
 def get_schema_name():

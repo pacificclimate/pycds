@@ -26,8 +26,9 @@ def db_supports_statement(engine, statement):
     itself can be executed in a transaction).
 
     Note: We must create a session to do this test. Creating a transaction
-    directly from the session failed: the entire Alembic operation transaction
-    was rolled back, not just the one supposedly enclosing this test execution.
+    directly from the Alembic connection failed: the entire pre-existing Alembic
+    operation transaction was rolled back, not just the one supposedly enclosing
+    this test execution.
     """
     Session = sessionmaker(bind=engine)
     session = Session()
