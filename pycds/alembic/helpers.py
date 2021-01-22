@@ -12,16 +12,14 @@ def get_postgresql_version(executor):
     This has no use at present but going to leave it here in case it does again
     in future.
     """
-    query = "SELECT version()"
+    query = "SELECT setting FROM pg_settings WHERE name = 'server_version'"
     try:
-        dbms, version, *_ = executor.execute(query).scalar().split(" ")
+        version = executor.execute(query).first()[0]
     except ProgrammingError:
         raise ValueError(
             f"Query '{query}' caused an error. "
             f"Possibly we are not running on PostgreSQL."
         )
-    if dbms != "PostgreSQL":
-        raise ValueError("Not running on PostgreSQL! Yikes!")
     return tuple(int(n) for n in version.split("."))
 
 
