@@ -37,10 +37,23 @@ from sqlalchemy.ext.declarative import declared_attr
 from pycds.view_helpers import snake_case
 
 
-# SQLAlchemy "commands"
-
+# SQLAlchemy commands
+#
+# Each of the (leaf) classes below is registered as a new SQLAlchemy command
+# with `@compiler.compiles` providing the registration and implementation of
+# the command. This puts them on a par with built-in SQLAlchemy commands such
+# as `CreateSchema`.
+#
+# This arrangement is copied from the idea outlined in
+# http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
+# However, it's not clear that we make any real use of these commands in PyCDS.
+# Instead, we register Alembic operations that simply call the implementation
+# functions (e.g., `create_materialized_view`) directly. These commands
+# therefore may not have any utility.
+# See [issue 75](https://github.com/pacificclimate/pycds/issues/75).
 
 class MaterializedViewCommand(DDLElement):
+    """Base class for materialized view commands."""
     def __init__(self, name, selectable=None):
         self.name = name
         self.selectable = selectable
