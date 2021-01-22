@@ -48,6 +48,7 @@ setup(
     tests_require=[
         "pytest",
         "pytest-describe",
+        "pytest-mock",
         "testing.postgresql",
         "alembic",
         "alembic-verify"
