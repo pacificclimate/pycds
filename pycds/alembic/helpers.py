@@ -6,16 +6,23 @@ def get_postgresql_version(executor):
     """
     Return PostgreSQL version as a tuple of integers.
 
-    This function is very rough and ready. It will fail in unknown ways if it
-    is run on any other database engine than PostgreSQL.
+    This function is only works PostgreSQL. On other DBMSs, it will raise
+    a ValueError.
 
     This has no use at present but going to leave it here in case it does again
     in future.
     """
-    items = executor.execute("SELECT version();").scalar().split(" ")
-    if items[0] != "PostgreSQL":
+    query = "SELECT version()"
+    try:
+        dbms, version, *_ = executor.execute(query).scalar().split(" ")
+    except ProgrammingError:
+        raise ValueError(
+            f"Query '{query}' caused an error. "
+            f"Possibly we are not running on PostgreSQL."
+        )
+    if dbms != "PostgreSQL":
         raise ValueError("Not running on PostgreSQL! Yikes!")
-    return tuple(int(n) for n in items[1].split("."))
+    return tuple(int(n) for n in version.split("."))
 
 
 def db_supports_statement(engine, statement):
