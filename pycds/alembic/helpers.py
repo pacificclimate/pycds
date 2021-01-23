@@ -2,7 +2,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
 
 
-def get_postgresql_version(executor):
+def get_postgresql_version(engine):
     """
     Return PostgreSQL version as a tuple of integers.
 
@@ -12,14 +12,13 @@ def get_postgresql_version(executor):
     This has no use at present but going to leave it here in case it does again
     in future.
     """
-    query = "SELECT setting FROM pg_settings WHERE name = 'server_version'"
-    try:
-        version = executor.execute(query).first()[0]
-    except ProgrammingError:
-        raise ValueError(
-            f"Query '{query}' caused an error. "
-            f"Possibly we are not running on PostgreSQL."
-        )
+    print(f"dialect: {engine.dialect.name}")
+    if engine.dialect.name.lower() != "postgresql":
+        raise ValueError(f"We are not running on PostgreSQL.")
+
+    version = engine.execute(
+        "SELECT setting FROM pg_settings WHERE name = " "'server_version'"
+    ).first()[0]
     return tuple(int(n) for n in version.split("."))
 
 
