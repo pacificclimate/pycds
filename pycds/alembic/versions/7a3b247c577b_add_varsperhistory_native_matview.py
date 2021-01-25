@@ -11,6 +11,7 @@ import sqlalchemy as sa
 from pycds import get_schema_name
 from pycds.materialized_views import VarsPerHistory
 from pycds.alembic.helpers import db_supports_matviews
+from pycds.alembic.extensions import operation_plugins
 
 # revision identifiers, used by Alembic.
 revision = "7a3b247c577b"
@@ -25,9 +26,11 @@ schema_name = get_schema_name()
 
 def upgrade():
     engine = op.get_bind().engine
+    inspector = sa.inspect(engine)
+    logger.debug(f"tables: {inspector.get_table_names(schema=schema_name)}")
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
-        op.drop_table("vars_per_history_mv", schema=schema_name)
+        op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
         op.create_native_materialized_view(VarsPerHistory, schema=schema_name)
         for index in VarsPerHistory.__table__.indexes:
             op.create_index(
@@ -52,6 +55,8 @@ def downgrade():
                 schema=schema_name,
             )
         op.drop_native_materialized_view(VarsPerHistory, schema=schema_name)
+        # Note: This will create the table in the database even if it didn't
+        # exist before. At the time of writing, this is the desired behaviour.
         op.create_table(
             "vars_per_history_mv",
             sa.Column("history_id", sa.Integer(), nullable=False),
