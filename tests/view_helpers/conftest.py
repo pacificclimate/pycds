@@ -2,11 +2,19 @@ from pytest import fixture
 from sqlalchemy.orm import sessionmaker
 from ..helpers import add_then_delete_objs
 from ..helpers import create_then_drop_views
-from .content import \
-    ContentBase, \
-    SimpleThingView, ThingWithDescriptionView, ThingCountView, \
-    SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview, \
-    content
+from .content import (
+    ContentBase,
+    SimpleThingView,
+    ThingWithDescriptionView,
+    ThingCountView,
+    SimpleThingManualMatview,
+    ThingWithDescriptionManualMatview,
+    ThingCountManualMatview,
+    SimpleThingNativeMatview,
+    ThingWithDescriptionNativeMatview,
+    ThingCountNativeMatview,
+    content,
+)
 
 
 @fixture(scope='session')
@@ -34,8 +42,26 @@ def view_sesh(tst_orm_sesh):
 
 
 @fixture
-def matview_sesh(tst_orm_sesh):
-    views = [SimpleThingMatview, ThingWithDescriptionMatview, ThingCountMatview]
+def manual_matview_sesh(tst_orm_sesh):
+    views = [
+        SimpleThingManualMatview,
+        ThingWithDescriptionManualMatview,
+        ThingCountManualMatview
+    ]
+    # Matviews must be created before content is added in order to test
+    # refreshed functionality. The nested loops do this.
+    for s0 in create_then_drop_views(tst_orm_sesh, views):
+        for s1 in add_then_delete_objs(s0, content):
+            yield s1
+
+
+@fixture
+def native_matview_sesh(tst_orm_sesh):
+    views = [
+        SimpleThingNativeMatview,
+        ThingWithDescriptionNativeMatview,
+        ThingCountNativeMatview,
+    ]
     # Matviews must be created before content is added in order to test
     # refreshed functionality. The nested loops do this.
     for s0 in create_then_drop_views(tst_orm_sesh, views):

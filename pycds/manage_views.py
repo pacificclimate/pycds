@@ -1,6 +1,6 @@
 import logging
 
-from pycds.materialized_view_helpers import MaterializedViewMixin
+from pycds.materialized_view_helpers import ManualMaterializedViewMixin
 from pycds.weather_anomaly import \
     DailyMaxTemperature, DailyMinTemperature, \
     MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
@@ -28,6 +28,6 @@ def manage_views(session, operation, which_set):
     }[which_set]
 
     for view in views:
-        if issubclass(view, MaterializedViewMixin):
+        if issubclass(view, ManualMaterializedViewMixin):
             logger.info("{} '{}'".format(operation.capitalize(), view.qualfied_viewname()))
             getattr(view, operation)(session)

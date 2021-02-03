@@ -12,7 +12,10 @@ from sqlalchemy.sql import column
 
 from pycds import get_schema_name
 from pycds.view_helpers import ViewMixin
-from pycds.materialized_view_helpers import MaterializedViewMixin
+from pycds.materialized_view_helpers import (
+    ManualMaterializedViewMixin,
+    NativeMaterializedViewMixin,
+)
 
 schema_name = get_schema_name()
 ContentBase = declarative_base(metadata=MetaData(schema=schema_name))
@@ -104,28 +107,51 @@ class ThingCountView(ViewBase, ViewMixin):
         return '<ThingWithDescriptionView(id={}, name={}, desc={})>'.format(self.id, self.name, self.desc)
 
 
-# Materialized views
+# Manual materialized views
 
-class SimpleThingMatview(ViewBase, MaterializedViewMixin):
+class SimpleThingManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = simple_thing_text_selectable
 
-    def __repr__(self):
-        return '<SimpleThingMatview(id={}, desc={})>'.format(self.id, self.name)
+    def __str__(self):
+        return f"<SimpleManualThingMatview(id={self.id}, name={self.name})>"
 
 
-class ThingWithDescriptionMatview(ViewBase, MaterializedViewMixin):
+class ThingWithDescriptionManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_with_description_text_selectable
     __primary_key__ = ['id']
 
 
-class ThingCountMatview(ViewBase, MaterializedViewMixin):
+class ThingCountManualMatview(ViewBase, ManualMaterializedViewMixin):
     __selectable__ = thing_count_text_selectable
     __primary_key__ = ['desc']
 
-    def __repr__(self):
-        return '<ThingWithDescriptionMatview(id={}, name={}, desc={})>'.format(self.id, self.name, self.desc)
+    def __str__(self):
+        return (
+            f"<ThingCountManualMatview("
+            f"id={self.id}, name={self.name}, desc={self.desc})>"
+        )
 
 
+# Native materialized views
+
+class SimpleThingNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = simple_thing_text_selectable
+
+    def __str__(self):
+        return f"<SimpleNativeThingMatview(id={self.id}, name={self.name})>"
 
 
+class ThingWithDescriptionNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = thing_with_description_text_selectable
+    __primary_key__ = ['id']
 
+
+class ThingCountNativeMatview(ViewBase, NativeMaterializedViewMixin):
+    __selectable__ = thing_count_text_selectable
+    __primary_key__ = ['desc']
+
+    def __str__(self):
+        return (
+            f"<ThingCountNativeMatview("
+            f"id={self.id}, name={self.name}, desc={self.desc})>"
+        )

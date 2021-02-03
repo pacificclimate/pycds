@@ -203,7 +203,7 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
 
 # Test helpers
 
-def get_schema_item_names(executor, item_type, schema_name=get_schema_name()):
+def get_schema_item_names(executor, item_type, table_name=None, schema_name=get_schema_name()):
     if item_type == 'routines':
         r = executor.execute(f"""
             SELECT routine_name 
@@ -221,6 +221,19 @@ def get_schema_item_names(executor, item_type, schema_name=get_schema_name()):
             SELECT table_name 
             FROM information_schema.views 
             WHERE table_schema = '{schema_name}';
+        """)
+    elif item_type == 'matviews':
+        r = executor.execute(f"""
+            SELECT matviewname 
+            FROM pg_matviews
+            WHERE schemaname = '{schema_name}';
+        """)
+    elif item_type == 'indexes':
+        r = executor.execute(f"""
+            SELECT indexname 
+            FROM pg_indexes
+            WHERE schemaname = '{schema_name}'
+            AND tablename = '{table_name}';
         """)
     else:
         raise ValueError('invalid item type')

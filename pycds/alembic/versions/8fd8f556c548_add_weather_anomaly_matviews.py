@@ -38,9 +38,9 @@ matviews = (
 
 def upgrade():
     for view in matviews:
-        op.create_materialized_view(view, schema=schema_name)
+        op.create_manual_materialized_view(view, schema=schema_name)
 
 
 def downgrade():
     for view in reversed(matviews):
-        op.drop_materialized_view(view, schema=schema_name)
+        op.drop_manual_materialized_view(view, schema=schema_name)
