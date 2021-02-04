@@ -409,12 +409,9 @@ def upgrade():
     # temporarily setting the role to a superuser role name that is externally
     # granted to the user only for the period when database migrations are
     # performed.
-    print(f"upgrade: setting role {get_su_role_name()}")
     op.set_role(get_su_role_name())
-    print(f"upgrade: role set; creating sps")
     for sp in definitions:
         op.create_stored_procedure(sp, schema=schema_name)
-    print(f"upgrade: resetting role")
     op.reset_role()
 
 
