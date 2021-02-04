@@ -46,18 +46,29 @@ def add_functions():
     return f
 
 
+def set_up_db_cluster(db_uri):
+    """Perform once-per-cluster database setup operations."""
+    # TODO: See if more things, e.g., extensions, languages can be done here.
+    engine = create_engine(db_uri)
+    engine.execute(
+        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT"
+    )
+    engine.dispose()
+
 @fixture(scope='session')
 def base_database_uri():
-    """Test-session scoped base database.
-    """
+    """Test-session scoped base database."""
     with testing.postgresql.Postgresql() as pg:
-        yield pg.url()
+        db_uri = pg.url()
+        set_up_db_cluster(db_uri)
+        yield db_uri
 
 
 # TODO: Separate out add_functions
 @fixture(scope='session')
 def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
-    """Test-session scoped base database engine.
+    """
+    Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
     engine = create_engine(base_database_uri)
