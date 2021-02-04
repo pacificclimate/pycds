@@ -8,6 +8,8 @@ from sqlalchemy.schema import CreateSchema
 
 from sqlalchemydiff.util import get_temporary_uri
 
+from pycds import get_su_role_name
+
 
 @pytest.fixture
 def alembic_root():
@@ -33,6 +35,9 @@ def uri_right(base_database_uri):
 @pytest.fixture(scope='module')
 def db_setup(schema_name):
     def f(engine):
+        engine.execute(
+            f"CREATE ROLE {get_su_role_name()} WITH SUPERUSER NOINHERIT"
+        )
         engine.execute('CREATE EXTENSION postgis')
         engine.execute('CREATE EXTENSION plpythonu')
         engine.execute(CreateSchema(schema_name))

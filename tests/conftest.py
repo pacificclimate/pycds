@@ -16,7 +16,7 @@ def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     logging.getLogger('tests').setLevel(logging.DEBUG)
     logging.getLogger('alembic').setLevel(logging.DEBUG)
-    # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     # logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
 @fixture(scope='session')
@@ -61,6 +61,9 @@ def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     "Base" engine indicates that it has no ORM content created in it.
     """
     engine = create_engine(base_database_uri)
+    engine.execute(
+        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT"
+    )
     engine.execute('CREATE EXTENSION postgis')
     engine.execute('CREATE EXTENSION plpythonu')
     engine.execute(CreateSchema(schema_name))
