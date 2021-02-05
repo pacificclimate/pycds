@@ -46,14 +46,18 @@ def add_functions():
     return f
 
 
-def set_up_db_cluster(db_uri):
+def set_up_db_cluster(db_uri, user="testuser"):
     """Perform once-per-cluster database setup operations."""
     # TODO: See if more things, e.g., extensions, languages can be done here.
     engine = create_engine(db_uri)
+
     engine.execute(
-        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT"
+        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;"
     )
+    engine.execute(f"CREATE USER {user};")
+
     engine.dispose()
+
 
 @fixture(scope='session')
 def base_database_uri():
