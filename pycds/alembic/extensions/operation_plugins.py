@@ -68,8 +68,7 @@ class SetRoleOp(MigrateOperation):
     @classmethod
     def set_role(cls, operations, name, **kw):
         """Issue a SET ROLE command."""
-        op = SetRoleOp(name)
-        return operations.invoke(op)
+        return operations.invoke(cls(name))
 
 
 @Operations.implementation_for(SetRoleOp)
@@ -84,10 +83,9 @@ class ResetRoleOp(MigrateOperation):
     @classmethod
     def reset_role(cls, operations, **kw):
         """Issue a RESET ROLE command."""
-        op = ResetRoleOp()
-        return operations.invoke(op)
+        return operations.invoke(cls())
 
 
 @Operations.implementation_for(ResetRoleOp)
-def set_role(operations, operation):
+def reset_role(operations, operation):
     operations.execute(f"RESET ROLE")

@@ -13,10 +13,6 @@ def prepared_schema_from_migrations_left(
         db_setup=db_setup,
         revision='4a2f1879293a'
     )
-    schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
-    print(f"### 4af2 schemas: {[x[0] for x in schemas]}")
-    result = engine.execute(f"SELECT current_user").scalar()
-    print(f'### 4af2 user {result}')
 
     yield engine, script
 

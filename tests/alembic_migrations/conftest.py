@@ -37,7 +37,7 @@ def db_setup(schema_name):
     def f(engine):
         test_user = "testuser"
 
-        print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
+        # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
         engine.execute('CREATE EXTENSION postgis')
         engine.execute('CREATE EXTENSION plpythonu')
@@ -57,17 +57,21 @@ def db_setup(schema_name):
         ]
         engine.execute("".join(privs))
 
-        # One of the following should set the current user to test_user.
-        # But it's hard to tell if it does, because `SELECT current_user` *always*
-        # returns `postgres`, except when it is executed in the same engine.execute
-        # block as the SET ROLE/AUTH statement. Subsequent SELECT current_user queries
-        # then return `postgres` again, so it's very hard to tell what is actually
-        # happening.
-        # engine.execute(f"SET ROLE '{test_user}';")
-        # engine.execute(f"SET SESSION AUTHORIZATION '{test_user}';")
+        # One of the following *should* set the current user to `test_user`.
+        # But it's hard to tell if it does, because `SELECT current_user`
+        # *always* returns `postgres`, except when it is executed in the same
+        # `engine.execute` operation as the `SET ROLE/AUTH` statement.
+        # Subsequent `SELECT current_user` queries then return `postgres` again,
+        # so it's very hard to tell what is actually happening.
 
-        result = engine.execute(f"SET SESSION AUTHORIZATION '{test_user}'; SELECT current_user").scalar()
-        print(f'### final user {result}')
+        # engine.execute(f"SET ROLE '{test_user}';")
+        engine.execute(f"SET SESSION AUTHORIZATION '{test_user}';")
+
+        # result = engine.execute(f"SELECT current_user").scalar()
+        #   --> "postgres"
+        # result = engine.execute(f"SET SESSION AUTHORIZATION '{test_user}'; SELECT current_user").scalar()
+        #   --> "testuser"
+        # print(f'### final user {result}')
 
     return f
 

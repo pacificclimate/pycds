@@ -16,7 +16,7 @@ def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     logging.getLogger('tests').setLevel(logging.DEBUG)
     logging.getLogger('alembic').setLevel(logging.DEBUG)
-    # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     # logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
 @fixture(scope='session')
@@ -63,9 +63,9 @@ def set_up_db_cluster(db_uri, user="testuser"):
 def base_database_uri():
     """Test-session scoped base database."""
     with testing.postgresql.Postgresql() as pg:
-        db_uri = pg.url()
-        set_up_db_cluster(db_uri)
-        yield db_uri
+        uri = pg.url()
+        set_up_db_cluster(uri)
+        yield uri
 
 
 # TODO: Separate out add_functions
