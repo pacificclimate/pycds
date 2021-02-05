@@ -74,7 +74,7 @@ class SetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(SetRoleOp)
 def set_role(operations, operation):
-    operations.execute(f"SET ROLE {operation.role_name}")
+    operations.execute(f"SET ROLE '{operation.role_name}'")
 
 
 @Operations.register_operation("reset_role")
