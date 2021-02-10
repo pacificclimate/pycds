@@ -1,4 +1,5 @@
 import os
+import re
 
 
 def get_schema_name():
@@ -70,3 +71,13 @@ def compile_query(statement, bind=None):
 
     compiler = LiteralCompiler(dialect, statement)
     return compiler.process(statement)
+
+
+def snake_case(ident):
+    """
+    Return a snake-case version of a camel-case identifier, e.g.,
+    "MyBigDeal" -> "my_big_deal".
+    Courtesy of http://stackoverflow.com/a/12867228
+    """
+    a = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
+    return a.sub(r'_\1', ident).lower()

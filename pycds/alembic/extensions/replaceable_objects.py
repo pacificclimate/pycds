@@ -7,7 +7,7 @@ that actually affect the mapping proper, not just adding an API for other use.
 TBD: Add references to documentation.
 """
 
-from pycds.view_helpers import snake_case
+from pycds.util import snake_case
 from pycds.sqlalchemy.ddl_extensions import (
     CreateView,
     DropView,
