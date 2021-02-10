@@ -82,10 +82,10 @@ def create_then_drop_views(sesh, views):
 
     """
     for view in views:
-        view.create(sesh)
+        sesh.execute(view.create())
     yield sesh
     for view in reversed(views):
-        view.drop(sesh)
+        sesh.execute(view.drop())
 
 
 # Data insertion helpers
