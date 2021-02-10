@@ -1,5 +1,5 @@
 import pytest
-from pycds.weather_anomaly.version_8fd8f556c548 import (
+from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     DailyMaxTemperature,
     DailyMinTemperature,
     monthly_average_of_daily_temperature_extremum_with_total_coverage,
@@ -29,7 +29,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_total_coverage_query
 ):
     sesh = obs1_temp_sesh
     DailyExtremeTemp = DailyExtremeTemps[extremum]
-    DailyExtremeTemp.refresh(sesh)
+    sesh.execute(DailyExtremeTemp.refresh())
     ma_daily_extreme_temps = (
         monthly_average_of_daily_temperature_extremum_with_total_coverage(
             extremum
@@ -47,7 +47,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_avg_coverage_query(
 ):
     sesh = obs1_temp_sesh
     DailyExtremeTemp = DailyExtremeTemps[extremum]
-    DailyExtremeTemp.refresh(sesh)
+    sesh.execute(DailyExtremeTemp.refresh())
     ma_daily_extreme_temps = (
         monthly_average_of_daily_temperature_extremum_with_avg_coverage(
             extremum
@@ -65,10 +65,10 @@ def test_monthly_average_of_daily_extreme_temperature_matview(
 ):
     sesh = obs1_temp_sesh
     DailyExtremeTemp = DailyExtremeTemps[extremum]
-    DailyExtremeTemp.refresh(sesh)
+    sesh.execute(DailyExtremeTemp.refresh())
     MonthlyAverageOfDailyExtremeTemp = MonthlyAverageOfDailyExtremeTemps[
         extremum
     ]
-    MonthlyAverageOfDailyExtremeTemp.refresh(sesh)
+    sesh.execute(MonthlyAverageOfDailyExtremeTemp.refresh())
     ma_daily_extreme_temps = sesh.query(MonthlyAverageOfDailyExtremeTemp).all()
     check(ma_daily_extreme_temps, obs1_months, var_temp_point)

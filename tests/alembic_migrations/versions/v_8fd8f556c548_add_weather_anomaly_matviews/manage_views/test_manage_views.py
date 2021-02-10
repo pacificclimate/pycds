@@ -6,8 +6,8 @@ from pycds import Obs
 from pycds.manage_views import daily_views, monthly_views, manage_views
 
 
-daily_view_names = [v.base_viewname() for v in daily_views]
-monthly_view_names = [v.base_viewname() for v in monthly_views]
+daily_view_names = [v.base_name() for v in daily_views]
+monthly_view_names = [v.base_name() for v in monthly_views]
 
 
 @mark.parametrize(
@@ -15,7 +15,7 @@ monthly_view_names = [v.base_viewname() for v in monthly_views]
     [
         ("daily", daily_views),
         # `refresh monthly-only` will fail if the daily views haven't been
-        # refreshed, succeed if they do; we don't bother setting up the test
+        # refreshed, succeed if they do; we don't bother setting up the
         # machinery to test that
         ("all", daily_views + monthly_views),
     ],
