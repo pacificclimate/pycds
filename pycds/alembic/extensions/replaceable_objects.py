@@ -60,7 +60,7 @@ class ReplaceableView(ReplaceableOrmClass):
 
     @classmethod
     def create(cls):
-        return CreateView(cls.qualified_name(), cls.__selectable__, foo="bar")
+        return CreateView(cls.qualified_name(), cls.__selectable__)
 
     @classmethod
     def drop(cls):
