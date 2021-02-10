@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.engine.reflection import Inspector
-from pycds.materialized_views.version_7a3b247c577b import VarsPerHistory
+from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -12,7 +12,7 @@ def test_vars_content(sesh_with_large_data):
     assert q.count() == 0
 
     # Refresh
-    VarsPerHistory.refresh(sesh_with_large_data)
+    sesh_with_large_data.execute(VarsPerHistory.refresh())
 
     # Et voila
     assert q.count() > 0
@@ -41,7 +41,7 @@ def test_index(schema_name, prepared_schema_from_migrations_left):
     """Test that VarsPerHistory has the expected index."""
     engine, script = prepared_schema_from_migrations_left
     inspector = Inspector(engine)
-    viewname = VarsPerHistory.base_viewname()
+    viewname = VarsPerHistory.base_name()
     indexes = inspector.get_indexes(table_name=viewname, schema=schema_name)
     assert indexes == [
         {
