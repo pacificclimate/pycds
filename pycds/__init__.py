@@ -1,9 +1,8 @@
-"""ORM for the CRMP database.
+"""
+ORM for the CRMP database.
 
-**Note: Tables only.**
-
-Functions, views, and materialized views are defined in separate modules.
-
+This ORM includes table mappings for all table-like objects: tables, views,
+and materialized views.
 
 **Note: Schema name:**
 
@@ -107,7 +106,7 @@ from .orm.native_matviews import (
     VarsPerHistory,
 )
 
-from .weather_anomaly import (
+from .orm.manual_matviews import (
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
