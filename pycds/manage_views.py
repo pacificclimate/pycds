@@ -1,13 +1,20 @@
 import logging
 
-from pycds.materialized_view_helpers import ManualMaterializedViewMixin
-from pycds.weather_anomaly import \
-    DailyMaxTemperature, DailyMinTemperature, \
-    MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, \
-    MonthlyTotalPrecipitation
+from pycds.alembic.extensions.replaceable_objects import ReplaceableOrmClass
+from pycds.orm.manual_matviews import (
+    DailyMaxTemperature,
+    DailyMinTemperature,
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
+    MonthlyTotalPrecipitation,
+)
 
 daily_views = [DailyMaxTemperature, DailyMinTemperature]
-monthly_views = [MonthlyAverageOfDailyMaxTemperature, MonthlyAverageOfDailyMinTemperature, MonthlyTotalPrecipitation]
+monthly_views = [
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
+    MonthlyTotalPrecipitation
+]
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +35,8 @@ def manage_views(session, operation, which_set):
     }[which_set]
 
     for view in views:
-        if issubclass(view, ManualMaterializedViewMixin):
-            logger.info("{} '{}'".format(operation.capitalize(), view.qualfied_viewname()))
-            getattr(view, operation)(session)
+        if issubclass(view, ReplaceableOrmClass):
+            logger.info(
+                f"{operation.capitalize()} '{view.qualified_name()}'"
+            )
+            session.execute(getattr(view, operation)())
