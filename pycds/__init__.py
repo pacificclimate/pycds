@@ -74,7 +74,7 @@ __all__ = [
 
 from pycds.util import (get_schema_name, get_su_role_name)
 
-from .orm import (
+from .orm.tables import (
     Base,
     Network,
     Contact,
@@ -96,11 +96,15 @@ from .orm import (
     StationObservationStats,
 )
 
-from .utility_views import (
+from .orm.views import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
     ObsCountPerDayHistory,
     ObsWithFlags,
+)
+
+from .orm.native_matviews import (
+    VarsPerHistory,
 )
 
 from .weather_anomaly import (
@@ -110,5 +114,3 @@ from .weather_anomaly import (
     MonthlyAverageOfDailyMinTemperature,
     MonthlyTotalPrecipitation,
 )
-
-from .materialized_views import VarsPerHistory
