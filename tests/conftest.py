@@ -9,7 +9,6 @@ from pytest import fixture
 import testing.postgresql
 
 import pycds
-import pycds.weather_anomaly
 
 
 def pytest_runtest_setup():
