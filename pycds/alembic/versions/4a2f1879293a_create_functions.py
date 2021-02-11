@@ -8,8 +8,8 @@ Create Date: 2020-01-28 16:43:12.112378
 from alembic import op
 import sqlalchemy as sa
 from pycds import (get_schema_name, get_su_role_name)
-from pycds.replaceable_objects import ReplaceableObject
-import pycds.replaceable_objects.stored_procedures
+from pycds.alembic.extensions.replaceable_objects import ReplaceableStoredProcedure 
+import pycds.alembic.extensions.operation_plugins
 
 
 schema_name = get_schema_name()
@@ -21,7 +21,7 @@ branch_labels = None
 depends_on = None
 
 
-closest_stns_within_threshold = ReplaceableObject(
+closest_stns_within_threshold = ReplaceableStoredProcedure(
     """
     closest_stns_within_threshold(
         IN x numeric,
@@ -56,10 +56,11 @@ closest_stns_within_threshold = ReplaceableObject(
       LANGUAGE plpgsql VOLATILE SECURITY DEFINER
       COST 100
       ROWS 1000;
-    """
+    """,
+    schema=schema_name,
 )
 
-daily_ts = ReplaceableObject(
+daily_ts = ReplaceableStoredProcedure(
     """
     daily_ts(
         IN station_id integer,
@@ -93,12 +94,13 @@ daily_ts = ReplaceableObject(
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    """
+    """,
+    schema=schema_name,
 )
 
 
 # Return the number of days in the month of the given date.
-daysinmonth = ReplaceableObject(
+daysinmonth = ReplaceableStoredProcedure(
     """
     daysinmonth(d timestamp)
     """,
@@ -110,13 +112,14 @@ daysinmonth = ReplaceableObject(
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
 # Execute function `query_one_station`. This function does not appear to be
 # in use in any production code. Possibly it is in use ad-hoc.
-do_query_one_station = ReplaceableObject(
+do_query_one_station = ReplaceableStoredProcedure(
     """
     do_query_one_station(station_id integer)
     """,
@@ -134,7 +137,8 @@ do_query_one_station = ReplaceableObject(
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
@@ -158,7 +162,7 @@ do_query_one_station = ReplaceableObject(
 # For minimum temperature:
 #   effective day does not depend on observation frequency; it is always the
 #   day of observation
-effective_day = ReplaceableObject(
+effective_day = ReplaceableStoredProcedure(
     """
     effective_day(
         obs_time timestamp without time zone,
@@ -186,7 +190,8 @@ effective_day = ReplaceableObject(
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
@@ -206,7 +211,7 @@ effective_day = ReplaceableObject(
 #
 # NOTE: Production code: This function is called by functions
 # `query_one_station` and `query_one_station_climo` .
-getstationvariabletable = ReplaceableObject(
+getstationvariabletable = ReplaceableStoredProcedure(
     """
     getstationvariabletable(
         station_id integer,
@@ -228,12 +233,13 @@ getstationvariabletable = ReplaceableObject(
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
 # Returns the last day of the month, as a date, of the month of the input date.
-lastdateofmonth = ReplaceableObject(
+lastdateofmonth = ReplaceableStoredProcedure(
     """
     lastdateofmonth(date)
     """,
@@ -244,11 +250,12 @@ lastdateofmonth = ReplaceableObject(
     $BODY$
       LANGUAGE sql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
-monthly_ts = ReplaceableObject(
+monthly_ts = ReplaceableStoredProcedure(
     """
     monthly_ts(
         IN station_id integer,
@@ -283,7 +290,8 @@ monthly_ts = ReplaceableObject(
       LANGUAGE plpgsql VOLATILE
       COST 100
       ROWS 1000;
-    """
+    """,
+    schema=schema_name,
 )
 
 
@@ -291,7 +299,7 @@ monthly_ts = ReplaceableObject(
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-query_one_station = ReplaceableObject(
+query_one_station = ReplaceableStoredProcedure(
     """
     query_one_station(station_id integer)
     """,
@@ -305,7 +313,8 @@ query_one_station = ReplaceableObject(
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
@@ -313,7 +322,7 @@ query_one_station = ReplaceableObject(
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-query_one_station_climo = ReplaceableObject(
+query_one_station_climo = ReplaceableStoredProcedure(
     """
     query_one_station_climo(station_id integer)
     """,
@@ -327,11 +336,12 @@ query_one_station_climo = ReplaceableObject(
     $BODY$
       LANGUAGE plpythonu VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
-season = ReplaceableObject(
+season = ReplaceableStoredProcedure(
     """
     season(d timestamp without time zone)
     """,
@@ -352,11 +362,12 @@ season = ReplaceableObject(
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
-updatesdateedate = ReplaceableObject(
+updatesdateedate = ReplaceableStoredProcedure(
     """
     updatesdateedate()
     """,
@@ -383,11 +394,12 @@ updatesdateedate = ReplaceableObject(
     $BODY$
       LANGUAGE plpgsql VOLATILE
       COST 100;
-    """
+    """,
+    schema=schema_name,
 )
 
 
-definitions = (
+stored_procedures = (
     closest_stns_within_threshold,
     daily_ts,
     daysinmonth,
@@ -410,11 +422,11 @@ def upgrade():
     # granted to the user only for the period when database migrations are
     # performed.
     op.set_role(get_su_role_name())
-    for sp in definitions:
-        op.create_stored_procedure(sp, schema=schema_name)
+    for sp in stored_procedures:
+        op.create_replaceable_object(sp)
     op.reset_role()
 
 
 def downgrade():
-    for sp in definitions:
-        op.drop_stored_procedure(sp, schema=schema_name)
+    for sp in stored_procedures:
+        op.drop_replaceable_object(sp)
