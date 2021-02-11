@@ -72,10 +72,7 @@ from pycds.orm.tables import (
 from pycds.alembic.extensions.replaceable_objects import (
     ReplaceableManualMatview,
 )
-
-# TODO: Move Base up one level.
-Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
-metadata = Base.metadata
+from pycds.orm.view_base import Base
 
 
 # Subquery used in daily temperature extrema and monthly total precip queries

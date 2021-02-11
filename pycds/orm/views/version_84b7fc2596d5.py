@@ -9,9 +9,7 @@ If views are behaving oddly with respect to geometry, this is worth looking at.
 """
 
 from sqlalchemy import (
-    MetaData,
     func,
-    text,
     Column,
     Integer,
     String,
@@ -22,10 +20,9 @@ from sqlalchemy import (
     BigInteger,
     Interval,
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 from geoalchemy2 import Geometry
-from pycds.util import get_schema_name
+
 from pycds.orm.tables import (
     Network,
     Station,
@@ -36,9 +33,7 @@ from pycds.orm.tables import (
     CollapsedVariables,
 )
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
-
-
-Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
+from pycds.orm.view_base import Base
 
 
 class CrmpNetworkGeoserver(Base, ReplaceableView):

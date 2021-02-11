@@ -6,9 +6,7 @@ from pycds.alembic.extensions.replaceable_objects import (
     ReplaceableNativeMatview,
 )
 from pycds.orm.tables import Obs
-
-# TODO: Factor Base one level up, common to all versions
-Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
+from pycds.orm.view_base import Base
 
 
 class VarsPerHistory(Base, ReplaceableNativeMatview):
