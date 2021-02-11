@@ -7,10 +7,12 @@ The definition pattern is:
 - Define a subclass of `DDLElement` that represents the command.
 - Define a compilation (implementation) of the command.
 """
-
+import re
 from sqlalchemy.schema import DDLElement
 from sqlalchemy.ext import compiler
 
+
+# Views of all types
 
 class ViewCommonDDL(DDLElement):
     """Base class for several varieties of view commands."""
@@ -97,3 +99,38 @@ def compile(element, compiler, **kw):
         body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
         return f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
     raise ValueError(f"Invalid materialized view type '{element.type_}'")
+
+
+# Stored procedure commands
+
+class StoredProcedureDDL(DDLElement):
+    """Base class for several varieties of view commands."""
+    def __init__(self, identifier, definition=None):
+        self.identifier = identifier
+        self.definition = definition
+
+
+class CreateStoredProcedure(StoredProcedureDDL):
+    pass
+
+
+@compiler.compiles(CreateStoredProcedure)
+def compile(element, compiler, **kw):
+    return f"CREATE FUNCTION {element.identifier} {element.definition}"
+
+
+class DropStoredProcedure(StoredProcedureDDL):
+    pass
+
+
+@compiler.compiles(DropStoredProcedure)
+def compile(element, compiler, **kw):
+    # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
+    # signature is included in the DROP FUNCTION statement. So ditch it.
+    name = re.sub(
+        r" (DEFAULT|=) [^,)]*([,)])",
+        r"\2",
+        element.identifier,
+        flags=re.MULTILINE
+    )
+    return f"DROP FUNCTION {name}"

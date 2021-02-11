@@ -81,3 +81,11 @@ def snake_case(ident):
     """
     a = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
     return a.sub(r'_\1', ident).lower()
+
+
+def ddl_escape(s):
+    """
+    Encode a string so that SQLAlchemy DDL will process it as intended.
+    See https://docs.sqlalchemy.org/en/14/core/ddl.html#sqlalchemy.schema.DDL
+    """
+    return s.replace("%", "%%")
