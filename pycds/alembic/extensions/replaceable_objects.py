@@ -1,11 +1,28 @@
 """
-This module defines base classes for defining replaceable objects.
+This module defines classes for defining replaceable objects.
 
-Note: SQLAlchemy documentation often refers to classes that supply extra
-features in ORM classes as "mixins", but we reserve that terminology for classes
-that actually affect the mapping proper, not just adding an API for other use.
+Replaceable objects represent database entities that, unlike tables, cannot be
+mutated, and must instead be replaced (dropped, re-created) as a whole in order
+to update them.
 
-TBD: Add references to documentation.
+We use a variation of the
+[replaceable object recipe](https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects)
+in the Alembic Cookbook.
+
+Each type of replaceable object needs a representation. That representation
+is quite flexible, but it must provide the following two methods:
+
+- `create()`: Returns a DDL element (or string) containing SQL instructions that
+  create the object.
+- `drop()`: Returns a DDL element (or string) containing SQL instructions that
+  drop the object.
+
+For replaceable objects whose representation is a *class* (e.g., views,
+matviews), the API must be implemented as class methods. For replaceable
+objects whose representation an *object*, they are instance methods.
+
+Note how we factor out the create and drop instructions as SQLAlchemy DDL
+commands, which we add as extensions elsewhere.
 """
 
 from pycds.util import snake_case, ddl_escape
@@ -19,8 +36,13 @@ from pycds.sqlalchemy.ddl_extensions import (
     DropStoredProcedure,
 )
 
-# Replaceable objects represented by ORM classes
 
+# Replaceable objects represented by ORM classes
+#
+# Note: SQLAlchemy documentation often refers to classes that supply extra
+# features in ORM classes as "mixins", but we reserve that terminology for
+# classes that actually affect the mapping proper, not just adding an API
+# properties or methods for other use.
 
 class ReplaceableOrmClass:
     """

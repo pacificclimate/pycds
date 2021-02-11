@@ -1,12 +1,12 @@
 """
-Plugins to extend Alembic operations.
+Plugins that add to the operations available in migrations.
 
-For information on the Alembic operation plugins, see
+This module provides a few simple additional operations, such as `set_role`,
+but its major contribution is to add the operations `create_replaceable_object`,
+`drop_replaceable_object`, and `replace_replaceable_object`.
+
+For information on Alembic operation plugins, see
 https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
-
-TODO: Move contents of `pycds/replaceable_objects/materialized_views.py` here.
-TODO: Move contents of `pycds/replaceable_objects/views.py` here.
-TODO: Move contents of `pycds/replaceable_objects/stored_procedures.py` here.
 """
 
 from alembic.operations import Operations, MigrateOperation
@@ -17,13 +17,7 @@ from alembic.operations.ops import CreateTableOp
 
 @Operations.register_operation("drop_table_if_exists")
 class DropTableIfExistsOp(MigrateOperation):
-    """
-    Provide DROP TABLE IF EXISTS command.
-
-    TODO: Look into whether it is possible to override builtin Alembic
-        operations. If so, replace this with an override for the existing
-        `drop_table` op that adds an `if_exists` kw arg.
-    """
+    """Provide DROP TABLE IF EXISTS command."""
 
     def __init__(self, name, schema=None):
         self.name = name
@@ -50,6 +44,7 @@ class DropTableIfExistsOp(MigrateOperation):
 
 @Operations.implementation_for(DropTableIfExistsOp)
 def drop_table_if_exists(operations, operation):
+    # TODO: Refactor into a DDL extension.
     schema_prefix = (
         f"{operation.schema}." if operation.schema is not None else ""
     )
@@ -70,12 +65,7 @@ class ReversibleOperation(MigrateOperation):
     It does this so it can invoke the appropriate drop/create operation on
     the old object before invoking the create/drop operation on the new object
     in order to replace one with the other. Access to different versions of
-    an object is mediated by method `_get_object_from_version`.
-
-    TODO: This isn't really right. It's what we do, but it's not necessary.
-    The "target" of a reversible operation is nominally a replaceable object.
-    The reversible operation has to know how to invoke the compilation of the
-    create and drop operations for the target objects.
+    an object is provided by method `_get_object_from_version`.
     """
     def __init__(self, target, schema=None):
         self.target = target
@@ -120,10 +110,19 @@ class ReversibleOperation(MigrateOperation):
 
 
 # Replaceable object reversible operations
+# 
+#  The reversible operations must know how to produce create and drop
+#  commands for the target objects. This is done here by requiring that any 
+#  target object (a replaceable object) to provide methods `create`  and
+#  `drop` that return the requisite commands. These are invoked in the
+# `implementation_for` of the classes that represent the operations.
 #
-# A replaceable object itself supplies the SQL instructions that create or
-# drop the object. The Alembic create and drop operations need only execute
-# those instructions.
+# Since all replaceable objects conform to the same API, we do not need
+# to specialize the operations for each different kind of replaceable object
+# (view, matview, stored procedure). We can have just 3 generic operations
+# (`create_replaceable_object`, `drop_replaceable_object`, and
+# `replace_replaceable_object`) for all the different types of replaceable
+# object.
 
 @Operations.register_operation("create_replaceable_object", "invoke_for_target")
 @Operations.register_operation("replace_replaceable_object", "replace")
@@ -173,6 +172,7 @@ class SetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(SetRoleOp)
 def set_role(operations, operation):
+    # TODO: Refactor into a DDL extension.
     operations.execute(f"SET ROLE '{operation.role_name}'")
 
 
@@ -188,4 +188,5 @@ class ResetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(ResetRoleOp)
 def reset_role(operations, operation):
+    # TODO: Refactor into a DDL extension.
     operations.execute(f"RESET ROLE")

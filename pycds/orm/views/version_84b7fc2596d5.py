@@ -1,15 +1,5 @@
-"""Views
-
-Define views as proper SQL views in the database.
-
-SQLAlchemy does not directly support views. A view can be represented simply
-as a table in the ORM, but this does not permit its definition to be part of
-the ORM, or to be maintained and migrated.
-
-This module defines views in the ORM as SQL views in the database, using
-a SQLAlchemy compiler extension provided by `./view_helpers`. See that module
-for more information. In particular, see the note about using a separate
-declarative base for views; here it is `Base`.
+"""
+Utility views.
 
 WARNING: The `History` class defines column `the_geom` using GeoAlchemy2
 data type `Geometry`. This forces
