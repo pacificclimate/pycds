@@ -7,7 +7,7 @@ Create Date: 2020-01-28 16:43:12.112378
 """
 from alembic import op
 import sqlalchemy as sa
-from pycds import get_schema_name
+from pycds import (get_schema_name, get_su_role_name)
 from pycds.replaceable_objects import ReplaceableObject
 import pycds.replaceable_objects.stored_procedures
 
@@ -404,8 +404,15 @@ definitions = (
 
 
 def upgrade():
+    # In order to create stored procedures using untrusted languages (we use
+    # `plpythonu`), the user needs superuser privileges. This is achieved by
+    # temporarily setting the role to a superuser role name that is externally
+    # granted to the user only for the period when database migrations are
+    # performed.
+    op.set_role(get_su_role_name())
     for sp in definitions:
         op.create_stored_procedure(sp, schema=schema_name)
+    op.reset_role()
 
 
 def downgrade():

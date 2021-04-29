@@ -54,3 +54,38 @@ def drop_table_if_exists(operations, operation):
         f"{operation.schema}." if operation.schema is not None else ""
     )
     operations.execute(f"DROP TABLE IF EXISTS {schema_prefix}{operation.name}")
+
+
+# Miscellaneous operations
+
+@Operations.register_operation("set_role")
+class SetRoleOp(MigrateOperation):
+    """Provide SET ROLE command"""
+
+    def __init__(self, role_name):
+        self.role_name = role_name
+
+    @classmethod
+    def set_role(cls, operations, name, **kw):
+        """Issue a SET ROLE command."""
+        return operations.invoke(cls(name))
+
+
+@Operations.implementation_for(SetRoleOp)
+def set_role(operations, operation):
+    operations.execute(f"SET ROLE '{operation.role_name}'")
+
+
+@Operations.register_operation("reset_role")
+class ResetRoleOp(MigrateOperation):
+    """Provide RESET ROLE command"""
+
+    @classmethod
+    def reset_role(cls, operations, **kw):
+        """Issue a RESET ROLE command."""
+        return operations.invoke(cls())
+
+
+@Operations.implementation_for(ResetRoleOp)
+def reset_role(operations, operation):
+    operations.execute(f"RESET ROLE")

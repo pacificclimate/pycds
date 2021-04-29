@@ -16,7 +16,7 @@ def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     logging.getLogger('tests').setLevel(logging.DEBUG)
     logging.getLogger('alembic').setLevel(logging.DEBUG)
-    # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     # logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
 @fixture(scope='session')
@@ -46,18 +46,33 @@ def add_functions():
     return f
 
 
+def set_up_db_cluster(db_uri, user="testuser"):
+    """Perform once-per-cluster database setup operations."""
+    # TODO: See if more things, e.g., extensions, languages can be done here.
+    engine = create_engine(db_uri)
+
+    engine.execute(
+        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;"
+    )
+    engine.execute(f"CREATE USER {user};")
+
+    engine.dispose()
+
+
 @fixture(scope='session')
 def base_database_uri():
-    """Test-session scoped base database.
-    """
+    """Test-session scoped base database."""
     with testing.postgresql.Postgresql() as pg:
-        yield pg.url()
+        uri = pg.url()
+        set_up_db_cluster(uri)
+        yield uri
 
 
 # TODO: Separate out add_functions
 @fixture(scope='session')
 def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
-    """Test-session scoped base database engine.
+    """
+    Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
     engine = create_engine(base_database_uri)

@@ -8,6 +8,8 @@ from sqlalchemy.schema import CreateSchema
 
 from sqlalchemydiff.util import get_temporary_uri
 
+from pycds import get_su_role_name
+
 
 @pytest.fixture
 def alembic_root():
@@ -33,9 +35,44 @@ def uri_right(base_database_uri):
 @pytest.fixture(scope='module')
 def db_setup(schema_name):
     def f(engine):
+        test_user = "testuser"
+
+        # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
+
         engine.execute('CREATE EXTENSION postgis')
         engine.execute('CREATE EXTENSION plpythonu')
+
         engine.execute(CreateSchema(schema_name))
+        # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
+        # print(f"### schemas: {[x[0] for x in schemas]}")
+
+        engine.execute(
+            f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"
+        )
+
+        privs = [
+            f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
+            f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema_name} GRANT ALL PRIVILEGES ON TABLES TO {test_user};"
+            for objects in ("TABLES", "SEQUENCES", "FUNCTIONS")
+        ]
+        engine.execute("".join(privs))
+
+        # One of the following *should* set the current user to `test_user`.
+        # But it's hard to tell if it does, because `SELECT current_user`
+        # *always* returns `postgres`, except when it is executed in the same
+        # `engine.execute` operation as the `SET ROLE/AUTH` statement.
+        # Subsequent `SELECT current_user` queries then return `postgres` again,
+        # so it's very hard to tell what is actually happening.
+
+        # engine.execute(f"SET ROLE '{test_user}';")
+        engine.execute(f"SET SESSION AUTHORIZATION '{test_user}';")
+
+        # result = engine.execute(f"SELECT current_user").scalar()
+        #   --> "postgres"
+        # result = engine.execute(f"SET SESSION AUTHORIZATION '{test_user}'; SELECT current_user").scalar()
+        #   --> "testuser"
+        # print(f'### final user {result}')
+
     return f
 
 
