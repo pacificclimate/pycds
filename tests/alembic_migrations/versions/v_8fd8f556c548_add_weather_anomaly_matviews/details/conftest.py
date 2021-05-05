@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from pycds.weather_anomaly import (
+from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
@@ -41,6 +41,6 @@ def all_views(daily_views, monthly_views):
 def refresh_views():
     def f(views, sesh):
         for view in views:
-            view.refresh(sesh)
+            sesh.execute(view.refresh())
 
     return f

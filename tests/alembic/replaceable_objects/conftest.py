@@ -1,19 +1,22 @@
 from pytest import fixture
 from sqlalchemy.orm import sessionmaker
-from ..helpers import add_then_delete_objs
-from ..helpers import create_then_drop_views
+from tests.helpers import add_then_delete_objs
+from tests.helpers import create_then_drop_views
 from .content import (
     ContentBase,
+    content,
+
     SimpleThingView,
     ThingWithDescriptionView,
     ThingCountView,
-    SimpleThingManualMatview,
-    ThingWithDescriptionManualMatview,
-    ThingCountManualMatview,
+
     SimpleThingNativeMatview,
     ThingWithDescriptionNativeMatview,
     ThingCountNativeMatview,
-    content,
+
+    SimpleThingManualMatview,
+    ThingWithDescriptionManualMatview,
+    ThingCountManualMatview,
 )
 
 

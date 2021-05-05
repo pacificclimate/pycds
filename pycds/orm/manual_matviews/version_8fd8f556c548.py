@@ -1,55 +1,66 @@
-"""Weather anomaly views
+"""
+Manual materialized views for weather anomaly application.
 
-Define views for weather anomaly applications using tools in pycds.view_helpers.
+`DailyMaxTemperature`
+`DailyMinTemperature`
+  - These views support views that deliver monthly average of daily max/min
+    temperature.
+  - Observations flagged with `meta_native_flag.discard` or
+    `meta_pcic_flag.discard` are not included in the view.
+  - `data_coverage` is the fraction of observations actually available in a
+     day relative to those potentially available in a day. The computation is
+     correct for a given day if and only if the observation frequency does not
+     change during that day. If such a change does occur, the `data_coverage`
+     fraction for the day will be > 1, which is not fatal to distinguishing
+     adequate coverage.
 
-Materialized view: Daily maximum temperature (DailyMaxTemperature)
-Materialized view: Daily minimum temperature (DailyMinTemperature)
-  - These views support views that deliver monthly average of daily max/min temperature.
-  - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
-  - data_coverage is the fraction of observations actually available in a day relative to those potentially available
-     in a day. The computation is correct for a given day if and only if the observation frequency does not change
-     during that day. If such a change does occur, the data_coverage fraction for the day will be > 1, which is not
-     fatal to distinguishing adequate coverage.
-  - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-      unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
-      This decision subject to revision.
-
-Materialized View: Monthly average of daily maximum temperature (MonthlyAverageOfDailyMaxTemperature)
-Materialized View: Monthly average of daily minimum temperature (MonthlyAverageOfDailyMinTemperature)
-  - data_coverage is the fraction of of observations actually available in a month relative to those potentially
-    available in a month, and is robust to varying reporting frequencies on different days in the month (but see
+`MonthlyAverageOfDailyMaxTemperature`
+`MonthlyAverageOfDailyMinTemperature`
+  - `data_coverage` is the fraction of of observations actually available in
+    a month relative to those potentially available in a month, and is robust
+    to varying reporting frequencies on different days in the month (but see
     caveat for daily data coverage above).
-  - These views are defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-      excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
 
-Materialized View: Monthly total precipitation (MonthlyTotalPrecipitation)
-  - Observations flagged with meta_native_flag.discard or meta_pcic_flag.discard are not included in the view.
-  - data_coverage is the fraction of observations actually available in a month relative to those potentially
-     available in a month. This computation is correct if and only if the observation frequency does not change
-     during any one day in the month. It remains approximately correct if such days are rare, and remains valid
-     for the purpose of distinguishing adequate coverage.
-  - This view is defined with plain-text SQL queries instead of with SQLAlchemy select expressions.
-      The SQL SELECT statements were already written, and the work required to translate them to SQLAlchemy seemed
-      excessive and unnecessary. See https://docs.sqlalchemy.org/en/latest/core/tutorial.html#using-textual-sql
+`MonthlyTotalPrecipitation`
+  - Observations flagged with `meta_native_flag.discard` or
+    `meta_pcic_flag.discard` are not included in the view.
+  - `data_coverage` is the fraction of observations actually available in a
+    month relative to those potentially available in a month. This computation
+    is correct if and only if the observation frequency does not change
+    during any one day in the month. It remains approximately correct if such
+    days are rare, and remains valid for the purpose of distinguishing adequate
+    coverage.
 
-Note: Schema name: See note on this topic in pycds/__init__.py
+Notes:
+  - Schema name: See note on this topic in pycds/__init__.py
 
-Note: Session-less queries: All queries defined in this module are session-less;
-that is they are created using the `sqlalchemy.orm.query.Query` object instead
-of via `Session.query()`. Such Query objects have no session attached, which
-is required because the design of the manual materialized view implementation
-delays association of the session to the matview until it is explicitly created
-(i.e., Matview.create(session)).
+  - Session-less queries: All queries defined in this module are session-less;
+    that is they are created using the `sqlalchemy.orm.query.Query` object
+    instead of via `Session.query()`. Such Query objects have no session
+    attached, which is required because the design of the manual materialized
+    view implementation delays association of the session to the matview until
+    it is explicitly created.
 """
 
-from sqlalchemy import MetaData, func, and_, not_, case, cast, String, Date
+from sqlalchemy import (
+    MetaData,
+    func,
+    and_,
+    not_,
+    case,
+    cast,
+    Column,
+    Integer,
+    String,
+    Date,
+    DateTime,
+    Float,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 
 from pycds.util import get_schema_name
-from pycds.orm import (
+from pycds.orm.tables import (
     History,
     Obs,
     ObsRawNativeFlags,
@@ -58,10 +69,10 @@ from pycds.orm import (
     PCICFlag,
     Variable,
 )
-from pycds.materialized_view_helpers import ManualMaterializedViewMixin
-
-Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
-metadata = Base.metadata
+from pycds.alembic.extensions.replaceable_objects import (
+    ReplaceableManualMatview,
+)
+from pycds.orm.view_base import Base
 
 
 # Subquery used in daily temperature extrema and monthly total precip queries
@@ -111,12 +122,12 @@ def daily_temperature_extremum(extremum):
                 func_schema.effective_day(
                     good_obs.c.time,
                     cast(extremum, String),
-                    cast(History.freq, String)
+                    cast(History.freq, String),
                 ).label("obs_day"),
                 extremum_func(good_obs.c.datum).label("statistic"),
                 func.sum(
                     case(
-                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24,},
+                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24},
                         value=History.freq,
                     )
                 ).label("data_coverage"),
@@ -136,14 +147,28 @@ def daily_temperature_extremum(extremum):
     )
 
 
-class DailyMaxTemperature(Base, ManualMaterializedViewMixin):
+class DailyMaxTemperature(Base, ReplaceableManualMatview):
+    __tablename__ = "daily_max_temperature_mv"
+
+    history_id = Column(Integer, primary_key=True)
+    vars_id = Column(Integer, primary_key=True)
+    obs_day = Column(DateTime, primary_key=True)
+    statistic = Column(Float)
+    data_coverage = Column(Float)
+
     __selectable__ = daily_temperature_extremum("max").selectable
-    __primary_key__ = "history_id vars_id obs_day".split()
 
 
-class DailyMinTemperature(Base, ManualMaterializedViewMixin):
+class DailyMinTemperature(Base, ReplaceableManualMatview):
+    __tablename__ = "daily_min_temperature_mv"
+
+    history_id = Column(Integer, primary_key=True)
+    vars_id = Column(Integer, primary_key=True)
+    obs_day = Column(DateTime, primary_key=True)
+    statistic = Column(Float)
+    data_coverage = Column(Float)
+
     __selectable__ = daily_temperature_extremum("min").selectable
-    __primary_key__ = "history_id vars_id obs_day".split()
 
 
 def monthly_average_of_daily_temperature_extremum_with_total_coverage(
@@ -197,10 +222,10 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     """
     # TODO: Rename. Geez.
 
-    avg_daily_extreme_temperature = monthly_average_of_daily_temperature_extremum_with_total_coverage(
-        extremum
-    ).subquery(
-        "avg_daily_extreme_temperature"
+    avg_daily_extreme_temperature = (
+        monthly_average_of_daily_temperature_extremum_with_total_coverage(
+            extremum
+        ).subquery("avg_daily_extreme_temperature")
     )
 
     func_schema = getattr(func, get_schema_name())
@@ -221,18 +246,36 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     ).select_from(avg_daily_extreme_temperature)
 
 
-class MonthlyAverageOfDailyMaxTemperature(Base, ManualMaterializedViewMixin):
-    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
-        "max"
-    ).selectable
-    __primary_key__ = "history_id vars_id obs_month".split()
+class MonthlyAverageOfDailyMaxTemperature(Base, ReplaceableManualMatview):
+    __tablename__ = "monthly_average_of_daily_max_temperature_mv"
+
+    history_id = Column(Integer, primary_key=True)
+    vars_id = Column(Integer, primary_key=True)
+    obs_month = Column(DateTime, primary_key=True)
+    statistic = Column(Float)
+    data_coverage = Column(Float)
+
+    __selectable__ = (
+        monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+            "max"
+        ).selectable
+    )
 
 
-class MonthlyAverageOfDailyMinTemperature(Base, ManualMaterializedViewMixin):
-    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
-        "min"
-    ).selectable
-    __primary_key__ = "history_id vars_id obs_month".split()
+class MonthlyAverageOfDailyMinTemperature(Base, ReplaceableManualMatview):
+    __tablename__ = "monthly_average_of_daily_min_temperature_mv"
+
+    history_id = Column(Integer, primary_key=True)
+    vars_id = Column(Integer, primary_key=True)
+    obs_month = Column(DateTime, primary_key=True)
+    statistic = Column(Float)
+    data_coverage = Column(Float)
+
+    __selectable__ = (
+        monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+            "min"
+        ).selectable
+    )
 
 
 def monthly_total_precipitation_with_total_coverage():
@@ -251,7 +294,7 @@ def monthly_total_precipitation_with_total_coverage():
                 func.sum(good_obs.c.datum).label("statistic"),
                 func.sum(
                     case(
-                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24,},
+                        {"daily": 1.0, "12-hourly": 0.5, "1-hourly": 1 / 24},
                         value=History.freq,
                     )
                 ).label("total_data_coverage"),
@@ -284,8 +327,10 @@ def monthly_total_precipitation_with_avg_coverage():
     """
     # TODO: Rename. Geez.
 
-    monthly_total_precip = monthly_total_precipitation_with_total_coverage().subquery(
-        "monthly_total_precip"
+    monthly_total_precip = (
+        monthly_total_precipitation_with_total_coverage().subquery(
+            "monthly_total_precip"
+        )
     )
 
     func_schema = getattr(func, get_schema_name())
@@ -298,12 +343,23 @@ def monthly_total_precipitation_with_avg_coverage():
             monthly_total_precip.c.statistic.label("statistic"),
             (
                 monthly_total_precip.c.total_data_coverage
-                / func_schema.DaysInMonth(cast(monthly_total_precip.c.obs_month, Date))
+                / func_schema.DaysInMonth(
+                    cast(monthly_total_precip.c.obs_month, Date)
+                )
             ).label("data_coverage"),
         ]
     ).select_from(monthly_total_precip)
 
 
-class MonthlyTotalPrecipitation(Base, ManualMaterializedViewMixin):
-    __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable
-    __primary_key__ = "history_id vars_id obs_month".split()
+class MonthlyTotalPrecipitation(Base, ReplaceableManualMatview):
+    __tablename__ = "monthly_total_precipitation_mv"
+
+    history_id = Column(Integer, primary_key=True)
+    vars_id = Column(Integer, primary_key=True)
+    obs_month = Column(DateTime, primary_key=True)
+    statistic = Column(Float)
+    data_coverage = Column(Float)
+
+    __selectable__ = (
+        monthly_total_precipitation_with_avg_coverage().selectable
+    )

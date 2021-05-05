@@ -16,7 +16,9 @@ from pytest import fixture, mark, approx
 
 from .....helpers import add_then_delete_objs, create_then_drop_views
 from pycds import Obs, NativeFlag, PCICFlag
-from pycds.weather_anomaly import DailyMaxTemperature, DailyMinTemperature
+from pycds.orm.manual_matviews.version_8fd8f556c548 import (
+    DailyMaxTemperature, DailyMinTemperature
+)
 
 
 def describe_with_1_network():

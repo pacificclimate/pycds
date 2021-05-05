@@ -1,4 +1,4 @@
-from pycds.weather_anomaly.version_8fd8f556c548 import (
+from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     monthly_total_precipitation_with_total_coverage,
     monthly_total_precipitation_with_avg_coverage,
     MonthlyTotalPrecipitation,
@@ -43,6 +43,6 @@ def test_monthly_total_precipitation_matview(
     obs1_precip_sesh, obs1_months, var_precip_net1_1
 ):
     sesh = obs1_precip_sesh
-    MonthlyTotalPrecipitation.refresh(sesh)
+    sesh.execute(MonthlyTotalPrecipitation.refresh())
     monthly_total_precip = sesh.query(MonthlyTotalPrecipitation).all()
     check(monthly_total_precip, obs1_months, var_precip_net1_1)

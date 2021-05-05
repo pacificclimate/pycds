@@ -1,6 +1,5 @@
-"""Most up-to-date general-purpose materialized views.
-
-(Additional matviews are defined in other modules, e.g. weather_anomaly.)
+"""
+Most up-to-date native materialized views.
 
 Materialized views are managed by Alembic migrations. A migration may add, drop,
 or change a view. The views present in one migration version of the database

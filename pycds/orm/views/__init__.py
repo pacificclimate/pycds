@@ -1,6 +1,5 @@
-"""Most up-to-date utility views.
-
-(Additional views are defined in other modules, e.g. weather_anomaly.)
+"""
+Most up-to-date views.
 
 Views are managed by Alembic migrations. A migration may add, drop, or change
 a view. The views present in one migration version of the database can be
@@ -8,7 +7,7 @@ different than those in another version.
 
 To enable Alembic to work properly, it is necessary retain all
 versions of views, not just the latest. The views defined in migration
-version `<version>` are stored in the module `version_<version>.py`
+revision `<version>` are stored in the module `version_<version>.py`
 in this directory.
 
 This file, the top level of the views module, exports the most recent version

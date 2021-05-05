@@ -1,6 +1,6 @@
 import pytest
 
-from pycds.weather_anomaly.version_8fd8f556c548 import (
+from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     daily_temperature_extremum,
     DailyMaxTemperature,
     DailyMinTemperature,
@@ -52,7 +52,7 @@ def test_daily_extreme_temperature_matview(
 ):
     sesh = obs1_temp_sesh
     Matview = DailyMaxTemperature if extremum == "max" else DailyMinTemperature
-    Matview.refresh(sesh)
+    sesh.execute(Matview.refresh())
     daily_extreme_temps = sesh.query(Matview).all()
     check(
         daily_extreme_temps,

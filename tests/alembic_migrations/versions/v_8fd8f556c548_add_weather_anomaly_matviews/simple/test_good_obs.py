@@ -1,7 +1,7 @@
 """Tests of the `good_obs` query"""
 import pytest
 from pycds import Obs
-from pycds.weather_anomaly.version_8fd8f556c548 import good_obs
+from pycds.orm.manual_matviews.version_8fd8f556c548 import good_obs
 
 
 @pytest.mark.slow

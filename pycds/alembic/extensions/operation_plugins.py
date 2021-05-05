@@ -1,29 +1,23 @@
 """
-Plugins to extend Alembic operations.
+Plugins that add to the operations available in migrations.
 
-For information on the Alembic operation plugins, see
+This module provides a few simple additional operations, such as `set_role`,
+but its major contribution is to add the operations `create_replaceable_object`,
+`drop_replaceable_object`, and `replace_replaceable_object`.
+
+For information on Alembic operation plugins, see
 https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
-
-TODO: Move contents of `pycds/replaceable_objects/materialized_views.py` here.
-TODO: Move contents of `pycds/replaceable_objects/views.py` here.
-TODO: Move contents of `pycds/replaceable_objects/stored_procedures.py` here.
 """
 
 from alembic.operations import Operations, MigrateOperation
 from alembic.operations.ops import CreateTableOp
 
 
-# Table operations
+# Extended table operations
 
 @Operations.register_operation("drop_table_if_exists")
 class DropTableIfExistsOp(MigrateOperation):
-    """
-    Provide DROP TABLE IF EXISTS command.
-
-    TODO: Look into whether it is possible to override builtin Alembic
-        operations. If so, replace this with an override for the existing
-        `drop_table` op that adds an `if_exists` kw arg.
-    """
+    """Provide DROP TABLE IF EXISTS command."""
 
     def __init__(self, name, schema=None):
         self.name = name
@@ -50,10 +44,115 @@ class DropTableIfExistsOp(MigrateOperation):
 
 @Operations.implementation_for(DropTableIfExistsOp)
 def drop_table_if_exists(operations, operation):
+    # TODO: Refactor into a DDL extension.
     schema_prefix = (
         f"{operation.schema}." if operation.schema is not None else ""
     )
     operations.execute(f"DROP TABLE IF EXISTS {schema_prefix}{operation.name}")
+
+
+# Reversible operations
+
+class ReversibleOperation(MigrateOperation):
+    """
+    Base class for reversible Alembic migration operations.
+
+    A reversible operation is one capable of emitting create and drop
+    instructions for an object, and of "reversing" the creation (or dropping)
+    of such an object. It does this by accessing other migration scripts in
+    order to use different (previous or later) versions, enabling an object
+    from one revision to be replaced by its version from another revision.
+    It does this so it can invoke the appropriate drop/create operation on
+    the old object before invoking the create/drop operation on the new object
+    in order to replace one with the other. Access to different versions of
+    an object is provided by method `_get_object_from_version`.
+    """
+    def __init__(self, target, schema=None):
+        self.target = target
+        self.schema = schema
+
+    @classmethod
+    def invoke_for_target(cls, operations, target, **kw):
+        op = cls(target, **kw)
+        return operations.invoke(op)
+
+    def reverse(self):
+        raise NotImplementedError()
+
+    @classmethod
+    def _get_object_from_version(cls, operations, ident):
+        version, objname = ident.split(".")
+
+        module = operations.get_context().script.get_revision(version).module
+        obj = getattr(module, objname)
+        return obj
+
+    @classmethod
+    def replace(cls, operations, target, replaces=None, replace_with=None, **kw):
+        """
+        Migration upgrade uses `replaces`.
+        Migration downgrade uses `replace_with`.
+        """
+
+        if replaces:
+            old_obj = cls._get_object_from_version(operations, replaces)
+            drop_old = cls(old_obj, **kw).reverse()
+            create_new = cls(target, **kw)
+        elif replace_with:
+            old_obj = cls._get_object_from_version(operations, replace_with)
+            drop_old = cls(target, **kw).reverse()
+            create_new = cls(old_obj, **kw)
+        else:
+            raise TypeError("replaces or replace_with is required")
+
+        operations.invoke(drop_old)
+        operations.invoke(create_new)
+
+
+# Replaceable object reversible operations
+# 
+#  The reversible operations must know how to produce create and drop
+#  commands for the target objects. This is done here by requiring that any 
+#  target object (a replaceable object) to provide methods `create`  and
+#  `drop` that return the requisite commands. These are invoked in the
+# `implementation_for` of the classes that represent the operations.
+#
+# Since all replaceable objects conform to the same API, we do not need
+# to specialize the operations for each different kind of replaceable object
+# (view, matview, stored procedure). We can have just 3 generic operations
+# (`create_replaceable_object`, `drop_replaceable_object`, and
+# `replace_replaceable_object`) for all the different types of replaceable
+# object.
+
+@Operations.register_operation("create_replaceable_object", "invoke_for_target")
+@Operations.register_operation("replace_replaceable_object", "replace")
+class CreateReplaceableObjectOp(ReversibleOperation):
+    """
+    Class representing a reversible create operation for a replaceable object.
+    This class also requires an implementation to make it executable.
+    """
+    def reverse(self):
+        return DropReplaceableObjectOp(self.target)
+
+
+@Operations.implementation_for(CreateReplaceableObjectOp)
+def create_replaceable_object(operations, operation):
+    operations.execute(operation.target.create())
+
+
+@Operations.register_operation("drop_replaceable_object", "invoke_for_target")
+class DropReplaceableObjectOp(ReversibleOperation):
+    """
+    Class representing a reversible drop operation for a replaceable object.
+    This class also requires an implementation to make it executable.
+    """
+    def reverse(self):
+        return CreateReplaceableObjectOp(self.target)
+
+
+@Operations.implementation_for(DropReplaceableObjectOp)
+def drop_replaceable_object(operations, operation):
+    operations.execute(operation.target.drop())
 
 
 # Miscellaneous operations
@@ -73,6 +172,7 @@ class SetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(SetRoleOp)
 def set_role(operations, operation):
+    # TODO: Refactor into a DDL extension.
     operations.execute(f"SET ROLE '{operation.role_name}'")
 
 
@@ -88,4 +188,5 @@ class ResetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(ResetRoleOp)
 def reset_role(operations, operation):
+    # TODO: Refactor into a DDL extension.
     operations.execute(f"RESET ROLE")

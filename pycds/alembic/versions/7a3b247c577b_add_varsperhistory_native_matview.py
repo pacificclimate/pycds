@@ -9,7 +9,7 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
-from pycds.materialized_views import VarsPerHistory
+from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
 from pycds.alembic.helpers import db_supports_matviews
 from pycds.alembic.extensions import operation_plugins
 
@@ -29,10 +29,11 @@ def upgrade():
     inspector = sa.inspect(engine)
     logger.debug(f"tables: {inspector.get_table_names(schema=schema_name)}")
     if db_supports_matviews(engine):
-        logger.debug("This database supports matviews")
+        logger.debug("This database supports native materialized views")
         op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
-        op.create_native_materialized_view(VarsPerHistory, schema=schema_name)
+        op.create_replaceable_object(VarsPerHistory)
         for index in VarsPerHistory.__table__.indexes:
+            logger.debug(f"Creating index '{index.name}'")
             op.create_index(
                 index_name=index.name,
                 table_name=index.table.name,
@@ -41,7 +42,10 @@ def upgrade():
                 schema=schema_name,
             )
     else:
-        logger.info("This database does not support matviews: skipping upgrade")
+        logger.info(
+            "This database does not support native materialized views: "
+            "skipping upgrade"
+        )
 
 
 def downgrade():
@@ -49,12 +53,13 @@ def downgrade():
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
         for index in VarsPerHistory.__table__.indexes:
+            logger.debug(f"Dropping index '{index.name}'")
             op.drop_index(
                 index_name=index.name,
                 table_name=index.table.name,
                 schema=schema_name,
             )
-        op.drop_native_materialized_view(VarsPerHistory, schema=schema_name)
+        op.drop_replaceable_object(VarsPerHistory)
         # Note: This will create the table in the database even if it didn't
         # exist before. At the time of writing, this is the desired behaviour.
         op.create_table(
@@ -72,5 +77,6 @@ def downgrade():
         )
     else:
         logger.info(
-            "This database does not support matviews: skipping downgrade"
+            "This database does not support native materialized views: "
+            "skipping downgrade"
         )

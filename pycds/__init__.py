@@ -1,9 +1,8 @@
-"""ORM for the CRMP database.
+"""
+ORM for the CRMP database.
 
-**Note: Tables only.**
-
-Functions, views, and materialized views are defined in separate modules.
-
+This ORM includes table mappings for all table-like objects: tables, views,
+and materialized views.
 
 **Note: Schema name:**
 
@@ -74,7 +73,7 @@ __all__ = [
 
 from pycds.util import (get_schema_name, get_su_role_name)
 
-from .orm import (
+from .orm.tables import (
     Base,
     Network,
     Contact,
@@ -96,19 +95,21 @@ from .orm import (
     StationObservationStats,
 )
 
-from .utility_views import (
+from .orm.views import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
     ObsCountPerDayHistory,
     ObsWithFlags,
 )
 
-from .weather_anomaly import (
+from .orm.native_matviews import (
+    VarsPerHistory,
+)
+
+from .orm.manual_matviews import (
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
     MonthlyTotalPrecipitation,
 )
-
-from .materialized_views import VarsPerHistory

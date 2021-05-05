@@ -8,13 +8,13 @@ Create Date: 2020-01-31 16:54:35.636097
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
-from pycds.utility_views.version_84b7fc2596d5 import (
+from pycds.orm.views.version_84b7fc2596d5 import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
     ObsCountPerDayHistory,
     ObsWithFlags,
 )
-import pycds.replaceable_objects.views
+import pycds.alembic.extensions.operation_plugins
 
 
 # revision identifiers, used by Alembic.
@@ -37,9 +37,9 @@ views = (
 
 def upgrade():
     for view in views:
-        op.create_view(view, schema=schema_name)
+        op.create_replaceable_object(view)
 
 
 def downgrade():
     for view in reversed(views):
-        op.drop_view(view, schema=schema_name)
+        op.drop_replaceable_object(view)
