@@ -79,38 +79,33 @@ if is_live_env:
 def include_object(object, name, type_, reflected, compare_to):
     """Include only objects that belong to the specified schema."""
     if type_ == "table":
-        include = (not reflected and
-                   object.metadata.schema == target_metadata.schema)
-        print(f'include_object: '
-              f'name = {name} type_ = {type_}, '
-              f'reflected = {reflected}, '
-              f'schema = {object.metadata.schema}, '
-              f'include = {include}')
-        return include
+        object_schema = object.metadata.schema
     elif type_ == 'column':
-        include = (not reflected and
-                   object.table.metadata.schema == target_metadata.schema)
-        print(f'include_object: '
-              f'name = {name} type_ = {type_}, '
-              f'reflected = {reflected}, '
-              f'schema = {object.table.metadata.schema}, '
-              f'include = {include}')
-        return include
+        object_schema = object.table.metadata.schema
     elif type_ == 'index':
-        include = (not reflected and
-                   object.table.metadata.schema == target_metadata.schema)
-        print(f'include_object: '
-              f'name = {name} type_ = {type_}, '
-              f'reflected = {reflected}, '
-              f'schema = {object.table.metadata.schema}, '
-              f'include = {include}')
-        return include
+        object_schema = object.table.metadata.schema
+    elif type_ == 'foreign_key_constraint':
+        object_schema = object.table.metadata.schema
+    elif type_ == 'unique_constraint':
+        object_schema = object.table.metadata.schema
     else:
         print(f'include_object: '
+              f'Unknown object type'
               f'name = {name} type_ = {type_}, '
               f'reflected = {reflected}, '
-              f'include = {False}')
-        raise ValueError(f'Unexpected object type: {type_}')
+              f'object = {object}')
+        raise ValueError(f'Unknown object type: {type_}')
+
+    include = (not reflected and
+               object_schema == target_metadata.schema)
+    print(f'include_object: '
+          f'{"INCLUDE" if include else "EXCLUDE"} '
+          f'name = {name} type_ = {type_}, '
+          f'reflected = {reflected}, '
+          f'schema = {object_schema}, '
+          f'include = {include}')
+    return include
+
 
 
 def run_migrations_offline():
