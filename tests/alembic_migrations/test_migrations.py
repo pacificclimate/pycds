@@ -48,6 +48,26 @@ def test_upgrade_and_downgrade(
         current = get_current_revision(alembic_config_left, engine, script)
 
 
+@pytest.mark.skip(reason="utility; not really a test")
+@pytest.mark.usefixtures('new_db_left')
+def test_indexes(
+    uri_left, alembic_config_left, db_setup, env_config,
+):
+    engine, script = prepare_schema_from_migrations(
+        uri_left, alembic_config_left, db_setup=db_setup
+    )
+
+    indexes = engine.execute("""
+        select indexname, indexdef 
+        from pg_indexes 
+        where schemaname ='crmp' 
+        order by indexname
+        """)
+    print(f"### indexes")
+    for index in indexes:
+        print(index[0], index[1])
+
+
 @pytest.mark.usefixtures('new_db_left')
 @pytest.mark.usefixtures('new_db_right')
 def test_model_and_migration_schemas_are_the_same(
