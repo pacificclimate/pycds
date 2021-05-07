@@ -50,3 +50,52 @@ def db_supports_matviews(engine):
     return db_supports_statement(
         engine, "CREATE MATERIALIZED VIEW test AS SELECT 1"
     )
+
+
+def get_schema_item_names(
+    executor, item_type, table_name=None, schema_name="crmp"
+):
+    if item_type == "routines":
+        r = executor.execute(
+            f"""
+            SELECT routine_name 
+            FROM information_schema.routines 
+            WHERE specific_schema = '{schema_name}'
+        """
+        )
+    elif item_type == "tables":
+        r = executor.execute(
+            f"""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = '{schema_name}';
+        """
+        )
+    elif item_type == "views":
+        r = executor.execute(
+            f"""
+            SELECT table_name 
+            FROM information_schema.views 
+            WHERE table_schema = '{schema_name}';
+        """
+        )
+    elif item_type == "matviews":
+        r = executor.execute(
+            f"""
+            SELECT matviewname 
+            FROM pg_matviews
+            WHERE schemaname = '{schema_name}';
+        """
+        )
+    elif item_type == "indexes":
+        r = executor.execute(
+            f"""
+            SELECT indexname 
+            FROM pg_indexes
+            WHERE schemaname = '{schema_name}'
+            AND tablename = '{table_name}';
+        """
+        )
+    else:
+        raise ValueError("invalid item type")
+    return {x[0] for x in r.fetchall()}
