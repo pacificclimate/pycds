@@ -1,5 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
+from pycds.util import get_schema_name
 
 
 def get_postgresql_version(engine):
@@ -53,7 +54,7 @@ def db_supports_matviews(engine):
 
 
 def get_schema_item_names(
-    executor, item_type, table_name=None, schema_name="crmp"
+    executor, item_type, table_name=None, schema_name=get_schema_name()
 ):
     if item_type == "routines":
         r = executor.execute(
