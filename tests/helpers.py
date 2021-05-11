@@ -5,7 +5,7 @@ from collections import namedtuple
 from datetime import datetime
 
 from pycds import get_schema_name, Contact, Network, Station, History, Variable
-
+from pycds.alembic.helpers import get_schema_item_names
 
 # Fixture helpers
 
@@ -199,42 +199,3 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
         sesh.execute(data)
 
     with_schema_name(sesh, schema_name, action)
-
-
-# Test helpers
-
-def get_schema_item_names(executor, item_type, table_name=None, schema_name=get_schema_name()):
-    if item_type == 'routines':
-        r = executor.execute(f"""
-            SELECT routine_name 
-            FROM information_schema.routines 
-            WHERE specific_schema = '{schema_name}'
-        """)
-    elif item_type == 'tables':
-        r = executor.execute(f"""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = '{schema_name}';
-        """)
-    elif item_type == 'views':
-        r = executor.execute(f"""
-            SELECT table_name 
-            FROM information_schema.views 
-            WHERE table_schema = '{schema_name}';
-        """)
-    elif item_type == 'matviews':
-        r = executor.execute(f"""
-            SELECT matviewname 
-            FROM pg_matviews
-            WHERE schemaname = '{schema_name}';
-        """)
-    elif item_type == 'indexes':
-        r = executor.execute(f"""
-            SELECT indexname 
-            FROM pg_indexes
-            WHERE schemaname = '{schema_name}'
-            AND tablename = '{table_name}';
-        """)
-    else:
-        raise ValueError('invalid item type')
-    return {x[0] for x in r.fetchall()}

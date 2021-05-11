@@ -15,7 +15,7 @@ def check_migration_version(
     schema_name=get_schema_name(),
     # `version` must be kept up to date with latest migration
     # a test checks it, however, in case you don't
-    version="7a3b247c577b",
+    version="bdc28573df56",
 ):
     """Check that the migration version of the database schema is compatible
     with the current version of this package.

@@ -15,7 +15,8 @@ ENV LC_ALL en_CA.UTF-8
 RUN apt-get install -y curl ca-certificates gnupg && \
     curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
     echo 'deb http://apt.postgresql.org/pub/repos/apt bionic-pgdg main' >/etc/apt/sources.list.d/pgdg.list && \
-    apt-get update
+    apt-get update && \
+    apt purge postgresql-client-13 postgresql-server-dev-all
 
 # Install the packages required to install PyCDS.
 RUN apt-get install -yq \
