@@ -110,5 +110,5 @@ you should not need to do this. However, just in case:
 From the _project root directory_ (important Docker context location):
 
 ```
-docker build -t pcic/pycds-local-pytest -f docker/local-test/Dockerfile .
+docker build -t pcic/pycds-local-pytest -f docker/local-pytest/Dockerfile .
 ```
