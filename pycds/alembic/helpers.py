@@ -1,6 +1,10 @@
+import logging
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
 from pycds.util import get_schema_name
+
+
+logger = logging.getLogger("alembic")
 
 
 def get_postgresql_version(engine):
