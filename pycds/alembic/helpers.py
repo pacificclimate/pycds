@@ -101,6 +101,24 @@ def get_schema_item_names(
             AND tablename = '{table_name}';
         """
         )
+    elif item_type == "constraints":
+        contype = constraint_type[0]
+        print(f"### constraints {constraint_type}, {contype}")
+        if contype == "e":
+            contype = "x"
+        sql = f"""
+            SELECT conname  
+            FROM pg_catalog.pg_constraint con
+            INNER JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+            INNER JOIN pg_catalog.pg_namespace nsp ON nsp.oid = connamespace            
+            WHERE nsp.nspname = '{schema_name}'
+            AND rel.relname = '{table_name}'
+            AND con.contype = '{contype}';
+        """
+        print(f"### constraints query: \n{sql}")
+        r = executor.execute(
+            sql
+        )
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}
