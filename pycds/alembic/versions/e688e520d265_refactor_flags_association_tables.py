@@ -86,13 +86,19 @@ def create_primary_key_if_not_exists(
 def upgrade():
     # Table obs_raw_native_flags
     table_name = "obs_raw_native_flags"
-    drop_constraint_if_exists(
-        op,
+    op.drop_constraint_if_exists(
         table_name=table_name,
         constraint_name="obs_raw_native_flag_unique",
-        constraint_type="unique",
+        type_="unique",
         schema=schema_name,
     )
+    # drop_constraint_if_exists(
+    #     op,
+    #     table_name=table_name,
+    #     constraint_name="obs_raw_native_flag_unique",
+    #     constraint_type="unique",
+    #     schema=schema_name,
+    # )
     create_primary_key_if_not_exists(
         op,
         table_name=table_name,
@@ -103,13 +109,19 @@ def upgrade():
 
     # Table obs_raw_pcic_flags
     table_name = "obs_raw_pcic_flags"
-    drop_constraint_if_exists(
-        op,
+    op.drop_constraint_if_exists(
         table_name=table_name,
         constraint_name="obs_raw_pcic_flag_unique",
-        constraint_type="unique",
+        type_="unique",
         schema=schema_name,
     )
+    # drop_constraint_if_exists(
+    #     op,
+    #     table_name=table_name,
+    #     constraint_name="obs_raw_pcic_flag_unique",
+    #     constraint_type="unique",
+    #     schema=schema_name,
+    # )
     create_primary_key_if_not_exists(
         op,
         table_name=table_name,
