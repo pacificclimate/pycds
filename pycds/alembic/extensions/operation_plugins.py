@@ -12,7 +12,7 @@ https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
 from alembic.operations import BatchOperations, Operations, MigrateOperation
 from alembic.operations.ops import (
     CreateTableOp,
-    AddConstraintOp,
+    DropConstraintOp,
 )
 from alembic import util
 from alembic.util import sqla_compat
@@ -22,7 +22,11 @@ from alembic.util import sqla_compat
 
 @Operations.register_operation("drop_table_if_exists")
 class DropTableIfExistsOp(MigrateOperation):
-    """Provide DROP TABLE IF EXISTS command."""
+    """
+    Provide DROP TABLE IF EXISTS command.
+
+    TODO: Inherit from Alembic builtin DropTableOp? See DropConstraintIfExistsOp
+    """
 
     def __init__(self, name, schema=None):
         self.name = name
@@ -60,131 +64,41 @@ def drop_table_if_exists(operations, operation):
 @BatchOperations.register_operation(
     "drop_constraint_if_exists", "batch_drop_constraint_if_exists"
 )
-class DropConstraintIfExistsOp(MigrateOperation):
+class DropConstraintIfExistsOp(DropConstraintOp):
     """
     Represent a drop constraint if exists operation.
 
-    This code is a slightly modified version of the Alembic builtin operation
-    for drop constraint (no if exists).
-
-    TODO: DRY up by inheriting from DropConstraintOp
+    This operation's class is identical to DropConstraintOp except for
+    class method names which become operation names. The new names dispatch
+    to the old names.
     """
-
-    def __init__(
-        self,
-        constraint_name,
-        table_name,
-        type_=None,
-        schema=None,
-        _orig_constraint=None,
-    ):
-        self.constraint_name = constraint_name
-        self.table_name = table_name
-        self.constraint_type = type_
-        self.schema = schema
-        self._orig_constraint = _orig_constraint
-
-    def reverse(self):
-        if self._orig_constraint is None:
-            raise ValueError(
-                "operation is not reversible; "
-                "original constraint is not present"
-            )
-        return AddConstraintOp.from_constraint(self._orig_constraint)
-
-    def to_diff_tuple(self):
-        if self.constraint_type == "foreignkey":
-            return ("remove_fk", self.to_constraint())
-        else:
-            return ("remove_constraint", self.to_constraint())
-
-    @classmethod
-    def from_constraint(cls, constraint):
-        types = {
-            "unique_constraint": "unique",
-            "foreign_key_constraint": "foreignkey",
-            "primary_key_constraint": "primary",
-            "check_constraint": "check",
-            "column_check_constraint": "check",
-        }
-
-        constraint_table = sqla_compat._table_for_constraint(constraint)
-        return cls(
-            constraint.name,
-            constraint_table.name,
-            schema=constraint_table.schema,
-            type_=types[constraint.__visit_name__],
-            _orig_constraint=constraint,
-        )
-
-    def to_constraint(self):
-        if self._orig_constraint is not None:
-            return self._orig_constraint
-        else:
-            raise ValueError(
-                "constraint cannot be produced; "
-                "original constraint is not present"
-            )
-
     @classmethod
     @util._with_legacy_names([("type", "type_"), ("name", "constraint_name")])
     def drop_constraint_if_exists(
         cls, operations, constraint_name, table_name, type_=None, schema=None
     ):
-        r"""Drop a constraint of the given name, typically via DROP CONSTRAINT.
-
-        :param constraint_name: name of the constraint.
-        :param table_name: table name.
-        :param type\_: optional, required on MySQL.  can be
-         'foreignkey', 'primary', 'unique', or 'check'.
-        :param schema: Optional schema name to operate within.  To control
-         quoting of the schema outside of the default behavior, use
-         the SQLAlchemy construct
-         :class:`~sqlalchemy.sql.elements.quoted_name`.
-
-         .. versionadded:: 0.7.0 'schema' can now accept a
-            :class:`~sqlalchemy.sql.elements.quoted_name` construct.
-
-        .. versionchanged:: 0.8.0 The following positional argument names
-           have been changed:
-
-           * name -> constraint_name
-
-        """
-
-        op = cls(constraint_name, table_name, type_=type_, schema=schema)
-        return operations.invoke(op)
+        return cls.drop_constraint(
+            operations, constraint_name, table_name, type_=type_, schema=schema
+        )
 
     @classmethod
-    def batch_drop_constraint_if_exists(cls, operations, constraint_name, type_=None):
-        """Issue a "drop constraint" instruction using the
-        current batch migration context.
-
-        The batch form of this call omits the ``table_name`` and ``schema``
-        arguments from the call.
-
-        .. seealso::
-
-            :meth:`.Operations.drop_constraint`
-
-        .. versionchanged:: 0.8.0 The following positional argument names
-           have been changed:
-
-           * name -> constraint_name
-
-        """
-        op = cls(
-            constraint_name,
-            operations.impl.table_name,
-            type_=type_,
-            schema=operations.impl.schema,
-        )
-        return operations.invoke(op)
+    def batch_drop_constraint_if_exists(
+        cls, operations, constraint_name, type_=None
+    ):
+        return cls.drop_constraint(operations, constraint_name, type_=type_)
 
 
 @Operations.implementation_for(DropConstraintIfExistsOp)
-def drop_table_if_exists(operations, operation):
-    # TODO: Refactor into a DDL extension. Maybe
+def drop_constraint_if_exists(operations, operation):
+    """
+    Implement drop constraint if exists operation. This is a greatly simplified
+    version of how operations are implemented in Alembic, where there is much
+    dispatching between here and the final SQL generation.
+
+    **This version is only guaranteed to work for PostgreSQL.**
+
+    TODO: Refactor into a DDL extension. Maybe.
+    """
     schema_prefix = (
         f"{operation.schema}." if operation.schema is not None else ""
     )
