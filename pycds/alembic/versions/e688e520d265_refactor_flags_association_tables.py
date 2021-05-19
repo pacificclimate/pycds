@@ -22,39 +22,49 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
-def upgrade():
-    # Table obs_raw_native_flags
-    table_name = "obs_raw_native_flags"
-    op.drop_constraint_if_exists(
-        table_name=table_name,
-        constraint_name="obs_raw_native_flag_unique",
-        type_="unique",
-        schema=schema_name,
-    )
-    create_primary_key_if_not_exists(
-        op,
-        table_name=table_name,
-        constraint_name="obs_raw_native_flags_pkey",
-        columns=["obs_raw_id", "native_flag_id"],
-        schema=schema_name,
-    )
+items = (
+    {
+        "table_name": "obs_raw_native_flags",
+        "unique_constraint_name": "obs_raw_native_flag_unique",
+        "primary_key_name": "obs_raw_native_flags_pkey",
+        "columns": ["obs_raw_id", "native_flag_id"]
+    },
+    {
+        "table_name": "obs_raw_pcic_flags",
+        "unique_constraint_name": "obs_raw_pcic_flag_unique",
+        "primary_key_name": "obs_raw_pcic_flags_pkey",
+        "columns": ["obs_raw_id", "pcic_flag_id"]
+    },
+)
 
-    # Table obs_raw_pcic_flags
-    table_name = "obs_raw_pcic_flags"
-    op.drop_constraint_if_exists(
-        table_name=table_name,
-        constraint_name="obs_raw_pcic_flag_unique",
-        type_="unique",
-        schema=schema_name,
-    )
-    create_primary_key_if_not_exists(
-        op,
-        table_name=table_name,
-        constraint_name="obs_raw_pcic_flags_pkey",
-        columns=["obs_raw_id", "pcic_flag_id"],
-        schema=schema_name,
-    )
+
+def upgrade():
+    for item in items:
+        op.drop_constraint_if_exists(
+            table_name=item["table_name"],
+            constraint_name=item["unique_constraint_name"],
+            type_="unique",
+            schema=schema_name,
+        )
+        create_primary_key_if_not_exists(
+            op,
+            table_name=item["table_name"],
+            constraint_name=item["primary_key_name"],
+            columns=item["columns"],
+            schema=schema_name,
+        )
 
 
 def downgrade():
-    pass
+    for item in items:
+        op.drop_constraint(
+            table_name=item["table_name"],
+            constraint_name=item["primary_key_name"],
+            schema=schema_name,
+        )
+        op.create_unique_constraint(
+            table_name=item["table_name"],
+            constraint_name=item["unique_constraint_name"],
+            columns=item["columns"],
+            schema=schema_name,
+        )
