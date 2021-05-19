@@ -34,7 +34,7 @@ docker pull pcic/pycds-test-db
 Run it from the project root directory:
 
 ```shell script
-./docker/local-test-db/run-db.sh <port> <password>
+./docker/test-db/run-db.sh <port> <password>
 ```
 
 This script starts a container mapped to port `<port>` on `localhost`.
