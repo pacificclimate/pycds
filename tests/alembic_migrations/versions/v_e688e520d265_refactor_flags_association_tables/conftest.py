@@ -8,26 +8,13 @@ from ....helpers import insert_crmp_data
 def prepared_schema_from_migrations_left(
     uri_left, alembic_config_left, db_setup,  mocker, request
 ):
-    """
-    This fixture has an optional indirect parameter that determines
-    whether the helper function `get_schema_item_names` is mocked, and if so,
-    what its value is. Without an indirect parameter, the function is
-    unmocked and performs as usual. This allows us to test upgrade and downgrade
-    migrations in each case indexes present or not. Mocking must be done here
-    because fixtures are instantiated *before* the test is run, so it is
-    too late by the time we are inside the test.
-    """
-    if hasattr(request, "param"):
-        mocker.patch(
-            "pycds.alembic.helpers.get_schema_item_names",
-            return_value=request.param
-        )
+    revision = getattr(request, "param", "e688e520d265")
 
     engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
         db_setup=db_setup,
-        revision="e688e520d265"
+        revision=revision
     )
 
     yield engine, script
