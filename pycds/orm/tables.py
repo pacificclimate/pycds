@@ -426,7 +426,7 @@ class StationObservationStats(Base):
     history_id = Column(Integer, ForeignKey('meta_history.history_id'))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
-    obs_count = BigInteger
+    obs_count = Column(BigInteger)
 
     # Indexes
     station_obs_stats_mv_idx = Index(
