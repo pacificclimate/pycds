@@ -234,6 +234,7 @@ def upgrade():
         sa.Column("history_id", sa.Integer(), nullable=True),
         sa.Column("min_obs_time", sa.DateTime(), nullable=True),
         sa.Column("max_obs_time", sa.DateTime(), nullable=True),
+        sa.Column("obs_count", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(
             ["history_id"], [f"{schema_name}.meta_history.history_id"],
         ),
