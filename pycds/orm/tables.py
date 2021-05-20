@@ -1,3 +1,15 @@
+"""
+ORM declarations for tables.
+
+Notes:
+
+1. Index declarations should be made *outside* of ORM classes. If not, they are
+paradoxically not included in the internal list of indexes available for an
+ORM class via `ORMClass.__table__.indexes`. The latter is very convenient, so
+we make sure always to declare indexes outside of classes. See code below for
+many examples.
+"""
+
 import datetime
 
 from sqlalchemy import MetaData
@@ -251,12 +263,11 @@ class Obs(Base):
                          name='time_place_variable_unique'),
     )
 
-    # Indexes
-    mod_time_idx = Index('mod_time_idx', 'mod_time')
-    obs_raw_comp_idx = Index('obs_raw_comp_idx', 'obs_time', 'vars_id',
-                             'history_id')
-    obs_raw_history_id_idx = Index('obs_raw_history_id_idx', 'history_id')
-    obs_raw_id_idx = Index('obs_raw_id_idx', 'obs_raw_id')
+
+Index("mod_time_idx", Obs.mod_time)
+Index("obs_raw_comp_idx", Obs.time, Obs.vars_id, Obs.history_id)
+Index("obs_raw_history_id_idx", Obs.history_id)
+Index("obs_raw_id_idx", Obs.id)
 
 
 class TimeBound(Base):
