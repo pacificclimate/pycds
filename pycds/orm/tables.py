@@ -75,12 +75,11 @@ class Station(Base):
     histories = relationship(
         "History", backref=backref('meta_station', order_by=id))
 
-    # Indexes
-    fki_meta_station_network_id_fkey = \
-        Index('fki_meta_station_network_id_fkey', 'network_id')
-
     def __str__(self):
         return '<CRMP Station %s:%s>' % (self.network.name, self.native_id)
+
+
+Index("fki_meta_station_network_id_fkey", Station.network_id)
 
 
 class History(Base):
@@ -120,11 +119,9 @@ class History(Base):
     observations = relationship(
         "Obs", backref=backref('meta_history', order_by=id))
 
-    # Indexes
-    fki_meta_history_station_id_fk = \
-        Index('fki_meta_history_station_id_fk', 'station_id')
-    meta_history_freq_idx = \
-        Index('meta_history_freq_idx', 'freq')
+
+Index("fki_meta_history_station_id_fk", History.station_id)
+Index("meta_history_freq_idx", History.freq)
 
 
 # For tables `ObsRawNativeFlags` and `ObsRawPCICFlags`, we'd like declare them
@@ -298,12 +295,11 @@ class Variable(Base):
         "Network", backref=backref('meta_vars', order_by=id))
     obs = relationship("Obs", backref=backref('meta_vars', order_by=id))
 
-    # Indexes
-    fki_meta_vars_network_id_fkey = \
-        Index('fki_meta_vars_network_id_fkey', 'network_id')
-
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(self.__class__.__name__, **self.__dict__)
+
+
+Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class ClimatologyAttributes(Base):
@@ -316,9 +312,14 @@ class ClimatologyAttributes(Base):
     wmo_code = Column(String(1))
     adjusted = Column(Boolean)
 
-    # Indexes
-    meta_climo_attrs_idx = Index(
-        'meta_climo_attrs_idx', 'vars_id', 'station_id', 'wmo_code', 'month')
+
+Index(
+    "meta_climo_attrs_idx", 
+    ClimatologyAttributes.vars_id, 
+    ClimatologyAttributes.station_id, 
+    ClimatologyAttributes.wmo_code, 
+    ClimatologyAttributes.month
+)
 
 
 class NativeFlag(Base):
@@ -389,9 +390,12 @@ class ObsCountPerMonthHistory(Base):
     # Relationships
     history = relationship("History")
 
-    # Indexes
-    obs_count_per_month_history_idx = \
-        Index('obs_count_per_month_history_idx', 'date_trunc', 'history_id')
+
+Index(
+    "obs_count_per_month_history_idx", 
+    ObsCountPerMonthHistory.date_trunc, 
+    ObsCountPerMonthHistory.history_id,
+)
 
 
 class ClimoObsCount(Base):
@@ -404,8 +408,8 @@ class ClimoObsCount(Base):
     count = Column(BigInteger)
     history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
 
-    # Indexes
-    climo_obs_count_idx = Index('climo_obs_count_idx', 'history_id')
+
+Index("climo_obs_count_idx", ClimoObsCount.history_id)
 
 
 class CollapsedVariables(Base):
@@ -416,8 +420,8 @@ class CollapsedVariables(Base):
     vars = Column(String)
     display_names = Column(String)
 
-    # Indexes
-    collapsed_vars_idx = Index('collapsed_vars_idx', 'history_id')
+
+Index("collapsed_vars_idx", CollapsedVariables.history_id)
 
 
 class StationObservationStats(Base):
@@ -428,7 +432,12 @@ class StationObservationStats(Base):
     max_obs_time = Column(DateTime)
     obs_count = Column(BigInteger)
 
-    # Indexes
-    station_obs_stats_mv_idx = Index(
-        'station_obs_stats_mv_idx', 'min_obs_time', 'max_obs_time',
-        'obs_count', 'station_id', 'history_id')
+
+Index(
+    "station_obs_stats_mv_idx",
+    StationObservationStats.min_obs_time, 
+    StationObservationStats.max_obs_time, 
+    StationObservationStats.obs_count, 
+    StationObservationStats.station_id, 
+    StationObservationStats.history_id,
+)
