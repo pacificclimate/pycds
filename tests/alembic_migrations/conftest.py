@@ -5,10 +5,12 @@ import os
 import pytest
 
 from sqlalchemy.schema import CreateSchema
-
 from sqlalchemydiff.util import get_temporary_uri
+from sqlalchemy.orm import sessionmaker
 
 from .alembicverify_util import prepare_schema_from_migrations
+from pycds.alembic.info import get_current_head
+from ..helpers import insert_crmp_data
 
 
 @pytest.fixture
@@ -88,17 +90,26 @@ def env_config(schema_name):
 def prepared_schema_from_migrations_left(
     uri_left, alembic_config_left, db_setup, request
 ):
-    revision = getattr(request, "param", "0d99ba90c229")
+    """
+    Generic prepared_schema_from_migrations_left fixture. It prepares the
+    schema to a revision specified by the param. It does not default because
+    every user of it will want a different revision, and defaulting would
+    therefore make its usage error-prone. It should be used as follows:
 
+        @pytest.mark.parametrize(
+            "prepared_schema_from_migrations_left",
+            (<revision sha>,),
+            indirect=True,
+        )
+
+    """
     engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
         db_setup=db_setup,
-        revision=revision
+        revision=request.param
     )
 
     yield engine, script
 
     engine.dispose()
-
-
