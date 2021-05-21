@@ -36,7 +36,7 @@ def get_postgresql_version(engine):
     This has no use at present but going to leave it here in case it does again
     in future.
     """
-    print(f"dialect: {engine.dialect.name}")
+    # print(f"dialect: {engine.dialect.name}")
     if engine.dialect.name.lower() != "postgresql":
         raise ValueError(f"We are not running on PostgreSQL.")
 
@@ -128,7 +128,6 @@ def get_schema_item_names(
         )
     elif item_type == "constraints":
         contype = constraint_type[0]
-        print(f"### constraints {constraint_type}, {contype}")
         if contype == "e":
             contype = "x"
         sql = f"""
@@ -140,10 +139,7 @@ def get_schema_item_names(
             AND rel.relname = '{table_name}'
             AND con.contype = '{contype}';
         """
-        print(f"### constraints query: \n{sql}")
-        r = executor.execute(
-            sql
-        )
+        r = executor.execute(sql)
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}
