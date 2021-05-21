@@ -15,7 +15,7 @@ from pycds import History, Station, Variable
 
 
 logger = logging.getLogger("tests")
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+# logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 table_and_index = (
     ("climo_obs_count_mv", "climo_obs_count_idx"),
