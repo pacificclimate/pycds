@@ -51,7 +51,7 @@ def upgrade():
             logger.debug(
                 f"Creating index '{index.name} on table {index.table.name}'"
             )
-            op.create_index(
+            op.create_index_if_not_exists(
                 index_name=index.name,
                 table_name=index.table.name,
                 columns=[col.name for col in index.columns],
