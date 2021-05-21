@@ -7,8 +7,7 @@
 import logging
 import pytest
 from alembic import command
-from ....helpers import get_schema_item_names
-import pycds.alembic.helpers
+from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")

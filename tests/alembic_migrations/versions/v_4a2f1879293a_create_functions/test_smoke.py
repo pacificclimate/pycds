@@ -9,7 +9,7 @@ from _datetime import datetime, date
 import logging
 import pytest
 from alembic import command
-from ....helpers import get_schema_item_names
+from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")

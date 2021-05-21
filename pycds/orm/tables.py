@@ -20,7 +20,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
-from pycds.util import get_schema_name
+from pycds.context import get_schema_name
 
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))

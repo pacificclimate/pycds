@@ -13,7 +13,7 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
-from pycds.alembic.helpers import get_schema_item_names
+from pycds.database import get_schema_item_names
 
 
 # revision identifiers, used by Alembic.

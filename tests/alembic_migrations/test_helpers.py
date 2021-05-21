@@ -1,5 +1,5 @@
 import pytest
-from pycds.alembic.helpers import (
+from pycds.database import (
     get_postgresql_version,
     db_supports_statement,
     db_supports_matviews,

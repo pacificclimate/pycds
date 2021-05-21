@@ -1,4 +1,5 @@
-from ..helpers import get_schema_item_names, insert_test_data, insert_crmp_data
+from ..helpers import insert_test_data, insert_crmp_data
+from pycds.database import get_schema_item_names
 from pycds import Contact, History, Obs
 
 

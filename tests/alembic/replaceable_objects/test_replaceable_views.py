@@ -1,4 +1,4 @@
-from tests.helpers import get_schema_item_names
+from pycds.database import get_schema_item_names
 from .content import (
     Thing,
     SimpleThingView,

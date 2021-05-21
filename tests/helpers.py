@@ -5,7 +5,6 @@ from collections import namedtuple
 from datetime import datetime
 
 from pycds import get_schema_name, Contact, Network, Station, History, Variable
-from pycds.alembic.helpers import get_schema_item_names
 
 # Fixture helpers
 

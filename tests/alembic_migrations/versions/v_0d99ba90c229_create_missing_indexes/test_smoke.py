@@ -7,10 +7,9 @@
 import logging
 import pytest
 from alembic import command
+from pycds.database import get_schema_item_names
 from sqlalchemy.schema import CreateIndex
 
-from ....helpers import get_schema_item_names
-import pycds.alembic.helpers
 from pycds import History, Station, Variable
 
 

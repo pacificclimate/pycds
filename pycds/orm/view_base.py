@@ -18,6 +18,6 @@ avoided by clever programming, but we aren't that clever this afternoon.
 """
 from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
-from pycds.util import get_schema_name
+from pycds.context import get_schema_name
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))

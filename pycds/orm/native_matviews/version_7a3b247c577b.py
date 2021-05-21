@@ -1,7 +1,6 @@
 from sqlalchemy import MetaData, Index, Column, Integer
 from sqlalchemy.orm import Query
 from sqlalchemy.ext.declarative import declarative_base
-from pycds.util import get_schema_name
 from pycds.alembic.extensions.replaceable_objects import (
     ReplaceableNativeMatview,
 )

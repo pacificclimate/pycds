@@ -59,7 +59,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
 
-from pycds.util import get_schema_name
+from pycds.context import get_schema_name
 from pycds.orm.tables import (
     History,
     Obs,

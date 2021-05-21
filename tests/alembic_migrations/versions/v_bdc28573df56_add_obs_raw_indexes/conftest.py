@@ -19,7 +19,7 @@ def prepared_schema_from_migrations_left(
     """
     if hasattr(request, "param"):
         mocker.patch(
-            "pycds.alembic.helpers.get_schema_item_names",
+            "pycds.database.get_schema_item_names",
             return_value=request.param
         )
 

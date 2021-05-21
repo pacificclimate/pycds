@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
-from pycds.alembic.helpers import db_supports_matviews
+from pycds.database import db_supports_matviews
 from pycds.alembic.extensions import operation_plugins
 
 # revision identifiers, used by Alembic.

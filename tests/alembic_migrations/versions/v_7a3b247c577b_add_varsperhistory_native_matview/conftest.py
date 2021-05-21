@@ -19,7 +19,7 @@ def prepared_schema_from_migrations_left(
     """
     if hasattr(request, "param"):
         mocker.patch(
-            "pycds.alembic.helpers.db_supports_matviews",
+            "pycds.database.db_supports_matviews",
             return_value=request.param
         )
 
