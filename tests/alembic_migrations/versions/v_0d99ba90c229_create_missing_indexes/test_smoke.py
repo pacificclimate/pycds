@@ -61,6 +61,9 @@ def test_upgrade(
 
 
 @pytest.mark.usefixtures("new_db_left")
+@pytest.mark.parametrize(
+    "prepared_schema_from_migrations_left", ("0d99ba90c229",), indirect=True
+)
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
@@ -69,7 +72,7 @@ def test_downgrade(
     # Set up database to revision 0d99ba90c229
     engine, script = prepared_schema_from_migrations_left
 
-    # Downgrade to revision bdc28573df56
+    # Downgrade to revision e688e520d265
     command.downgrade(alembic_config_left, "-1")
 
     # Check that indexes have been removed
