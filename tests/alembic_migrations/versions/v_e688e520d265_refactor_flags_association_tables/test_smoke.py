@@ -97,6 +97,9 @@ def test_upgrade(
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
+    "prepared_schema_from_migrations_left", ("e688e520d265",), indirect=True
+)
+@pytest.mark.parametrize(
     "table_name, unique_constraint_name, primary_key_name, pkey_columns",
     test_items,
 )
