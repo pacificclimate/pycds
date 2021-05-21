@@ -86,15 +86,27 @@ def env_config(schema_name):
     }
 
 
+@pytest.fixture(scope="module")
+def target_revision():
+    """
+    Placeholder for fixture that must be defined individually for each
+    migration test module.
+    """
+    raise NotImplementedError(
+        "`target_revision` not defined for this migration."
+    )
+
+
 @pytest.fixture(scope='function')
 def prepared_schema_from_migrations_left(
-    uri_left, alembic_config_left, db_setup, request
+    uri_left, alembic_config_left, db_setup, target_revision, request
 ):
     """
     Generic prepared_schema_from_migrations_left fixture. It prepares the
-    schema to a revision specified by the param. It does not default because
-    every user of it will want a different revision, and defaulting would
-    therefore make its usage error-prone. It should be used as follows:
+    schema to a revision specified by the value of the fixture
+    `target_revision` (see above). If the target revision for a specific
+     test needs to be different, it can be overridden by specifying it as
+     an indirect parameter, as follows:
 
         @pytest.mark.parametrize(
             "prepared_schema_from_migrations_left",
@@ -107,7 +119,7 @@ def prepared_schema_from_migrations_left(
         uri_left,
         alembic_config_left,
         db_setup=db_setup,
-        revision=request.param
+        revision=getattr(request, "param", target_revision),
     )
 
     yield engine, script
