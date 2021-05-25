@@ -57,6 +57,8 @@ def db_supports_matviews(engine):
     )
 
 
+# TODO: Break this up into separate functions for each item type.
+# TODO: Use `inspect()` to get information.
 def get_schema_item_names(
     executor,
     item_type,
