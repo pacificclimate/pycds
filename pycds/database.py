@@ -5,9 +5,7 @@ from pycds.context import get_schema_name
 
 
 def check_migration_version(
-    executor,
-    schema_name=get_schema_name(),
-    version="0d99ba90c229",
+    executor, schema_name=get_schema_name(), version="0d99ba90c229"
 ):
     """Check that the migration version of the database schema is compatible
     with the current version of this package.
@@ -15,11 +13,13 @@ def check_migration_version(
     This implementation is quick and easy, relying on manual updating of the
     correct version number.
     """
-    current = executor.execute(f"""
+    current = executor.execute(
+        f"""
         SELECT version_num 
         FROM {schema_name}.alembic_version
-    """).scalar()
-    if  current != version:
+    """
+    ).scalar()
+    if current != version:
         raise ValueError(
             f"Schema {schema_name} must be at Alembic version {version}; "
             f"detected version {current}."
@@ -143,5 +143,3 @@ def get_schema_item_names(
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}
-
-

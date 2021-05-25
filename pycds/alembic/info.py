@@ -9,5 +9,3 @@ script = ScriptDirectory.from_config(config)
 
 def get_current_head():
     return script.get_current_head()
-
-

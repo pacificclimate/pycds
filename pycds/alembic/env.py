@@ -58,6 +58,7 @@ if is_live_env:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from pycds import Base
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -69,43 +70,47 @@ target_metadata = Base.metadata
 if is_live_env:
     # Obtain command-line specification of database to run migration against.
     cmd_kwargs = context.get_x_argument(as_dictionary=True)
-    if 'db' not in cmd_kwargs:
-        raise Exception('We couldn\'t find `db` in the CLI arguments. '
-                        'Please verify `alembic` was run with `-x db=<db_name>` '
-                        '(e.g. `alembic -x db=development upgrade head`)')
-    db_name = cmd_kwargs['db']
+    if "db" not in cmd_kwargs:
+        raise Exception(
+            "We couldn't find `db` in the CLI arguments. "
+            "Please verify `alembic` was run with `-x db=<db_name>` "
+            "(e.g. `alembic -x db=development upgrade head`)"
+        )
+    db_name = cmd_kwargs["db"]
 
 
 def include_object(object, name, type_, reflected, compare_to):
     """Include only objects that belong to the specified schema."""
     if type_ == "table":
         object_schema = object.metadata.schema
-    elif type_ == 'column':
+    elif type_ == "column":
         object_schema = object.table.metadata.schema
-    elif type_ == 'index':
+    elif type_ == "index":
         object_schema = object.table.metadata.schema
-    elif type_ == 'foreign_key_constraint':
+    elif type_ == "foreign_key_constraint":
         object_schema = object.table.metadata.schema
-    elif type_ == 'unique_constraint':
+    elif type_ == "unique_constraint":
         object_schema = object.table.metadata.schema
     else:
-        print(f'include_object: '
-              f'Unknown object type'
-              f'name = {name} type_ = {type_}, '
-              f'reflected = {reflected}, '
-              f'object = {object}')
-        raise ValueError(f'Unknown object type: {type_}')
+        print(
+            f"include_object: "
+            f"Unknown object type"
+            f"name = {name} type_ = {type_}, "
+            f"reflected = {reflected}, "
+            f"object = {object}"
+        )
+        raise ValueError(f"Unknown object type: {type_}")
 
-    include = (not reflected and
-               object_schema == target_metadata.schema)
-    print(f'include_object: '
-          f'{"INCLUDE" if include else "EXCLUDE"} '
-          f'name = {name} type_ = {type_}, '
-          f'reflected = {reflected}, '
-          f'schema = {object_schema}, '
-          f'include = {include}')
+    include = not reflected and object_schema == target_metadata.schema
+    print(
+        f"include_object: "
+        f'{"INCLUDE" if include else "EXCLUDE"} '
+        f"name = {name} type_ = {type_}, "
+        f"reflected = {reflected}, "
+        f"schema = {object_schema}, "
+        f"include = {include}"
+    )
     return include
-
 
 
 def run_migrations_offline():
@@ -151,9 +156,7 @@ def run_migrations_online():
             alembic_config[key] = db_config[key]
 
     connectable = engine_from_config(
-        alembic_config,
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool
+        alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
 
     with connectable.connect() as connection:

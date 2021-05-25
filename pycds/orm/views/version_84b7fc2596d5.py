@@ -192,9 +192,10 @@ class ObsWithFlags(Base, ReplaceableView):
     """
     This view joins Obs with History and Variable.
     """
+
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
     #  Better name: ObsWithMetadata
-    __tablename__ = 'obs_with_flags'
+    __tablename__ = "obs_with_flags"
 
     vars_id = Column(Integer)
     network_id = Column(Integer)
@@ -209,20 +210,22 @@ class ObsWithFlags(Base, ReplaceableView):
     datum = Column(Float)
 
     __selectable__ = (
-        Query([
-            Variable.id.label('vars_id'),
-            Variable.network_id.label('network_id'),
-            Variable.unit.label('unit'),
-            Variable.standard_name.label('standard_name'),
-            Variable.cell_method.label('cell_method'),
-            Variable.name.label('net_var_name'),
-            History.station_id.label('station_id'),
-            Obs.id.label('obs_raw_id'),
-            Obs.time.label('obs_time'),
-            Obs.mod_time.label('mod_time'),
-            Obs.datum.label('datum')
-        ])
+        Query(
+            [
+                Variable.id.label("vars_id"),
+                Variable.network_id.label("network_id"),
+                Variable.unit.label("unit"),
+                Variable.standard_name.label("standard_name"),
+                Variable.cell_method.label("cell_method"),
+                Variable.name.label("net_var_name"),
+                History.station_id.label("station_id"),
+                Obs.id.label("obs_raw_id"),
+                Obs.time.label("obs_time"),
+                Obs.mod_time.label("mod_time"),
+                Obs.datum.label("datum"),
+            ]
+        )
         .select_from(Obs)
-            .join(Variable)
-            .join(History)
+        .join(Variable)
+        .join(History)
     ).selectable

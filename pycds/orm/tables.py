@@ -13,7 +13,16 @@ many examples.
 import datetime
 
 from sqlalchemy import MetaData
-from sqlalchemy import Table, Column, Integer, BigInteger, Float, String, Date, Index
+from sqlalchemy import (
+    Table,
+    Column,
+    Integer,
+    BigInteger,
+    Float,
+    String,
+    Date,
+    Index,
+)
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 from sqlalchemy.orm import relationship, backref
@@ -28,74 +37,82 @@ metadata = Base.metadata
 
 
 class Network(Base):
-    '''This class maps to the table which represents various `networks` of
+    """This class maps to the table which represents various `networks` of
     data for the Climate Related Monitoring Program. There is one
     network row for each data provider, typically a BC Ministry, crown
     corporation or private company.
-    '''
-    __tablename__ = 'meta_network'
-    id = Column('network_id', Integer, primary_key=True)
-    name = Column('network_name', String)
-    long_name = Column('description', String)
+    """
+
+    __tablename__ = "meta_network"
+    id = Column("network_id", Integer, primary_key=True)
+    name = Column("network_name", String)
+    long_name = Column("description", String)
     virtual = Column(String(255))
     publish = Column(Boolean)
-    color = Column('col_hex', String)
-    contact_id = Column(Integer, ForeignKey('meta_contact.contact_id'))
+    color = Column("col_hex", String)
+    contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
     stations = relationship(
-        "Station", backref=backref('meta_network', order_by=id))
+        "Station", backref=backref("meta_network", order_by=id)
+    )
     variables = relationship(
-        "Variable", backref=backref('meta_network', order_by=id))
+        "Variable", backref=backref("meta_network", order_by=id)
+    )
 
     def __str__(self):
-        return '<CRMP Network %s>' % self.name
+        return "<CRMP Network %s>" % self.name
 
 
 class Contact(Base):
-    '''This class maps to the table which represents contact people and
+    """This class maps to the table which represents contact people and
     representatives for the networks of the Climate Related Monitoring
     Program.
-    '''
-    __tablename__ = 'meta_contact'
-    id = Column('contact_id', Integer, primary_key=True)
-    name = Column('name', String)
-    title = Column('title', String)
-    organization = Column('organization', String)
-    email = Column('email', String)
-    phone = Column('phone', String)
+    """
+
+    __tablename__ = "meta_contact"
+    id = Column("contact_id", Integer, primary_key=True)
+    name = Column("name", String)
+    title = Column("title", String)
+    organization = Column("organization", String)
+    email = Column("email", String)
+    phone = Column("phone", String)
 
     networks = relationship(
-        "Network", backref=backref('meta_contact', order_by=id))
+        "Network", backref=backref("meta_contact", order_by=id)
+    )
 
 
 class Station(Base):
-    '''This class maps to the table which represents a single weather
+    """This class maps to the table which represents a single weather
     station. One weather station can potentially have multiple
     physical locations (though, few do in practice) and periods of
     operation
-    '''
-    __tablename__ = 'meta_station'
-    id = Column('station_id', Integer, primary_key=True)
+    """
+
+    __tablename__ = "meta_station"
+    id = Column("station_id", Integer, primary_key=True)
     native_id = Column(String)
-    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
+    network_id = Column(Integer, ForeignKey("meta_network.network_id"))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
 
     # Relationships
     network = relationship(
-        "Network", backref=backref('meta_station', order_by=id))
+        "Network", backref=backref("meta_station", order_by=id)
+    )
     histories = relationship(
-        "History", backref=backref('meta_station', order_by=id))
+        "History", backref=backref("meta_station", order_by=id)
+    )
 
     def __str__(self):
-        return '<CRMP Station %s:%s>' % (self.network.name, self.native_id)
+        return "<CRMP Station %s:%s>" % (self.network.name, self.native_id)
 
 
 Index("fki_meta_station_network_id_fkey", Station.network_id)
 
 
 class History(Base):
-    '''This class maps to the table which represents a history record for
+    """This class maps to the table which represents a history record for
     a weather station. Since a station can potentially (and do) move
     small distances (e.g. from one end of the airport runway to
     another) or change the frequency of its observations, this table
@@ -105,15 +122,17 @@ class History(Base):
     all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
     This may or may not be desirable for all use cases, specifically views.
     See the GeoAlchemy2 documentation for details.
-    '''
-    __tablename__ = 'meta_history'
-    id = Column('history_id', Integer, primary_key=True)
-    station_id = Column('station_id', Integer,
-                        ForeignKey('meta_station.station_id'))
+    """
+
+    __tablename__ = "meta_history"
+    id = Column("history_id", Integer, primary_key=True)
+    station_id = Column(
+        "station_id", Integer, ForeignKey("meta_station.station_id")
+    )
     station_name = Column(String)
     lon = Column(Numeric)
     lat = Column(Numeric)
-    elevation = Column('elev', Float)
+    elevation = Column("elev", Float)
     sdate = Column(Date)
     edate = Column(Date)
     tz_offset = Column(Interval)
@@ -121,15 +140,17 @@ class History(Base):
     country = Column(String)
     comments = Column(String(255))
     freq = Column(String)
-    sensor_id = Column(ForeignKey(u'meta_sensor.sensor_id'))
-    the_geom = Column(Geometry('GEOMETRY', 4326))
+    sensor_id = Column(ForeignKey(u"meta_sensor.sensor_id"))
+    the_geom = Column(Geometry("GEOMETRY", 4326))
 
     # Relationships
     sensor = relationship("MetaSensor")
     station = relationship(
-        "Station", backref=backref('meta_history', order_by=id))
+        "Station", backref=backref("meta_history", order_by=id)
+    )
     observations = relationship(
-        "Obs", backref=backref('meta_history', order_by=id))
+        "Obs", backref=backref("meta_history", order_by=id)
+    )
 
 
 Index("fki_meta_history_station_id_fk", History.station_id)
@@ -139,69 +160,78 @@ Index("meta_history_freq_idx", History.freq)
 # Association table for Obs *--* NativeFLag
 # TODO: See https://github.com/pacificclimate/pycds/issues/95
 ObsRawNativeFlags = Table(
-    'obs_raw_native_flags', Base.metadata,
-    Column('obs_raw_id', BigInteger,
-           ForeignKey('obs_raw.obs_raw_id')),
-    Column('native_flag_id', Integer, ForeignKey(
-        'meta_native_flag.native_flag_id')),
+    "obs_raw_native_flags",
+    Base.metadata,
+    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
+    Column(
+        "native_flag_id", Integer, ForeignKey("meta_native_flag.native_flag_id")
+    ),
     UniqueConstraint(
-        'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique'),
-
+        "obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"
+    ),
     # Indexes
-    Index('flag_index', 'obs_raw_id')
+    Index("flag_index", "obs_raw_id"),
 )
 
 
 # Association table for Obs *--* PCICFLag
 # TODO: See https://github.com/pacificclimate/pycds/issues/95
 ObsRawPCICFlags = Table(
-    'obs_raw_pcic_flags', Base.metadata,
-    Column('obs_raw_id', BigInteger,
-           ForeignKey('obs_raw.obs_raw_id')),
-    Column('pcic_flag_id', Integer, ForeignKey(
-        'meta_pcic_flag.pcic_flag_id')),
+    "obs_raw_pcic_flags",
+    Base.metadata,
+    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
+    Column("pcic_flag_id", Integer, ForeignKey("meta_pcic_flag.pcic_flag_id")),
     UniqueConstraint(
-        'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique'),
-
+        "obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"
+    ),
     # Indexes
-    Index('pcic_flag_index', 'obs_raw_id')
+    Index("pcic_flag_index", "obs_raw_id"),
 )
 
 
 class MetaSensor(Base):
-    __tablename__ = 'meta_sensor'
+    __tablename__ = "meta_sensor"
 
-    id = Column('sensor_id', Integer, primary_key=True)
+    id = Column("sensor_id", Integer, primary_key=True)
     name = Column(String(255))
 
 
 class Obs(Base):
-    '''This class maps to the table which records the details of weather
+    """This class maps to the table which records the details of weather
     observations. Each row is one single data point for one single
     quantity.
-    '''
-    __tablename__ = 'obs_raw'
-    id = Column('obs_raw_id', BigInteger, primary_key=True)
-    time = Column('obs_time', DateTime)
-    mod_time = Column(DateTime, nullable=False,
-                      default=datetime.datetime.utcnow)
+    """
+
+    __tablename__ = "obs_raw"
+    id = Column("obs_raw_id", BigInteger, primary_key=True)
+    time = Column("obs_time", DateTime)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.utcnow
+    )
     datum = Column(Float)
-    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
+    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship("History", backref=backref('obs_raw', order_by=id))
-    variable = relationship(
-        "Variable", backref=backref('obs_raw', order_by=id))
-    flags = relationship("NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs")
+    history = relationship("History", backref=backref("obs_raw", order_by=id))
+    variable = relationship("Variable", backref=backref("obs_raw", order_by=id))
+    flags = relationship(
+        "NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs"
+    )
     # better named alias for 'flags'; don't repeat backref
     native_flags = relationship("NativeFlag", secondary=ObsRawNativeFlags)
-    pcic_flags = relationship("PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs")
+    pcic_flags = relationship(
+        "PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs"
+    )
 
     # Constraints
     __table_args__ = (
-        UniqueConstraint('obs_time', 'history_id', 'vars_id',
-                         name='time_place_variable_unique'),
+        UniqueConstraint(
+            "obs_time",
+            "history_id",
+            "vars_id",
+            name="time_place_variable_unique",
+        ),
     )
 
 
@@ -219,113 +249,129 @@ class TimeBound(Base):
     in that time period). Variable time periods are typically for climatologies
     and cumulative precipitations.
     """
-    __tablename__ = 'time_bounds'
+
+    __tablename__ = "time_bounds"
     obs_raw_id = Column(
-        Integer, ForeignKey('obs_raw.obs_raw_id'), primary_key=True)
+        Integer, ForeignKey("obs_raw.obs_raw_id"), primary_key=True
+    )
     start = Column(DateTime)
     end = Column(DateTime)
 
 
 class Variable(Base):
-    '''This class maps to the table which records the details of the
+    """This class maps to the table which records the details of the
     physical quantities which are recorded by the weather stations.
-    '''
-    __tablename__ = 'meta_vars'
-    id = Column('vars_id', Integer, primary_key=True)
-    name = Column('net_var_name', String)
+    """
+
+    __tablename__ = "meta_vars"
+    id = Column("vars_id", Integer, primary_key=True)
+    name = Column("net_var_name", String)
     unit = Column(String)
     standard_name = Column(String)
     cell_method = Column(String)
     precision = Column(Float)
-    description = Column('long_description', String)
+    description = Column("long_description", String)
     display_name = Column(String)
     short_name = Column(String)
-    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
+    network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
     # Relationships
-    network = relationship(
-        "Network", backref=backref('meta_vars', order_by=id))
-    obs = relationship("Obs", backref=backref('meta_vars', order_by=id))
+    network = relationship("Network", backref=backref("meta_vars", order_by=id))
+    obs = relationship("Obs", backref=backref("meta_vars", order_by=id))
 
     def __repr__(self):
-        return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(self.__class__.__name__, **self.__dict__)
+        return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
+            self.__class__.__name__, **self.__dict__
+        )
 
 
 Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class ClimatologyAttributes(Base):
-    __tablename__ = 'meta_climo_attrs'
-    vars_id = Column(
-        Integer, ForeignKey('meta_vars.vars_id'), primary_key=True)
+    __tablename__ = "meta_climo_attrs"
+    vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"), primary_key=True)
     station_id = Column(
-        Integer, ForeignKey('meta_station.station_id'), primary_key=True)
+        Integer, ForeignKey("meta_station.station_id"), primary_key=True
+    )
     month = Column(Integer, primary_key=True)
     wmo_code = Column(String(1))
     adjusted = Column(Boolean)
 
 
 Index(
-    "meta_climo_attrs_idx", 
-    ClimatologyAttributes.vars_id, 
-    ClimatologyAttributes.station_id, 
-    ClimatologyAttributes.wmo_code, 
-    ClimatologyAttributes.month
+    "meta_climo_attrs_idx",
+    ClimatologyAttributes.vars_id,
+    ClimatologyAttributes.station_id,
+    ClimatologyAttributes.wmo_code,
+    ClimatologyAttributes.month,
 )
 
 
 class NativeFlag(Base):
-    '''This class maps to the table which records all 'flags' for observations which have been `flagged` by the
+    """This class maps to the table which records all 'flags' for observations which have been `flagged` by the
     data provider (i.e. the network) for some reason. This table records the details of the flags.
     Actual flagging is recorded in the class/table ObsRawNativeFlags.
-    '''
-    __tablename__ = 'meta_native_flag'
-    id = Column('native_flag_id', Integer, primary_key=True)
-    name = Column('flag_name', String)
+    """
+
+    __tablename__ = "meta_native_flag"
+    id = Column("native_flag_id", Integer, primary_key=True)
+    name = Column("flag_name", String)
     description = Column(String)
-    network_id = Column(Integer, ForeignKey('meta_network.network_id'))
+    network_id = Column(Integer, ForeignKey("meta_network.network_id"))
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship("Network", backref=backref('meta_native_flag', order_by=id))
+    network = relationship(
+        "Network", backref=backref("meta_native_flag", order_by=id)
+    )
 
     # Constraints
     __table_args__ = (
-        UniqueConstraint('network_id', 'value',
-                         name='meta_native_flag_unique'),
+        UniqueConstraint("network_id", "value", name="meta_native_flag_unique"),
     )
 
 
 class PCICFlag(Base):
-    '''This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
+    """This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
     for some reason. This table records the details of the flags.
     Actual flagging is recorded in the class/table ObsRawNativeFlags.
-    '''
-    __tablename__ = 'meta_pcic_flag'
-    id = Column('pcic_flag_id', Integer, primary_key=True)
-    name = Column('flag_name', String)
+    """
+
+    __tablename__ = "meta_pcic_flag"
+    id = Column("pcic_flag_id", Integer, primary_key=True)
+    name = Column("flag_name", String)
     description = Column(String)
     discard = Column(Boolean)
 
 
 class DerivedValue(Base):
-    __tablename__ = 'obs_derived_values'
-    id = Column('obs_derived_value_id', Integer, primary_key=True)
-    time = Column('value_time', DateTime)
-    mod_time = Column(DateTime, nullable=False,
-                      default=datetime.datetime.utcnow)
+    __tablename__ = "obs_derived_values"
+    id = Column("obs_derived_value_id", Integer, primary_key=True)
+    time = Column("value_time", DateTime)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.utcnow
+    )
     datum = Column(Float)
-    vars_id = Column(Integer, ForeignKey('meta_vars.vars_id'))
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
+    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship('History', backref=backref('obs_derived_values', order_by=id))
-    variable = relationship('Variable', backref=backref('obs_derived_values', order_by=id))
+    history = relationship(
+        "History", backref=backref("obs_derived_values", order_by=id)
+    )
+    variable = relationship(
+        "Variable", backref=backref("obs_derived_values", order_by=id)
+    )
 
     # Constraints
     __table_args__ = (
-        UniqueConstraint('value_time', 'history_id', 'vars_id',
-                         name='obs_derived_value_time_place_variable_unique'),
+        UniqueConstraint(
+            "value_time",
+            "history_id",
+            "vars_id",
+            name="obs_derived_value_time_place_variable_unique",
+        ),
     )
 
 
@@ -334,18 +380,21 @@ class ObsCountPerMonthHistory(Base):
     app performance. It is used for approximating the number of
     observations which will be returned by station selection criteria.
     """
-    __tablename__ = 'obs_count_per_month_history_mv'
+
+    __tablename__ = "obs_count_per_month_history_mv"
     count = Column(Integer)
     date_trunc = Column(DateTime, primary_key=True)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
+    history_id = Column(
+        Integer, ForeignKey("meta_history.history_id"), primary_key=True
+    )
 
     # Relationships
     history = relationship("History")
 
 
 Index(
-    "obs_count_per_month_history_idx", 
-    ObsCountPerMonthHistory.date_trunc, 
+    "obs_count_per_month_history_idx",
+    ObsCountPerMonthHistory.date_trunc,
     ObsCountPerMonthHistory.history_id,
 )
 
@@ -356,9 +405,12 @@ class ClimoObsCount(Base):
     climatologies which will be returned by station selection
     criteria.
     """
-    __tablename__ = 'climo_obs_count_mv'
+
+    __tablename__ = "climo_obs_count_mv"
     count = Column(BigInteger)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
+    history_id = Column(
+        Integer, ForeignKey("meta_history.history_id"), primary_key=True
+    )
 
 
 Index("climo_obs_count_idx", ClimoObsCount.history_id)
@@ -367,8 +419,11 @@ Index("climo_obs_count_idx", ClimoObsCount.history_id)
 class CollapsedVariables(Base):
     """This class maps to a manual materialized view that supports the
     view CrmpNetworkGeoserver."""
-    __tablename__ = 'collapsed_vars_mv'
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'), primary_key=True)
+
+    __tablename__ = "collapsed_vars_mv"
+    history_id = Column(
+        Integer, ForeignKey("meta_history.history_id"), primary_key=True
+    )
     vars = Column(String)
     display_names = Column(String)
 
@@ -377,9 +432,11 @@ Index("collapsed_vars_idx", CollapsedVariables.history_id)
 
 
 class StationObservationStats(Base):
-    __tablename__ = 'station_obs_stats_mv'
-    station_id = Column(Integer, ForeignKey('meta_station.station_id'), primary_key=True)
-    history_id = Column(Integer, ForeignKey('meta_history.history_id'))
+    __tablename__ = "station_obs_stats_mv"
+    station_id = Column(
+        Integer, ForeignKey("meta_station.station_id"), primary_key=True
+    )
+    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     obs_count = Column(BigInteger)
@@ -387,9 +444,9 @@ class StationObservationStats(Base):
 
 Index(
     "station_obs_stats_mv_idx",
-    StationObservationStats.min_obs_time, 
-    StationObservationStats.max_obs_time, 
-    StationObservationStats.obs_count, 
-    StationObservationStats.station_id, 
+    StationObservationStats.min_obs_time,
+    StationObservationStats.max_obs_time,
+    StationObservationStats.obs_count,
+    StationObservationStats.station_id,
     StationObservationStats.history_id,
 )

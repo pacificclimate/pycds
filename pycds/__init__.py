@@ -28,7 +28,6 @@ fail with errors of the form "could not find object X in schema Y".
 __all__ = [
     # Utility methods
     "get_schema_name",
-    
     # Tables
     "Base",
     "Network",
@@ -47,23 +46,19 @@ __all__ = [
     "DerivedValue",
     "CollapsedVariables",
     "StationObservationStats",
-    
     # Alembic-managed native matviews
     "VarsPerHistory",
-    
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
     "MonthlyAverageOfDailyMaxTemperature",
     "MonthlyAverageOfDailyMinTemperature",
     "MonthlyTotalPrecipitation",
-    
     # Alembic-managed views
     "CrmpNetworkGeoserver",
     "HistoryStationNetwork",
     "ObsCountPerDayHistory",
     "ObsWithFlags",
-
     # Externally managed manual matviews
     "ObsCountPerMonthHistory",
     "ClimoObsCount",
@@ -71,7 +66,7 @@ __all__ = [
     "StationObservationStats",
 ]
 
-from pycds.context import (get_schema_name, get_su_role_name)
+from pycds.context import get_schema_name, get_su_role_name
 
 from .orm.tables import (
     Base,
@@ -102,9 +97,7 @@ from .orm.views import (
     ObsWithFlags,
 )
 
-from .orm.native_matviews import (
-    VarsPerHistory,
-)
+from .orm.native_matviews import VarsPerHistory
 
 from .orm.manual_matviews import (
     DailyMaxTemperature,

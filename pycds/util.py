@@ -13,11 +13,10 @@ def compile_query(statement, bind=None):
     please also note that this function is quite slow
     """
     import sqlalchemy.orm
+
     if isinstance(statement, sqlalchemy.orm.Query):
         if bind is None:
-            bind = statement.session.get_bind(
-                statement._mapper_zero_or_none()
-            )
+            bind = statement.session.get_bind(statement._mapper_zero_or_none())
             statement = statement.statement
         elif bind is None:
             bind = statement.bind
@@ -26,14 +25,18 @@ def compile_query(statement, bind=None):
         compiler = statement._compiler(dialect)
 
         class LiteralCompiler(compiler.__class__):
-
             def visit_bindparam(
-                    self, bindparam, within_columns_clause=False,
-                    literal_binds=False, **kwargs
+                self,
+                bindparam,
+                within_columns_clause=False,
+                literal_binds=False,
+                **kwargs
             ):
                 return super(LiteralCompiler, self).render_literal_bindparam(
-                    bindparam, within_columns_clause=within_columns_clause,
-                    literal_binds=literal_binds, **kwargs
+                    bindparam,
+                    within_columns_clause=within_columns_clause,
+                    literal_binds=literal_binds,
+                    **kwargs
                 )
 
     compiler = LiteralCompiler(dialect, statement)
@@ -46,8 +49,8 @@ def snake_case(ident):
     "MyBigDeal" -> "my_big_deal".
     Courtesy of http://stackoverflow.com/a/12867228
     """
-    a = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
-    return a.sub(r'_\1', ident).lower()
+    a = re.compile("((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
+    return a.sub(r"_\1", ident).lower()
 
 
 def ddl_escape(s):

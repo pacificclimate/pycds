@@ -222,10 +222,10 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     """
     # TODO: Rename. Geez.
 
-    avg_daily_extreme_temperature = (
-        monthly_average_of_daily_temperature_extremum_with_total_coverage(
-            extremum
-        ).subquery("avg_daily_extreme_temperature")
+    avg_daily_extreme_temperature = monthly_average_of_daily_temperature_extremum_with_total_coverage(
+        extremum
+    ).subquery(
+        "avg_daily_extreme_temperature"
     )
 
     func_schema = getattr(func, get_schema_name())
@@ -255,11 +255,9 @@ class MonthlyAverageOfDailyMaxTemperature(Base, ReplaceableManualMatview):
     statistic = Column(Float)
     data_coverage = Column(Float)
 
-    __selectable__ = (
-        monthly_average_of_daily_temperature_extremum_with_avg_coverage(
-            "max"
-        ).selectable
-    )
+    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+        "max"
+    ).selectable
 
 
 class MonthlyAverageOfDailyMinTemperature(Base, ReplaceableManualMatview):
@@ -271,11 +269,9 @@ class MonthlyAverageOfDailyMinTemperature(Base, ReplaceableManualMatview):
     statistic = Column(Float)
     data_coverage = Column(Float)
 
-    __selectable__ = (
-        monthly_average_of_daily_temperature_extremum_with_avg_coverage(
-            "min"
-        ).selectable
-    )
+    __selectable__ = monthly_average_of_daily_temperature_extremum_with_avg_coverage(
+        "min"
+    ).selectable
 
 
 def monthly_total_precipitation_with_total_coverage():
@@ -327,10 +323,8 @@ def monthly_total_precipitation_with_avg_coverage():
     """
     # TODO: Rename. Geez.
 
-    monthly_total_precip = (
-        monthly_total_precipitation_with_total_coverage().subquery(
-            "monthly_total_precip"
-        )
+    monthly_total_precip = monthly_total_precipitation_with_total_coverage().subquery(
+        "monthly_total_precip"
     )
 
     func_schema = getattr(func, get_schema_name())
@@ -360,6 +354,4 @@ class MonthlyTotalPrecipitation(Base, ReplaceableManualMatview):
     statistic = Column(Float)
     data_coverage = Column(Float)
 
-    __selectable__ = (
-        monthly_total_precipitation_with_avg_coverage().selectable
-    )
+    __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable

@@ -44,6 +44,7 @@ from pycds.sqlalchemy.ddl_extensions import (
 # classes that actually affect the mapping proper, not just adding an API
 # properties or methods for other use.
 
+
 class ReplaceableOrmClass:
     """
     Base class for replaceable objects which are also ORM classes (e.g., views).
