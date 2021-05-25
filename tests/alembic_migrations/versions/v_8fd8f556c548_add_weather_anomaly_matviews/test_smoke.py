@@ -8,7 +8,7 @@
 import logging
 import pytest
 from alembic import command
-from ....helpers import get_schema_item_names
+from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")
@@ -25,6 +25,9 @@ table_names = {
 
 
 @pytest.mark.usefixtures("new_db_left")
+# @pytest.mark.parametrize(
+#     "prepared_schema_from_migrations_left", ("8fd8f556c548",), indirect=True
+# )
 def test_upgrade(prepared_schema_from_migrations_left, schema_name):
     """Test the schema migration from 4a2f1879293a to 84b7fc2596d5. """
 
@@ -37,6 +40,9 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 
 
 @pytest.mark.usefixtures("new_db_left")
+# @pytest.mark.parametrize(
+#     "prepared_schema_from_migrations_left", ("8fd8f556c548",), indirect=True
+# )
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):

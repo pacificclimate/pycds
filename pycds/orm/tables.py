@@ -20,7 +20,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
-from pycds.util import get_schema_name
+from pycds.context import get_schema_name
 
 
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
@@ -136,67 +136,8 @@ Index("fki_meta_history_station_id_fk", History.station_id)
 Index("meta_history_freq_idx", History.freq)
 
 
-# For tables `ObsRawNativeFlags` and `ObsRawPCICFlags`, we'd like declare them
-# in declarative base (class) style, as below. However, if we do so with
-# `primary_key=True`, some tests error out (specifically, but not only I
-# suspect, tests/alembic_migrations/versions/v_7a3b247c577b_add_varsperhistory_native_matview/test_matview.py::test_vars_content).
-# If we omit `primary_key`, then SQLAlchemy objects that it cannot determine
-# primary key columns for the table, which is hardly surprising. Question:
-# Why is it OK to declare a table without primary keys using a functional
-# `X = Table(...)` declaration, and not using `class X`?
-#
-# TODO: Figure this out.
-
-# class ObsRawNativeFlags(Base):
-#     """Association table for Obs *--* NativeFLag"""
-#     __tablename__ = "obs_raw_native_flags"
-#
-#     obs_raw_id = Column(
-#         BigInteger,
-#         ForeignKey("obs_raw.obs_raw_id"),
-#         # primary_key=True,
-#     )
-#     native_flag_id = Column(
-#         Integer,
-#         ForeignKey("meta_native_flag.native_flag_id"),
-#         # primary_key=True,
-#     )
-#
-#     # Constraints
-#     obs_raw_native_flag_unique = UniqueConstraint(
-#         'obs_raw_id', 'native_flag_id', name='obs_raw_native_flag_unique'
-#     )
-#
-#     # Indexes
-#     flag_index = Index("flag_index", "obs_raw_id")
-
-
-# class ObsRawPCICFlags(Base):
-#     """Association table for Obs *--* PCICFLag"""
-#     __tablename__ = 'obs_raw_pcic_flags'
-#
-#     obs_raw_id = Column(
-#         BigInteger,
-#         ForeignKey('obs_raw.obs_raw_id'),
-#         # primary_key=True,
-#     )
-#     pcic_flag_id = Column(
-#         Integer,
-#         ForeignKey('meta_pcic_flag.pcic_flag_id'),
-#         # primary_key=True,
-#     )
-#
-#     # Constraints
-#     obs_raw_pcic_flag_unique = UniqueConstraint(
-#         'obs_raw_id', 'pcic_flag_id', name='obs_raw_pcic_flag_unique'
-#     )
-#
-#     # Indexes
-#     pcic_flag_index = Index('pcic_flag_index', 'obs_raw_id')
-
-
 # Association table for Obs *--* NativeFLag
-# TODO: Define using declarative base
+# TODO: See https://github.com/pacificclimate/pycds/issues/95
 ObsRawNativeFlags = Table(
     'obs_raw_native_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,
@@ -212,7 +153,7 @@ ObsRawNativeFlags = Table(
 
 
 # Association table for Obs *--* PCICFLag
-# TODO: Define using declarative base
+# TODO: See https://github.com/pacificclimate/pycds/issues/95
 ObsRawPCICFlags = Table(
     'obs_raw_pcic_flags', Base.metadata,
     Column('obs_raw_id', BigInteger,

@@ -10,7 +10,7 @@ by earlier migrations.
 import logging
 from alembic import op
 import sqlalchemy as sa
-from pycds import get_schema_name
+from pycds.context import get_schema_name
 from pycds.orm.tables import (
     ClimoObsCount,
     CollapsedVariables,

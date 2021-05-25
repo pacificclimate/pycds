@@ -7,12 +7,11 @@
 import logging
 import pytest
 from alembic import command
-from ....helpers import get_schema_item_names
-import pycds.alembic.helpers
+import pycds.database
+from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")
-
 
 index_names = {
     "mod_time_idx",
@@ -25,9 +24,9 @@ index_names = {
 @pytest.mark.parametrize("item_names", [set(), {"alpha", "beta"}])
 def test_mock(mocker, item_names):
     mocker.patch(
-        "pycds.alembic.helpers.get_schema_item_names", return_value=item_names
+        "pycds.database.get_schema_item_names", return_value=item_names
     )
-    assert pycds.alembic.helpers.get_schema_item_names() == item_names
+    assert pycds.database.get_schema_item_names() == item_names
 
 
 @pytest.mark.parametrize(
@@ -84,7 +83,7 @@ def test_downgrade(
 
     # Tell the downgrade operation what we want it to think.
     patcher = mocker.patch(
-        "pycds.alembic.helpers.get_schema_item_names",
+        "pycds.database.get_schema_item_names",
         return_value=prior_index_names,
     )
 

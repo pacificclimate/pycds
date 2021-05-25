@@ -71,7 +71,7 @@ __all__ = [
     "StationObservationStats",
 ]
 
-from pycds.util import (get_schema_name, get_su_role_name)
+from pycds.context import (get_schema_name, get_su_role_name)
 
 from .orm.tables import (
     Base,

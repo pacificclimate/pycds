@@ -1,10 +1,29 @@
-import logging
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
-from pycds.util import get_schema_name
+from pycds.alembic.info import get_current_head
+from pycds.context import get_schema_name
 
 
-logger = logging.getLogger("alembic")
+def check_migration_version(
+    executor,
+    schema_name=get_schema_name(),
+    version="0d99ba90c229",
+):
+    """Check that the migration version of the database schema is compatible
+    with the current version of this package.
+
+    This implementation is quick and easy, relying on manual updating of the
+    correct version number.
+    """
+    current = executor.execute(f"""
+        SELECT version_num 
+        FROM {schema_name}.alembic_version
+    """).scalar()
+    if  current != version:
+        raise ValueError(
+            f"Schema {schema_name} must be at Alembic version {version}; "
+            f"detected version {current}."
+        )
 
 
 def get_postgresql_version(engine):
@@ -17,7 +36,7 @@ def get_postgresql_version(engine):
     This has no use at present but going to leave it here in case it does again
     in future.
     """
-    print(f"dialect: {engine.dialect.name}")
+    # print(f"dialect: {engine.dialect.name}")
     if engine.dialect.name.lower() != "postgresql":
         raise ValueError(f"We are not running on PostgreSQL.")
 
@@ -109,7 +128,6 @@ def get_schema_item_names(
         )
     elif item_type == "constraints":
         contype = constraint_type[0]
-        print(f"### constraints {constraint_type}, {contype}")
         if contype == "e":
             contype = "x"
         sql = f"""
@@ -121,43 +139,9 @@ def get_schema_item_names(
             AND rel.relname = '{table_name}'
             AND con.contype = '{contype}';
         """
-        print(f"### constraints query: \n{sql}")
-        r = executor.execute(
-            sql
-        )
+        r = executor.execute(sql)
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}
 
 
-def create_primary_key_if_not_exists(
-    op, constraint_name, table_name, columns, schema,
-):
-    """
-    Create a primary key in a table if it does not already exist.
-    SQL (and PostgreSQL) does not support an IF NOT EXISTS option for this
-    operation, so we have to do this the hard way.
-    """
-    bind = op.get_bind()
-    pkey_constraint_names = get_schema_item_names(
-        bind,
-        "constraints",
-        table_name=table_name,
-        constraint_type="primary",
-        schema_name=schema,
-    )
-    if constraint_name in pkey_constraint_names:
-        logger.info(
-            f"Primary key '{constraint_name}' already exists in "
-            f"table '{table_name}': skipping create."
-        )
-    else:
-        logger.info(
-            f"Creating primary key '{constraint_name}' in table '{table_name}'."
-        )
-        op.create_primary_key(
-            constraint_name=constraint_name,
-            table_name=table_name,
-            columns=columns,
-            schema=schema,
-        )

@@ -14,24 +14,9 @@ from pycds import (
 )
 
 
-# TODO: Replace this with a module-scoped fixture. Preparing a schema slow,
-#  and many tests run against this, while cleaning up after themselves.
-#  However, some tests (smoke tests?) may actually need a fresh schema each
-#  time out. Sigh.
-@pytest.fixture(scope="function")
-def prepared_schema_from_migrations_left(
-    uri_left, alembic_config_left, db_setup
-):
-    engine, script = prepare_schema_from_migrations(
-        uri_left,
-        alembic_config_left,
-        db_setup=db_setup,
-        revision="8fd8f556c548",
-    )
-
-    yield engine, script
-
-    engine.dispose()
+@pytest.fixture(scope="module")
+def target_revision():
+    return "8fd8f556c548"
 
 
 @pytest.fixture(scope="function")

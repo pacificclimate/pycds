@@ -7,10 +7,9 @@
 import logging
 import pytest
 from alembic import command
+from pycds.database import get_schema_item_names
 from sqlalchemy.schema import CreateIndex
 
-from ....helpers import get_schema_item_names
-import pycds.alembic.helpers
 from pycds import History, Station, Variable
 
 
@@ -70,7 +69,7 @@ def test_downgrade(
     # Set up database to revision 0d99ba90c229
     engine, script = prepared_schema_from_migrations_left
 
-    # Downgrade to revision bdc28573df56
+    # Downgrade to revision e688e520d265
     command.downgrade(alembic_config_left, "-1")
 
     # Check that indexes have been removed

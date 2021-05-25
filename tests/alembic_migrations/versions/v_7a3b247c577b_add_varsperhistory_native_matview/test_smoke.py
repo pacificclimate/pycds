@@ -7,10 +7,9 @@
 import logging
 import pytest
 from alembic import command
-from ....helpers import get_schema_item_names
 
-# from pycds.alembic.helpers import db_supports_matviews
-import pycds.alembic.helpers
+import pycds.database
+from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")
@@ -23,10 +22,10 @@ matview_names = set(matviews)
 @pytest.mark.parametrize("supports_matviews", [True, False])
 def test_mock(mocker, supports_matviews):
     mocker.patch(
-        "pycds.alembic.helpers.db_supports_matviews",
+        "pycds.database.db_supports_matviews",
         return_value=supports_matviews,
     )
-    assert pycds.alembic.helpers.db_supports_matviews() is supports_matviews
+    assert pycds.database.db_supports_matviews() is supports_matviews
 
 
 def check_matviews(engine, schema_name, present):
@@ -81,7 +80,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 
     # Matviews present if and only if supported by database.
     check_matviews(
-        engine, schema_name, pycds.alembic.helpers.db_supports_matviews(engine)
+        engine, schema_name, pycds.database.db_supports_matviews(engine)
     )
 
 

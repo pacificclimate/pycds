@@ -8,7 +8,9 @@ Create Date: 2021-05-14 12:07:09.107616
 import logging
 from alembic import op, context
 from pycds import get_schema_name
-from pycds.alembic.helpers import create_primary_key_if_not_exists
+from pycds.alembic.extensions.special_operations import (
+    create_primary_key_if_not_exists,
+)
 
 # revision identifiers, used by Alembic.
 revision = "e688e520d265"
@@ -27,13 +29,13 @@ items = (
         "table_name": "obs_raw_native_flags",
         "unique_constraint_name": "obs_raw_native_flag_unique",
         "primary_key_name": "obs_raw_native_flags_pkey",
-        "columns": ["obs_raw_id", "native_flag_id"]
+        "columns": ["obs_raw_id", "native_flag_id"],
     },
     {
         "table_name": "obs_raw_pcic_flags",
         "unique_constraint_name": "obs_raw_pcic_flag_unique",
         "primary_key_name": "obs_raw_pcic_flags_pkey",
-        "columns": ["obs_raw_id", "pcic_flag_id"]
+        "columns": ["obs_raw_id", "pcic_flag_id"],
     },
 )
 
