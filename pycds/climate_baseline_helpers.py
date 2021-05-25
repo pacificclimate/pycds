@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 def get_or_create_pcic_climate_variables_network(
     session, network_name=pcic_climate_variable_network_name
 ):
-    """Get or, if it does not exist, create the synthetic network for derived variables
+    """
+    Get or, if it does not exist, create the synthetic network for derived
+    variables
 
     Args:
         session (...): SQLAlchemy session for accessing the database
@@ -42,8 +44,10 @@ def get_or_create_pcic_climate_variables_network(
 
 
 def get_or_create_pcic_climate_baseline_variables(session):
-    """Get or, if they do not exist, create the derived variables for climate baseline values.
-    Create the necessary synthetic network for them if it does not already exist.
+    """
+    Get or, if they do not exist, create the derived variables for climate
+    baseline values. Create the necessary synthetic network for them if it
+    does not already exist.
 
     Args:
         session (...): SQLAlchemy session for accessing the database
@@ -149,47 +153,55 @@ def load_pcic_climate_baseline_values(
     network_name=pcic_climate_variable_network_name,
 ):
     """Load baseline values into the database.
-    Create the necessary variables and synthetic network if they do not already exist.
+    Create the necessary variables and synthetic network if they do not
+    already exist.
 
     Args:
         session (...): SQLAlchemy session for accessing the database
 
-        var_name (str): name of climate baseline variable for which the values are to be loaded
+        var_name (str): name of climate baseline variable for which the values
+            are to be loaded
 
-        lines (iterable): an interable that returns a sequence of fixed-width formatted ASCII lines
-            (strings) containing the data to be loaded; typically result of `file.readlines()`.
-            Each line represents a single station.
+        lines (iterable): an interable that returns a sequence of fixed-width
+            formatted ASCII lines (strings) containing the data to be loaded;
+            typically result of `file.readlines()`. Each line represents a
+            single station.
 
-        exclude (list): a list of station native id's that should be excluded from the stations
-            loaded from `lines`.
+        exclude (list): a list of station native id's that should be excluded
+            from the stations loaded from `lines`.
 
-        network_name (str): name of the network to which the climate variable (identified by `var_name`)
-            must be associated
+        network_name (str): name of the network to which the climate variable
+            (identified by `var_name`) must be associated
 
-    Returns:
-        n_lines_added,      # count of lines loaded (stations processed) into database
+    Returns: tuple:
+        n_lines_added,      # count of lines loaded (stations processed) into
+                              database
         n_values_added,     # count of climatology values added to database
-        n_lines_errored,    # count of lines that got an error during parsing (unpacking)
+        n_lines_errored,    # count of lines that got an error during parsing
+                              (unpacking)
         n_lines_excluded,   # count of lines excluded via exclusion list
-        n_lines_skipped,    # count of lines skipped (normally because no matching station exists in database)
+        n_lines_skipped,    # count of lines skipped (normally because no
+                              matching station exists in database)
 
-    Read the input lines one by one and interpret each under a fixed-width format (provided externally; defined above
-    in variables field_names, field_widths, field_format.
+    Read the input lines one by one and interpret each under a fixed-width
+    format (provided externally; defined above in variables field_names,
+    field_widths, field_format.
 
     The data fields are further formatted as follows:
 
     - Temperature values are given in 10ths of a degree C.
     - Precipitation values are given in mm.
-    - A raw value of -9999 indicates no data for that particular station and month. These values are not
-      stored in the database.
+    - A raw value of -9999 indicates no data for that particular station and
+      month. These values are not stored in the database.
     """
 
-    # Time (attribute) for each climate value should be the last hour of the last day of the month, year 2000.
+    # Time (attribute) for each climate value should be the last hour of the
+    # last day of the month, year 2000.
     baseline_year = 2000
 
-    def baseline_day(month):
+    def baseline_day(mon):
         """Return last day of month in baseline_year"""
-        return monthrange(baseline_year, month)[1]
+        return monthrange(baseline_year, mon)[1]
 
     baseline_hour = 23
 
@@ -210,9 +222,8 @@ def load_pcic_climate_baseline_values(
     )
     if not variable:
         raise ValueError(
-            "Climate variable named '{}' associated with network {} was not found in the database".format(
-                var_name, network_name
-            )
+            f"Climate variable named '{var_name}' associated with "
+            f"network {network_name} was not found in the database"
         )
 
     if var_name in ["Tx_Climatology", "Tn_Climatology"]:
@@ -270,16 +281,14 @@ def load_pcic_climate_baseline_values(
                 logger.info("Skipping input line:")
                 logger.info(line)
                 logger.info(
-                    'Reason: No history record(s) found for station with native_id = "{}"'.format(
-                        station_native_id
-                    )
+                    f'Reason: No history record(s) found for station with '
+                    f'native_id = "{station_native_id}"'
                 )
                 n_lines_skipped += 1
         else:
             logger.info(
-                'Excluding station with native id = "{}": found in exclude list'.format(
-                    station_native_id
-                )
+                f'Excluding station with native id = "{station_native_id}": '
+                f'found in exclude list'
             )
             n_lines_excluded += 1
 
@@ -288,20 +297,14 @@ def load_pcic_climate_baseline_values(
     assert (
         n_lines_total
         == n_lines_errored + n_lines_added + n_lines_excluded + n_lines_skipped
-    ), "Total number of lines processed {} is not total of errored {} +added {} + excluded {} + skipped {}".format(
-        n_lines_total,
-        n_lines_errored,
-        n_lines_added,
-        n_lines_excluded,
-        n_lines_skipped,
-    )
+    ), f"Total number of lines processed {n_lines_total} " \
+       f"is not total of errored {n_lines_errored} + added {n_lines_added} " \
+       f"+ excluded {n_lines_excluded} + skipped {n_lines_skipped}"
 
     logger.info("Loading complete")
     logger.info("{} input lines processed".format(n_lines_total))
     logger.info(
-        "{} stations (input lines) processed into to database".format(
-            n_lines_added
-        )
+        f"{n_lines_added} stations (input lines) processed into to database"
     )
     logger.info(
         "{} climatology values added to database".format(n_values_added)
@@ -326,8 +329,9 @@ def expect_value(what, value, expected):
 
 
 def verify_baseline_network_and_variables(session):
-    """Verify that the expected baseline network and variable records are present in database.
-    These reproduce most of the unit tests for the corresponding upload functions.
+    """Verify that the expected baseline network and variable records are
+    present in database. These reproduce most of the unit tests for the
+    corresponding upload functions.
 
     :param session:
     :return: boolean (always True)
@@ -376,15 +380,12 @@ def verify_baseline_network_and_variables(session):
             "unit": "celsius",
             "standard_name": "air_temperature",
             "network_id": network.id,
-            "short_name": "air_temperature t: {} within days t: mean within months t: mean over years".format(
-                keyword
-            ),
-            "cell_method": "t: {} within days t: mean within months t: mean over years".format(
-                keyword
-            ),
-            "description": "Climatological mean of monthly mean of {} daily temperature".format(
-                keyword
-            ),
+            "short_name": f"air_temperature t: {keyword} within days t: mean "
+                          f"within months t: mean over years",
+            "cell_method": f"t: {keyword} within days t: mean within months "
+                           f"t: mean over years",
+            "description": f"Climatological mean of monthly mean of {keyword} "
+                           f"daily temperature",
             "display_name": "Temperature Climatology ({})".format(kwd),
         }
         for attr, value in expected_attrs.items():
@@ -410,23 +411,29 @@ def verify_baseline_network_and_variables(session):
 def verify_baseline_values(
     session, var_name, station_count, expected_stations_and_values
 ):
-    """Verify that the database contains the expected content for baseline values. Specifically:
+    """Verify that the database contains the expected content for baseline
+    values. Specifically:
 
-    - the expected number (count) of climate baseline values, given the number of stations with baseline values
-    - specific example values, taken from visual intepretation of an arbitrary selection of stations
-      in the input file.
+    - the expected number (count) of climate baseline values, given the number
+      of stations with baseline values
+    - specific example values, taken from visual intepretation of an arbitrary
+      selection of stations in the input file.
 
     :param session:
-    :param station_count: number of stations for which baseline climate values should exist
-        (we cannot rely on just counting the number of stations in the database, I think)
+    :param station_count: number of stations for which baseline climate values
+        should exist (we cannot rely on just counting the number of stations
+        in the database, I think)
     :param var_name: name of variable to be checked
-    :param expected_stations_and_values: list of expected stations and associated climate baseline values
-        for the specified variable to be checked. Of the form
+    :param expected_stations_and_values: list of expected stations and
+        associated climate baseline values for the specified variable to be
+        checked. Of the form
         [
             {
-                'station_native_id': str, # identifies station
-                'values': list(numeric), # 12 expected values, in ascending month order;
-                                         # absent value indicated by value None
+                # identifies station
+                'station_native_id': str,
+                # 12 expected values, in ascending month order;
+                # absent value indicated by value None
+                'values': list(numeric),
             },
             ...
 
