@@ -5,22 +5,19 @@ from tests.helpers import create_then_drop_views
 from .content import (
     ContentBase,
     content,
-
     SimpleThingView,
     ThingWithDescriptionView,
     ThingCountView,
-
     SimpleThingNativeMatview,
     ThingWithDescriptionNativeMatview,
     ThingCountNativeMatview,
-
     SimpleThingManualMatview,
     ThingWithDescriptionManualMatview,
     ThingCountManualMatview,
 )
 
 
-@fixture(scope='session')
+@fixture(scope="session")
 def tst_orm_engine(base_engine):
     """Database engine with test content created in it."""
     ContentBase.metadata.create_all(bind=base_engine)
@@ -49,7 +46,7 @@ def manual_matview_sesh(tst_orm_sesh):
     views = [
         SimpleThingManualMatview,
         ThingWithDescriptionManualMatview,
-        ThingCountManualMatview
+        ThingCountManualMatview,
     ]
     # Matviews must be created before content is added in order to test
     # refreshed functionality. The nested loops do this.

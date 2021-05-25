@@ -26,7 +26,7 @@ def test_native_flag_unique(pycds_sesh_with_small_data):
     # Pick a network, any network
     net = sesh.query(Network).first()
     for _ in range(2):
-        flag = NativeFlag(network=net, value='foo')
+        flag = NativeFlag(network=net, value="foo")
         sesh.add(flag)
 
     with pytest.raises(IntegrityError):

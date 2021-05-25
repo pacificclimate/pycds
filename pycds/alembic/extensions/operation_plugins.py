@@ -25,6 +25,7 @@ logger = logging.getLogger("alembic")
 
 # Extended table operations
 
+
 @Operations.register_operation("drop_table_if_exists")
 class DropTableIfExistsOp(MigrateOperation):
     """
@@ -77,6 +78,7 @@ class DropConstraintIfExistsOp(DropConstraintOp):
     class method names which become operation names. The new names dispatch
     to the old names.
     """
+
     @classmethod
     @util._with_legacy_names([("type", "type_"), ("name", "constraint_name")])
     def drop_constraint_if_exists(
@@ -137,7 +139,7 @@ class CreateIndexIfNotExists(CreateIndexOp):
         columns,
         schema=None,
         unique=False,
-        **kw
+        **kw,
     ):
         logger.debug(f"create_index_if_not_exists")
         return cls.create_index(
@@ -147,7 +149,7 @@ class CreateIndexIfNotExists(CreateIndexOp):
             columns,
             schema=schema,
             unique=unique,
-            **kw
+            **kw,
         )
 
     @classmethod
@@ -170,6 +172,7 @@ def create_index_if_not_exists(operations, operation):
 
 # Reversible operations
 
+
 class ReversibleOperation(MigrateOperation):
     """
     Base class for reversible Alembic migration operations.
@@ -184,6 +187,7 @@ class ReversibleOperation(MigrateOperation):
     in order to replace one with the other. Access to different versions of
     an object is provided by method `_get_object_from_version`.
     """
+
     def __init__(self, target, schema=None):
         self.target = target
         self.schema = schema
@@ -205,7 +209,9 @@ class ReversibleOperation(MigrateOperation):
         return obj
 
     @classmethod
-    def replace(cls, operations, target, replaces=None, replace_with=None, **kw):
+    def replace(
+        cls, operations, target, replaces=None, replace_with=None, **kw
+    ):
         """
         Migration upgrade uses `replaces`.
         Migration downgrade uses `replace_with`.
@@ -227,9 +233,9 @@ class ReversibleOperation(MigrateOperation):
 
 
 # Replaceable object reversible operations
-# 
+#
 #  The reversible operations must know how to produce create and drop
-#  commands for the target objects. This is done here by requiring that any 
+#  commands for the target objects. This is done here by requiring that any
 #  target object (a replaceable object) to provide methods `create`  and
 #  `drop` that return the requisite commands. These are invoked in the
 # `implementation_for` of the classes that represent the operations.
@@ -241,6 +247,7 @@ class ReversibleOperation(MigrateOperation):
 # `replace_replaceable_object`) for all the different types of replaceable
 # object.
 
+
 @Operations.register_operation("create_replaceable_object", "invoke_for_target")
 @Operations.register_operation("replace_replaceable_object", "replace")
 class CreateReplaceableObjectOp(ReversibleOperation):
@@ -248,6 +255,7 @@ class CreateReplaceableObjectOp(ReversibleOperation):
     Class representing a reversible create operation for a replaceable object.
     This class also requires an implementation to make it executable.
     """
+
     def reverse(self):
         return DropReplaceableObjectOp(self.target)
 
@@ -263,6 +271,7 @@ class DropReplaceableObjectOp(ReversibleOperation):
     Class representing a reversible drop operation for a replaceable object.
     This class also requires an implementation to make it executable.
     """
+
     def reverse(self):
         return CreateReplaceableObjectOp(self.target)
 
@@ -273,6 +282,7 @@ def drop_replaceable_object(operations, operation):
 
 
 # Miscellaneous operations
+
 
 @Operations.register_operation("set_role")
 class SetRoleOp(MigrateOperation):

@@ -46,7 +46,9 @@ classes = (
 
 def upgrade():
     for ORMClass in classes:
-        logger.debug(f"Processing class {ORMClass.__name__}; table {ORMClass.__tablename__}")
+        logger.debug(
+            f"Processing class {ORMClass.__name__}; table {ORMClass.__tablename__}"
+        )
         for index in ORMClass.__table__.indexes:
             logger.debug(
                 f"Creating index '{index.name} on table {index.table.name}'"

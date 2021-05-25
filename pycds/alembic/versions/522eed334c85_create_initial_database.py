@@ -23,6 +23,7 @@ schema_name = get_schema_name()
 # TODO: Verify index handling
 # TODO: Add sequences
 
+
 def upgrade():
     op.create_table(
         "meta_contact",
@@ -61,7 +62,7 @@ def upgrade():
         sa.Column("col_hex", sa.String(), nullable=True),
         sa.Column("contact_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["contact_id"], [f"{schema_name}.meta_contact.contact_id"],
+            ["contact_id"], [f"{schema_name}.meta_contact.contact_id"]
         ),
         sa.PrimaryKeyConstraint("network_id"),
         schema=schema_name,
@@ -75,7 +76,7 @@ def upgrade():
         sa.Column("value", sa.String(), nullable=True),
         sa.Column("discard", sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["network_id"], [f"{schema_name}.meta_network.network_id"],
+            ["network_id"], [f"{schema_name}.meta_network.network_id"]
         ),
         sa.PrimaryKeyConstraint("native_flag_id"),
         sa.UniqueConstraint(
@@ -91,7 +92,7 @@ def upgrade():
         sa.Column("min_obs_time", sa.DateTime(), nullable=True),
         sa.Column("max_obs_time", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["network_id"], [f"{schema_name}.meta_network.network_id"],
+            ["network_id"], [f"{schema_name}.meta_network.network_id"]
         ),
         sa.PrimaryKeyConstraint("station_id"),
         schema=schema_name,
@@ -109,7 +110,7 @@ def upgrade():
         sa.Column("short_name", sa.String(), nullable=True),
         sa.Column("network_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["network_id"], [f"{schema_name}.meta_network.network_id"],
+            ["network_id"], [f"{schema_name}.meta_network.network_id"]
         ),
         sa.PrimaryKeyConstraint("vars_id"),
         schema=schema_name,
@@ -122,9 +123,11 @@ def upgrade():
         sa.Column("wmo_code", sa.String(length=1), nullable=True),
         sa.Column("adjusted", sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["station_id"], [f"{schema_name}.meta_station.station_id"],
+            ["station_id"], [f"{schema_name}.meta_station.station_id"]
         ),
-        sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"],),
+        sa.ForeignKeyConstraint(
+            ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
+        ),
         sa.PrimaryKeyConstraint("vars_id", "station_id", "month"),
         schema=schema_name,
     )
@@ -147,9 +150,11 @@ def upgrade():
         sa.Column(
             "the_geom", geoalchemy2.types.Geometry(srid=4326), nullable=True
         ),
-        sa.ForeignKeyConstraint(["sensor_id"], [f"{schema_name}.meta_sensor.sensor_id"],),
         sa.ForeignKeyConstraint(
-            ["station_id"], [f"{schema_name}.meta_station.station_id"],
+            ["sensor_id"], [f"{schema_name}.meta_sensor.sensor_id"]
+        ),
+        sa.ForeignKeyConstraint(
+            ["station_id"], [f"{schema_name}.meta_station.station_id"]
         ),
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
@@ -159,7 +164,7 @@ def upgrade():
         sa.Column("count", sa.BigInteger(), nullable=True),
         sa.Column("history_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
@@ -170,7 +175,7 @@ def upgrade():
         sa.Column("vars", sa.String(), nullable=True),
         sa.Column("display_names", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
@@ -181,7 +186,7 @@ def upgrade():
         sa.Column("date_trunc", sa.DateTime(), nullable=False),
         sa.Column("history_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
         sa.PrimaryKeyConstraint("date_trunc", "history_id"),
         schema=schema_name,
@@ -195,9 +200,11 @@ def upgrade():
         sa.Column("vars_id", sa.Integer(), nullable=True),
         sa.Column("history_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
-        sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"],),
+        sa.ForeignKeyConstraint(
+            ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
+        ),
         sa.PrimaryKeyConstraint("obs_derived_value_id"),
         sa.UniqueConstraint(
             "value_time",
@@ -216,9 +223,11 @@ def upgrade():
         sa.Column("vars_id", sa.Integer(), nullable=True),
         sa.Column("history_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
-        sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"],),
+        sa.ForeignKeyConstraint(
+            ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
+        ),
         sa.PrimaryKeyConstraint("obs_raw_id"),
         sa.UniqueConstraint(
             "obs_time",
@@ -236,10 +245,10 @@ def upgrade():
         sa.Column("max_obs_time", sa.DateTime(), nullable=True),
         sa.Column("obs_count", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
         sa.ForeignKeyConstraint(
-            ["station_id"], [f"{schema_name}.meta_station.station_id"],
+            ["station_id"], [f"{schema_name}.meta_station.station_id"]
         ),
         sa.PrimaryKeyConstraint("station_id"),
         schema=schema_name,
@@ -249,9 +258,11 @@ def upgrade():
         sa.Column("history_id", sa.Integer(), nullable=False),
         sa.Column("vars_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"],
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
         ),
-        sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"],),
+        sa.ForeignKeyConstraint(
+            ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
+        ),
         sa.PrimaryKeyConstraint("history_id", "vars_id"),
         schema=schema_name,
     )
@@ -260,9 +271,12 @@ def upgrade():
         sa.Column("obs_raw_id", sa.BigInteger(), nullable=True),
         sa.Column("native_flag_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["native_flag_id"], [f"{schema_name}.meta_native_flag.native_flag_id"],
+            ["native_flag_id"],
+            [f"{schema_name}.meta_native_flag.native_flag_id"],
         ),
-        sa.ForeignKeyConstraint(["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"],),
+        sa.ForeignKeyConstraint(
+            ["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"]
+        ),
         sa.UniqueConstraint(
             "obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"
         ),
@@ -277,16 +291,20 @@ def upgrade():
         "obs_raw_pcic_flags",
         sa.Column("obs_raw_id", sa.BigInteger(), nullable=True),
         sa.Column("pcic_flag_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"],),
         sa.ForeignKeyConstraint(
-            ["pcic_flag_id"], [f"{schema_name}.meta_pcic_flag.pcic_flag_id"],
+            ["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"]
+        ),
+        sa.ForeignKeyConstraint(
+            ["pcic_flag_id"], [f"{schema_name}.meta_pcic_flag.pcic_flag_id"]
         ),
         sa.UniqueConstraint(
             "obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"
         ),
         schema=schema_name,
     )
-    with op.batch_alter_table("obs_raw_pcic_flags", schema=schema_name) as batch_op:
+    with op.batch_alter_table(
+        "obs_raw_pcic_flags", schema=schema_name
+    ) as batch_op:
         batch_op.create_index("pcic_flag_index", ["obs_raw_id"], unique=False)
 
     op.create_table(
@@ -294,7 +312,9 @@ def upgrade():
         sa.Column("obs_raw_id", sa.Integer(), nullable=False),
         sa.Column("start", sa.DateTime(), nullable=True),
         sa.Column("end", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"],),
+        sa.ForeignKeyConstraint(
+            ["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"]
+        ),
         sa.PrimaryKeyConstraint("obs_raw_id"),
         schema=schema_name,
     )
@@ -302,7 +322,9 @@ def upgrade():
 
 def downgrade():
     op.drop_table("time_bounds", schema=schema_name)
-    with op.batch_alter_table("obs_raw_pcic_flags", schema=schema_name) as batch_op:
+    with op.batch_alter_table(
+        "obs_raw_pcic_flags", schema=schema_name
+    ) as batch_op:
         batch_op.drop_index("pcic_flag_index")
 
     op.drop_table("obs_raw_pcic_flags", schema=schema_name)

@@ -13,7 +13,7 @@ daily_views = [DailyMaxTemperature, DailyMinTemperature]
 monthly_views = [
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation
+    MonthlyTotalPrecipitation,
 ]
 
 logger = logging.getLogger(__name__)
@@ -29,14 +29,12 @@ def manage_views(session, operation, which_set):
     """
 
     views = {
-        'daily': daily_views,
-        'monthly-only': monthly_views,
-        'all': daily_views + monthly_views,  # Order of view updating matters
+        "daily": daily_views,
+        "monthly-only": monthly_views,
+        "all": daily_views + monthly_views,  # Order of view updating matters
     }[which_set]
 
     for view in views:
         if issubclass(view, ReplaceableOrmClass):
-            logger.info(
-                f"{operation.capitalize()} '{view.qualified_name()}'"
-            )
+            logger.info(f"{operation.capitalize()} '{view.qualified_name()}'")
             session.execute(getattr(view, operation)())

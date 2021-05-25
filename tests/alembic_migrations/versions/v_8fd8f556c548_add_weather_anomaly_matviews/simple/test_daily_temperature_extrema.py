@@ -19,12 +19,7 @@ def check(results, extremum, months, days, hours, variable):
 @pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_daily_temperature_extremum_query(
-    extremum,
-    obs1_temp_sesh,
-    obs1_months,
-    obs1_days,
-    obs1_hours,
-    var_temp_point,
+    extremum, obs1_temp_sesh, obs1_months, obs1_days, obs1_hours, var_temp_point
 ):
     sesh = obs1_temp_sesh
     daily_extreme_temps = (
@@ -43,12 +38,7 @@ def test_daily_temperature_extremum_query(
 @pytest.mark.slow
 @pytest.mark.parametrize("extremum", ("max", "min"))
 def test_daily_extreme_temperature_matview(
-    extremum,
-    obs1_temp_sesh,
-    obs1_months,
-    obs1_days,
-    obs1_hours,
-    var_temp_point,
+    extremum, obs1_temp_sesh, obs1_months, obs1_days, obs1_hours, var_temp_point
 ):
     sesh = obs1_temp_sesh
     Matview = DailyMaxTemperature if extremum == "max" else DailyMinTemperature

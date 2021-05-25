@@ -17,7 +17,8 @@ from pytest import fixture, mark, approx
 from .....helpers import add_then_delete_objs, create_then_drop_views
 from pycds import Obs, NativeFlag, PCICFlag
 from pycds.orm.manual_matviews.version_8fd8f556c548 import (
-    DailyMaxTemperature, DailyMinTemperature
+    DailyMaxTemperature,
+    DailyMinTemperature,
 )
 
 
@@ -360,8 +361,7 @@ def describe_with_1_network():
                                 obs = sesh.query(Obs)
                                 if request.param in ["native", "both"]:
                                     for o in obs.filter(
-                                        (0 <= Obs.id)
-                                        & (Obs.id < num_discarded)
+                                        (0 <= Obs.id) & (Obs.id < num_discarded)
                                     ).all():
                                         o.native_flags.append(
                                             native_flag_discard
@@ -376,10 +376,7 @@ def describe_with_1_network():
                                 elif request.param in ["pcic", "both"]:
                                     for o in obs.filter(
                                         (pcic_offset <= Obs.id)
-                                        & (
-                                            Obs.id
-                                            < pcic_offset + num_discarded
-                                        )
+                                        & (Obs.id < pcic_offset + num_discarded)
                                     ).all():
                                         o.pcic_flags.append(pcic_flag_discard)
                                     for o in obs.filter(
@@ -417,8 +414,7 @@ def describe_with_1_network():
                                     )
                                 )
                                 assert (
-                                    obs_flagged_discard.count()
-                                    == num_discarded
+                                    obs_flagged_discard.count() == num_discarded
                                 )
                                 obs_flagged_not_discard = obs.filter(
                                     Obs.native_flags.any(
@@ -834,31 +830,15 @@ def describe_with_1_network():
                                 DailyMaxTemperature,
                                 [
                                     (datetime.datetime(2000, 1, 11), 0.0, 0.5),
-                                    (
-                                        datetime.datetime(2000, 1, 12),
-                                        10.0,
-                                        1.0,
-                                    ),
-                                    (
-                                        datetime.datetime(2000, 1, 13),
-                                        15.0,
-                                        1.0,
-                                    ),
-                                    (
-                                        datetime.datetime(2000, 1, 14),
-                                        20.0,
-                                        0.5,
-                                    ),
+                                    (datetime.datetime(2000, 1, 12), 10.0, 1.0),
+                                    (datetime.datetime(2000, 1, 13), 15.0, 1.0),
+                                    (datetime.datetime(2000, 1, 14), 20.0, 0.5),
                                 ],
                             ),
                             (
                                 DailyMinTemperature,
                                 [
-                                    (
-                                        datetime.datetime(2000, 1, 11),
-                                        -5.0,
-                                        1.0,
-                                    ),
+                                    (datetime.datetime(2000, 1, 11), -5.0, 1.0),
                                     (datetime.datetime(2000, 1, 12), 0.0, 1.0),
                                     (
                                         datetime.datetime(2000, 1, 13),

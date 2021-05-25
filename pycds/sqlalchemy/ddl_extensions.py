@@ -14,14 +14,17 @@ from sqlalchemy.ext import compiler
 
 # Views of all types
 
+
 class ViewCommonDDL(DDLElement):
     """Base class for several varieties of view commands."""
+
     def __init__(self, name, selectable=None):
         self.name = name
         self.selectable = selectable
 
 
 # View commands (not materialized)
+
 
 class CreateView(ViewCommonDDL):
     pass
@@ -50,6 +53,7 @@ def compile(element, compiler, **kw):
 # native and manual matviews. That seemed unnecessarily wordy and bulky, but one
 # objection to the present approach is that native and manual matviews are
 # actually two entirely different kinds of object under the same name.
+
 
 class MaterializedViewDDL(ViewCommonDDL):
     def __init__(self, name, selectable=None, type_="native"):
@@ -85,7 +89,9 @@ def compile(element, compiler, **kw):
 
 
 class RefreshMaterializedView(MaterializedViewDDL):
-    def __init__(self, name, selectable=None, type_="native", concurrently=False):
+    def __init__(
+        self, name, selectable=None, type_="native", concurrently=False
+    ):
         super().__init__(name, selectable=selectable, type_=type_)
         self.concurrently = concurrently
 
@@ -93,18 +99,24 @@ class RefreshMaterializedView(MaterializedViewDDL):
 @compiler.compiles(RefreshMaterializedView)
 def compile(element, compiler, **kw):
     if element.type_ == "native":
-        concurrently = 'CONCURRENTLY' if element.concurrently else ''
+        concurrently = "CONCURRENTLY" if element.concurrently else ""
         return f"REFRESH MATERIALIZED VIEW {concurrently} {element.name}"
     if element.type_ == "manual":
-        body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
-        return f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
+        body = compiler.sql_compiler.process(
+            element.selectable, literal_binds=True
+        )
+        return (
+            f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
+        )
     raise ValueError(f"Invalid materialized view type '{element.type_}'")
 
 
 # Stored procedure commands
 
+
 class StoredProcedureDDL(DDLElement):
     """Base class for several varieties of view commands."""
+
     def __init__(self, identifier, definition=None):
         self.identifier = identifier
         self.definition = definition
@@ -131,6 +143,6 @@ def compile(element, compiler, **kw):
         r" (DEFAULT|=) [^,)]*([,)])",
         r"\2",
         element.identifier,
-        flags=re.MULTILINE
+        flags=re.MULTILINE,
     )
     return f"DROP FUNCTION {name}"

@@ -4,9 +4,9 @@ from ...alembicverify_util import prepare_schema_from_migrations
 from ....helpers import insert_crmp_data
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def prepared_schema_from_migrations_left(
-    uri_left, alembic_config_left, db_setup,  mocker, request
+    uri_left, alembic_config_left, db_setup, mocker, request
 ):
     """
     This fixture has an optional indirect parameter that determines
@@ -19,15 +19,14 @@ def prepared_schema_from_migrations_left(
     """
     if hasattr(request, "param"):
         mocker.patch(
-            "pycds.database.get_schema_item_names",
-            return_value=request.param
+            "pycds.database.get_schema_item_names", return_value=request.param
         )
 
     engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
         db_setup=db_setup,
-        revision="bdc28573df56"
+        revision="bdc28573df56",
     )
 
     yield engine, script
@@ -35,7 +34,7 @@ def prepared_schema_from_migrations_left(
     engine.dispose()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def sesh_with_large_data(prepared_schema_from_migrations_left):
     # TODO: Is large data needed??
     engine, script = prepared_schema_from_migrations_left

@@ -221,9 +221,7 @@ def describe_with_1_network():
                         result = obs_sesh.query(View).first()
                         assert result.history_id == history_stn1_hourly.id
                         assert result.vars_id == variable.id
-                        assert result.obs_month == datetime.datetime(
-                            2000, 1, 1
-                        )
+                        assert result.obs_month == datetime.datetime(2000, 1, 1)
 
                     @mark.parametrize(
                         "View, obs_sesh, statistic",
@@ -579,6 +577,7 @@ def describe_with_1_network():
                                 obs_sesh.query(View),
                             )
                         )
+
 
 @mark.slow
 def describe_with_2_networks():

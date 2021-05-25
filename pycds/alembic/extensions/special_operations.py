@@ -6,7 +6,7 @@ logger = logging.getLogger("alembic")
 
 
 def create_primary_key_if_not_exists(
-    op, constraint_name, table_name, columns, schema,
+    op, constraint_name, table_name, columns, schema
 ):
     """
     Create a primary key in a table if it does not already exist.
