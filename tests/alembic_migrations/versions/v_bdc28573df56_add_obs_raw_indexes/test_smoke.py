@@ -83,8 +83,7 @@ def test_downgrade(
 
     # Tell the downgrade operation what we want it to think.
     patcher = mocker.patch(
-        "pycds.database.get_schema_item_names",
-        return_value=prior_index_names,
+        "pycds.database.get_schema_item_names", return_value=prior_index_names
     )
 
     # Run downgrade migration to revision 7a3b247c577b

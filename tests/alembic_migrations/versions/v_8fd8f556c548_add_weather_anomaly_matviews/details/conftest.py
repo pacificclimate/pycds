@@ -17,10 +17,7 @@ def autouse_new_db_left(new_db_left):
 
 @fixture
 def daily_views():
-    return [
-        DailyMaxTemperature,
-        DailyMinTemperature,
-    ]
+    return [DailyMaxTemperature, DailyMinTemperature]
 
 
 @fixture

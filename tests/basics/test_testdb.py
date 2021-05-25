@@ -4,12 +4,18 @@ from pycds import Contact, History, Obs
 
 
 def test_schema_content(pycds_sesh):
-   assert get_schema_item_names(pycds_sesh, 'tables') >= {
-        'meta_sensor', 'meta_contact', 'climo_obs_count_mv',
-        'obs_count_per_month_history_mv',
-        'meta_history',
-        'meta_vars', 'meta_network', 'meta_station',
-        'obs_raw', 'meta_native_flag', 'obs_raw_native_flags'
+    assert get_schema_item_names(pycds_sesh, "tables") >= {
+        "meta_sensor",
+        "meta_contact",
+        "climo_obs_count_mv",
+        "obs_count_per_month_history_mv",
+        "meta_history",
+        "meta_vars",
+        "meta_network",
+        "meta_station",
+        "obs_raw",
+        "meta_native_flag",
+        "obs_raw_native_flags",
     }
 
 

@@ -7,28 +7,29 @@ from .content import (
     ThingCountManualMatview,
     SimpleThingNativeMatview,
     ThingWithDescriptionNativeMatview,
-    ThingCountNativeMatview
+    ThingCountNativeMatview,
 )
 
 
 def test_manual_matview_schema_content(manual_matview_sesh):
-    assert get_schema_item_names(manual_matview_sesh, 'tables') >= {
-        'things',
-        'descriptions',
-        'simple_thing_mmv',
-        'thing_with_description_mmv',
-        'thing_count_mmv'
+    assert get_schema_item_names(manual_matview_sesh, "tables") >= {
+        "things",
+        "descriptions",
+        "simple_thing_mmv",
+        "thing_with_description_mmv",
+        "thing_count_mmv",
     }
 
 
 def test_native_matview_schema_content(native_matview_sesh):
-    assert get_schema_item_names(native_matview_sesh, 'tables') >= {
-        'things', 'descriptions',
+    assert get_schema_item_names(native_matview_sesh, "tables") >= {
+        "things",
+        "descriptions",
     }
-    assert get_schema_item_names(native_matview_sesh, 'matviews') >= {
-        'simple_thing_nmv',
-        'thing_with_description_nmv',
-        'thing_count_nmv'
+    assert get_schema_item_names(native_matview_sesh, "matviews") >= {
+        "simple_thing_nmv",
+        "thing_with_description_nmv",
+        "thing_count_nmv",
     }
 
 
@@ -37,11 +38,11 @@ def test_native_matview_schema_content(native_matview_sesh):
     [
         (SimpleThingManualMatview, "simple_thing_mmv"),
         (SimpleThingNativeMatview, "simple_thing_nmv"),
-    ]
+    ],
 )
 def test_viewname(schema_name, View, viewname):
     assert View.base_name() == viewname
-    assert View.qualified_name() == f'{schema_name}.{viewname}'
+    assert View.qualified_name() == f"{schema_name}.{viewname}"
 
 
 def check_simple_matview(sesh, SimpleThingMatview):
@@ -54,10 +55,11 @@ def check_simple_matview(sesh, SimpleThingMatview):
 
     sesh.execute(SimpleThingMatview.refresh())
     assert view_things.count() == 3  # there is something after
-    assert (
-        [t.id for t in view_things.order_by(SimpleThingMatview.id)]
-        == [1, 2, 3]
-    )
+    assert [t.id for t in view_things.order_by(SimpleThingMatview.id)] == [
+        1,
+        2,
+        3,
+    ]
 
 
 def test_simple_manual_matview(manual_matview_sesh):
@@ -75,10 +77,9 @@ def check_complex_matview(sesh, ThingWithDescriptionMatview):
 
     sesh.execute(ThingWithDescriptionMatview.refresh())
     things = sesh.query(ThingWithDescriptionMatview)
-    assert (
-        [t.desc for t in things.order_by(ThingWithDescriptionMatview.id)]
-        == ['alpha', 'beta', 'gamma', 'beta', 'alpha']
-    )
+    assert [
+        t.desc for t in things.order_by(ThingWithDescriptionMatview.id)
+    ] == ["alpha", "beta", "gamma", "beta", "alpha"]
 
 
 def test_complex_manual_matview(manual_matview_sesh):
@@ -100,10 +101,9 @@ def check_counts_matview(sesh, ThingCountMatview):
 
     sesh.execute(ThingCountMatview.refresh())
     counts = sesh.query(ThingCountMatview)
-    assert (
-        [(c.desc, c.num) for c in counts.order_by(ThingCountMatview.desc)]
-        == [('alpha', 2), ('beta', 2), ('gamma', 1), ]
-    )
+    assert [
+        (c.desc, c.num) for c in counts.order_by(ThingCountMatview.desc)
+    ] == [("alpha", 2), ("beta", 2), ("gamma", 1)]
 
 
 def test_counts_manual_matview(manual_matview_sesh):

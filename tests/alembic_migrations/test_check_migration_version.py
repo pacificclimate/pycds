@@ -10,9 +10,9 @@ def test_get_current_head():
     assert get_current_head() == "0d99ba90c229"
 
 
-@pytest.mark.usefixtures('new_db_left')
+@pytest.mark.usefixtures("new_db_left")
 def test_check_migration_version(
-        uri_left, alembic_config_left, db_setup, env_config,
+    uri_left, alembic_config_left, db_setup, env_config
 ):
     """Test that `check_migration_version` passes on the latest migration
     and raises an exception on other versions.
@@ -29,7 +29,7 @@ def test_check_migration_version(
     check_migration_version(engine)
 
     # Back off to the previous migration.
-    command.downgrade(alembic_config_left, '-1')
+    command.downgrade(alembic_config_left, "-1")
 
     # Now the checker should raise an exception.
     with pytest.raises(ValueError):

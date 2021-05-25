@@ -22,8 +22,7 @@ matview_names = set(matviews)
 @pytest.mark.parametrize("supports_matviews", [True, False])
 def test_mock(mocker, supports_matviews):
     mocker.patch(
-        "pycds.database.db_supports_matviews",
-        return_value=supports_matviews,
+        "pycds.database.db_supports_matviews", return_value=supports_matviews
     )
     assert pycds.database.db_supports_matviews() is supports_matviews
 

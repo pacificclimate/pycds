@@ -43,16 +43,16 @@ def get_current_revision(config, engine, script, **kwargs):
 
 def get_head_revision(config, engine, script, **kwargs):
     """Inspection helper. Get the head revision of a set of migrations. """
-    return _get_revision(config, engine, script, **kwargs, revision_type='head')
+    return _get_revision(config, engine, script, **kwargs, revision_type="head")
 
 
 def _get_revision(
-        config, engine, script, env_config=None, revision_type='current'
+    config, engine, script, env_config=None, revision_type="current"
 ):
     with engine.connect() as conn:
         with EnvironmentContext(config, script) as env_context:
             env_context.configure(conn, **(env_config or {}))
-            if revision_type == 'head':
+            if revision_type == "head":
                 revision = env_context.get_head_revision()
             else:
                 migration_context = env_context.get_context()

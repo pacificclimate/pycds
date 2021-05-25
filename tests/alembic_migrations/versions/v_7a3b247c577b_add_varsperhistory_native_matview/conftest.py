@@ -4,7 +4,7 @@ from ...alembicverify_util import prepare_schema_from_migrations
 from ....helpers import insert_crmp_data
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def prepared_schema_from_migrations_left(
     uri_left, alembic_config_left, db_setup, mocker, request
 ):
@@ -19,15 +19,14 @@ def prepared_schema_from_migrations_left(
     """
     if hasattr(request, "param"):
         mocker.patch(
-            "pycds.database.db_supports_matviews",
-            return_value=request.param
+            "pycds.database.db_supports_matviews", return_value=request.param
         )
 
-    engine, script =  prepare_schema_from_migrations(
+    engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
         db_setup=db_setup,
-        revision="7a3b247c577b"
+        revision="7a3b247c577b",
     )
 
     yield engine, script
@@ -35,7 +34,7 @@ def prepared_schema_from_migrations_left(
     engine.dispose()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def sesh_with_large_data(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()

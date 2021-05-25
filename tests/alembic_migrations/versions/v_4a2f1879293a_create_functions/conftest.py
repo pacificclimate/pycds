@@ -8,7 +8,7 @@ def target_revision():
     return "4a2f1879293a"
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()

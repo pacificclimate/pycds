@@ -16,33 +16,32 @@ from ..helpers import insert_crmp_data
 @pytest.fixture
 def alembic_root():
     return os.path.normpath(
-        os.path.join(
-            os.path.dirname(__file__), '..', '..', 'pycds', 'alembic'
-        )
+        os.path.join(os.path.dirname(__file__), "..", "..", "pycds", "alembic")
     )
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def uri_left(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def uri_right(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
 
 # Fixtures specific to our tests
 
-@pytest.fixture(scope='module')
+
+@pytest.fixture(scope="module")
 def db_setup(schema_name):
     def f(engine):
         test_user = "testuser"
 
         # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
-        engine.execute('CREATE EXTENSION postgis')
-        engine.execute('CREATE EXTENSION plpythonu')
+        engine.execute("CREATE EXTENSION postgis")
+        engine.execute("CREATE EXTENSION plpythonu")
 
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
@@ -78,11 +77,11 @@ def db_setup(schema_name):
     return f
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def env_config(schema_name):
     return {
-        'version_table': "alembic_version",
-        'version_table_schema': schema_name
+        "version_table": "alembic_version",
+        "version_table_schema": schema_name,
     }
 
 
@@ -97,7 +96,7 @@ def target_revision():
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def prepared_schema_from_migrations_left(
     uri_left, alembic_config_left, db_setup, target_revision, request
 ):
