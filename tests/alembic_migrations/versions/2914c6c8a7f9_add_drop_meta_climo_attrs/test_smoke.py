@@ -1,0 +1,63 @@
+"""Smoke tests:
+- Upgrade
+- Downgrade
+"""
+
+# -*- coding: utf-8 -*-
+import logging
+import pytest
+from alembic import command
+from pycds.database import get_schema_item_names
+
+
+logger = logging.getLogger("tests")
+# logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+table_name = "meta_climo_attrs"
+
+
+@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.parametrize(
+    "prepared_schema_from_migrations_left", ("e688e520d265",), indirect=True
+)
+@pytest.mark.parametrize("table_exists", [False, True])
+def test_upgrade(
+    prepared_schema_from_migrations_left,
+    alembic_config_left,
+    schema_name,
+    table_exists,
+):
+    """Test the schema migration from e688e520d265 to 2914c6c8a7f9."""
+
+    # Set up database to revision e688e520d265
+    engine, script = prepared_schema_from_migrations_left
+
+    # Exercise both cases of "if not exists"
+    if not table_exists:
+        engine.execute(f"DROP TABLE {schema_name}.{table_name}")
+
+    # Upgrade to 0d99ba90c229
+    command.upgrade(alembic_config_left, "2914c6c8a7f9")
+
+    # Check that table has been dropped
+    assert table_name not in get_schema_item_names(
+        engine, "tables", schema_name=schema_name
+    )
+
+
+@pytest.mark.usefixtures("new_db_left")
+def test_downgrade(
+    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+):
+    """Test the schema migration from 2914c6c8a7f9 to e688e520d265."""
+
+    # Set up database to revision 2914c6c8a7f9
+    engine, script = prepared_schema_from_migrations_left
+
+    # Downgrade to revision e688e520d265
+    command.downgrade(alembic_config_left, "-1")
+
+    # Check that table has been added
+    assert table_name in get_schema_item_names(
+        engine, "tables", schema_name=schema_name
+    )
