@@ -38,7 +38,6 @@ classes = (
     History,
     Station,
     Variable,
-    # ClimatologyAttributes,
     ObsCountPerMonthHistory,
     StationObservationStats,
 )

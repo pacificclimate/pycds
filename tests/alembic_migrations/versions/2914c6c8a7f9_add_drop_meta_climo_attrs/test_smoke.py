@@ -6,14 +6,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import pytest
+from sqlalchemy import inspect
+from sqlalchemy.schema import DropTable
 from alembic import command
-from pycds.database import get_schema_item_names
+from pycds import ClimatologyAttributes
 
 
 logger = logging.getLogger("tests")
 # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
-table_name = "meta_climo_attrs"
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -32,17 +32,19 @@ def test_upgrade(
     # Set up database to revision e688e520d265
     engine, script = prepared_schema_from_migrations_left
 
+    logger.debug(f"Table names: {inspect(engine).get_table_names(schema=schema_name)}")
+
     # Exercise both cases of "if not exists"
     if not table_exists:
-        engine.execute(f"DROP TABLE {schema_name}.{table_name}")
+        engine.execute(DropTable(ClimatologyAttributes.__table__))
 
     # Upgrade to 0d99ba90c229
     command.upgrade(alembic_config_left, "2914c6c8a7f9")
 
     # Check that table has been dropped
-    assert table_name not in get_schema_item_names(
-        engine, "tables", schema_name=schema_name
-    )
+    assert ClimatologyAttributes.__tablename__ not in inspect(
+        engine
+    ).get_table_names(schema=schema_name)
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -58,6 +60,6 @@ def test_downgrade(
     command.downgrade(alembic_config_left, "-1")
 
     # Check that table has been added
-    assert table_name in get_schema_item_names(
-        engine, "tables", schema_name=schema_name
-    )
+    assert ClimatologyAttributes.__tablename__ in inspect(
+        engine
+    ).get_table_names(schema=schema_name)
