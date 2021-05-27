@@ -7,13 +7,14 @@
 import logging
 import pytest
 from sqlalchemy import inspect
-from sqlalchemy.schema import DropTable
 from alembic import command
-from pycds import ClimatologyAttributes
 
 
 logger = logging.getLogger("tests")
 # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+
+table_name = "meta_climo_attrs"
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -34,15 +35,13 @@ def test_upgrade(
 
     # Exercise both cases of "if not exists"
     if not table_exists:
-        engine.execute(DropTable(ClimatologyAttributes.__table__))
+        engine.execute(f"DROP TABLE {schema_name}.{table_name}")
 
     # Upgrade to 0d99ba90c229
     command.upgrade(alembic_config_left, "2914c6c8a7f9")
 
     # Check that table has been dropped
-    assert ClimatologyAttributes.__tablename__ not in inspect(
-        engine
-    ).get_table_names(schema=schema_name)
+    assert table_name not in inspect(engine).get_table_names(schema=schema_name)
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -58,6 +57,4 @@ def test_downgrade(
     command.downgrade(alembic_config_left, "-1")
 
     # Check that table has been added
-    assert ClimatologyAttributes.__tablename__ in inspect(
-        engine
-    ).get_table_names(schema=schema_name)
+    assert table_name in inspect(engine).get_table_names(schema=schema_name)

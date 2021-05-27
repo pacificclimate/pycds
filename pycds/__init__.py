@@ -38,7 +38,6 @@ __all__ = [
     "Obs",
     "MetaSensor",
     "TimeBound",
-    "ClimatologyAttributes",
     "ObsRawNativeFlags",
     "NativeFlag",
     "ObsRawPCICFlags",

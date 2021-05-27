@@ -17,7 +17,6 @@ from pycds.orm.tables import (
     History,
     Station,
     Variable,
-    ClimatologyAttributes,
     ObsCountPerMonthHistory,
     StationObservationStats,
 )
