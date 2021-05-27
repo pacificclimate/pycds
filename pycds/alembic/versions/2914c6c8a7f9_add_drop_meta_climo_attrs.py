@@ -1,4 +1,4 @@
-"""Add/drop meta_climo_attrs
+"""Drop meta_climo_attrs
 
 Revision ID: 2914c6c8a7f9
 Revises: 0d99ba90c229

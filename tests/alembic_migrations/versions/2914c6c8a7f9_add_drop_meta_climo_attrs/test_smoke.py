@@ -32,8 +32,6 @@ def test_upgrade(
     # Set up database to revision e688e520d265
     engine, script = prepared_schema_from_migrations_left
 
-    logger.debug(f"Table names: {inspect(engine).get_table_names(schema=schema_name)}")
-
     # Exercise both cases of "if not exists"
     if not table_exists:
         engine.execute(DropTable(ClimatologyAttributes.__table__))
