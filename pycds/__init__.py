@@ -80,7 +80,6 @@ from .orm.tables import (
     Obs,
     TimeBound,
     Variable,
-    ClimatologyAttributes,
     NativeFlag,
     PCICFlag,
     DerivedValue,
