@@ -53,7 +53,7 @@ class Network(Base):
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
     stations = relationship(
-        "Station", back_populates="network", order_by="Network.id"
+        "Station", order_by="Station.id", back_populates="network"
     )
     meta_station = synonym("stations")
     variables = relationship("Variable", back_populates="network")
@@ -100,7 +100,7 @@ class Station(Base):
     network = relationship("Network", back_populates="stations")
     meta_network = synonym("network")
     histories = relationship(
-        "History", back_populates="station", order_by=id
+        "History", order_by="History.id", back_populates="station"
     )
     meta_history = synonym("histories")  # Retain backwards compatibility
 
@@ -148,7 +148,7 @@ class History(Base):
     station = relationship("Station", back_populates="histories")
     meta_station = synonym("station")  # Retain backwards compatibility
     observations = relationship(
-        "Obs", back_populates="history", order_by="Obs.id"
+        "Obs", order_by="Obs.id", back_populates="history"
     )
     obs_raw = synonym("observations")  # Retain backwards compatibility
 
@@ -280,10 +280,11 @@ class Variable(Base):
 
     # Relationships
     network = relationship(
-        "Network", back_populates="variables", order_by="Variable.id"
+        "Network", back_populates="variables"
     )
     meta_network = synonym("network")
-    obs = relationship("Obs", back_populates="variable", order_by="Obs.id")
+    obs = relationship("Obs", order_by="Obs.id", back_populates="variable")
+    observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
 
     def __repr__(self):
