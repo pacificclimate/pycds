@@ -58,6 +58,8 @@ class Network(Base):
     meta_station = synonym("stations")
     variables = relationship("Variable", back_populates="network")
     meta_vars = synonym("variables")
+    contact = relationship("Contact", back_populates="networks")
+    meta_contact = synonym("contact")  # Retain backwards compatibility
 
     def __str__(self):
         return "<CRMP Network %s>" % self.name
@@ -78,7 +80,7 @@ class Contact(Base):
     phone = Column("phone", String)
 
     networks = relationship(
-        "Network", backref=backref("meta_contact", order_by=id)
+        "Network", order_by="Network.id", back_populates="contact"
     )
 
 
