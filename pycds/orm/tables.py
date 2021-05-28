@@ -100,8 +100,9 @@ class Station(Base):
         "Network", backref=backref("meta_station", order_by=id)
     )
     histories = relationship(
-        "History", backref=backref("meta_station", order_by=id)
+        "History", back_populates="station", order_by=id
     )
+    meta_history = synonym("histories")  # Retain backwards compatibility
 
     def __str__(self):
         return "<CRMP Station %s:%s>" % (self.network.name, self.native_id)
@@ -144,9 +145,8 @@ class History(Base):
 
     # Relationships
     sensor = relationship("MetaSensor")
-    station = relationship(
-        "Station", backref=backref("meta_history", order_by=id)
-    )
+    station = relationship("Station", back_populates="histories")
+    meta_station = synonym("station")  # Retain backwards compatibility
     observations = relationship(
         "Obs", back_populates="history", order_by="Obs.id"
     )
