@@ -55,9 +55,8 @@ class Network(Base):
     stations = relationship(
         "Station", backref=backref("meta_network", order_by=id)
     )
-    variables = relationship(
-        "Variable", backref=backref("meta_network", order_by=id)
-    )
+    variables = relationship("Variable", back_populates="network")
+    meta_vars = synonym("variables")
 
     def __str__(self):
         return "<CRMP Network %s>" % self.name
@@ -277,7 +276,10 @@ class Variable(Base):
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
     # Relationships
-    network = relationship("Network", backref=backref("meta_vars", order_by=id))
+    network = relationship(
+        "Network", back_populates="variables", order_by="Variable.id"
+    )
+    meta_network = synonym("network")
     obs = relationship("Obs", back_populates="variable", order_by="Obs.id")
     obs_raw = synonym("obs")  # To keep backwards compatibility
 
