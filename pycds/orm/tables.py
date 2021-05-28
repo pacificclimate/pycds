@@ -148,8 +148,9 @@ class History(Base):
         "Station", backref=backref("meta_history", order_by=id)
     )
     observations = relationship(
-        "Obs", backref=backref("meta_history", order_by=id)
+        "Obs", back_populates="history", order_by="Obs.id"
     )
+    obs_raw = synonym("observations")  # Retain backwards compatibility
 
 
 Index("fki_meta_history_station_id_fk", History.station_id)
@@ -212,7 +213,10 @@ class Obs(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship("History", backref=backref("obs_raw", order_by=id))
+    history = relationship(
+        "History", back_populates="observations"
+    )
+    meta_history = synonym("history")  # Retain backwards compatibility
     variable = relationship("Variable", back_populates="obs")
     meta_vars = synonym("variable")  # To keep backwards compatibility
     flags = relationship(
