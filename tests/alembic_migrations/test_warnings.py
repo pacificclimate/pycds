@@ -17,6 +17,6 @@ def test_warnings(
         print(f"{len(ws)} warnings:")
         for w in ws:
             print(f"\n{w}")
-        assert len(ws) == 2
+        assert len(ws) == 0
         assert all(w.category == SAWarning for w in ws)
 

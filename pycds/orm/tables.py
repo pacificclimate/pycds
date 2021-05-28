@@ -53,8 +53,9 @@ class Network(Base):
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
     stations = relationship(
-        "Station", backref=backref("meta_network", order_by=id)
+        "Station", back_populates="network", order_by="Network.id"
     )
+    meta_station = synonym("stations")
     variables = relationship("Variable", back_populates="network")
     meta_vars = synonym("variables")
 
@@ -96,9 +97,8 @@ class Station(Base):
     max_obs_time = Column(DateTime)
 
     # Relationships
-    network = relationship(
-        "Network", backref=backref("meta_station", order_by=id)
-    )
+    network = relationship("Network", back_populates="stations")
+    meta_network = synonym("network")
     histories = relationship(
         "History", back_populates="station", order_by=id
     )
