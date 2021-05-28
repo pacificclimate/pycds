@@ -25,7 +25,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, synonym
 from sqlalchemy.schema import DDL, UniqueConstraint
 from geoalchemy2 import Geometry
 
@@ -214,7 +214,8 @@ class Obs(Base):
 
     # Relationships
     history = relationship("History", backref=backref("obs_raw", order_by=id))
-    variable = relationship("Variable", backref=backref("obs_raw", order_by=id))
+    variable = relationship("Variable", back_populates="obs")
+    meta_vars = synonym("variable")  # To keep backwards compatibility
     flags = relationship(
         "NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs"
     )
@@ -277,7 +278,8 @@ class Variable(Base):
 
     # Relationships
     network = relationship("Network", backref=backref("meta_vars", order_by=id))
-    obs = relationship("Obs", backref=backref("meta_vars", order_by=id))
+    obs = relationship("Obs", back_populates="variable", order_by="Obs.id")
+    obs_raw = synonym("obs")  # To keep backwards compatibility
 
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
