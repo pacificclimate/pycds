@@ -218,8 +218,7 @@ class Obs(Base):
     flags = relationship(
         "NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs"
     )
-    # better named alias for 'flags'; don't repeat backref
-    native_flags = relationship("NativeFlag", secondary=ObsRawNativeFlags)
+    native_flags = synonym("flags")  # Better name
     pcic_flags = relationship(
         "PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs"
     )
