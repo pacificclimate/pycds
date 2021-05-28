@@ -1,3 +1,4 @@
+from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
 from pycds.alembic.info import get_current_head
@@ -78,6 +79,8 @@ def db_supports_matviews(engine):
 
 # TODO: Break this up into separate functions for each item type.
 # TODO: Use `inspect()` to get information.
+# Note: Prefer `Inspector` methods to this function wherever possible.
+# It's easy: e.g., `inspect(engine).get_table_names(schema=...)`
 def get_schema_item_names(
     executor,
     item_type,

@@ -17,7 +17,6 @@ from pycds.orm.tables import (
     History,
     Station,
     Variable,
-    ClimatologyAttributes,
     ObsCountPerMonthHistory,
     StationObservationStats,
 )
@@ -25,7 +24,7 @@ from pycds.orm.tables import (
 
 # revision identifiers, used by Alembic.
 revision = "0d99ba90c229"
-down_revision = "e688e520d265"
+down_revision = "2914c6c8a7f9"
 branch_labels = None
 depends_on = None
 
@@ -38,7 +37,6 @@ classes = (
     History,
     Station,
     Variable,
-    ClimatologyAttributes,
     ObsCountPerMonthHistory,
     StationObservationStats,
 )
