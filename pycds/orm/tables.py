@@ -292,6 +292,10 @@ class Variable(Base):
     obs = relationship("Obs", order_by="Obs.id", back_populates="variable")
     observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
+    derived_values = relationship(
+        "DerivedValue", order_by="DerivedValue.id", back_populates="variable"
+    )
+    obs_derived_values = synonym("derived_values") # Backwards compatibility
 
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
@@ -352,9 +356,7 @@ class DerivedValue(Base):
 
     # Relationships
     history = relationship("History", back_populates="derived_values")
-    variable = relationship(
-        "Variable", backref=backref("obs_derived_values", order_by=id)
-    )
+    variable = relationship("Variable", back_populates="derived_values")
 
     # Constraints
     __table_args__ = (
