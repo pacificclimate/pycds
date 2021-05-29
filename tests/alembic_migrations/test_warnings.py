@@ -19,4 +19,3 @@ def test_warnings(
             print(f"\n{w}")
         assert len(ws) == 0
         assert all(w.category == SAWarning for w in ws)
-

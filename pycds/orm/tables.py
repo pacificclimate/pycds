@@ -153,6 +153,10 @@ class History(Base):
         "Obs", order_by="Obs.id", back_populates="history"
     )
     obs_raw = synonym("observations")  # Retain backwards compatibility
+    derived_values = relationship(
+        "DerivedValue", order_by="DerivedValue.id", back_populates="history"
+    )
+    obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
 
 Index("fki_meta_history_station_id_fk", History.station_id)
@@ -347,9 +351,7 @@ class DerivedValue(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship(
-        "History", backref=backref("obs_derived_values", order_by=id)
-    )
+    history = relationship("History", back_populates="derived_values")
     variable = relationship(
         "Variable", backref=backref("obs_derived_values", order_by=id)
     )
