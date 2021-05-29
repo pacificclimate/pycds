@@ -225,10 +225,10 @@ class Obs(Base):
     meta_history = synonym("history")  # Retain backwards compatibility
     variable = relationship("Variable", back_populates="obs")
     meta_vars = synonym("variable")  # To keep backwards compatibility
-    flags = relationship(
-        "NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs"
+    native_flags = relationship(
+        "NativeFlag", secondary=ObsRawNativeFlags, back_populates="flagged_obs"
     )
-    native_flags = synonym("flags")  # Better name
+    flags = synonym("native_flags")  # Retain backwards compatibility
     pcic_flags = relationship(
         "PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs"
     )
@@ -322,6 +322,9 @@ class NativeFlag(Base):
 
     network = relationship(
         "Network", backref=backref("meta_native_flag", order_by=id)
+    )
+    flagged_obs = relationship(
+        "Obs", secondary=ObsRawNativeFlags, back_populates="native_flags"
     )
 
     # Constraints
