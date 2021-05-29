@@ -8,6 +8,12 @@ paradoxically not included in the internal list of indexes available for an
 ORM class via `ORMClass.__table__.indexes`. The latter is very convenient, so
 we make sure always to declare indexes outside of classes. See code below for
 many examples.
+
+2. Relationships should be declared using `back_populates=`, and *not* using
+`backref=`. Using `back_populates` is slightly redundant, but the redundancy
+ensures that each class explicitly names all its relationship attributes.
+(Using `backref` requires one to scan the all other classes to
+find all the relationship attributes that a given class may have.)
 """
 
 import datetime
@@ -24,9 +30,9 @@ from sqlalchemy import (
     Index,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
-from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
-from sqlalchemy.orm import relationship, backref, synonym
-from sqlalchemy.schema import DDL, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.schema import UniqueConstraint
 from geoalchemy2 import Geometry
 
 from pycds.context import get_schema_name
@@ -223,9 +229,7 @@ class Obs(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship(
-        "History", back_populates="observations"
-    )
+    history = relationship("History", back_populates="observations")
     meta_history = synonym("history")  # Retain backwards compatibility
     variable = relationship("Variable", back_populates="obs")
     meta_vars = synonym("variable")  # To keep backwards compatibility
@@ -289,9 +293,7 @@ class Variable(Base):
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
     # Relationships
-    network = relationship(
-        "Network", back_populates="variables"
-    )
+    network = relationship("Network", back_populates="variables")
     meta_network = synonym("network")
     obs = relationship("Obs", order_by="Obs.id", back_populates="variable")
     observations = synonym("obs")  # Better name
@@ -299,7 +301,7 @@ class Variable(Base):
     derived_values = relationship(
         "DerivedValue", order_by="DerivedValue.id", back_populates="variable"
     )
-    obs_derived_values = synonym("derived_values") # Backwards compatibility
+    obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
@@ -311,9 +313,10 @@ Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class NativeFlag(Base):
-    """This class maps to the table which records all 'flags' for observations which have been `flagged` by the
-    data provider (i.e. the network) for some reason. This table records the details of the flags.
-    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    """This class maps to the table which records all 'flags' for observations
+    which have been `flagged` by the data provider (i.e. the network) for some
+    reason. This table records the details of the flags. Actual flagging is
+    recorded in the class/table ObsRawNativeFlags.
     """
 
     __tablename__ = "meta_native_flag"
@@ -336,9 +339,10 @@ class NativeFlag(Base):
 
 
 class PCICFlag(Base):
-    """This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
-    for some reason. This table records the details of the flags.
-    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    """This class maps to the table which records all 'flags' for observations
+    which have been flagged by PCIC for some reason. This table records the
+    details of the flags. Actual flagging is recorded in the class/table
+    ObsRawPCICFlags.
     """
 
     __tablename__ = "meta_pcic_flag"
