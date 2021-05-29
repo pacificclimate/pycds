@@ -60,6 +60,10 @@ class Network(Base):
     meta_vars = synonym("variables")
     contact = relationship("Contact", back_populates="networks")
     meta_contact = synonym("contact")  # Retain backwards compatibility
+    native_flags = relationship(
+        "NativeFlag", order_by="NativeFlag.id", back_populates="network"
+    )
+    meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
     def __str__(self):
         return "<CRMP Network %s>" % self.name
@@ -320,9 +324,7 @@ class NativeFlag(Base):
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship(
-        "Network", backref=backref("meta_native_flag", order_by=id)
-    )
+    network = relationship("Network", back_populates="native_flags")
     flagged_obs = relationship(
         "Obs", secondary=ObsRawNativeFlags, back_populates="native_flags"
     )
