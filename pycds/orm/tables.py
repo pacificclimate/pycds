@@ -230,7 +230,7 @@ class Obs(Base):
     )
     flags = synonym("native_flags")  # Retain backwards compatibility
     pcic_flags = relationship(
-        "PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs"
+        "PCICFlag", secondary=ObsRawPCICFlags, back_populates="flagged_obs"
     )
 
     # Constraints
@@ -344,6 +344,10 @@ class PCICFlag(Base):
     name = Column("flag_name", String)
     description = Column(String)
     discard = Column(Boolean)
+
+    flagged_obs = relationship(
+        "Obs", secondary=ObsRawPCICFlags, back_populates="pcic_flags"
+    )
 
 
 class DerivedValue(Base):
