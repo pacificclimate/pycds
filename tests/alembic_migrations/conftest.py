@@ -35,6 +35,14 @@ def uri_right(base_database_uri):
 
 @pytest.fixture(scope="module")
 def db_setup(schema_name):
+    """
+    Database setup operations. These are operations that must executed prior
+    to the creation of any (other) content in the database in order for the
+    tests to work.
+
+    The function returned by this fixture is passed to
+    `alembicverify_util.prepare_schema_from_migrations`, which invokes it.
+    """
     def f(engine):
         test_user = "testuser"
 
@@ -79,6 +87,14 @@ def db_setup(schema_name):
 
 @pytest.fixture(scope="module")
 def env_config(schema_name):
+    """
+    Additional Alembic migration environment configuration values. These
+    values are required for the tests to operate properly; in particular for
+    them to respect the schema the migrations are being applied to.
+
+    These values are passed to `alembicverify_util.get_current_revision`,
+    `.get_head_revision` as kw args of the same name.
+    """
     return {
         "version_table": "alembic_version",
         "version_table_schema": schema_name,

@@ -6,9 +6,7 @@ from .alembicverify_util import prepare_schema_from_migrations
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_warnings(
-    uri_left, alembic_config_left, db_setup, env_config
-):
+def test_warnings(uri_left, alembic_config_left, db_setup):
     with warnings.catch_warnings(record=True) as ws:
         warnings.simplefilter("always")
         engine, script = prepare_schema_from_migrations(

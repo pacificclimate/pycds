@@ -48,7 +48,7 @@ def test_upgrade_and_downgrade(
 
 @pytest.mark.skip(reason="utility; not really a test")
 @pytest.mark.usefixtures("new_db_left")
-def test_indexes(uri_left, alembic_config_left, db_setup, env_config):
+def test_indexes(uri_left, alembic_config_left, db_setup):
     engine, script = prepare_schema_from_migrations(
         uri_left, alembic_config_left, db_setup=db_setup
     )
