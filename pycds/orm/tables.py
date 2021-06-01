@@ -9,7 +9,7 @@ ORM class via `ORMClass.__table__.indexes`. The latter is very convenient, so
 we make sure always to declare indexes outside of classes. See code below for
 many examples.
 
-2. Relationships should be declared using `back_populates=`, and *not* using
+2. We prefer to declare relationships using `back_populates=`, *not* using
 `backref=`. Using `back_populates` is slightly redundant, but the redundancy
 ensures that each class explicitly names all its relationship attributes.
 (Using `backref` requires one to scan the all other classes to
