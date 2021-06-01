@@ -14,8 +14,9 @@ def test_warnings(
         engine, script = prepare_schema_from_migrations(
             uri_left, alembic_config_left, db_setup=db_setup
         )
-        print(f"{len(ws)} warnings:")
-        for w in ws:
-            print(f"\n{w}")
+        # When warnings are present and being addressed, these print statements
+        # are useful.
+        # print(f"{len(ws)} warnings:")
+        # for w in ws:
+        #     print(f"\n{w}")
         assert len(ws) == 0
-        assert all(w.category == SAWarning for w in ws)
