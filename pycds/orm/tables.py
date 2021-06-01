@@ -159,13 +159,9 @@ class History(Base):
     sensor = relationship("MetaSensor")
     station = relationship("Station", back_populates="histories")
     meta_station = synonym("station")  # Retain backwards compatibility
-    observations = relationship(
-        "Obs", order_by="Obs.id", back_populates="history"
-    )
+    observations = relationship("Obs", back_populates="history")
     obs_raw = synonym("observations")  # Retain backwards compatibility
-    derived_values = relationship(
-        "DerivedValue", order_by="DerivedValue.id", back_populates="history"
-    )
+    derived_values = relationship("DerivedValue", back_populates="history")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
 
@@ -295,12 +291,10 @@ class Variable(Base):
     # Relationships
     network = relationship("Network", back_populates="variables")
     meta_network = synonym("network")
-    obs = relationship("Obs", order_by="Obs.id", back_populates="variable")
+    obs = relationship("Obs", back_populates="variable")
     observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
-    derived_values = relationship(
-        "DerivedValue", order_by="DerivedValue.id", back_populates="variable"
-    )
+    derived_values = relationship("DerivedValue", back_populates="variable")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
     def __repr__(self):
