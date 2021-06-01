@@ -11,9 +11,7 @@ def test_get_current_head():
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_check_migration_version(
-    uri_left, alembic_config_left, db_setup, env_config
-):
+def test_check_migration_version(uri_left, alembic_config_left, db_setup):
     """Test that `check_migration_version` passes on the latest migration
     and raises an exception on other versions.
 

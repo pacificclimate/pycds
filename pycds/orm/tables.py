@@ -8,6 +8,12 @@ paradoxically not included in the internal list of indexes available for an
 ORM class via `ORMClass.__table__.indexes`. The latter is very convenient, so
 we make sure always to declare indexes outside of classes. See code below for
 many examples.
+
+2. We prefer to declare relationships using `back_populates=`, *not* using
+`backref=`. Using `back_populates` is slightly redundant, but the redundancy
+ensures that each class explicitly names all its relationship attributes.
+(Using `backref` requires one to scan the all other classes to
+find all the relationship attributes that a given class may have.)
 """
 
 import datetime
@@ -24,9 +30,9 @@ from sqlalchemy import (
     Index,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
-from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.schema import DDL, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.schema import UniqueConstraint
 from geoalchemy2 import Geometry
 
 from pycds.context import get_schema_name
@@ -53,11 +59,17 @@ class Network(Base):
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
     stations = relationship(
-        "Station", backref=backref("meta_network", order_by=id)
+        "Station", order_by="Station.id", back_populates="network"
     )
-    variables = relationship(
-        "Variable", backref=backref("meta_network", order_by=id)
+    meta_station = synonym("stations")
+    variables = relationship("Variable", back_populates="network")
+    meta_vars = synonym("variables")
+    contact = relationship("Contact", back_populates="networks")
+    meta_contact = synonym("contact")  # Retain backwards compatibility
+    native_flags = relationship(
+        "NativeFlag", order_by="NativeFlag.id", back_populates="network"
     )
+    meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
     def __str__(self):
         return "<CRMP Network %s>" % self.name
@@ -78,7 +90,7 @@ class Contact(Base):
     phone = Column("phone", String)
 
     networks = relationship(
-        "Network", backref=backref("meta_contact", order_by=id)
+        "Network", order_by="Network.id", back_populates="contact"
     )
 
 
@@ -97,12 +109,12 @@ class Station(Base):
     max_obs_time = Column(DateTime)
 
     # Relationships
-    network = relationship(
-        "Network", backref=backref("meta_station", order_by=id)
-    )
+    network = relationship("Network", back_populates="stations")
+    meta_network = synonym("network")
     histories = relationship(
-        "History", backref=backref("meta_station", order_by=id)
+        "History", order_by="History.id", back_populates="station"
     )
+    meta_history = synonym("histories")  # Retain backwards compatibility
 
     def __str__(self):
         return "<CRMP Station %s:%s>" % (self.network.name, self.native_id)
@@ -145,12 +157,12 @@ class History(Base):
 
     # Relationships
     sensor = relationship("MetaSensor")
-    station = relationship(
-        "Station", backref=backref("meta_history", order_by=id)
-    )
-    observations = relationship(
-        "Obs", backref=backref("meta_history", order_by=id)
-    )
+    station = relationship("Station", back_populates="histories")
+    meta_station = synonym("station")  # Retain backwards compatibility
+    observations = relationship("Obs", back_populates="history")
+    obs_raw = synonym("observations")  # Retain backwards compatibility
+    derived_values = relationship("DerivedValue", back_populates="history")
+    obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
 
 Index("fki_meta_history_station_id_fk", History.station_id)
@@ -213,15 +225,16 @@ class Obs(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship("History", backref=backref("obs_raw", order_by=id))
-    variable = relationship("Variable", backref=backref("obs_raw", order_by=id))
-    flags = relationship(
-        "NativeFlag", secondary=ObsRawNativeFlags, backref="flagged_obs"
+    history = relationship("History", back_populates="observations")
+    meta_history = synonym("history")  # Retain backwards compatibility
+    variable = relationship("Variable", back_populates="obs")
+    meta_vars = synonym("variable")  # To keep backwards compatibility
+    native_flags = relationship(
+        "NativeFlag", secondary=ObsRawNativeFlags, back_populates="flagged_obs"
     )
-    # better named alias for 'flags'; don't repeat backref
-    native_flags = relationship("NativeFlag", secondary=ObsRawNativeFlags)
+    flags = synonym("native_flags")  # Retain backwards compatibility
     pcic_flags = relationship(
-        "PCICFlag", secondary=ObsRawPCICFlags, backref="flagged_obs"
+        "PCICFlag", secondary=ObsRawPCICFlags, back_populates="flagged_obs"
     )
 
     # Constraints
@@ -276,8 +289,13 @@ class Variable(Base):
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
     # Relationships
-    network = relationship("Network", backref=backref("meta_vars", order_by=id))
-    obs = relationship("Obs", backref=backref("meta_vars", order_by=id))
+    network = relationship("Network", back_populates="variables")
+    meta_network = synonym("network")
+    obs = relationship("Obs", back_populates="variable")
+    observations = synonym("obs")  # Better name
+    obs_raw = synonym("obs")  # To keep backwards compatibility
+    derived_values = relationship("DerivedValue", back_populates="variable")
+    obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
@@ -289,9 +307,10 @@ Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class NativeFlag(Base):
-    """This class maps to the table which records all 'flags' for observations which have been `flagged` by the
-    data provider (i.e. the network) for some reason. This table records the details of the flags.
-    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    """This class maps to the table which records all 'flags' for observations
+    which have been `flagged` by the data provider (i.e. the network) for some
+    reason. This table records the details of the flags. Actual flagging is
+    recorded in the class/table ObsRawNativeFlags.
     """
 
     __tablename__ = "meta_native_flag"
@@ -302,8 +321,9 @@ class NativeFlag(Base):
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship(
-        "Network", backref=backref("meta_native_flag", order_by=id)
+    network = relationship("Network", back_populates="native_flags")
+    flagged_obs = relationship(
+        "Obs", secondary=ObsRawNativeFlags, back_populates="native_flags"
     )
 
     # Constraints
@@ -313,9 +333,10 @@ class NativeFlag(Base):
 
 
 class PCICFlag(Base):
-    """This class maps to the table which records all 'flags' for observations which have been flagged by PCIC
-    for some reason. This table records the details of the flags.
-    Actual flagging is recorded in the class/table ObsRawNativeFlags.
+    """This class maps to the table which records all 'flags' for observations
+    which have been flagged by PCIC for some reason. This table records the
+    details of the flags. Actual flagging is recorded in the class/table
+    ObsRawPCICFlags.
     """
 
     __tablename__ = "meta_pcic_flag"
@@ -323,6 +344,10 @@ class PCICFlag(Base):
     name = Column("flag_name", String)
     description = Column(String)
     discard = Column(Boolean)
+
+    flagged_obs = relationship(
+        "Obs", secondary=ObsRawPCICFlags, back_populates="pcic_flags"
+    )
 
 
 class DerivedValue(Base):
@@ -337,12 +362,8 @@ class DerivedValue(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship(
-        "History", backref=backref("obs_derived_values", order_by=id)
-    )
-    variable = relationship(
-        "Variable", backref=backref("obs_derived_values", order_by=id)
-    )
+    history = relationship("History", back_populates="derived_values")
+    variable = relationship("Variable", back_populates="derived_values")
 
     # Constraints
     __table_args__ = (
