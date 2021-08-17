@@ -63,11 +63,11 @@ jobs:
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        py.test -v --tb=short tests
+        pipenv run pytest -v --tb=short tests
 
     - name: Test with pytest (fast)
       if: github.ref != 'refs/heads/master'
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        py.test -m "not slow" -v --tb=short tests
+        pipenv run pytest -m "not slow" -v --tb=short tests
