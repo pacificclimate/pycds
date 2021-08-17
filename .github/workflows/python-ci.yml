@@ -19,8 +19,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install system-level dependencies
-#      env:
-#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
         # Add postgres package repo; see https://wiki.postgresql.org/wiki/Apt
         sudo apt-get install curl ca-certificates gnupg
@@ -29,9 +27,6 @@ jobs:
         sudo apt-get update
         sudo apt purge postgresql-client-13 postgresql-server-dev-all
         sudo apt-get install postgresql-plpython-9.5 postgresql-9.5-postgis-2.4
-#        pip install -U pip pytest
-#        pip install -r requirements.txt -r test_requirements.txt
-#        pip install .
 
     - name: Install pipenv
       run: |
