@@ -1,18 +1,11 @@
-# PyCDS local test database
+# Test migrations with a test database
 
-## What
-
-The files in this directory allow you to build and run a test database
-for PyCDS.
-
-## Why
-
-Mainly for for testing the Alembic customization 
+We have defined a Docker image `pcic/pycds-test-db` 
+that establishes a test PyCDS database.
+It is mainly used for testing the Alembic customization 
 (`alembic/env.py`) and database migrations.
 
-## How
-
-The Dockerfile defines a Docker image with PostgreSQL 9.3,
+The image defines a Docker image with PostgreSQL 9.3,
 PostGIS 2.4, and PL/Python installed. 
 This configuration matches our test environment,
 and approximately matches our production environment, which currently runs 
@@ -20,13 +13,10 @@ PostgreSQL 9.1 and some compatible version of PostGIS.
 (It seems that it is not possible to replicate the production environment 
 environment exactly in test environments.)
 
-## Pull image
-
-The GitHub Action docker-publish automatically builds the image.
-Pull it from Dockerhub:
+## Build image
 
 ```
-docker pull pcic/pycds-test-db
+$ make test-db-image
 ```
 
 ## Run image (container)
@@ -70,7 +60,7 @@ To stop the local Docker test database container:
 ./docker/test-db/down-db.sh
 ```
 
-This is a pretty trivial convenience, but it's a _convenient_ convenience.
+It's a pretty trivial convenience, but it's a _convenient_ convenience.
 
 ### Note: Unit test data from production
 
@@ -85,4 +75,3 @@ The steps to produce this were:
 5. Re-order the data inserts to respect foreign key constraints.
     Default sort is alphabetical and the only changes that should need to be made are ordering `meta_network`,
     `meta_station`, and `meta_history` first and leaving the remaining inserts ordered as is.
-
