@@ -21,6 +21,8 @@ $ make test-db-image
 
 ## Run image (container)
 
+**TODO**: Migrate this into the Makefile, and eliminate the shell scripts.
+
 Run it from the project root directory:
 
 ```shell script

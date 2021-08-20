@@ -2,7 +2,6 @@
 
 ## Table of contents
 
-- [Table of contents](#table-of-contents)
 - [Continuous Integration testing](#continuous-integration-testing)
 - [Docker container for running tests](#docker-container-for-running-tests)
     - [Introduction](#introduction)

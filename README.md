@@ -10,9 +10,10 @@ database in a standard database model, referred to variously as a CRMP
 database or a PCDS database.
 
 This package also uses [Alembic](https://alembic.sqlalchemy.org/) to manage 
-database creation and migration (see section below).
+database creation and migration. For details, 
+see [Database maintenance](docs/database-maintenance.md).
 
-This type of database (i.e., with the PCDS/CRMP model) is currently used at 
+This type of database (PCDS/CRMP schema) is currently used at 
 PCIC to store BC's long-term weather archive, the Provincial Climate Data 
 Set (PCDS), and the Northern Climate Database (dbnorth). For details, see 
 [Background](docs/background.md).

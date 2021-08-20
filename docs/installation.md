@@ -17,7 +17,7 @@ Installation is automated through `make`.
 To clone the project:
 
 1. `cd` to your parent directory for project code (e.g., `~/code`).
-1. `make clone`
+1. `git clone git@github.com:pacificclimate/pycds.git`
 1. `cd pycds`
 
 To install the project:

@@ -24,9 +24,10 @@ tool based on SQLAlchemy.
 
 In short, Alembic supports and disciplines two processes of database schema change:
 
-- Creation of database migration scripts (Python programs) that modify the schema of a database.
+1. Creation of database migration scripts (Python programs) that modify the 
+   schema of a database.
 
-- Application of migrations to specific database instances.
+2. Application of migrations to specific database instances.
 
   - In particular, Alembic can be used to *create* a new instance of a ``modelmeta`` database by migrating an
     empty database to the current state. This is described in detail below.
@@ -37,7 +38,7 @@ For more information, see the [Alembic tutorial](https://alembic.sqlalchemy.org/
 
 We have customized the Alembic environment manager (`alembic/env.py`) so that it is
 possible to operate on any of an arbitrary number of databases defined in `alembic.ini`,
-according an `alembic` command line argument. This argument takes the form
+according to an `alembic` command line argument. This argument takes the form
 
 ```shell script
 alembic -x db=<db-label> ...

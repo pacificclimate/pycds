@@ -1,5 +1,7 @@
 # ORM contents and usage
 
+PyCDS defines the following contents of a CRMP/PCDS database:
+
 # Table of contents
 
 - [Schema name](#schema-name)
@@ -7,23 +9,13 @@
 - [Stored procedures](#stored-procedures)
 - [Views](#views)
 - [Materialized views](#materialized-views)
- 
-
-PyCDS defines the following contents of a CRMP/PCDS database:
-
-- schema name
-- tables
-- stored procedures
-- views
-- materialized views
-
 
 ## Schema name
 
 All contents of a PyCDS database are defined in a named schema.
 
-SQLAlchemy documentation [recommends](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path)
-against using the `search_path` to establish schema name:
+SQLAlchemy documentation [recommends against](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#remote-schema-table-introspection-and-postgresql-search-path)
+using the `search_path` to establish schema name:
 
 > keep the `search_path` variable set to its default of `public`, name schemas other than `public`
 explicitly within `Table` definitions.
@@ -73,7 +65,9 @@ where `engine` is a SQLAlchemy database engine.
 
 ## Stored procedures
 
-A stored procedure is a replaceable object (see above), and all such objects are managed
+A stored procedure is a replaceable object 
+(see [Managing non-mutable database content](managing-non-mutable.md)), 
+and all such objects are managed
 via Alembic migrations. A migration may add, drop, or change a stored procedure.
 The stored procedures present in one
 migration version of the database can be different than those in another version.
@@ -92,7 +86,9 @@ A stored procedure in the database is is accessed in SQLAlchemy through the stan
 
 ## Views
 
-A view is a replaceable object (see above), and all such objects are managed via
+A view is a replaceable object 
+(see [Managing non-mutable database content](managing-non-mutable.md)), 
+and all such objects are managed via
 Alembic migrations. A migration may add, drop, or change a view. The views present in one
 migration version of the database can be different than those in another version.
 
@@ -117,7 +113,9 @@ Column names within views bear a similarly close but not always identical relati
 
 ## Materialized views
 
-A materialized view is a replaceable object (see above), and all such objects are managed via
+A materialized view is a replaceable object
+(see [Managing non-mutable database content](managing-non-mutable.md)),
+and all such objects are managed via
 Alembic migrations. A migration may add, drop, or change a materialized view. The materialized views present in one
 migration version of the database can be different than those in another version.
 
