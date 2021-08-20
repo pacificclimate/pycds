@@ -39,3 +39,9 @@ six = "==1.12.0"
 sqlalchemy-diff = "==0.1.5"
 SQLAlchemy-Utils = "==0.37.3"
 zipp = "==0.6.0"
+
+# We can't use python_version because with a Ubuntu 18.04 base image
+# (which we must use in order to access old versions of Postgres etc.),
+# the Python test-matrix installations fail.
+# [requires]
+# python_version = "3.8"

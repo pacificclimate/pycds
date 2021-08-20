@@ -29,6 +29,12 @@ RUN apt-get install -yq \
             && \
     pip3 install -U pipenv
 
+# Set up non-root user. We do this for two reasons:
+# - Postgres refuses to run as root for security reasons.
+# - In general, we do not want to run our test environments as root on workstations, because
+#   they are behind the firewall.
+# This setup follows the pattern established in several other projects for non-root users.
+
 # Build arguments (scope limited to build). If you wish to use a different user,
 # group, or home dir, override these in the build command or change them here.
 # If you specify build arg USERNAME=root, then the user is root.

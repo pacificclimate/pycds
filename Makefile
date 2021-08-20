@@ -1,8 +1,3 @@
-all: install
-
-clone:
-	git clone git@github.com:pacificclimate/pycds.git
-
 install:
 	pip install -U pipenv
 	pipenv install --dev

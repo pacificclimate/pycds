@@ -62,16 +62,18 @@ To stop the local Docker test database container:
 
 It's a pretty trivial convenience, but it's a _convenient_ convenience.
 
-### Note: Unit test data from production
+## Note: Unit test data from production
 
 Some data used in the unit tests was sourced from a production database. 
 The steps to produce this were:
 
-1. As database superuser, run CREATE SCHEMA subset AUTHORIZATION <username>;
+1. As database superuser, run
+   `CREATE SCHEMA subset AUTHORIZATION <username>;`
 2. As that user, run `psql -h <db_host> -f create_crmp_subset.sql crmp`.
    This insert a selection of data into the `subset` schema.
 3. Then, `pg_dump -h <db_host> -d crmp --schema=subset --data-only --no-owner --no-privileges --no-tablespaces --column-inserts -f pycds/data/crmp_subset_data.sql`
 4. Edit this file to remove the `SET search_path...` line,
 5. Re-order the data inserts to respect foreign key constraints.
-    Default sort is alphabetical and the only changes that should need to be made are ordering `meta_network`,
+    Default sort is alphabetical and the only changes that should need to be 
+    made are ordering `meta_network`,
     `meta_station`, and `meta_history` first and leaving the remaining inserts ordered as is.
