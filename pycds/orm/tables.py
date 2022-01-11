@@ -297,6 +297,11 @@ class Variable(Base):
     derived_values = relationship("DerivedValue", back_populates="variable")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
+    # Constraints
+    __table_args__ = (
+            UniqueConstraint("network_id", func.lower("net_var_name"), name="network_variable_name_unique"),
+    )
+
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(
             self.__class__.__name__, **self.__dict__
