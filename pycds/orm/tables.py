@@ -28,6 +28,7 @@ from sqlalchemy import (
     String,
     Date,
     Index,
+    Func,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base
