@@ -28,12 +28,12 @@ from sqlalchemy import (
     String,
     Date,
     Index,
-    Func,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, synonym
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy import func
 from geoalchemy2 import Geometry
 
 from pycds.context import get_schema_name
