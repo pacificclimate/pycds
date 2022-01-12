@@ -21,6 +21,7 @@ regex = "==2020.1.8"
 SQLAlchemy = "==1.4.15"
 toml = "==0.10.0"
 typed-ast = "==1.4.1"
+sqlalchemy-citext = "*"
 
 [dev-packages]
 alembic-verify = "==0.1.4"
@@ -39,7 +40,6 @@ six = "==1.12.0"
 sqlalchemy-diff = "==0.1.5"
 SQLAlchemy-Utils = "==0.37.3"
 zipp = "==3.5.0"
-
 # We can't use python_version because with a Ubuntu 18.04 base image
 # (which we must use in order to access old versions of Postgres etc.),
 # the Python test-matrix installations fail.
