@@ -35,7 +35,7 @@ production environment. The infrastructure is in `docker/local-pytest/`.
 
 1. **Advance prep**
 
-    Do each of the following things *once per workstation*.
+    Do each of the following things **once per workstation**.
     
     1. Configure Docker user namespace mapping.
     
@@ -77,26 +77,37 @@ production environment. The infrastructure is in `docker/local-pytest/`.
 
 1. **Change code and run tests**
 
-    Each time you wish to run tests on your local codebase, enter a suitable
-    command at the prompt. For example:
+   Each time you wish to run tests on your local codebase, enter a suitable
+   command at the prompt. For example:
     
-    ```
-    pipenv run pytest -v -m "not local_only" --tb=short tests -x
-    ```
-    
-    *Do not stop the container until you have finished all changes and
-    testing you wish to make for a given session.* 
-    It is far more time efficient run tests inside the same container 
-    (avoiding startup time) than to restart the container for each test.
-    
-    Your local codebase is mounted to the container. Any code changes you make 
-    externally (in your local filesystem) are reflected "live" inside the 
-    container.
+   ```
+   pipenv run pytest -v -m "not local_only" --tb=short tests -x
+   ```
+   
+   Alternatively, run                               
 
-1. **Stop the test container**
+   ```
+   pipenv shell
+   ```
+   
+   to obtain a shell in which the virtual environment created by `pipenv` is 
+   activated. All commands run from this shell take place within the virtual 
+   environment. To exit this shell (but not the container), enter `exit`.
+
+   
+1. **Do not stop the container until you have finished all changes and
+   testing you wish to make for a given session.** 
+   It is far more time efficient run tests inside the same container 
+   (avoiding startup time) than to restart the container for each test.
+    
+   Your local codebase is mounted to the container. Any code changes you make 
+   externally (in your local filesystem) are reflected "live" inside the 
+   container.
+
+2. **Stop the test container**
 
     When you have completed a develop-and-test session and no longer wish to
-    have the test container running, enter Ctrl+D on the 
+    have the test container running, enter Ctrl+D or `exit` on the 
     command line. The container is stopped and automatically removed.
 
 ### Notes and caveats
