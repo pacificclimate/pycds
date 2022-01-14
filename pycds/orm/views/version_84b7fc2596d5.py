@@ -193,6 +193,12 @@ class ObsWithFlags(Base, ReplaceableView):
     This view joins Obs with History and Variable.
     """
 
+    """ 
+    The column net_var_name is defined as a String, but the source 
+    is actually of type CIText 
+    """
+
+
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
     #  Better name: ObsWithMetadata
     __tablename__ = "obs_with_flags"
