@@ -203,7 +203,8 @@ class ObsWithFlags(Base, ReplaceableView):
     unit = Column(String)
     standard_name = Column(String)
     cell_method = Column(String)
-    # net_var_name is actually of type CIText, not String
+    # Variable net_var_name has type CIText in table meta_vars, 
+    # not String
     net_var_name = Column(String)
     station_id = Column(Integer)
     obs_raw_id = Column(Integer, primary_key=True)
