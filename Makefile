@@ -8,7 +8,7 @@ local-pytest-image:
 
 local-pytest-run:
 	py3clean .
-	docker run -it -v $(shell pwd):/codebase pcic/pycds-local-pytest
+	docker run --rm -it -v $(shell pwd):/codebase pcic/pycds-local-pytest
 
 test-db-image:
 	docker build -t pcic/pycds-test-db -f docker/test-db/Dockerfile .
