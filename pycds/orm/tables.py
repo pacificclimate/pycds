@@ -35,6 +35,8 @@ from sqlalchemy.orm import relationship, synonym
 from sqlalchemy.schema import UniqueConstraint
 from geoalchemy2 import Geometry
 
+from citext import CIText
+
 from pycds.context import get_schema_name
 
 
@@ -278,7 +280,7 @@ class Variable(Base):
 
     __tablename__ = "meta_vars"
     id = Column("vars_id", Integer, primary_key=True)
-    name = Column("net_var_name", String)
+    name = Column("net_var_name", CIText())
     unit = Column(String)
     standard_name = Column(String)
     cell_method = Column(String)
@@ -296,6 +298,11 @@ class Variable(Base):
     obs_raw = synonym("obs")  # To keep backwards compatibility
     derived_values = relationship("DerivedValue", back_populates="variable")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
+
+    # Constraints
+    __table_args__ = (
+            UniqueConstraint("network_id", "net_var_name", name="network_variable_name_unique"),
+    )
 
     def __repr__(self):
         return "<{} id={id} name='{name}' standard_name='{standard_name}' cell_method='{cell_method}' network_id={network_id}>".format(

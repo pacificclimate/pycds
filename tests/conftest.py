@@ -8,6 +8,8 @@ from sqlalchemy.schema import DDL, CreateSchema
 from pytest import fixture
 import testing.postgresql
 
+from citext import CIText
+
 import pycds
 
 
@@ -80,6 +82,7 @@ def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     engine = create_engine(base_database_uri)
     engine.execute("CREATE EXTENSION postgis")
     engine.execute("CREATE EXTENSION plpythonu")
+    engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
     engine.execute(CreateSchema(schema_name))
     set_search_path(engine)
     add_functions(engine)

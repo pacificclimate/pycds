@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from .alembicverify_util import prepare_schema_from_migrations
 from pycds.alembic.info import get_current_head
 from ..helpers import insert_crmp_data
-
+from citext import CIText
 
 @pytest.fixture
 def alembic_root():
@@ -50,6 +50,7 @@ def db_setup(schema_name):
 
         engine.execute("CREATE EXTENSION postgis")
         engine.execute("CREATE EXTENSION plpythonu")
+        engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
 
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
