@@ -56,4 +56,6 @@ def downgrade():
         schema=schema_name,
     )
    op.create_replaceable_object(ObsWithFlags)
+
+   op.execute("DROP EXTENSION IF EXISTS citext")
    # ### end Alembic commands ###

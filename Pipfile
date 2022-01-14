@@ -21,7 +21,7 @@ regex = "==2020.1.8"
 SQLAlchemy = "==1.4.15"
 toml = "==0.10.0"
 typed-ast = "==1.4.1"
-sqlalchemy-citext = "*"
+sqlalchemy-citext = "1.8.0"
 
 [dev-packages]
 alembic-verify = "==0.1.4"
