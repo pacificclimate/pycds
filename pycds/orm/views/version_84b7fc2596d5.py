@@ -193,11 +193,6 @@ class ObsWithFlags(Base, ReplaceableView):
     This view joins Obs with History and Variable.
     """
 
-    """ 
-    The column net_var_name is defined as a String, but the source 
-    is actually of type CIText 
-    """
-
 
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
     #  Better name: ObsWithMetadata
@@ -208,6 +203,7 @@ class ObsWithFlags(Base, ReplaceableView):
     unit = Column(String)
     standard_name = Column(String)
     cell_method = Column(String)
+    # net_var_name is actually of type CIText, not String
     net_var_name = Column(String)
     station_id = Column(Integer)
     obs_raw_id = Column(Integer, primary_key=True)
