@@ -49,7 +49,7 @@ def db_setup(schema_name):
         # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
         engine.execute("CREATE EXTENSION postgis")
-        engine.execute("CREATE EXTENSION plpythonu")
+        engine.execute("CREATE EXTENSION plpython3u")
         engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
 
         engine.execute(CreateSchema(schema_name))

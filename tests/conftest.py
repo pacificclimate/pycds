@@ -81,7 +81,7 @@ def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     """
     engine = create_engine(base_database_uri)
     engine.execute("CREATE EXTENSION postgis")
-    engine.execute("CREATE EXTENSION plpythonu")
+    engine.execute("CREATE EXTENSION plpython3u")
     engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
     engine.execute(CreateSchema(schema_name))
     set_search_path(engine)

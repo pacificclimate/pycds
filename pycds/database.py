@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
@@ -42,9 +44,13 @@ def get_postgresql_version(engine):
         raise ValueError(f"We are not running on PostgreSQL.")
 
     version = engine.execute(
-        "SELECT setting FROM pg_settings WHERE name = " "'server_version'"
+        "SELECT setting FROM pg_settings WHERE name = " "'server_version_num'"
     ).first()[0]
-    return tuple(int(n) for n in version.split("."))
+    # Strangely, PostgreSQL reports the version_num in the form of MAJOR_VERSION[zero]MINOR_VERSION[zero][PATCH_VERSION].
+    # The server_version setting is set by the OS/distro at compile time and can potentially be free form, making it challenging to use programatically
+    pattern = r"(\d{1,2})0(\d)0(\d)"
+    m = re.match(pattern, version)
+    return tuple(int(n) for n in m.groups())
 
 
 def db_supports_statement(engine, statement):
