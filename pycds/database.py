@@ -46,9 +46,9 @@ def get_postgresql_version(engine):
     version = engine.execute(
         "SELECT setting FROM pg_settings WHERE name = " "'server_version_num'"
     ).first()[0]
-    # Strangely, PostgreSQL reports the version_num in the form of MAJOR_VERSION[zero]MINOR_VERSION[zero][PATCH_VERSION].
+    # Strangely, PostgreSQL reports the version_num in the form of MAJOR_VERSION[zero][zero][MINOR_VERSION].
     # The server_version setting is set by the OS/distro at compile time and can potentially be free form, making it challenging to use programatically
-    pattern = r"(\d{1,2})0(\d)0(\d)"
+    pattern = r"(\d{1,2})00(\d{1,2})"
     m = re.match(pattern, version)
     return tuple(int(n) for n in m.groups())
 
