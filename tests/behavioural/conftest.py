@@ -1,16 +1,14 @@
-# Fixtures required by
-# [`alembic-verify`](https://alembic-verify.readthedocs.io/en/latest/)
-
 import os
 import pytest
 
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
 
 from ..alembicverify_util import prepare_schema_from_migrations
+from ..helpers import insert_crmp_data
 
 
-# TODO: Repeated. Hoist.
 @pytest.fixture
 def alembic_root():
     return os.path.normpath(
@@ -26,9 +24,6 @@ def uri_left(base_database_uri):
 @pytest.fixture(scope="module")
 def uri_right(base_database_uri):
     yield get_temporary_uri(base_database_uri)
-
-
-# Fixtures specific to our tests
 
 
 @pytest.fixture(scope="module")
@@ -102,13 +97,7 @@ def env_config(schema_name):
 
 @pytest.fixture(scope="module")
 def target_revision():
-    """
-    Placeholder for fixture that must be defined individually for each
-    migration test module.
-    """
-    raise NotImplementedError(
-        "`target_revision` not defined for this migration."
-    )
+    return "3d50ec832e47"
 
 
 @pytest.fixture(scope="function")
@@ -139,3 +128,25 @@ def prepared_schema_from_migrations_left(
     yield engine, script
 
     engine.dispose()
+
+
+@pytest.fixture(scope="function")
+def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
+    engine, script = prepared_schema_from_migrations_left
+    sesh = sessionmaker(bind=engine)()
+
+    yield sesh
+
+    sesh.close()
+
+
+
+@pytest.fixture(scope="function")
+def sesh_with_large_data(prepared_schema_from_migrations_left):
+    engine, script = prepared_schema_from_migrations_left
+    sesh = sessionmaker(bind=engine)()
+    insert_crmp_data(sesh)
+
+    yield sesh
+
+    sesh.close()

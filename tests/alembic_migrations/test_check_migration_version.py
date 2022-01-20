@@ -1,7 +1,7 @@
 import pytest
 from alembic import command
 
-from .alembicverify_util import prepare_schema_from_migrations
+from ..alembicverify_util import prepare_schema_from_migrations
 from pycds.alembic.info import get_current_head
 from pycds.database import check_migration_version
 

@@ -14,6 +14,22 @@
     - [Helper function `add_then_delete_objs`](#helper-function-add_then_delete_objs)
 - [Pytest output formatter](#pytest-output-formatter)
 
+## Unit test organization
+
+TODO: Document other types of tests, e.g., alembic tooling and extensions.
+
+### Unit tests for migrations
+
+Migration tests, aka smoke tests, test the operation of a single migration and whether it modifies the schema (structure) as intended.
+
+Migration tests are organized in a way that parallels the arrangement of the migration scripts they test. Per-migration tests are placed in subdirectories of `tests/alembic_migrations/versions/`. Subdirectories are named very similarly to as the migrations they test. The prefix `v_` (for version/revision) is used so that if necessary the directories can be treated as Python modules. Each such directory contains tests for the results of that migration alone.
+
+### Behavioural tests
+
+Behavioural tests test the _behaviour_ of a database schema object after migration. For example, test whether a view or materialized view contains the rows expected given a certain database content.
+
+Behavioural tests are placed in the directory `tests/behavioural`. 
+
 ## Continuous Integration testing
 
 Project unit tests are run automatically in an environment approximating our
@@ -81,7 +97,7 @@ production environment. The infrastructure is in `docker/local-pytest/`.
    command at the prompt. For example:
     
    ```
-   pipenv run pytest -v -m "not local_only" --tb=short tests -x
+   pipenv run pytest -v -m "not slow" --tb=short tests -x
    ```
    
    Alternatively, run                               

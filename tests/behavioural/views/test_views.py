@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import func, text
 
 from pycds import Obs, History
-from pycds.orm.views.version_84b7fc2596d5 import (
+from pycds.orm.views import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
     ObsCountPerDayHistory,
