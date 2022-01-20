@@ -6,13 +6,11 @@ import pytest
 
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
-from sqlalchemy.orm import sessionmaker
 
-from .alembicverify_util import prepare_schema_from_migrations
-from pycds.alembic.info import get_current_head
-from ..helpers import insert_crmp_data
-from citext import CIText
+from ..alembicverify_util import prepare_schema_from_migrations
 
+
+# TODO: Repeated. Hoist.
 @pytest.fixture
 def alembic_root():
     return os.path.normpath(

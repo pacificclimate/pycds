@@ -1,8 +1,7 @@
 import warnings
 import pytest
 
-from sqlalchemy.exc import SAWarning
-from .alembicverify_util import prepare_schema_from_migrations
+from ..alembicverify_util import prepare_schema_from_migrations
 
 
 @pytest.mark.usefixtures("new_db_left")
