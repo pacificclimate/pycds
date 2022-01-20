@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.engine.reflection import Inspector
-from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
+from pycds.orm.native_matviews import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
