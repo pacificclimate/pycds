@@ -11,7 +11,7 @@ from pycds.context import get_schema_name
 
 # revision identifiers, used by Alembic.
 revision = "879f0efa125f"
-down_revision = "0d99ba90c229"
+down_revision = "3d50ec832e47"
 branch_labels = None
 depends_on = None
 
