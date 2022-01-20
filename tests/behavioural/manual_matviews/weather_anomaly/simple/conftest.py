@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from pycds import Network, Station, History, Variable, Obs
+from pycds import Obs
 from .....helpers import add_then_delete_objs
 
 

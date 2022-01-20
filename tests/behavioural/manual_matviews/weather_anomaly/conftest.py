@@ -1,22 +1,19 @@
 import datetime
 import pytest
 from sqlalchemy.orm import sessionmaker
-from ...alembicverify_util import prepare_schema_from_migrations
 from pycds import (
-    Contact,
     Network,
     Station,
     History,
     Variable,
-    Obs,
     NativeFlag,
     PCICFlag,
 )
 
 
-@pytest.fixture(scope="module")
-def target_revision():
-    return "8fd8f556c548"
+# @pytest.fixture(scope="module")
+# def target_revision():
+#     return "8fd8f556c548"
 
 
 @pytest.fixture(scope="function")
