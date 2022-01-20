@@ -6,6 +6,7 @@ from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
 
 from ..alembicverify_util import prepare_schema_from_migrations
+from ..helpers import insert_crmp_data
 
 
 @pytest.fixture
@@ -133,6 +134,18 @@ def prepared_schema_from_migrations_left(
 def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()
+
+    yield sesh
+
+    sesh.close()
+
+
+
+@pytest.fixture(scope="function")
+def sesh_with_large_data(prepared_schema_from_migrations_left):
+    engine, script = prepared_schema_from_migrations_left
+    sesh = sessionmaker(bind=engine)()
+    insert_crmp_data(sesh)
 
     yield sesh
 
