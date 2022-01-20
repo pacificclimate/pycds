@@ -9,7 +9,7 @@ from sqlalchemydiff import compare
 
 from .sqlalchemydiff_util import prepare_schema_from_models
 
-from .alembicverify_util import (
+from ..alembicverify_util import (
     get_current_revision,
     get_head_revision,
     prepare_schema_from_migrations,

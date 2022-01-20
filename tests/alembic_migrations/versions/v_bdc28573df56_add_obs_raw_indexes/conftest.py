@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.orm import sessionmaker
-from ...alembicverify_util import prepare_schema_from_migrations
+from ....alembicverify_util import prepare_schema_from_migrations
 from ....helpers import insert_crmp_data
 
 
