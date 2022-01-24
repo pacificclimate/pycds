@@ -15,7 +15,13 @@ def other_network():
 @fixture
 def other_climatology_variables(other_network):
     return [
-            Variable(name=name, standard_name="foo: bar", cell_method="foo_bar", display_name="foo bar", network=other_network)
+        Variable(
+            name=name,
+            standard_name="foo: bar",
+            cell_method="foo_bar",
+            display_name="foo bar",
+            network=other_network,
+        )
         for name in climatology_var_names
     ]
 
