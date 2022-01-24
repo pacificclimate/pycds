@@ -109,6 +109,7 @@ class Station(Base):
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
+    publish = Column(Boolean, default=True, nullable=False)
 
     # Relationships
     network = relationship("Network", back_populates="stations")
