@@ -9,7 +9,6 @@ import pytest
 from alembic import command
 from pycds.database import get_schema_item_names
 
-
 logger = logging.getLogger("tests")
 
 
