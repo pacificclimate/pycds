@@ -20,8 +20,7 @@ table_name = "meta_vars"
 
 
 def update_table(
-    var,
-    replacement,
+    var, replacement,
 ):
     op.execute(
         f"""UPDATE {schema_name}.{table_name} SET {var}={replacement} WHERE {var} IS null;"""
@@ -29,8 +28,7 @@ def update_table(
 
 
 def regress_table(
-    var,
-    replacable,
+    var, replacable,
 ):
     op.execute(
         f"""UPDATE {schema_name}.{table_name} SET {var}=NULL WHERE {var} LIKE {replacable};"""
@@ -42,43 +40,25 @@ def upgrade():
     update_table("standard_name", "'foo_bar'")
     update_table("display_name", "'foo bar'")
     op.alter_column(
-        "meta_vars",
-        "cell_method",
-        nullable=False,
-        schema=schema_name,
+        "meta_vars", "cell_method", nullable=False, schema=schema_name,
     )
     op.alter_column(
-        "meta_vars",
-        "standard_name",
-        nullable=False,
-        schema=schema_name,
+        "meta_vars", "standard_name", nullable=False, schema=schema_name,
     )
     op.alter_column(
-        "meta_vars",
-        "display_name",
-        nullable=False,
-        schema=schema_name,
+        "meta_vars", "display_name", nullable=False, schema=schema_name,
     )
 
 
 def downgrade():
     op.alter_column(
-        "meta_vars",
-        "display_name",
-        nullable=True,
-        schema=schema_name,
+        "meta_vars", "display_name", nullable=True, schema=schema_name,
     )
     op.alter_column(
-        "meta_vars",
-        "standard_name",
-        nullable=True,
-        schema=schema_name,
+        "meta_vars", "standard_name", nullable=True, schema=schema_name,
     )
     op.alter_column(
-        "meta_vars",
-        "cell_method",
-        nullable=True,
-        schema=schema_name,
+        "meta_vars", "cell_method", nullable=True, schema=schema_name,
     )
     regress_table("display_name", "'foo bar'")
     regress_table("standard_name", "'foo_bar'")
