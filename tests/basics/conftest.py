@@ -64,9 +64,30 @@ def pycds_sesh_with_small_data(pycds_sesh):
     pycds_sesh.add_all(stations)
 
     variables = [
-        Variable(name="CURRENT_AIR_TEMPERATURE1", unit="celsius", network=moti),
-        Variable(name="precipitation", unit="mm", network=ec),
-        Variable(name="relative_humidity", unit="percent", network=wmb),
+        Variable(
+            name="CURRENT_AIR_TEMPERATURE1", 
+            unit="celsius", 
+            standard_name="foo: bar", 
+            cell_method="foo_bar", 
+            display_name="foo bar", 
+            network=moti
+            ),
+        Variable(
+            name="precipitation", 
+            unit="mm", 
+            standard_name="foo: bar", 
+            cell_method="foo_bar", 
+            display_name="foo bar", 
+            network=ec
+            ),
+        Variable(
+            name="relative_humidity", 
+            unit="percent", 
+            standard_name="foo: bar", 
+            cell_method="foo_bar", 
+            display_name="foo bar", 
+            network=wmb
+            ),
     ]
     pycds_sesh.add_all(variables)
 
