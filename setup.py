@@ -45,6 +45,7 @@ setup(
         "geoalchemy2",
         "psycopg2",
         "SQLAlchemy",
+        "sqlalchemy-citext",
     ],
     tests_require=[
         "pytest",
