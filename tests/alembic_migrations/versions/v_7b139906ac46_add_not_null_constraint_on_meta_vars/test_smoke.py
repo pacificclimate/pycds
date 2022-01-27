@@ -7,7 +7,7 @@
 import logging
 import pytest
 from alembic import command
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect
 
 logger = logging.getLogger("tests")
 
@@ -32,13 +32,11 @@ def test_upgrade(
 
     # Check that data has been modified to remove nulls
     result = engine.execute(
-        f"SELECT * FROM {schema_name}.meta_vars"
+        f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
     )
-    for row in result:
-        if row.vars_id == 1:
-            assert row.cell_method == "foo: bar"
-            assert row.standard_name == "foo_bar"
-            assert row.display_name == "foo bar"
+
+    row = next(result)
+    assert row == (1, "foo: bar", "foo_bar", "foo bar")
 
     # Check that not null constraints have been added
     table = inspect(engine).get_columns("meta_vars", schema=schema_name)
@@ -68,14 +66,12 @@ def test_downgrade(
     # Check that data has been modified to insert nulls back in
 
     result = engine.execute(
-        f"SELECT * FROM {schema_name}.meta_vars"
+        f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
     )
-    for row in result:
-        if row.vars_id == 10000:
-            assert row.cell_method == None
-            assert row.standard_name == None
-            assert row.display_name == None
 
+    row = next(result)
+    assert row == (10000, None, None, None)
+    
     # Check that not null constraints have been removed
     table = inspect(engine).get_columns("meta_vars", schema=schema_name)
 
