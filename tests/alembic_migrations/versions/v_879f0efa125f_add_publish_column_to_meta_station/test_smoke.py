@@ -22,9 +22,6 @@ def check_if_column_exists(col_name, sch_cols):
     return null
 
 @pytest.mark.usefixtures("new_db_left")
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", ("3d50ec832e47",), indirect=True
-)
 def test_upgrade(
     prepared_schema_from_migrations_left,
     alembic_config_left,
@@ -32,11 +29,8 @@ def test_upgrade(
 ):
     """Test the schema migration from 3d50ec832e47 to 879f0efa125f."""
 
-    # Set up database to revision 3d50ec832e47
+    # Set up database to revision  879f0efa125f
     engine, script = prepared_schema_from_migrations_left
-
-    # Upgrade to 879f0efa125f
-    command.upgrade(alembic_config_left, "879f0efa125f")
 
     # Check that column has been added to meta_station
     meta_station_table = inspect(engine).get_columns(table_name, schema=schema_name)
@@ -61,3 +55,4 @@ def test_downgrade(
     col = check_if_column_exists(column_name, meta_station_table)
 
     assert (col == null)
+    
