@@ -2,7 +2,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-__version__ = (3, 2, 0)
+__version__ = (3, 2, 2)
 
 
 class PyTest(TestCommand):
@@ -45,6 +45,7 @@ setup(
         "geoalchemy2",
         "psycopg2",
         "SQLAlchemy",
+        "sqlalchemy-citext",
     ],
     tests_require=[
         "pytest",

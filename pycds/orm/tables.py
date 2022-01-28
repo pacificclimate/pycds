@@ -283,11 +283,11 @@ class Variable(Base):
     id = Column("vars_id", Integer, primary_key=True)
     name = Column("net_var_name", CIText())
     unit = Column(String)
-    standard_name = Column(String)
-    cell_method = Column(String)
+    standard_name = Column(String, nullable=False)
+    cell_method = Column(String, nullable=False)
     precision = Column(Float)
     description = Column("long_description", String)
-    display_name = Column(String)
+    display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
@@ -442,10 +442,10 @@ Index("collapsed_vars_idx", CollapsedVariables.history_id)
 
 class StationObservationStats(Base):
     __tablename__ = "station_obs_stats_mv"
-    station_id = Column(
-        Integer, ForeignKey("meta_station.station_id"), primary_key=True
+    station_id = Column(Integer, ForeignKey("meta_station.station_id"))
+    history_id = Column(
+        Integer, ForeignKey("meta_history.history_id"), primary_key=True
     )
-    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     obs_count = Column(BigInteger)

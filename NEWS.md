@@ -1,5 +1,18 @@
 # News / Release Notes
 
+## 3.2.2
+
+*Release Date: 2022-Jan-27*
+
+- [Add sqlalchemy-citext to install dependencies in setup.py](https://github.com/pacificclimate/pycds/pull/117)
+
+## 3.2.1
+
+*Release Date: 2022-Jan-25*
+
+- Minor update to README
+- [Fix StationObservationStats primary key](https://github.com/pacificclimate/pycds/pull/114)
+
 ## 3.2.0
 
 *Release Date: 2021-Jan-11*
