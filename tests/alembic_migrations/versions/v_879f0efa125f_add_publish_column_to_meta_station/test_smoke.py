@@ -27,7 +27,7 @@ def test_upgrade(
     alembic_config_left,
     schema_name,
 ):
-    """Test the schema migration from 3d50ec832e47 to 879f0efa125f."""
+    """Test the schema migration from 7b139906ac46 to 879f0efa125f."""
 
     # Set up database to revision  879f0efa125f
     engine, script = prepared_schema_from_migrations_left
@@ -42,12 +42,12 @@ def test_upgrade(
 @pytest.mark.usefixtures("new_db_left")
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name):
-    """Test the schema migration from 879f0efa125f to 3d50ec832e47."""
+    """Test the schema migration from 879f0efa125f to 7b139906ac46."""
 
     # Set up database to revision 879f0efa125f
     engine, script = prepared_schema_from_migrations_left
 
-    # Downgrade to revision 3d50ec832e47
+    # Downgrade to revision 7b139906ac46
     command.downgrade(alembic_config_left, "-1")
 
     # Check that cloumn has been removed from meta_station

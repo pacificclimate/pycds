@@ -99,6 +99,7 @@ def var_temp_point(network1):
         network=network1,
         standard_name="air_temperature",
         cell_method="time: point",
+        display_name="foo bar",
     )
 
 
@@ -108,6 +109,7 @@ def var_temp_point2(network2):
         network=network2,
         standard_name="air_temperature",
         cell_method="time: point",
+        display_name="foo bar",
     )
 
 
@@ -117,6 +119,7 @@ def var_temp_max(network1):
         network=network1,
         standard_name="air_temperature",
         cell_method="time: maximum",
+        display_name="foo bar",
     )
 
 
@@ -126,6 +129,7 @@ def var_temp_min(network1):
         network=network1,
         standard_name="air_temperature",
         cell_method="time: minimum",
+        display_name="foo bar",
     )
 
 
@@ -135,13 +139,14 @@ def var_temp_mean(network1):
         network=network1,
         standard_name="air_temperature",
         cell_method="time: mean",
+        display_name="foo bar",
     )
 
 
 @pytest.fixture
 def var_foo(network1):
     return Variable(
-        network=network1, standard_name="foo", cell_method="time: point"
+        network=network1, standard_name="foo", cell_method="time: point", display_name="foo bar",
     )
 
 
@@ -151,6 +156,7 @@ def var_precip_net1_1(network1):
         network=network1,
         standard_name="thickness_of_rainfall_amount",
         cell_method="time: sum",
+        display_name="foo bar",
     )
 
 
@@ -160,6 +166,7 @@ def var_precip_net1_2(network1):
         network=network1,
         standard_name="thickness_of_rainfall_amount",
         cell_method="time: sum",
+        display_name="foo bar",
     )
 
 
@@ -169,6 +176,7 @@ def var_precip_net2_1(network2):
         network=network2,
         standard_name="thickness_of_rainfall_amount",
         cell_method="time: sum",
+        display_name="foo bar",
     )
 
 
