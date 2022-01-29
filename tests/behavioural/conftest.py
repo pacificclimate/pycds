@@ -97,7 +97,7 @@ def env_config(schema_name):
 
 @pytest.fixture(scope="module")
 def target_revision():
-    return "3d50ec832e47"
+    return "879f0efa125f"
 
 
 @pytest.fixture(scope="function")
