@@ -250,7 +250,6 @@ def upgrade():
         sa.ForeignKeyConstraint(
             ["station_id"], [f"{schema_name}.meta_station.station_id"]
         ),
-        sa.PrimaryKeyConstraint("station_id"),
         schema=schema_name,
     )
     op.create_table(
