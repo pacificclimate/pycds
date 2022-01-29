@@ -1,5 +1,11 @@
 # News / Release Notes
 
+## 3.2.3
+
+*Release Date: 2022-Jan-28*
+
+- [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
+
 ## 3.2.2
 
 *Release Date: 2022-Jan-27*
