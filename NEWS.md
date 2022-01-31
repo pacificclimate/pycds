@@ -1,32 +1,67 @@
 # News / Release Notes
 
+## 3.3.0
+
+*Release Date: 2022-Jan-31*
+
+This is a large and belated release. It includes several different classes of
+change, done over a year of work, including:
+
+- Migrations
+- Bug fixes to ORM and migrations
+- Refactoring of Alembic content to make it possible to migrate a (test)
+  test database in a client app to the desired revision.
+- Substantial refactoring of unit tests.
+
+Also worth noting is that several previous "patch" versions (which were 
+nothing of the kind) have been withdrawn (specifically 3.2.1, ..., 3.2.4).
+
+- [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
+- [Add publish flag to meta_stations](https://github.com/pacificclimate/pycds/pull/119)
+- [Add sqlalchemy-citext to install dependencies in setup.py](https://github.com/pacificclimate/pycds/pull/117)
+- [Change StationObservationStats PK to history_id](https://github.com/pacificclimate/pycds/pull/114)
+- [Refactor tests](https://github.com/pacificclimate/pycds/pull/112)
+- [Add NOT NULL constraints to certain Variable (meta_vars) columns](https://github.com/pacificclimate/pycds/pull/111)
+- [Update test infrastructure](https://github.com/pacificclimate/pycds/pull/109)
+- [Change column meta_vars.net_var_name type to citext](https://github.com/pacificclimate/pycds/pull/)
+- [Pin zipp dependency to "==3.5.0"](https://github.com/pacificclimate/pycds/pull/104)
+- [Replace pip with pipenv](https://github.com/pacificclimate/pycds/pull/103)
+- [Fix copy-conflict warnings](https://github.com/pacificclimate/pycds/pull/101)
+- [Drop table meta_climo_attrs](https://github.com/pacificclimate/pycds/pull/100)
+- [Apply Black](https://github.com/pacificclimate/pycds/pull/97)
+- [Cleanup](https://github.com/pacificclimate/pycds/pull/96)
+- [Add missing indexes](https://github.com/pacificclimate/pycds/pull/93)
+- [Convert unique constraints to primary key declarations](https://github.com/pacificclimate/pycds/pull/92)
+- [Add obs_raw indexes](https://github.com/pacificclimate/pycds/pull/89)
+- [Refactor replaceable objects](https://github.com/pacificclimate/pycds/pull/85)
+- [Add SET/RESET ROLE to migrations](https://github.com/pacificclimate/pycds/pull/82)
+- [Add conditional migration for native matview VarsPerHistory](https://github.com/pacificclimate/pycds/pull/73)
+
 ## 3.2.4
 
 *Release Date: 2022-Jan-28*
-
-- [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
+WITHDRAWN
 
 ## 3.2.3
 
-Omitted
+(not a release)
+WITHDRAWN
 
 ## 3.2.2
 
 *Release Date: 2022-Jan-27*
-
-- [Add sqlalchemy-citext to install dependencies in setup.py](https://github.com/pacificclimate/pycds/pull/117)
+WITHDRAWN
 
 ## 3.2.1
 
 *Release Date: 2022-Jan-25*
-
-- Minor update to README
-- [Fix StationObservationStats primary key](https://github.com/pacificclimate/pycds/pull/114)
+WITHDRAWN
 
 ## 3.2.0
 
 *Release Date: 2021-Jan-11*
 
+- [Include all pycds (sub)packages](https://github.com/pacificclimate/pycds/pull/71)
 - [Repackage so that Alembic migrations can be performed from client apps](https://github.com/pacificclimate/pycds/pull/70)
 
 ## 3.1.1
