@@ -40,7 +40,7 @@ ORM layer.
 
 To create a versioned release:
 
-1. Increment _`_version__` in `setup.py`.
+1. Increment `__version__` in `setup.py`.
 2. Summarize the changes from the last release in `NEWS.md`.
 3. Commit these changes, then tag the release:
 

@@ -1,11 +1,27 @@
 # News / Release Notes
 
+## 4.0.0
+
+*Release Date: 2022-Feb-03*
+
+- [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
+- [Add publish flag to meta_stations](https://github.com/pacificclimate/pycds/pull/119)
+- [Add sqlalchemy-citext to install dependencies in setup.py](https://github.com/pacificclimate/pycds/pull/117)
+- [Change StationObservationStats PK to history_id](https://github.com/pacificclimate/pycds/pull/114)
+- [Refactor tests](https://github.com/pacificclimate/pycds/pull/112)
+- [Add NOT NULL constraints to certain Variable (meta_vars) columns](https://github.com/pacificclimate/pycds/pull/111)
+- [Update test infrastructure](https://github.com/pacificclimate/pycds/pull/109)
+- [Change column meta_vars.net_var_name type to citext](https://github.com/pacificclimate/pycds/pull/)
+
 ## 3.3.0
 
-*Release Date: 2022-Jan-31*
+*Release Date: 2022-Feb-03*
+
+Note: An earlier version tagged 3.3.0 was released. That release was 
+withdrawn and re-released as the present version.
 
 This is a large and belated release. It includes several different classes of
-change, done over a year of work, including:
+change, including:
 
 - Migrations
 - Bug fixes to ORM and migrations
@@ -13,8 +29,7 @@ change, done over a year of work, including:
   test database in a client app to the desired revision.
 - Substantial refactoring of unit tests.
 
-Also worth noting is that several previous "patch" versions (which were 
-nothing of the kind) have been withdrawn (specifically 3.2.1, ..., 3.2.4).
+This release contains no breaking changes.
 
 - [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
 - [Add publish flag to meta_stations](https://github.com/pacificclimate/pycds/pull/119)
