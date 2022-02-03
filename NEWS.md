@@ -1,9 +1,63 @@
 # News / Release Notes
 
+### 3.3.0
+
+*Release Date: 2022-Feb-03*
+
+Note: 3.3.0 was originally released Jan 31, then withdrawn and re-released with
+only non-breaking content on Feb 3.
+
+Note: Several previous "patch" releases (which were
+nothing of the kind) have been permanently withdrawn (specifically
+3.2.1, ..., 3.2.4).
+
+This release does not include breaking changes.
+It is, however, a large and belated release. It includes several different
+classes of change, including:
+
+- Migrations
+- Bug fixes to ORM and migrations
+- Refactoring of Alembic content to make it possible to migrate a (test)
+  test database in a client app to the desired revision.
+
+- [Pin zipp dependency to "==3.5.0"](https://github.com/pacificclimate/pycds/pull/104)
+- [Replace pip with pipenv](https://github.com/pacificclimate/pycds/pull/103)
+- [Fix copy-conflict warnings](https://github.com/pacificclimate/pycds/pull/101)
+- [Drop table meta_climo_attrs](https://github.com/pacificclimate/pycds/pull/100)
+- [Apply Black](https://github.com/pacificclimate/pycds/pull/97)
+- [Cleanup](https://github.com/pacificclimate/pycds/pull/96)
+- [Add missing indexes](https://github.com/pacificclimate/pycds/pull/93)
+- [Convert unique constraints to primary key declarations](https://github.com/pacificclimate/pycds/pull/92)
+- [Add obs_raw indexes](https://github.com/pacificclimate/pycds/pull/89)
+- [Refactor replaceable objects](https://github.com/pacificclimate/pycds/pull/85)
+- [Add SET/RESET ROLE to migrations](https://github.com/pacificclimate/pycds/pull/82)
+- [Add conditional migration for native matview VarsPerHistory](https://github.com/pacificclimate/pycds/pull/73)
+
+## 3.2.4
+
+*Release Date: 2022-Jan-28*
+WITHDRAWN
+
+## 3.2.3
+
+(not a release)
+WITHDRAWN
+
+## 3.2.2
+
+*Release Date: 2022-Jan-27*
+WITHDRAWN
+
+## 3.2.1
+
+*Release Date: 2022-Jan-25*
+WITHDRAWN
+
 ## 3.2.0
 
 *Release Date: 2021-Jan-11*
 
+- [Include all pycds (sub)packages](https://github.com/pacificclimate/pycds/pull/71)
 - [Repackage so that Alembic migrations can be performed from client apps](https://github.com/pacificclimate/pycds/pull/70)
 
 ## 3.1.1
