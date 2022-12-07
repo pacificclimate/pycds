@@ -20,7 +20,7 @@ schema_name = get_schema_name()
 def upgrade():
     op.add_column(
         "meta_station",
-        sa.Column("publish", sa.Boolean(), default=True, nullable=False),
+        sa.Column("publish", sa.Boolean(), default=True, server_default="true", nullable=False),
         schema=schema_name
     )
 
