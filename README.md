@@ -29,7 +29,7 @@ ORM layer.
 - [Background](docs/background.md)
 - [Installation](docs/installation.md)
 - [ORM contents and usage](docs/orm.md)
-- [Database maintenance](docs/database-maintenance.md)
+- [Database creation and migration](docs/database-maintenance.md)
 - [Managing non-mutable database content](docs/managing-non-mutable.md)
 - Testing
     - [Project unit tests](docs/project-unit-tests.md)

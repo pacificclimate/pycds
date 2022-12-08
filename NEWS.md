@@ -1,5 +1,17 @@
 # News / Release Notes
 
+## 4.0.1
+
+*Release Date: 2022-Dec-07*
+
+Bugfixes for migrations, plus a couple of minor things.
+
+- [Fix NEWS.md](https://github.com/pacificclimate/pycds/pull/131)
+- [Add server default for meta_station.publish in migration](https://github.com/pacificclimate/pycds/pull/130)
+- [Add metnorth2 databases to alembic.ini](https://github.com/pacificclimate/pycds/pull/128)
+- [Use su role to create/drop extension citext](https://github.com/pacificclimate/pycds/pull/127)
+
+
 ## 4.0.0
 
 *Release Date: 2022-Feb-03*
