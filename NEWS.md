@@ -31,14 +31,6 @@ change, including:
 
 This release contains no breaking changes.
 
-- [Remove PK constraint from station_obs_stats_mv](https://github.com/pacificclimate/pycds/pull/121)
-- [Add publish flag to meta_stations](https://github.com/pacificclimate/pycds/pull/119)
-- [Add sqlalchemy-citext to install dependencies in setup.py](https://github.com/pacificclimate/pycds/pull/117)
-- [Change StationObservationStats PK to history_id](https://github.com/pacificclimate/pycds/pull/114)
-- [Refactor tests](https://github.com/pacificclimate/pycds/pull/112)
-- [Add NOT NULL constraints to certain Variable (meta_vars) columns](https://github.com/pacificclimate/pycds/pull/111)
-- [Update test infrastructure](https://github.com/pacificclimate/pycds/pull/109)
-- [Change column meta_vars.net_var_name type to citext](https://github.com/pacificclimate/pycds/pull/)
 - [Pin zipp dependency to "==3.5.0"](https://github.com/pacificclimate/pycds/pull/104)
 - [Replace pip with pipenv](https://github.com/pacificclimate/pycds/pull/103)
 - [Fix copy-conflict warnings](https://github.com/pacificclimate/pycds/pull/101)
