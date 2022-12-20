@@ -27,13 +27,9 @@ commands, which we add as extensions elsewhere.
 
 from pycds.util import snake_case, ddl_escape
 from pycds.sqlalchemy.ddl_extensions import (
-    CreateView,
-    DropView,
-    CreateMaterializedView,
-    DropMaterializedView,
-    RefreshMaterializedView,
-    CreateStoredProcedure,
-    DropStoredProcedure,
+    CreateView, DropView, CreateMaterializedView, DropMaterializedView,
+    RefreshMaterializedView, CreateStoredProcedure, DropStoredProcedure, CreateTrigger,
+    DropTrigger,
 )
 
 
@@ -209,7 +205,7 @@ class ReplaceableStoredProcedure(ReplaceableObject):
     def __init__(self, identifier, definition, schema=None, escape=True):
         # DDL statements substitute special % expressions, and literal '%' must
         # be escaped as '%%'. This is the default behaviour of this class. This
-        # is of particular concern for stored procedures as some of the
+        # is of particular concern for stored procedures as some procedure
         # languages themselves use %-substitution.
         super().__init__(identifier, definition, schema)
         self.escape = escape
@@ -222,3 +218,12 @@ class ReplaceableStoredProcedure(ReplaceableObject):
 
     def drop(self):
         return DropStoredProcedure(self.qualified_name())
+
+
+class ReplaceableTrigger(ReplaceableObject):
+    def create(self, definition):
+        return CreateTrigger(self.qualified_name(), definition)
+
+    def drop(self):
+        return DropTrigger(self.qualified_name())
+
