@@ -12,8 +12,13 @@ schema_name = get_schema_name()
 cxhx_schema_name = get_cxhx_schema_name()
 
 
+# TODO: This pair of function and trigger could be reformulated as noted below.
+#   Possibly better, including allowing a common function with clever arguments to
+#   serve all possible triggers, as suggested in PostgreSQL documentation.
+
 obs_raw_cxhx_log = ReplaceableStoredProcedure(
     identifier="""obs_raw_cxhx_log()""",
+    # TODO: Remove IF statement; substitute WHEN in trigger.
     definition=f"""
         RETURNS TRIGGER
         LANGUAGE plpgsql
@@ -32,8 +37,10 @@ obs_raw_cxhx_log = ReplaceableStoredProcedure(
 
 obs_raw_cxhx_trigger = ReplaceableTrigger(
     identifier="obs_raw_cxhx_trigger",
+    # TODO: Use WHEN in trigger to distinguish condition.
     definition=f"""
-        BEFORE UPDATE ON {schema_name}.obs_raw
+        BEFORE UPDATE 
+        ON {schema_name}.obs_raw
         FOR EACH ROW
         EXECUTE PROCEDURE {cxhx_schema_name}.obs_raw_cxhx_log()
     """,

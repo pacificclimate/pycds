@@ -2,6 +2,15 @@
 This ORM defines the change history tracking tables. Since "history" is already used
 in PyCDS, and "change history" is a longish phrase, we have adopted the abbreviation
 "cxhx".
+
+We don't need to give the change history tables different names, since they are in a
+different schema, but doing it this way has some advantages:
+
+- When the search path includes both schemas there is no confusion possible.
+- PyCDS can export all ORM objects without qualification.
+- Queries are more compact and more readable.
+
+Seems like a win. Can be reconsidered if there prove to be downsides.
 """
 
 from sqlalchemy import MetaData, Column, BigInteger
