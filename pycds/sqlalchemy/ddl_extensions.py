@@ -115,7 +115,7 @@ def compile(element, compiler, **kw):
 
 
 class StoredProcedureDDL(DDLElement):
-    """Base class for several varieties of view commands."""
+    """Base class for stored procedure commands."""
 
     def __init__(self, identifier, definition=None):
         self.identifier = identifier
@@ -146,3 +146,30 @@ def compile(element, compiler, **kw):
         flags=re.MULTILINE,
     )
     return f"DROP FUNCTION {name}"
+
+
+# TODO: Factor out commonalities with stored procedure?
+class TriggerDDL(DDLElement):
+    """Base class for trigger commands."""
+
+    def __init__(self, identifier, definition=None):
+        self.identifier = identifier
+        self.definition = definition
+
+
+class CreateTrigger(TriggerDDL):
+    pass
+
+
+@compiler.compiles(CreateTrigger)
+def compile_(element, compiler, **kw):
+    return f"CREATE TRIGGER {element.identifier} {element.definition}"
+
+
+class DropTrigger(TriggerDDL):
+    pass
+
+
+@compiler.compiles(DropTrigger)
+def compile_(element, compiler, **kw):
+    return f"DROP TRIGGER {element.identifier}"
