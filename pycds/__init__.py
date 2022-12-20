@@ -27,6 +27,7 @@ fail with errors of the form "could not find object X in schema Y".
 
 __all__ = [
     # Utility methods
+    "get_cxhx_schema_name",
     "get_schema_name",
     # Tables
     "Base",
@@ -65,7 +66,7 @@ __all__ = [
     "StationObservationStats",
 ]
 
-from pycds.context import get_schema_name, get_su_role_name
+from pycds.context import get_cxhx_schema_name, get_schema_name, get_su_role_name
 
 from .orm.tables import (
     Base,
@@ -104,3 +105,5 @@ from .orm.manual_matviews import (
     MonthlyAverageOfDailyMinTemperature,
     MonthlyTotalPrecipitation,
 )
+
+from .change_history.tables import ObsCxhx
