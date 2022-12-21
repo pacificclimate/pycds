@@ -72,7 +72,7 @@ class Network(Base):
     meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
     def __str__(self):
-        return "<CRMP Network %s>" % self.name
+        return f"<CRMP Network {self.name}>"
 
 
 class Contact(Base):
@@ -114,7 +114,7 @@ class Station(Base):
     meta_history = synonym("histories")  # Retain backwards compatibility
 
     def __str__(self):
-        return "<CRMP Station %s:%s>" % (self.network.name, self.native_id)
+        return f"<CRMP Station {self.network.name}:{self.native_id}>"
 
 
 Index("fki_meta_station_network_id_fkey", Station.network_id)
