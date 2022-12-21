@@ -229,7 +229,7 @@ getstationvariabletable = ReplaceableStoredProcedure(
     
         return "SELECT "+ ",".join(bits) + " from {schema_name}.obs_raw WHERE (" + " OR ".join(hid_clauses) + ") AND vars_id IN (" + ",".join(vars_ids) + ") GROUP BY obs_time ORDER BY obs_time"
     $BODY$
-      LANGUAGE plpythonu VOLATILE
+      LANGUAGE plpython3u VOLATILE
       COST 100;
     """,
     schema=schema_name,
@@ -309,7 +309,7 @@ query_one_station = ReplaceableStoredProcedure(
         #plpy.warning(data)
         return data[0]['getstationvariabletable']
     $BODY$
-      LANGUAGE plpythonu VOLATILE
+      LANGUAGE plpython3u VOLATILE
       COST 100;
     """,
     schema=schema_name,
@@ -332,7 +332,7 @@ query_one_station_climo = ReplaceableStoredProcedure(
         #plpy.warning(data)
         return data[0]['getstationvariabletable']
     $BODY$
-      LANGUAGE plpythonu VOLATILE
+      LANGUAGE plpython3u VOLATILE
       COST 100;
     """,
     schema=schema_name,
@@ -415,7 +415,7 @@ stored_procedures = (
 
 def upgrade():
     # In order to create stored procedures using untrusted languages (we use
-    # `plpythonu`), the user needs superuser privileges. This is achieved by
+    # `plpython3u`), the user needs superuser privileges. This is achieved by
     # temporarily setting the role to a superuser role name that is externally
     # granted to the user only for the period when database migrations are
     # performed.
