@@ -67,9 +67,7 @@ class ReplaceableOrmClass:
 
     @classmethod
     def qualified_name(cls):
-        prefix = (
-            "" if cls.metadata.schema is None else cls.metadata.schema + "."
-        )
+        prefix = "" if cls.metadata.schema is None else cls.metadata.schema + "."
         return prefix + cls.base_name()
 
 
@@ -215,9 +213,7 @@ class ReplaceableStoredProcedure(ReplaceableObject):
         self.escape = escape
 
     def create(self):
-        definition = (
-            ddl_escape(self.definition) if self.escape else self.definition
-        )
+        definition = ddl_escape(self.definition) if self.escape else self.definition
         return CreateStoredProcedure(self.qualified_name(), definition)
 
     def drop(self):

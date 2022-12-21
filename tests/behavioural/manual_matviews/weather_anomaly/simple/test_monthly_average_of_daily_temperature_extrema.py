@@ -31,9 +31,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_total_coverage_query
     DailyExtremeTemp = DailyExtremeTemps[extremum]
     sesh.execute(DailyExtremeTemp.refresh())
     ma_daily_extreme_temps = (
-        monthly_average_of_daily_temperature_extremum_with_total_coverage(
-            extremum
-        )
+        monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum)
         .with_session(sesh)
         .all()
     )
@@ -49,9 +47,7 @@ def test_monthly_average_of_daily_temperature_extremum_with_avg_coverage_query(
     DailyExtremeTemp = DailyExtremeTemps[extremum]
     sesh.execute(DailyExtremeTemp.refresh())
     ma_daily_extreme_temps = (
-        monthly_average_of_daily_temperature_extremum_with_avg_coverage(
-            extremum
-        )
+        monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum)
         .with_session(sesh)
         .all()
     )
@@ -66,9 +62,7 @@ def test_monthly_average_of_daily_extreme_temperature_matview(
     sesh = obs1_temp_sesh
     DailyExtremeTemp = DailyExtremeTemps[extremum]
     sesh.execute(DailyExtremeTemp.refresh())
-    MonthlyAverageOfDailyExtremeTemp = MonthlyAverageOfDailyExtremeTemps[
-        extremum
-    ]
+    MonthlyAverageOfDailyExtremeTemp = MonthlyAverageOfDailyExtremeTemps[extremum]
     sesh.execute(MonthlyAverageOfDailyExtremeTemp.refresh())
     ma_daily_extreme_temps = sesh.query(MonthlyAverageOfDailyExtremeTemp).all()
     check(ma_daily_extreme_temps, obs1_months, var_temp_point)

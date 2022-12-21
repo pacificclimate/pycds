@@ -46,9 +46,7 @@ def get_head_revision(config, engine, script, **kwargs):
     return _get_revision(config, engine, script, **kwargs, revision_type="head")
 
 
-def _get_revision(
-    config, engine, script, env_config=None, revision_type="current"
-):
+def _get_revision(config, engine, script, env_config=None, revision_type="current"):
     with engine.connect() as conn:
         with EnvironmentContext(config, script) as env_context:
             env_context.configure(conn, **(env_config or {}))

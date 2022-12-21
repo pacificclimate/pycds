@@ -146,7 +146,10 @@ def var_temp_mean(network1):
 @pytest.fixture
 def var_foo(network1):
     return Variable(
-        network=network1, standard_name="foo", cell_method="time: point", display_name="foo bar",
+        network=network1,
+        standard_name="foo",
+        cell_method="time: point",
+        display_name="foo bar",
     )
 
 

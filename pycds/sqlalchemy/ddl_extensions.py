@@ -89,9 +89,7 @@ def compile(element, compiler, **kw):
 
 
 class RefreshMaterializedView(MaterializedViewDDL):
-    def __init__(
-        self, name, selectable=None, type_="native", concurrently=False
-    ):
+    def __init__(self, name, selectable=None, type_="native", concurrently=False):
         super().__init__(name, selectable=selectable, type_=type_)
         self.concurrently = concurrently
 
@@ -102,12 +100,8 @@ def compile(element, compiler, **kw):
         concurrently = "CONCURRENTLY" if element.concurrently else ""
         return f"REFRESH MATERIALIZED VIEW {concurrently} {element.name}"
     if element.type_ == "manual":
-        body = compiler.sql_compiler.process(
-            element.selectable, literal_binds=True
-        )
-        return (
-            f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
-        )
+        body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
+        return f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
     raise ValueError(f"Invalid materialized view type '{element.type_}'")
 
 
@@ -140,9 +134,6 @@ def compile(element, compiler, **kw):
     # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
     # signature is included in the DROP FUNCTION statement. So ditch it.
     name = re.sub(
-        r" (DEFAULT|=) [^,)]*([,)])",
-        r"\2",
-        element.identifier,
-        flags=re.MULTILINE,
+        r" (DEFAULT|=) [^,)]*([,)])", r"\2", element.identifier, flags=re.MULTILINE,
     )
     return f"DROP FUNCTION {name}"

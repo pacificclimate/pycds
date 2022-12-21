@@ -18,9 +18,7 @@ def test_monthly_total_precipitation_with_total_coverage_query(
 ):
     sesh = obs1_precip_sesh
     monthly_total_precip = (
-        monthly_total_precipitation_with_total_coverage()
-        .with_session(sesh)
-        .all()
+        monthly_total_precipitation_with_total_coverage().with_session(sesh).all()
     )
     check(monthly_total_precip, obs1_months, var_precip_net1_1)
 

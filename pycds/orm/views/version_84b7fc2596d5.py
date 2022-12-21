@@ -99,8 +99,7 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
         .join(Network)
         .outerjoin(CollapsedVariables)
         .outerjoin(
-            StationObservationStats,
-            StationObservationStats.history_id == History.id,
+            StationObservationStats, StationObservationStats.history_id == History.id,
         )
     ).selectable
 
@@ -193,7 +192,6 @@ class ObsWithFlags(Base, ReplaceableView):
     This view joins Obs with History and Variable.
     """
 
-
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
     #  Better name: ObsWithMetadata
     __tablename__ = "obs_with_flags"
@@ -203,7 +201,7 @@ class ObsWithFlags(Base, ReplaceableView):
     unit = Column(String)
     standard_name = Column(String)
     cell_method = Column(String)
-    # Variable net_var_name has type CIText in table meta_vars, 
+    # Variable net_var_name has type CIText in table meta_vars,
     # not String
     net_var_name = Column(String)
     station_id = Column(Integer)

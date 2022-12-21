@@ -1,7 +1,5 @@
-from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
-from pycds.alembic.info import get_current_head
 from pycds.context import get_schema_name
 
 
@@ -72,9 +70,7 @@ def db_supports_statement(engine, statement):
 
 
 def db_supports_matviews(engine):
-    return db_supports_statement(
-        engine, "CREATE MATERIALIZED VIEW test AS SELECT 1"
-    )
+    return db_supports_statement(engine, "CREATE MATERIALIZED VIEW test AS SELECT 1")
 
 
 # TODO: Break this up into separate functions for each item type.

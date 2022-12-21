@@ -23,9 +23,7 @@ index_names = {
 
 @pytest.mark.parametrize("item_names", [set(), {"alpha", "beta"}])
 def test_mock(mocker, item_names):
-    mocker.patch(
-        "pycds.database.get_schema_item_names", return_value=item_names
-    )
+    mocker.patch("pycds.database.get_schema_item_names", return_value=item_names)
     assert pycds.database.get_schema_item_names() == item_names
 
 
@@ -38,9 +36,7 @@ def test_mock(mocker, item_names):
     indirect=["prepared_schema_from_migrations_left"],
 )
 @pytest.mark.usefixtures("new_db_left")
-def test_upgrade(
-    prepared_schema_from_migrations_left, prior_index_names, schema_name
-):
+def test_upgrade(prepared_schema_from_migrations_left, prior_index_names, schema_name):
     """Test the schema migration from 7a3b247c577b to bdc28573df56. """
 
     # Set up database to revision bdc28573df56
@@ -101,9 +97,5 @@ def test_downgrade(
     # but the following is clearer:
     for name in index_names:
         assert (
-            name in prior_index_names
-            and name not in after_downgrade_index_names
-        ) or (
-            name not in prior_index_names
-            and name in after_downgrade_index_names
-        )
+            name in prior_index_names and name not in after_downgrade_index_names
+        ) or (name not in prior_index_names and name in after_downgrade_index_names)

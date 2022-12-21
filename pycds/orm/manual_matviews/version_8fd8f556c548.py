@@ -43,7 +43,6 @@ Notes:
 """
 
 from sqlalchemy import (
-    MetaData,
     func,
     and_,
     not_,
@@ -69,9 +68,7 @@ from pycds.orm.tables import (
     PCICFlag,
     Variable,
 )
-from pycds.alembic.extensions.replaceable_objects import (
-    ReplaceableManualMatview,
-)
+from pycds.alembic.extensions.replaceable_objects import ReplaceableManualMatview
 from pycds.orm.view_base import Base
 
 
@@ -120,9 +117,7 @@ def daily_temperature_extremum(extremum):
                 History.id.label("history_id"),
                 good_obs.c.vars_id.label("vars_id"),
                 func_schema.effective_day(
-                    good_obs.c.time,
-                    cast(extremum, String),
-                    cast(History.freq, String),
+                    good_obs.c.time, cast(extremum, String), cast(History.freq, String),
                 ).label("obs_day"),
                 extremum_func(good_obs.c.datum).label("statistic"),
                 func.sum(
@@ -171,9 +166,7 @@ class DailyMinTemperature(Base, ReplaceableManualMatview):
     __selectable__ = daily_temperature_extremum("min").selectable
 
 
-def monthly_average_of_daily_temperature_extremum_with_total_coverage(
-    extremum,
-):
+def monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum,):
     """Return a SQLAlchemy query for a monthly average of a specified
     extremum of daily temperature, with monthly total data coverage.
 
@@ -185,9 +178,7 @@ def monthly_average_of_daily_temperature_extremum_with_total_coverage(
     """
     # TODO: Rename. Geez.
 
-    DailyExtremeTemp = (
-        DailyMaxTemperature if extremum == "max" else DailyMinTemperature
-    )
+    DailyExtremeTemp = DailyMaxTemperature if extremum == "max" else DailyMinTemperature
 
     obs_month = func.date_trunc("month", DailyExtremeTemp.obs_day)
 
@@ -198,15 +189,11 @@ def monthly_average_of_daily_temperature_extremum_with_total_coverage(
                 DailyExtremeTemp.vars_id.label("vars_id"),
                 obs_month.label("obs_month"),
                 func.avg(DailyExtremeTemp.statistic).label("statistic"),
-                func.sum(DailyExtremeTemp.data_coverage).label(
-                    "total_data_coverage"
-                ),
+                func.sum(DailyExtremeTemp.data_coverage).label("total_data_coverage"),
             ]
         )
         .select_from(DailyExtremeTemp)
-        .group_by(
-            DailyExtremeTemp.history_id, DailyExtremeTemp.vars_id, "obs_month"
-        )
+        .group_by(DailyExtremeTemp.history_id, DailyExtremeTemp.vars_id, "obs_month")
     )
 
 
@@ -337,9 +324,7 @@ def monthly_total_precipitation_with_avg_coverage():
             monthly_total_precip.c.statistic.label("statistic"),
             (
                 monthly_total_precip.c.total_data_coverage
-                / func_schema.DaysInMonth(
-                    cast(monthly_total_precip.c.obs_month, Date)
-                )
+                / func_schema.DaysInMonth(cast(monthly_total_precip.c.obs_month, Date))
             ).label("data_coverage"),
         ]
     ).select_from(monthly_total_precip)

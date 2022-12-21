@@ -1,13 +1,11 @@
 #! /usr/bin/env python
 
-import sys
 import logging
 from argparse import ArgumentParser
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import pycds.weather_anomaly
 import pycds.climate_baseline_helpers
 from pycds.climate_baseline_helpers import load_pcic_climate_baseline_values
 
@@ -25,9 +23,7 @@ Examples:
     parser.add_argument(
         "-d", "--dsn", help="Database DSN in which to create new network"
     )
-    parser.add_argument(
-        "-v", "--variable", help="Name of variable to be loaded"
-    )
+    parser.add_argument("-v", "--variable", help="Name of variable to be loaded")
     parser.add_argument(
         "-f",
         "--file",
@@ -57,9 +53,7 @@ Examples:
 
     script_logger = logging.getLogger(__name__)
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s: %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
@@ -96,9 +90,7 @@ Examples:
     # We don't use these header values, and (naturally, therefore) we skip them if present
     line = next(f)
     if line.rstrip(" \0\n") in ["GEO", "ALB", "UTM"]:
-        script_logger.debug(
-            "Header lines detected; skipping first 2 lines in file"
-        )
+        script_logger.debug("Header lines detected; skipping first 2 lines in file")
         line = next(f)  # header present; skip second header line
     else:
         script_logger.debug("No header lines detected")
@@ -113,9 +105,7 @@ Examples:
     exclude = [x.strip() for x in exclude]
 
     try:
-        load_pcic_climate_baseline_values(
-            session, args.variable, f, exclude=exclude
-        )
+        load_pcic_climate_baseline_values(session, args.variable, f, exclude=exclude)
         session.commit()
     finally:
         session.close()

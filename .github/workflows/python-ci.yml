@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -66,3 +66,6 @@ jobs:
         PYCDS_SCHEMA_NAME: other
       run: |
         pipenv run pytest -m "not slow" -v --tb=short tests
+
+    - name: Code format check
+      run: pipenv run black . --check

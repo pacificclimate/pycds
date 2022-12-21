@@ -11,7 +11,6 @@ import sqlalchemy as sa
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
 from pycds.database import db_supports_matviews
-from pycds.alembic.extensions import operation_plugins
 
 # revision identifiers, used by Alembic.
 revision = "7a3b247c577b"
@@ -55,9 +54,7 @@ def downgrade():
         for index in VarsPerHistory.__table__.indexes:
             logger.debug(f"Dropping index '{index.name}'")
             op.drop_index(
-                index_name=index.name,
-                table_name=index.table.name,
-                schema=schema_name,
+                index_name=index.name, table_name=index.table.name, schema=schema_name,
             )
         op.drop_replaceable_object(VarsPerHistory)
         # Note: This will create the table in the database even if it didn't
@@ -69,9 +66,7 @@ def downgrade():
             sa.ForeignKeyConstraint(
                 ["history_id"], [f"{schema_name}.meta_history.history_id"]
             ),
-            sa.ForeignKeyConstraint(
-                ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
-            ),
+            sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"]),
             sa.PrimaryKeyConstraint("history_id", "vars_id"),
             schema=schema_name,
         )

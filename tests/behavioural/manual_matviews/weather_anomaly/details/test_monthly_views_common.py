@@ -79,17 +79,13 @@ def describe_with_1_network():
         def describe_with_1_history_hourly():
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in add_then_delete_objs(
-                    station_sesh, [history_stn1_hourly]
-                ):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in add_then_delete_objs(
-                        history_sesh, [var_temp_point]
-                    ):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_a_partial_set_of_observations_for_one_month():
@@ -139,9 +135,7 @@ def describe_with_1_network():
                                 for day in days
                                 for hour in hours
                             ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -173,10 +167,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -249,9 +240,7 @@ def describe_with_1_network():
                         View, obs_sesh, statistic, refresh_views, all_views
                     ):
                         refresh_views(all_views, obs_sesh)
-                        assert (
-                            obs_sesh.query(View).first().statistic == statistic
-                        )
+                        assert obs_sesh.query(View).first().statistic == statistic
 
                     @mark.parametrize(
                         "View, obs_sesh",
@@ -264,10 +253,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -276,9 +262,7 @@ def describe_with_1_network():
                         View, obs_sesh, refresh_views, all_views
                     ):
                         refresh_views(all_views, obs_sesh)
-                        assert obs_sesh.query(
-                            View
-                        ).first().data_coverage == approx(
+                        assert obs_sesh.query(View).first().data_coverage == approx(
                             len(hours) / 24.0 * len(days) / 31.0
                         )
 
@@ -369,9 +353,7 @@ def describe_with_1_network():
                                 for day in days
                                 for hour in hours
                             ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @mark.parametrize(
@@ -385,10 +367,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -430,17 +409,13 @@ def describe_with_1_network():
         def describe_with_1_history_daily():
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in add_then_delete_objs(
-                    station_sesh, [history_stn1_daily]
-                ):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in add_then_delete_objs(
-                        history_sesh, [var_temp_point]
-                    ):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -464,9 +439,7 @@ def describe_with_1_network():
                                 Obs(
                                     variable=var_temp_point,
                                     history=history_stn1_daily,
-                                    time=datetime.datetime(
-                                        2000, month, day, 12
-                                    ),
+                                    time=datetime.datetime(2000, month, day, 12),
                                     datum=float(day),
                                 )
                                 for month in months
@@ -477,17 +450,13 @@ def describe_with_1_network():
                                 Obs(
                                     variable=var_precip_net1_1,
                                     history=history_stn1_daily,
-                                    time=datetime.datetime(
-                                        2000, month, day, 12
-                                    ),
+                                    time=datetime.datetime(2000, month, day, 12),
                                     datum=1.0,
                                 )
                                 for month in months
                                 for day in days
                             ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @mark.parametrize(
@@ -501,10 +470,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -526,10 +492,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -538,13 +501,8 @@ def describe_with_1_network():
                         View, obs_sesh, refresh_views, all_views
                     ):
                         refresh_views(all_views, obs_sesh)
-                        assert set(
-                            [r.obs_month for r in obs_sesh.query(View)]
-                        ) == set(
-                            [
-                                datetime.datetime(2000, month, 1)
-                                for month in months
-                            ]
+                        assert set([r.obs_month for r in obs_sesh.query(View)]) == set(
+                            [datetime.datetime(2000, month, 1) for month in months]
                         )
 
                     @mark.parametrize(
@@ -558,10 +516,7 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -572,8 +527,7 @@ def describe_with_1_network():
                         refresh_views(all_views, obs_sesh)
                         assert all(
                             map(
-                                lambda r: r.data_coverage
-                                == approx(len(days) / 30.0),
+                                lambda r: r.data_coverage == approx(len(days) / 30.0),
                                 obs_sesh.query(View),
                             )
                         )
@@ -583,24 +537,18 @@ def describe_with_1_network():
 def describe_with_2_networks():
     @fixture
     def network_sesh(prepared_sesh_left, network1, network2):
-        for sesh in add_then_delete_objs(
-            prepared_sesh_left, [network1, network2]
-        ):
+        for sesh in add_then_delete_objs(prepared_sesh_left, [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in add_then_delete_objs(
-                network_sesh, [station1, station2]
-            ):
+            for sesh in add_then_delete_objs(network_sesh, [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
             @fixture
-            def history_sesh(
-                station_sesh, history_stn1_hourly, history_stn2_hourly
-            ):
+            def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
                 for sesh in add_then_delete_objs(
                     station_sesh, [history_stn1_hourly, history_stn2_hourly]
                 ):
@@ -608,9 +556,7 @@ def describe_with_2_networks():
 
             def describe_with_1_variable_per_network():  # temp: point
                 @fixture
-                def variable_sesh(
-                    history_sesh, var_temp_point, var_temp_point2
-                ):
+                def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
                     for sesh in add_then_delete_objs(
                         history_sesh, [var_temp_point, var_temp_point2]
                     ):
@@ -641,9 +587,7 @@ def describe_with_2_networks():
                                 Obs(
                                     variable=var,
                                     history=hx,
-                                    time=datetime.datetime(
-                                        2000, month, day, hour
-                                    ),
+                                    time=datetime.datetime(2000, month, day, hour),
                                     datum=float(hour),
                                 )
                                 for (var, hx) in [
@@ -659,9 +603,7 @@ def describe_with_2_networks():
                                 Obs(
                                     variable=var,
                                     history=hx,
-                                    time=datetime.datetime(
-                                        2000, month, day, hour
-                                    ),
+                                    time=datetime.datetime(2000, month, day, hour),
                                     datum=1.0,
                                 )
                                 for (var, hx) in [
@@ -672,9 +614,7 @@ def describe_with_2_networks():
                                 for day in days
                                 for hour in hours
                             ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @mark.parametrize(
@@ -688,10 +628,7 @@ def describe_with_2_networks():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (
-                                MonthlyTotalPrecipitation,
-                                MonthlyTotalPrecipitation,
-                            ),
+                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -729,11 +666,7 @@ def describe_with_2_networks():
                             ]
                         ) == set(
                             [
-                                (
-                                    stn.id,
-                                    var.id,
-                                    datetime.datetime(2000, month, 1),
-                                )
+                                (stn.id, var.id, datetime.datetime(2000, month, 1),)
                                 for (var, stn) in var_stn
                                 for month in months
                             ]

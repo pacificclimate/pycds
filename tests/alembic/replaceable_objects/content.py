@@ -65,9 +65,7 @@ content = [
 
 # Selectables for defining views and matviews
 
-simple_thing_sqla_selectable = select([Thing]).where(
-    Thing.id <= literal_column("3")
-)
+simple_thing_sqla_selectable = select([Thing]).where(Thing.id <= literal_column("3"))
 
 # less delightful but applicable to cases where we use text queries for
 # selectable:

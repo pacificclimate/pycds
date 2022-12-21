@@ -60,9 +60,7 @@ class Network(Base):
     color = Column("col_hex", String)
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
-    stations = relationship(
-        "Station", order_by="Station.id", back_populates="network"
-    )
+    stations = relationship("Station", order_by="Station.id", back_populates="network")
     meta_station = synonym("stations")
     variables = relationship("Variable", back_populates="network")
     meta_vars = synonym("variables")
@@ -74,7 +72,7 @@ class Network(Base):
     meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
     def __str__(self):
-        return "<CRMP Network %s>" % self.name
+        return f"<CRMP Network {self.name}>"
 
 
 class Contact(Base):
@@ -91,9 +89,7 @@ class Contact(Base):
     email = Column("email", String)
     phone = Column("phone", String)
 
-    networks = relationship(
-        "Network", order_by="Network.id", back_populates="contact"
-    )
+    networks = relationship("Network", order_by="Network.id", back_populates="contact")
 
 
 class Station(Base):
@@ -114,13 +110,11 @@ class Station(Base):
     # Relationships
     network = relationship("Network", back_populates="stations")
     meta_network = synonym("network")
-    histories = relationship(
-        "History", order_by="History.id", back_populates="station"
-    )
+    histories = relationship("History", order_by="History.id", back_populates="station")
     meta_history = synonym("histories")  # Retain backwards compatibility
 
     def __str__(self):
-        return "<CRMP Station %s:%s>" % (self.network.name, self.native_id)
+        return f"<CRMP Station {self.network.name}:{self.native_id}>"
 
 
 Index("fki_meta_station_network_id_fkey", Station.network_id)
@@ -141,9 +135,7 @@ class History(Base):
 
     __tablename__ = "meta_history"
     id = Column("history_id", Integer, primary_key=True)
-    station_id = Column(
-        "station_id", Integer, ForeignKey("meta_station.station_id")
-    )
+    station_id = Column("station_id", Integer, ForeignKey("meta_station.station_id"))
     station_name = Column(String)
     lon = Column(Numeric)
     lat = Column(Numeric)
@@ -155,7 +147,7 @@ class History(Base):
     country = Column(String)
     comments = Column(String(255))
     freq = Column(String)
-    sensor_id = Column(ForeignKey(u"meta_sensor.sensor_id"))
+    sensor_id = Column(ForeignKey("meta_sensor.sensor_id"))
     the_geom = Column(Geometry("GEOMETRY", 4326))
 
     # Relationships
@@ -178,12 +170,8 @@ ObsRawNativeFlags = Table(
     "obs_raw_native_flags",
     Base.metadata,
     Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
-    Column(
-        "native_flag_id", Integer, ForeignKey("meta_native_flag.native_flag_id")
-    ),
-    UniqueConstraint(
-        "obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"
-    ),
+    Column("native_flag_id", Integer, ForeignKey("meta_native_flag.native_flag_id")),
+    UniqueConstraint("obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"),
     # Indexes
     Index("flag_index", "obs_raw_id"),
 )
@@ -196,9 +184,7 @@ ObsRawPCICFlags = Table(
     Base.metadata,
     Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
     Column("pcic_flag_id", Integer, ForeignKey("meta_pcic_flag.pcic_flag_id")),
-    UniqueConstraint(
-        "obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"
-    ),
+    UniqueConstraint("obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"),
     # Indexes
     Index("pcic_flag_index", "obs_raw_id"),
 )
@@ -220,9 +206,7 @@ class Obs(Base):
     __tablename__ = "obs_raw"
     id = Column("obs_raw_id", BigInteger, primary_key=True)
     time = Column("obs_time", DateTime)
-    mod_time = Column(
-        DateTime, nullable=False, default=datetime.datetime.utcnow
-    )
+    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
@@ -243,10 +227,7 @@ class Obs(Base):
     # Constraints
     __table_args__ = (
         UniqueConstraint(
-            "obs_time",
-            "history_id",
-            "vars_id",
-            name="time_place_variable_unique",
+            "obs_time", "history_id", "vars_id", name="time_place_variable_unique",
         ),
     )
 
@@ -267,9 +248,7 @@ class TimeBound(Base):
     """
 
     __tablename__ = "time_bounds"
-    obs_raw_id = Column(
-        Integer, ForeignKey("obs_raw.obs_raw_id"), primary_key=True
-    )
+    obs_raw_id = Column(Integer, ForeignKey("obs_raw.obs_raw_id"), primary_key=True)
     start = Column(DateTime)
     end = Column(DateTime)
 
@@ -302,7 +281,9 @@ class Variable(Base):
 
     # Constraints
     __table_args__ = (
-            UniqueConstraint("network_id", "net_var_name", name="network_variable_name_unique"),
+        UniqueConstraint(
+            "network_id", "net_var_name", name="network_variable_name_unique"
+        ),
     )
 
     def __repr__(self):
@@ -362,9 +343,7 @@ class DerivedValue(Base):
     __tablename__ = "obs_derived_values"
     id = Column("obs_derived_value_id", Integer, primary_key=True)
     time = Column("value_time", DateTime)
-    mod_time = Column(
-        DateTime, nullable=False, default=datetime.datetime.utcnow
-    )
+    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))

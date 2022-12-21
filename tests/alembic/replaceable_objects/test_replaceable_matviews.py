@@ -77,21 +77,21 @@ def check_complex_matview(sesh, ThingWithDescriptionMatview):
 
     sesh.execute(ThingWithDescriptionMatview.refresh())
     things = sesh.query(ThingWithDescriptionMatview)
-    assert [
-        t.desc for t in things.order_by(ThingWithDescriptionMatview.id)
-    ] == ["alpha", "beta", "gamma", "beta", "alpha"]
+    assert [t.desc for t in things.order_by(ThingWithDescriptionMatview.id)] == [
+        "alpha",
+        "beta",
+        "gamma",
+        "beta",
+        "alpha",
+    ]
 
 
 def test_complex_manual_matview(manual_matview_sesh):
-    check_complex_matview(
-        manual_matview_sesh, ThingWithDescriptionManualMatview
-    )
+    check_complex_matview(manual_matview_sesh, ThingWithDescriptionManualMatview)
 
 
 def test_complex_native_matview(native_matview_sesh):
-    check_complex_matview(
-        native_matview_sesh, ThingWithDescriptionNativeMatview
-    )
+    check_complex_matview(native_matview_sesh, ThingWithDescriptionNativeMatview)
 
 
 def check_counts_matview(sesh, ThingCountMatview):
@@ -101,9 +101,11 @@ def check_counts_matview(sesh, ThingCountMatview):
 
     sesh.execute(ThingCountMatview.refresh())
     counts = sesh.query(ThingCountMatview)
-    assert [
-        (c.desc, c.num) for c in counts.order_by(ThingCountMatview.desc)
-    ] == [("alpha", 2), ("beta", 2), ("gamma", 1)]
+    assert [(c.desc, c.num) for c in counts.order_by(ThingCountMatview.desc)] == [
+        ("alpha", 2),
+        ("beta", 2),
+        ("gamma", 1),
+    ]
 
 
 def test_counts_manual_matview(manual_matview_sesh):

@@ -3,12 +3,10 @@ import sys
 
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import DDL, CreateSchema
+from sqlalchemy.schema import CreateSchema
 
 from pytest import fixture
 import testing.postgresql
-
-from citext import CIText
 
 import pycds
 
@@ -55,9 +53,7 @@ def set_up_db_cluster(db_uri, user="testuser"):
     # TODO: See if more things, e.g., extensions, languages can be done here.
     engine = create_engine(db_uri)
 
-    engine.execute(
-        f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;"
-    )
+    engine.execute(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
     engine.execute(f"CREATE USER {user};")
 
     engine.dispose()
