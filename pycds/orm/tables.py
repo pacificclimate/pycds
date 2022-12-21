@@ -147,7 +147,7 @@ class History(Base):
     country = Column(String)
     comments = Column(String(255))
     freq = Column(String)
-    sensor_id = Column(ForeignKey(u"meta_sensor.sensor_id"))
+    sensor_id = Column(ForeignKey("meta_sensor.sensor_id"))
     the_geom = Column(Geometry("GEOMETRY", 4326))
 
     # Relationships
