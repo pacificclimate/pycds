@@ -22,9 +22,7 @@ logger = logging.getLogger("tests")
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_upgrade_and_downgrade(
-    uri_left, alembic_config_left, db_setup, env_config
-):
+def test_upgrade_and_downgrade(uri_left, alembic_config_left, db_setup, env_config):
     """Test all migrations up and down.
 
     Tests that we can apply all migrations from a brand new empty
@@ -76,9 +74,7 @@ def test_model_and_migration_schemas_are_the_same(
     Compares the database obtained with all migrations against the
     one we get out of the models.
     """
-    prepare_schema_from_migrations(
-        uri_left, alembic_config_left, db_setup=db_setup
-    )
+    prepare_schema_from_migrations(uri_left, alembic_config_left, db_setup=db_setup)
     prepare_schema_from_models(uri_right, Base, db_setup=db_setup)
 
     result = compare(uri_left, uri_right)

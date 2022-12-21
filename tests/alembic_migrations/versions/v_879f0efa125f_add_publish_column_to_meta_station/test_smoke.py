@@ -15,17 +15,17 @@ logger = logging.getLogger("tests")
 column_name = "publish"
 table_name = "meta_station"
 
+
 def check_if_column_exists(col_name, sch_cols):
     for col in sch_cols:
         if col["name"] == col_name:
             return col
     return null
 
+
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
-    schema_name,
+    prepared_schema_from_migrations_left, alembic_config_left, schema_name,
 ):
     """Test the schema migration from 7b139906ac46 to 879f0efa125f."""
 
@@ -41,7 +41,8 @@ def test_upgrade(
 
 @pytest.mark.usefixtures("new_db_left")
 def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name):
+    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+):
     """Test the schema migration from 879f0efa125f to 7b139906ac46."""
 
     # Set up database to revision 879f0efa125f
@@ -54,5 +55,4 @@ def test_downgrade(
     meta_station_table = inspect(engine).get_columns(table_name, schema=schema_name)
     col = check_if_column_exists(column_name, meta_station_table)
 
-    assert (col == null)
-    
+    assert col == null

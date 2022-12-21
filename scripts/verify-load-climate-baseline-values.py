@@ -71,9 +71,7 @@ Examples:
 
     script_logger = logging.getLogger(__name__)
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s: %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
@@ -201,20 +199,7 @@ Examples:
                 {
                     "station_native_id": "1158990",
                     "values": convert_temp_data(
-                        [
-                            -36,
-                            14,
-                            69,
-                            127,
-                            181,
-                            220,
-                            257,
-                            259,
-                            198,
-                            128,
-                            19,
-                            -33,
-                        ]
+                        [-36, 14, 69, 127, 181, 220, 257, 259, 198, 128, 19, -33,]
                     ),
                 },
                 {
@@ -264,20 +249,7 @@ Examples:
                 {
                     "station_native_id": "PKM",
                     "values": convert_temp_data(
-                        [
-                            -110,
-                            -100,
-                            -82,
-                            -46,
-                            -1,
-                            32,
-                            62,
-                            68,
-                            23,
-                            -24,
-                            -86,
-                            -115,
-                        ]
+                        [-110, -100, -82, -46, -1, 32, 62, 68, 23, -24, -86, -115,]
                     ),
                 },
                 {

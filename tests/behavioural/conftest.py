@@ -36,6 +36,7 @@ def db_setup(schema_name):
     The function returned by this fixture is passed to
     `alembicverify_util.prepare_schema_from_migrations`, which invokes it.
     """
+
     def f(engine):
         test_user = "testuser"
 
@@ -49,9 +50,7 @@ def db_setup(schema_name):
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(
-            f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"
-        )
+        engine.execute(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
 
         privs = [
             f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
@@ -138,7 +137,6 @@ def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
     yield sesh
 
     sesh.close()
-
 
 
 @pytest.fixture(scope="function")

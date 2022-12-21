@@ -34,10 +34,7 @@ table_and_index = (
 )
 @pytest.mark.parametrize("pre_create", [tuple(), (History, Station, Variable)])
 def test_upgrade(
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
-    schema_name,
-    pre_create,
+    prepared_schema_from_migrations_left, alembic_config_left, schema_name, pre_create,
 ):
     """Test the schema migration from 2914c6c8a7f9 to 0d99ba90c229."""
 

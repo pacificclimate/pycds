@@ -22,9 +22,7 @@ def test_daily_temperature_extremum_query(
     extremum, obs1_temp_sesh, obs1_months, obs1_days, obs1_hours, var_temp_point
 ):
     sesh = obs1_temp_sesh
-    daily_extreme_temps = (
-        daily_temperature_extremum(extremum).with_session(sesh).all()
-    )
+    daily_extreme_temps = daily_temperature_extremum(extremum).with_session(sesh).all()
     check(
         daily_extreme_temps,
         extremum,

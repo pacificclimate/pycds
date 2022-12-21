@@ -34,8 +34,7 @@ test_items = [
     "prepared_schema_from_migrations_left", ("bdc28573df56",), indirect=True
 )
 @pytest.mark.parametrize(
-    "table_name, unique_constraint_name, primary_key_name, pkey_columns",
-    test_items,
+    "table_name, unique_constraint_name, primary_key_name, pkey_columns", test_items,
 )
 @pytest.mark.parametrize("unique_exists", [True, False])
 @pytest.mark.parametrize("primary_key_exists", [True, False])
@@ -97,8 +96,7 @@ def test_upgrade(
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
-    "table_name, unique_constraint_name, primary_key_name, pkey_columns",
-    test_items,
+    "table_name, unique_constraint_name, primary_key_name, pkey_columns", test_items,
 )
 def test_downgrade(
     prepared_schema_from_migrations_left,

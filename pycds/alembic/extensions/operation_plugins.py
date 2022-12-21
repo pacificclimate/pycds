@@ -60,9 +60,7 @@ class DropTableIfExistsOp(MigrateOperation):
 @Operations.implementation_for(DropTableIfExistsOp)
 def drop_table_if_exists(operations, operation):
     # TODO: Refactor into a DDL extension.
-    schema_prefix = (
-        f"{operation.schema}." if operation.schema is not None else ""
-    )
+    schema_prefix = f"{operation.schema}." if operation.schema is not None else ""
     operations.execute(f"DROP TABLE IF EXISTS {schema_prefix}{operation.name}")
 
 
@@ -89,9 +87,7 @@ class DropConstraintIfExistsOp(DropConstraintOp):
         )
 
     @classmethod
-    def batch_drop_constraint_if_exists(
-        cls, operations, constraint_name, type_=None
-    ):
+    def batch_drop_constraint_if_exists(cls, operations, constraint_name, type_=None):
         return cls.drop_constraint(operations, constraint_name, type_=type_)
 
 
@@ -107,9 +103,7 @@ def drop_constraint_if_exists(operations, operation):
     TODO: Refactor into a DDL extension. Maybe. Or use the built-in SQLAlchemy
       DropConstraint DDL element, and -- ack, barf -- modify its result.
     """
-    schema_prefix = (
-        f"{operation.schema}." if operation.schema is not None else ""
-    )
+    schema_prefix = f"{operation.schema}." if operation.schema is not None else ""
     operations.execute(
         f"ALTER TABLE {schema_prefix}{operation.table_name} "
         f"DROP CONSTRAINT IF EXISTS {operation.constraint_name}"
@@ -153,9 +147,7 @@ class CreateIndexIfNotExists(CreateIndexOp):
         )
 
     @classmethod
-    def batch_create_index_if_not_exists(
-        cls, operations, index_name, columns, **kw
-    ):
+    def batch_create_index_if_not_exists(cls, operations, index_name, columns, **kw):
         return cls.batch_create_index(operations, index_name, columns, **kw)
 
 
@@ -209,9 +201,7 @@ class ReversibleOperation(MigrateOperation):
         return obj
 
     @classmethod
-    def replace(
-        cls, operations, target, replaces=None, replace_with=None, **kw
-    ):
+    def replace(cls, operations, target, replaces=None, replace_with=None, **kw):
         """
         Migration upgrade uses `replaces`.
         Migration downgrade uses `replace_with`.

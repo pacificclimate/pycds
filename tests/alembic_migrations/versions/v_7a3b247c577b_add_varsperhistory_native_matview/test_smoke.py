@@ -21,9 +21,7 @@ matview_names = set(matviews)
 
 @pytest.mark.parametrize("supports_matviews", [True, False])
 def test_mock(mocker, supports_matviews):
-    mocker.patch(
-        "pycds.database.db_supports_matviews", return_value=supports_matviews
-    )
+    mocker.patch("pycds.database.db_supports_matviews", return_value=supports_matviews)
     assert pycds.database.db_supports_matviews() is supports_matviews
 
 
@@ -33,25 +31,18 @@ def check_matviews(engine, schema_name, present):
         # Check that table has been replaced with matview
         names = get_schema_item_names(engine, "tables", schema_name=schema_name)
         assert names & matview_names == set()
-        names = get_schema_item_names(
-            engine, "matviews", schema_name=schema_name
-        )
+        names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
         assert names >= matview_names
 
         # Check that indexes were installed too
         for table_name, contents in matviews.items():
             names = get_schema_item_names(
-                engine,
-                "indexes",
-                table_name=table_name,
-                schema_name=schema_name,
+                engine, "indexes", table_name=table_name, schema_name=schema_name,
             )
             assert names == contents["indexes"]
     else:
         # Check that matview is not present and table is
-        names = get_schema_item_names(
-            engine, "matviews", schema_name=schema_name
-        )
+        names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
         assert names & matview_names == set()
         names = get_schema_item_names(engine, "tables", schema_name=schema_name)
         assert names >= matview_names
@@ -59,10 +50,7 @@ def check_matviews(engine, schema_name, present):
         # Check that matview indexes are not present
         for table_name, contents in matviews.items():
             names = get_schema_item_names(
-                engine,
-                "indexes",
-                table_name=table_name,
-                schema_name=schema_name,
+                engine, "indexes", table_name=table_name, schema_name=schema_name,
             )
             assert names & contents["indexes"] == set()
 
@@ -78,9 +66,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
     engine, script = prepared_schema_from_migrations_left
 
     # Matviews present if and only if supported by database.
-    check_matviews(
-        engine, schema_name, pycds.database.db_supports_matviews(engine)
-    )
+    check_matviews(engine, schema_name, pycds.database.db_supports_matviews(engine))
 
 
 @pytest.mark.parametrize(

@@ -41,6 +41,7 @@ def db_setup(schema_name):
     The function returned by this fixture is passed to
     `alembicverify_util.prepare_schema_from_migrations`, which invokes it.
     """
+
     def f(engine):
         test_user = "testuser"
 
@@ -54,9 +55,7 @@ def db_setup(schema_name):
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(
-            f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"
-        )
+        engine.execute(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
 
         privs = [
             f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
@@ -106,9 +105,7 @@ def target_revision():
     Placeholder for fixture that must be defined individually for each
     migration test module.
     """
-    raise NotImplementedError(
-        "`target_revision` not defined for this migration."
-    )
+    raise NotImplementedError("`target_revision` not defined for this migration.")
 
 
 @pytest.fixture(scope="function")

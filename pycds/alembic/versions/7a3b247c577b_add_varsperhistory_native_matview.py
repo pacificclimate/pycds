@@ -55,9 +55,7 @@ def downgrade():
         for index in VarsPerHistory.__table__.indexes:
             logger.debug(f"Dropping index '{index.name}'")
             op.drop_index(
-                index_name=index.name,
-                table_name=index.table.name,
-                schema=schema_name,
+                index_name=index.name, table_name=index.table.name, schema=schema_name,
             )
         op.drop_replaceable_object(VarsPerHistory)
         # Note: This will create the table in the database even if it didn't
@@ -69,9 +67,7 @@ def downgrade():
             sa.ForeignKeyConstraint(
                 ["history_id"], [f"{schema_name}.meta_history.history_id"]
             ),
-            sa.ForeignKeyConstraint(
-                ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
-            ),
+            sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"]),
             sa.PrimaryKeyConstraint("history_id", "vars_id"),
             schema=schema_name,
         )

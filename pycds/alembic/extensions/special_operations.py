@@ -5,9 +5,7 @@ from pycds.database import get_schema_item_names
 logger = logging.getLogger("alembic")
 
 
-def create_primary_key_if_not_exists(
-    op, constraint_name, table_name, columns, schema
-):
+def create_primary_key_if_not_exists(op, constraint_name, table_name, columns, schema):
     """
     Create a primary key in a table if it does not already exist.
     SQL (and PostgreSQL) does not support an IF NOT EXISTS option for this

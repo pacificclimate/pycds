@@ -18,15 +18,10 @@ def prepared_schema_from_migrations_left(
     too late by the time we are inside the test.
     """
     if hasattr(request, "param"):
-        mocker.patch(
-            "pycds.database.get_schema_item_names", return_value=request.param
-        )
+        mocker.patch("pycds.database.get_schema_item_names", return_value=request.param)
 
     engine, script = prepare_schema_from_migrations(
-        uri_left,
-        alembic_config_left,
-        db_setup=db_setup,
-        revision="bdc28573df56",
+        uri_left, alembic_config_left, db_setup=db_setup, revision="bdc28573df56",
     )
 
     yield engine, script

@@ -48,9 +48,7 @@ def upgrade():
             f"Processing class {ORMClass.__name__}; table {ORMClass.__tablename__}"
         )
         for index in ORMClass.__table__.indexes:
-            logger.debug(
-                f"Creating index '{index.name} on table {index.table.name}'"
-            )
+            logger.debug(f"Creating index '{index.name} on table {index.table.name}'")
             op.create_index_if_not_exists(
                 index_name=index.name,
                 table_name=index.table.name,
@@ -63,11 +61,7 @@ def upgrade():
 def downgrade():
     for ORMClass in classes:
         for index in ORMClass.__table__.indexes:
-            logger.debug(
-                f"Dropping index '{index.name} on table {index.table.name}'"
-            )
+            logger.debug(f"Dropping index '{index.name} on table {index.table.name}'")
             op.drop_index(
-                index_name=index.name,
-                table_name=index.table.name,
-                schema=schema_name,
+                index_name=index.name, table_name=index.table.name, schema=schema_name,
             )

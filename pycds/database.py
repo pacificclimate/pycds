@@ -72,9 +72,7 @@ def db_supports_statement(engine, statement):
 
 
 def db_supports_matviews(engine):
-    return db_supports_statement(
-        engine, "CREATE MATERIALIZED VIEW test AS SELECT 1"
-    )
+    return db_supports_statement(engine, "CREATE MATERIALIZED VIEW test AS SELECT 1")
 
 
 # TODO: Break this up into separate functions for each item type.

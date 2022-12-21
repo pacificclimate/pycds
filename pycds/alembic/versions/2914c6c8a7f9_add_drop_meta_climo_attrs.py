@@ -34,9 +34,7 @@ def downgrade():
         sa.ForeignKeyConstraint(
             ["station_id"], [f"{schema_name}.meta_station.station_id"]
         ),
-        sa.ForeignKeyConstraint(
-            ["vars_id"], [f"{schema_name}.meta_vars.vars_id"]
-        ),
+        sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"]),
         sa.PrimaryKeyConstraint("vars_id", "station_id", "month"),
         schema=schema_name,
     )

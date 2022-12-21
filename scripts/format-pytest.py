@@ -64,9 +64,7 @@ class Describe:
         if is_test(first):
             self.add_test(Test(*(test_parts(first))))
         else:
-            describe = next(
-                (d for d in self.describes if d.name == first), None
-            )
+            describe = next((d for d in self.describes if d.name == first), None)
             if not describe:
                 describe = Describe(first)
                 self.add_describe(describe)
@@ -86,18 +84,10 @@ class Describe:
     def lines(self, indent):
         result = [self.rep()]
         result.extend(
-            [
-                ("%s%s" % (indent, l))
-                for d in self.describes
-                for l in d.lines(indent)
-            ]
+            [("%s%s" % (indent, l)) for d in self.describes for l in d.lines(indent)]
         )
         result.extend(
-            [
-                ("%s%s" % (indent, l))
-                for t in self.tests
-                for l in t.lines(indent)
-            ]
+            [("%s%s" % (indent, l)) for t in self.tests for l in t.lines(indent)]
         )
         return result
 

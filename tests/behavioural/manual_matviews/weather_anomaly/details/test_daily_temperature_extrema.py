@@ -37,24 +37,18 @@ def describe_with_1_network():
         def describe_with_1_history_hourly():
             @fixture
             def history_sesh(station_sesh, history_stn1_hourly):
-                for sesh in add_then_delete_objs(
-                    station_sesh, [history_stn1_hourly]
-                ):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_hourly]):
                     yield sesh
 
             def describe_with_1_variable():
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in add_then_delete_objs(
-                        history_sesh, [var_temp_point]
-                    ):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_in_one_day():
                     @fixture
-                    def obs_sesh(
-                        variable_sesh, var_temp_point, history_stn1_hourly
-                    ):
+                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
                             Obs(
                                 variable=var_temp_point,
@@ -64,9 +58,7 @@ def describe_with_1_network():
                             )
                             for i in range(1, 4)
                         ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -83,10 +75,7 @@ def describe_with_1_network():
                         refreshed_sesh, DailyExtremeTemperature
                     ):
                         assert (
-                            refreshed_sesh.query(
-                                DailyExtremeTemperature
-                            ).count()
-                            == 1
+                            refreshed_sesh.query(DailyExtremeTemperature).count() == 1
                         )
 
                     @mark.parametrize(
@@ -99,19 +88,14 @@ def describe_with_1_network():
                         history_stn1_hourly,
                         var_temp_point,
                     ):
-                        result = refreshed_sesh.query(
-                            DailyExtremeTemperature
-                        ).first()
+                        result = refreshed_sesh.query(DailyExtremeTemperature).first()
                         assert result.history_id == history_stn1_hourly.id
                         assert result.vars_id == var_temp_point.id
                         assert result.obs_day == datetime.datetime(2000, 1, 1)
 
                     @mark.parametrize(
                         "DailyExtremeTemperature, statistic",
-                        [
-                            (DailyMaxTemperature, 3.0),
-                            (DailyMinTemperature, 1.0),
-                        ],
+                        [(DailyMaxTemperature, 3.0), (DailyMinTemperature, 1.0),],
                     )
                     def it_returns_the_expected_extreme_value(
                         refreshed_sesh, DailyExtremeTemperature, statistic
@@ -136,9 +120,7 @@ def describe_with_1_network():
 
                 def describe_with_many_observations_on_two_different_days():
                     @fixture
-                    def obs_sesh(
-                        variable_sesh, var_temp_point, history_stn1_hourly
-                    ):
+                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
                             Obs(
                                 variable=var_temp_point,
@@ -156,9 +138,7 @@ def describe_with_1_network():
                             )
                             for i in range(4, 8)
                         ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -170,14 +150,9 @@ def describe_with_1_network():
                         "DailyExtremeTemperature",
                         [DailyMaxTemperature, DailyMinTemperature],
                     )
-                    def it_returns_two_rows(
-                        refreshed_sesh, DailyExtremeTemperature
-                    ):
+                    def it_returns_two_rows(refreshed_sesh, DailyExtremeTemperature):
                         assert (
-                            refreshed_sesh.query(
-                                DailyExtremeTemperature
-                            ).count()
-                            == 2
+                            refreshed_sesh.query(DailyExtremeTemperature).count() == 2
                         )
 
                     @mark.parametrize(
@@ -190,9 +165,7 @@ def describe_with_1_network():
                         history_stn1_hourly,
                         var_temp_point,
                     ):
-                        for result in refreshed_sesh.query(
-                            DailyExtremeTemperature
-                        ):
+                        for result in refreshed_sesh.query(DailyExtremeTemperature):
                             assert result.history_id == history_stn1_hourly.id
                             assert result.vars_id == var_temp_point.id
 
@@ -206,9 +179,7 @@ def describe_with_1_network():
                         assert set(
                             [
                                 r.obs_day
-                                for r in refreshed_sesh.query(
-                                    DailyExtremeTemperature
-                                )
+                                for r in refreshed_sesh.query(DailyExtremeTemperature)
                             ]
                         ) == {
                             datetime.datetime(2000, 1, 1),
@@ -263,9 +234,7 @@ def describe_with_1_network():
                     pcic_offset = num_obs_for_native
 
                     @fixture
-                    def obs_sesh(
-                        variable_sesh, var_temp_point, history_stn1_hourly
-                    ):
+                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_hourly):
                         observations = [
                             Obs(
                                 id=i,
@@ -276,9 +245,7 @@ def describe_with_1_network():
                             )
                             for i in range(num_obs)
                         ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     def describe_with_flags():
@@ -363,16 +330,11 @@ def describe_with_1_network():
                                     for o in obs.filter(
                                         (0 <= Obs.id) & (Obs.id < num_discarded)
                                     ).all():
-                                        o.native_flags.append(
-                                            native_flag_discard
-                                        )
+                                        o.native_flags.append(native_flag_discard)
                                     for o in obs.filter(
-                                        (3 <= Obs.id)
-                                        & (Obs.id < 3 + num_non_discarded)
+                                        (3 <= Obs.id) & (Obs.id < 3 + num_non_discarded)
                                     ).all():
-                                        o.native_flags.append(
-                                            native_flag_non_discard
-                                        )
+                                        o.native_flags.append(native_flag_non_discard)
                                 elif request.param in ["pcic", "both"]:
                                     for o in obs.filter(
                                         (pcic_offset <= Obs.id)
@@ -381,16 +343,9 @@ def describe_with_1_network():
                                         o.pcic_flags.append(pcic_flag_discard)
                                     for o in obs.filter(
                                         (pcic_offset + 3 <= Obs.id)
-                                        & (
-                                            Obs.id
-                                            < pcic_offset
-                                            + 3
-                                            + num_non_discarded
-                                        )
+                                        & (Obs.id < pcic_offset + 3 + num_non_discarded)
                                     ).all():
-                                        o.pcic_flags.append(
-                                            pcic_flag_non_discard
-                                        )
+                                        o.pcic_flags.append(pcic_flag_non_discard)
                                 sesh.flush()
                                 yield sesh
                                 for o in obs.all():
@@ -399,34 +354,21 @@ def describe_with_1_network():
                                 sesh.flush()
 
                             @mark.parametrize(
-                                "flag_assoc_sesh",
-                                ["native", "pcic"],
-                                indirect=True,
+                                "flag_assoc_sesh", ["native", "pcic"], indirect=True,
                             )
                             def setup_is_correct(flag_assoc_sesh):
                                 obs = flag_assoc_sesh.query(Obs)
                                 obs_flagged_discard = obs.filter(
-                                    Obs.native_flags.any(
-                                        NativeFlag.discard == True
-                                    )
-                                    | Obs.pcic_flags.any(
-                                        PCICFlag.discard == True
-                                    )
+                                    Obs.native_flags.any(NativeFlag.discard == True)
+                                    | Obs.pcic_flags.any(PCICFlag.discard == True)
                                 )
-                                assert (
-                                    obs_flagged_discard.count() == num_discarded
-                                )
+                                assert obs_flagged_discard.count() == num_discarded
                                 obs_flagged_not_discard = obs.filter(
-                                    Obs.native_flags.any(
-                                        NativeFlag.discard == False
-                                    )
-                                    | Obs.pcic_flags.any(
-                                        PCICFlag.discard == False
-                                    )
+                                    Obs.native_flags.any(NativeFlag.discard == False)
+                                    | Obs.pcic_flags.any(PCICFlag.discard == False)
                                 )
                                 assert (
-                                    obs_flagged_not_discard.count()
-                                    == num_non_discarded
+                                    obs_flagged_not_discard.count() == num_non_discarded
                                 )
 
                             @mark.parametrize(
@@ -450,12 +392,8 @@ def describe_with_1_network():
                                 num_actually_discarded = (
                                     sesh.query(Obs)
                                     .filter(
-                                        Obs.native_flags.any(
-                                            NativeFlag.discard == True
-                                        )
-                                        | Obs.pcic_flags.any(
-                                            PCICFlag.discard == True
-                                        )
+                                        Obs.native_flags.any(NativeFlag.discard == True)
+                                        | Obs.pcic_flags.any(PCICFlag.discard == True)
                                     )
                                     .count()
                                 )
@@ -513,15 +451,11 @@ def describe_with_1_network():
                                     Obs(
                                         variable=var,
                                         history=history_stn1_hourly,
-                                        time=datetime.datetime(
-                                            2000, 1, 1, 12, id
-                                        ),
+                                        time=datetime.datetime(2000, 1, 1, 12, id),
                                         datum=float(id),
                                     )
                                 )
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -568,17 +502,13 @@ def describe_with_1_network():
         def describe_with_1_history_daily():
             @fixture
             def history_sesh(station_sesh, history_stn1_daily):
-                for sesh in add_then_delete_objs(
-                    station_sesh, [history_stn1_daily]
-                ):
+                for sesh in add_then_delete_objs(station_sesh, [history_stn1_daily]):
                     yield sesh
 
             def describe_with_1_variable():
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in add_then_delete_objs(
-                        history_sesh, [var_temp_point]
-                    ):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
@@ -586,9 +516,7 @@ def describe_with_1_network():
                     n_days = 3
 
                     @fixture
-                    def obs_sesh(
-                        variable_sesh, var_temp_point, history_stn1_daily
-                    ):
+                    def obs_sesh(variable_sesh, var_temp_point, history_stn1_daily):
                         observations = [
                             Obs(
                                 id=i + 100,
@@ -599,9 +527,7 @@ def describe_with_1_network():
                             )
                             for i in range(0, n_days)
                         ]
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -617,9 +543,7 @@ def describe_with_1_network():
                         refreshed_sesh, DailyExtremeTemperature
                     ):
                         assert (
-                            refreshed_sesh.query(
-                                DailyExtremeTemperature
-                            ).count()
+                            refreshed_sesh.query(DailyExtremeTemperature).count()
                             == n_days
                         )
 
@@ -633,9 +557,7 @@ def describe_with_1_network():
                         assert set(
                             [
                                 r.obs_day
-                                for r in refreshed_sesh.query(
-                                    DailyExtremeTemperature
-                                )
+                                for r in refreshed_sesh.query(DailyExtremeTemperature)
                             ]
                         ) == set(
                             [
@@ -660,9 +582,7 @@ def describe_with_1_network():
 
         def describe_with_1_history_hourly_1_history_daily():
             @fixture
-            def history_sesh(
-                station_sesh, history_stn1_hourly, history_stn1_daily
-            ):
+            def history_sesh(station_sesh, history_stn1_hourly, history_stn1_daily):
                 for sesh in add_then_delete_objs(
                     station_sesh, [history_stn1_hourly, history_stn1_daily]
                 ):
@@ -671,9 +591,7 @@ def describe_with_1_network():
             def describe_with_1_variable():
                 @fixture
                 def variable_sesh(history_sesh, var_temp_point):
-                    for sesh in add_then_delete_objs(
-                        history_sesh, [var_temp_point]
-                    ):
+                    for sesh in add_then_delete_objs(history_sesh, [var_temp_point]):
                         yield sesh
 
                 def describe_with_observations_in_both_histories():
@@ -706,9 +624,7 @@ def describe_with_1_network():
                                 datum=10.0,
                             )
                         )
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -727,17 +643,12 @@ def describe_with_1_network():
                         history_stn1_daily,
                     ):
                         assert (
-                            refreshed_sesh.query(
-                                DailyExtremeTemperature
-                            ).count()
-                            == 2
+                            refreshed_sesh.query(DailyExtremeTemperature).count() == 2
                         )
                         assert set(
                             [
                                 r.history_id
-                                for r in refreshed_sesh.query(
-                                    DailyExtremeTemperature
-                                )
+                                for r in refreshed_sesh.query(DailyExtremeTemperature)
                             ]
                         ) == {history_stn1_hourly.id, history_stn1_daily.id}
 
@@ -812,9 +723,7 @@ def describe_with_1_network():
                             for hour, temp in iter(hours.items())
                         ]
 
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -840,11 +749,7 @@ def describe_with_1_network():
                                 [
                                     (datetime.datetime(2000, 1, 11), -5.0, 1.0),
                                     (datetime.datetime(2000, 1, 12), 0.0, 1.0),
-                                    (
-                                        datetime.datetime(2000, 1, 13),
-                                        -10.0,
-                                        1.0,
-                                    ),
+                                    (datetime.datetime(2000, 1, 13), -10.0, 1.0,),
                                 ],
                             ),
                         ],
@@ -856,32 +761,25 @@ def describe_with_1_network():
                             DailyExtremeTemperature
                         ).order_by(DailyExtremeTemperature.obs_day)
                         assert [
-                            (r.obs_day, r.statistic, r.data_coverage)
-                            for r in results
+                            (r.obs_day, r.statistic, r.data_coverage) for r in results
                         ] == expected
 
 
 def describe_with_2_networks():
     @fixture
     def network_sesh(prepared_sesh_left, network1, network2):
-        for sesh in add_then_delete_objs(
-            prepared_sesh_left, [network1, network2]
-        ):
+        for sesh in add_then_delete_objs(prepared_sesh_left, [network1, network2]):
             yield sesh
 
     def describe_with_1_station_per_network():
         @fixture
         def station_sesh(network_sesh, station1, station2):
-            for sesh in add_then_delete_objs(
-                network_sesh, [station1, station2]
-            ):
+            for sesh in add_then_delete_objs(network_sesh, [station1, station2]):
                 yield sesh
 
         def describe_with_1_history_hourly_per_station():
             @fixture
-            def history_sesh(
-                station_sesh, history_stn1_hourly, history_stn2_hourly
-            ):
+            def history_sesh(station_sesh, history_stn1_hourly, history_stn2_hourly):
                 for sesh in add_then_delete_objs(
                     station_sesh, [history_stn1_hourly, history_stn2_hourly]
                 ):
@@ -889,9 +787,7 @@ def describe_with_2_networks():
 
             def describe_with_1_variable_per_network():  # temp: point
                 @fixture
-                def variable_sesh(
-                    history_sesh, var_temp_point, var_temp_point2
-                ):
+                def variable_sesh(history_sesh, var_temp_point, var_temp_point2):
                     for sesh in add_then_delete_objs(
                         history_sesh, [var_temp_point, var_temp_point2]
                     ):
@@ -929,9 +825,7 @@ def describe_with_2_networks():
                                             datum=float(id),
                                         )
                                     )
-                        for sesh in add_then_delete_objs(
-                            variable_sesh, observations
-                        ):
+                        for sesh in add_then_delete_objs(variable_sesh, observations):
                             yield sesh
 
                     @fixture
@@ -954,17 +848,11 @@ def describe_with_2_networks():
                         assert set(
                             [
                                 (r.history_id, r.vars_id, r.obs_day)
-                                for r in refreshed_sesh.query(
-                                    DailyExtremeTemperature
-                                )
+                                for r in refreshed_sesh.query(DailyExtremeTemperature)
                             ]
                         ) == set(
                             [
-                                (
-                                    stn.id,
-                                    var.id,
-                                    datetime.datetime(2000, 1, day),
-                                )
+                                (stn.id, var.id, datetime.datetime(2000, 1, day),)
                                 for (var, stn) in [
                                     (var_temp_point, history_stn1_hourly),
                                     (var_temp_point2, history_stn2_hourly),

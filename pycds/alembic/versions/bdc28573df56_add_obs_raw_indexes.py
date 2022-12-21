@@ -44,11 +44,7 @@ def upgrade():
         if index_name not in existing_index_names:
             logger.debug(f"Creating index {index_name}")
             op.create_index(
-                index_name,
-                table_name,
-                columns,
-                unique=False,
-                schema=schema_name,
+                index_name, table_name, columns, unique=False, schema=schema_name,
             )
         else:
             logger.debug(f"Index {index_name} already exists; skipping create")

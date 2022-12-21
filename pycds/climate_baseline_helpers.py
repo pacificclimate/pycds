@@ -28,9 +28,7 @@ def get_or_create_pcic_climate_variables_network(
         Network object for synthetic network for derived variables
     """
 
-    network = (
-        session.query(Network).filter(Network.name == network_name).first()
-    )
+    network = session.query(Network).filter(Network.name == network_name).first()
     if not network:
         network = Network(
             name=network_name,
@@ -95,16 +93,12 @@ def get_or_create_pcic_climate_baseline_variables(session):
         variable = (
             session.query(Variable)
             .filter(Variable.name == vs["name"])
-            .filter(
-                Variable.network.has(name=pcic_climate_variable_network_name)
-            )
+            .filter(Variable.network.has(name=pcic_climate_variable_network_name))
             .first()
         )
         if not variable:
             vs.update(
-                short_name="{0} {1}".format(
-                    vs["standard_name"], vs["cell_method"]
-                ),
+                short_name="{0} {1}".format(vs["standard_name"], vs["cell_method"]),
                 network_id=network.id,
             )
             variable = Variable(**vs)
@@ -281,14 +275,14 @@ def load_pcic_climate_baseline_values(
                 logger.info("Skipping input line:")
                 logger.info(line)
                 logger.info(
-                    f'Reason: No history record(s) found for station with '
+                    f"Reason: No history record(s) found for station with "
                     f'native_id = "{station_native_id}"'
                 )
                 n_lines_skipped += 1
         else:
             logger.info(
                 f'Excluding station with native id = "{station_native_id}": '
-                f'found in exclude list'
+                f"found in exclude list"
             )
             n_lines_excluded += 1
 
@@ -297,18 +291,16 @@ def load_pcic_climate_baseline_values(
     assert (
         n_lines_total
         == n_lines_errored + n_lines_added + n_lines_excluded + n_lines_skipped
-    ), f"Total number of lines processed {n_lines_total} " \
-       f"is not total of errored {n_lines_errored} + added {n_lines_added} " \
-       f"+ excluded {n_lines_excluded} + skipped {n_lines_skipped}"
+    ), (
+        f"Total number of lines processed {n_lines_total} "
+        f"is not total of errored {n_lines_errored} + added {n_lines_added} "
+        f"+ excluded {n_lines_excluded} + skipped {n_lines_skipped}"
+    )
 
     logger.info("Loading complete")
     logger.info("{} input lines processed".format(n_lines_total))
-    logger.info(
-        f"{n_lines_added} stations (input lines) processed into to database"
-    )
-    logger.info(
-        "{} climatology values added to database".format(n_values_added)
-    )
+    logger.info(f"{n_lines_added} stations (input lines) processed into to database")
+    logger.info("{} climatology values added to database".format(n_values_added))
     logger.info("{} input lines errored".format(n_lines_errored))
     logger.info("{} stations excluded".format(n_lines_excluded))
     logger.info("{} stations skipped".format(n_lines_skipped))
@@ -350,16 +342,12 @@ def verify_baseline_network_and_variables(session):
         )
         assert (
             variable
-        ), 'Climate baseline variable named "{}" not found in database'.format(
-            name
-        )
+        ), 'Climate baseline variable named "{}" not found in database'.format(name)
         return variable
 
     def expect_variable_attr(variable, attr, expected):
         value = getattr(variable, attr)
-        expect_value(
-            'Variable "{}" {}'.format(variable.name, attr), value, expected
-        )
+        expect_value('Variable "{}" {}'.format(variable.name, attr), value, expected)
 
     # Network
     networks = session.query(Network).filter(
@@ -381,11 +369,11 @@ def verify_baseline_network_and_variables(session):
             "standard_name": "air_temperature",
             "network_id": network.id,
             "short_name": f"air_temperature t: {keyword} within days t: mean "
-                          f"within months t: mean over years",
+            f"within months t: mean over years",
             "cell_method": f"t: {keyword} within days t: mean within months "
-                           f"t: mean over years",
+            f"t: mean over years",
             "description": f"Climatological mean of monthly mean of {keyword} "
-                           f"daily temperature",
+            f"daily temperature",
             "display_name": "Temperature Climatology ({})".format(kwd),
         }
         for attr, value in expected_attrs.items():
@@ -455,9 +443,7 @@ def verify_baseline_values(
     )
 
     expect_value(
-        "{} station count".format(var_name),
-        stations_with_dvs.count(),
-        station_count,
+        "{} station count".format(var_name), stations_with_dvs.count(), station_count,
     )
 
     derived_values = (
