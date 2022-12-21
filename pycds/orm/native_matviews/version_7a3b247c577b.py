@@ -1,6 +1,5 @@
-from sqlalchemy import MetaData, Index, Column, Integer
+from sqlalchemy import Index, Column, Integer
 from sqlalchemy.orm import Query
-from sqlalchemy.ext.declarative import declarative_base
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.tables import Obs
 from pycds.orm.view_base import Base

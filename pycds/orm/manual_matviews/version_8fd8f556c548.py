@@ -43,7 +43,6 @@ Notes:
 """
 
 from sqlalchemy import (
-    MetaData,
     func,
     and_,
     not_,

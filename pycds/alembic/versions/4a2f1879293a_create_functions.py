@@ -6,10 +6,8 @@ Create Date: 2020-01-28 16:43:12.112378
 
 """
 from alembic import op
-import sqlalchemy as sa
 from pycds.context import get_schema_name, get_su_role_name
 from pycds.alembic.extensions.replaceable_objects import ReplaceableStoredProcedure
-import pycds.alembic.extensions.operation_plugins
 
 
 schema_name = get_schema_name()

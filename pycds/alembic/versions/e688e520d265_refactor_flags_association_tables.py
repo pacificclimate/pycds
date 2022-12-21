@@ -6,7 +6,7 @@ Create Date: 2021-05-14 12:07:09.107616
 
 """
 import logging
-from alembic import op, context
+from alembic import op
 from pycds import get_schema_name
 from pycds.alembic.extensions.special_operations import create_primary_key_if_not_exists
 

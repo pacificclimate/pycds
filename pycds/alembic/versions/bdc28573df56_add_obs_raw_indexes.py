@@ -11,7 +11,6 @@ would be true, but it's easy enough to provide for.
 """
 import logging
 from alembic import op
-import sqlalchemy as sa
 from pycds import get_schema_name
 from pycds.database import get_schema_item_names
 

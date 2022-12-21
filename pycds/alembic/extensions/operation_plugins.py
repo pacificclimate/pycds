@@ -17,7 +17,6 @@ from alembic.operations.ops import (
     CreateIndexOp,
 )
 from alembic import util
-from alembic.util import sqla_compat
 
 
 logger = logging.getLogger("alembic")

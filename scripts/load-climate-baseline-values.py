@@ -1,13 +1,11 @@
 #! /usr/bin/env python
 
-import sys
 import logging
 from argparse import ArgumentParser
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import pycds.weather_anomaly
 import pycds.climate_baseline_helpers
 from pycds.climate_baseline_helpers import load_pcic_climate_baseline_values
 

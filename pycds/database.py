@@ -1,7 +1,5 @@
-from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
-from pycds.alembic.info import get_current_head
 from pycds.context import get_schema_name
 
 

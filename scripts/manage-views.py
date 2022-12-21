@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import sys
 import logging
 from argparse import ArgumentParser
 

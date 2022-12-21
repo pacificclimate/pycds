@@ -3,12 +3,10 @@ import sys
 
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import DDL, CreateSchema
+from sqlalchemy.schema import CreateSchema
 
 from pytest import fixture
 import testing.postgresql
-
-from citext import CIText
 
 import pycds
 
