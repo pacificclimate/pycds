@@ -8,10 +8,9 @@ from pycds.database import (
 
 def test_get_postgres_version(base_engine):
     version = get_postgresql_version(base_engine)
-    print(version)
     assert type(version) == tuple
     assert all(type(n) == int for n in version)
-    assert version >= (9, 0, 0)  # Just for laughs
+    assert version >= (10, 0)  # Just for laughs
 
 
 @pytest.mark.parametrize(
