@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy.engine.reflection import Inspector
+import sqlalchemy
 from pycds.orm.native_matviews import VarsPerHistory
 
 
@@ -40,13 +40,15 @@ def test_vars_content(sesh_with_large_data):
 def test_index(schema_name, prepared_schema_from_migrations_left):
     """Test that VarsPerHistory has the expected index."""
     engine, script = prepared_schema_from_migrations_left
-    inspector = Inspector(engine)
-    viewname = VarsPerHistory.base_name()
-    indexes = inspector.get_indexes(table_name=viewname, schema=schema_name)
+    inspector = sqlalchemy.inspect(engine)
+    indexes = inspector.get_indexes(
+        table_name=(VarsPerHistory.base_name()), schema=schema_name
+    )
     assert indexes == [
         {
             "name": "var_hist_idx",
             "column_names": ["history_id", "vars_id"],
             "unique": False,
+            "include_columns": [],
         }
     ]

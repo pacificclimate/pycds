@@ -1,3 +1,4 @@
+import re
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
 from pycds.context import get_schema_name
@@ -27,7 +28,7 @@ def check_migration_version(
 
 def get_postgresql_version(engine):
     """
-    Return PostgreSQL version as a tuple of integers.
+    Return PostgreSQL version as a pair of integers.
 
     This function is only works PostgreSQL. On other DBMSs, it will raise
     a ValueError.
@@ -39,10 +40,9 @@ def get_postgresql_version(engine):
     if engine.dialect.name.lower() != "postgresql":
         raise ValueError(f"We are not running on PostgreSQL.")
 
-    version = engine.execute(
-        "SELECT setting FROM pg_settings WHERE name = " "'server_version'"
-    ).first()[0]
-    return tuple(int(n) for n in version.split("."))
+    version = engine.execute("SELECT version()").first()[0]
+    match = re.match(r"PostgreSQL (\d+)\.(\d+)", version)
+    return tuple(map(int, match.groups()))
 
 
 def db_supports_statement(engine, statement):
