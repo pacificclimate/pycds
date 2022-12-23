@@ -33,6 +33,7 @@ jobs:
 
     - name: Install pipenv
       run: |
+        pip install --upgrade pip
         pip install -U pipenv
 
     - name: Install Python dependencies
