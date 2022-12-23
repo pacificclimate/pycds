@@ -169,8 +169,13 @@ Index("meta_history_freq_idx", History.freq)
 ObsRawNativeFlags = Table(
     "obs_raw_native_flags",
     Base.metadata,
-    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
-    Column("native_flag_id", Integer, ForeignKey("meta_native_flag.native_flag_id")),
+    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id"), nullable=False),
+    Column(
+        "native_flag_id",
+        Integer,
+        ForeignKey("meta_native_flag.native_flag_id"),
+        nullable=False,
+    ),
     UniqueConstraint("obs_raw_id", "native_flag_id", name="obs_raw_native_flag_unique"),
     # Indexes
     Index("flag_index", "obs_raw_id"),
@@ -182,8 +187,13 @@ ObsRawNativeFlags = Table(
 ObsRawPCICFlags = Table(
     "obs_raw_pcic_flags",
     Base.metadata,
-    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id")),
-    Column("pcic_flag_id", Integer, ForeignKey("meta_pcic_flag.pcic_flag_id")),
+    Column("obs_raw_id", BigInteger, ForeignKey("obs_raw.obs_raw_id"), nullable=False),
+    Column(
+        "pcic_flag_id",
+        Integer,
+        ForeignKey("meta_pcic_flag.pcic_flag_id"),
+        nullable=False,
+    ),
     UniqueConstraint("obs_raw_id", "pcic_flag_id", name="obs_raw_pcic_flag_unique"),
     # Indexes
     Index("pcic_flag_index", "obs_raw_id"),
