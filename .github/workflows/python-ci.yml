@@ -34,7 +34,7 @@ jobs:
     - name: Install pipenv
       run: |
         pip install --upgrade pip
-        pip install -U pipenv
+        pip install -U pipenv==2022.3.28
 
     - name: Install Python dependencies
       env:
