@@ -40,6 +40,10 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
     """
     This view is used by the PDP Geoserver backend for generating station
     map layers.
+
+    Note: In this class (which maps a table to the view), a primary key must be
+    declared (SQLAlchemy requirement). A view cannot have a PK, but this table
+    declaration does not affect the view.
     """
 
     __tablename__ = "crmp_network_geoserver"
@@ -55,8 +59,8 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
     freq = Column(String)
     tz_offset = Column(Interval)
     province = Column(String)
-    station_id = Column(Integer, primary_key=True)
-    history_id = Column(Integer)
+    station_id = Column(Integer)
+    history_id = Column(Integer, primary_key=True)
     country = Column(String)
     comments = Column(String(255))
     the_geom = Column(Geometry("GEOMETRY", 4326))
@@ -106,8 +110,12 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
 
 class HistoryStationNetwork(Base, ReplaceableView):
     """
-    This view, as its name suggests, is a convenience view that joins
-    History, Station, and Network tables.
+    This view, as its name suggests, is a convenience view that joins History, Station,
+    and Network tables.
+
+    Note: In this class (which maps a table to the view), a primary key must be
+    declared (SQLAlchemy requirement). A view cannot have a PK, but this table
+    declaration does not affect the view.
     """
 
     __tablename__ = "history_join_station_network"  # Legacy name
@@ -164,8 +172,11 @@ class HistoryStationNetwork(Base, ReplaceableView):
 
 class ObsCountPerDayHistory(Base, ReplaceableView):
     """
-    This view provides counts of observations grouped by day (date) and
-    history_id
+    This view provides counts of observations grouped by day (date) and history_id
+
+    Note: In this class (which maps a table to the view), a primary key must be
+    declared (SQLAlchemy requirement). A view cannot have a PK, but this table
+    declaration does not affect the view.
     """
 
     __tablename__ = "obs_count_per_day_history_v"  # Legacy name
@@ -190,6 +201,10 @@ class ObsCountPerDayHistory(Base, ReplaceableView):
 class ObsWithFlags(Base, ReplaceableView):
     """
     This view joins Obs with History and Variable.
+
+    Note: In this class (which maps a table to the view), a primary key must be
+    declared (SQLAlchemy requirement). A view cannot have a PK, but this table
+    declaration does not affect the view.
     """
 
     # TODO: Why is this called 'ObsWithFlags'? There are no flags!
