@@ -77,4 +77,5 @@ jobs:
         pipenv run pytest -m "not slow" -v --tb=short tests
 
     - name: Code format check
+      if: ${{ matrix.python-version == '3.8' }}
       run: pipenv run black . --check
