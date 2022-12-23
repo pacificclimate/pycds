@@ -11,8 +11,8 @@ jobs:
         python-version:
           - "3.8"
           - "3.9"
-          - "3.10"
-          - "3.11"
+#          - "3.10"
+#          - "3.11"
 
     steps:
     - uses: actions/checkout@v2
@@ -35,26 +35,32 @@ jobs:
       run: |
         pip install -U pipenv
 
-    - id: cache-pipenv
-      uses: actions/cache@v2
-      with:
-        path: ~/.local/share/virtualenvs
-        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-
-    - name: Install dependencies if changed
-      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
+    - name: Install Python dependencies
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
-        pipenv install --deploy --dev
+        pipenv install --python ${{ matrix.python-version }} --deploy --dev
 
-    - name: Re-install dependencies if alternative python version
-      if: ${{ matrix.python-version != '3.8' }}
-      env:
-        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
-      run: |
-        mv Pipfile.lock do-not-use
-        pipenv install --python ${{ matrix.python-version }} --dev
+#    - id: cache-pipenv
+#      uses: actions/cache@v2
+#      with:
+#        path: ~/.local/share/virtualenvs
+#        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+#
+#    - name: Install dependencies if changed
+#      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        pipenv install --deploy --dev
+#
+#    - name: Re-install dependencies if alternative python version
+#      if: ${{ matrix.python-version != '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        mv Pipfile.lock do-not-use
+#        pipenv install --python ${{ matrix.python-version }} --dev
 
     - name: Test with pytest (full)
       if: github.ref == 'refs/heads/master'
@@ -71,4 +77,5 @@ jobs:
         pipenv run pytest -m "not slow" -v --tb=short tests
 
     - name: Code format check
+      if: ${{ matrix.python-version == '3.8' }}
       run: pipenv run black . --check
