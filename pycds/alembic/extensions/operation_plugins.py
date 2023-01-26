@@ -33,9 +33,10 @@ class DropTableIfExistsOp(MigrateOperation):
     TODO: Inherit from Alembic builtin DropTableOp? See DropConstraintIfExistsOp
     """
 
-    def __init__(self, name, schema=None):
+    def __init__(self, name, schema=None, cascade=False):
         self.name = name
         self.schema = schema
+        self.cascade = cascade
 
     @classmethod
     def drop_table_if_exists(cls, operations, name, **kw):
@@ -59,8 +60,16 @@ class DropTableIfExistsOp(MigrateOperation):
 @Operations.implementation_for(DropTableIfExistsOp)
 def drop_table_if_exists(operations, operation):
     # TODO: Refactor into a DDL extension.
+    # TODO: Possibly refactor this into a command DropTableWithOptions to accommodate
+    #   the possibility of omitting IF EXISTS and adding other options like CASCADE
     schema_prefix = f"{operation.schema}." if operation.schema is not None else ""
-    operations.execute(f"DROP TABLE IF EXISTS {schema_prefix}{operation.name}")
+    command_parts = [
+        "DROP TABLE",
+        "IF EXISTS",
+        f"{schema_prefix}{operation.name}",
+        operation.cascade and "CASCADE"
+    ]
+    operations.execute(" ".join(filter(None, command_parts)))
 
 
 @Operations.register_operation("drop_constraint_if_exists")
