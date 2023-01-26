@@ -67,7 +67,7 @@ def drop_table_if_exists(operations, operation):
         "DROP TABLE",
         "IF EXISTS",
         f"{schema_prefix}{operation.name}",
-        operation.cascade and "CASCADE"
+        operation.cascade and "CASCADE",
     ]
     operations.execute(" ".join(filter(None, command_parts)))
 
@@ -95,8 +95,12 @@ class DropConstraintIfExistsOp(DropConstraintOp):
         )
 
     @classmethod
-    def batch_drop_constraint_if_exists(cls, operations, constraint_name, type_=None):
-        return cls.drop_constraint(operations, constraint_name, type_=type_)
+    def batch_drop_constraint_if_exists(
+        cls, operations, constraint_name, table_name, type_=None, schema=None
+    ):
+        return cls.drop_constraint(
+            operations, constraint_name, table_name, type_=type_, schema=schema
+        )
 
 
 @Operations.implementation_for(DropConstraintIfExistsOp)
