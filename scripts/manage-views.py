@@ -23,9 +23,7 @@ Examples:
     postgresql+pg8000://scott:tiger@localhost/mydatabase
 """
     )
-    parser.add_argument(
-        "-d", "--dsn", help="Database DSN in which to manage views"
-    )
+    parser.add_argument("-d", "--dsn", help="Database DSN in which to manage views")
     log_level_choices = "NOTSET DEBUG INFO WARNING ERROR CRITICAL".split()
     parser.add_argument(
         "-s",
@@ -41,19 +39,13 @@ Examples:
         choices=log_level_choices,
         default="WARNING",
     )
+    parser.add_argument("operation", help="Operation to perform", choices=["refresh"])
     parser.add_argument(
-        "operation", help="Operation to perform", choices=["refresh"]
-    )
-    parser.add_argument(
-        "views",
-        help="Views to affect",
-        choices=["daily", "monthly-only", "all"],
+        "views", help="Views to affect", choices=["daily", "monthly-only", "all"],
     )
     args = parser.parse_args()
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s: %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
@@ -65,7 +57,21 @@ Examples:
     mv_logger.addHandler(handler)
     mv_logger.setLevel(getattr(logging, args.scriptloglevel))
 
-    engine = create_engine(args.dsn)
+    mv_logger.debug("Creating engine")
+    engine = create_engine(
+        args.dsn,
+        # This might not be necessary, but it can't hurt.
+        pool_pre_ping=True,
+        # The following keepalive args fix a connection timeout problem that interrupted
+        # the refreshes. Note: These args are specific to psycopg2. They may not work
+        # with other DBAPIs.
+        connect_args={
+            "keepalives": 1,
+            "keepalives_idle": 60,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
+    )
     session = sessionmaker(bind=engine)()
 
     mv_logger.debug("Creating all ORM objects")
