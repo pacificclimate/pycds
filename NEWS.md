@@ -1,5 +1,13 @@
 # News / Release Notes
 
+## 3.3.2
+
+*Release Date: 2023-Feb-28*
+
+(Side release to actually fix that bug.)
+
+- [Fix script manage-views](https://github.com/pacificclimate/pycds/issues/146)
+
 ## 3.3.1
 
 *Release Date: 2023-Feb-28*
