@@ -9,9 +9,9 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.8"
-          - "3.9"
-#          - "3.10"
+#          - "3.8"
+#          - "3.9"
+          - "3.10"
 #          - "3.11"
 
     steps:
@@ -61,6 +61,7 @@ jobs:
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
+        pipenv run pip install -U pip
         pipenv install --dev
 
     - name: Install Python dependencies for Python != 3.8
@@ -68,6 +69,7 @@ jobs:
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
+        pipenv run pip install -U pip
         mv Pipfile.lock do-not-use
         pipenv install --python ${{ matrix.python-version }} --dev
 
