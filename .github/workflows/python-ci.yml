@@ -35,20 +35,36 @@ jobs:
       run: |
         pip install -U pipenv
 
-    - id: cache-pipenv
-      uses: actions/cache@v2
-      with:
-        path: ~/.local/share/virtualenvs
-        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+#    - id: cache-pipenv
+#      uses: actions/cache@v2
+#      with:
+#        path: ~/.local/share/virtualenvs
+#        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+#
+#    - name: Install dependencies if changed
+#      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        pipenv install --deploy --dev
+#
+#    - name: Re-install dependencies if alternative python version
+#      if: ${{ matrix.python-version != '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        mv Pipfile.lock do-not-use
+#        pipenv install --python ${{ matrix.python-version }} --dev
 
-    - name: Install dependencies if changed
-      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
+    - name: Install Python dependencies for Python == 3.8
+      if: ${{ matrix.python-version == '3.8' }}
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
-        pipenv install --deploy --dev
+        # Why --deploy here but not for Py != 3.8?
+        pipenv install pipenv install --deploy --dev
 
-    - name: Re-install dependencies if alternative python version
+    - name: Install Python dependencies for Python != 3.8
       if: ${{ matrix.python-version != '3.8' }}
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
