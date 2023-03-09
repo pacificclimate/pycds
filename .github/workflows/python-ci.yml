@@ -61,8 +61,7 @@ jobs:
       env:
         PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
       run: |
-        # Why --deploy here but not for Py != 3.8?
-        pipenv install pipenv install --deploy --dev
+        pipenv install --dev
 
     - name: Install Python dependencies for Python != 3.8
       if: ${{ matrix.python-version != '3.8' }}
