@@ -98,7 +98,9 @@ test = [
 
 [project.scripts]
 # Does this actually work when manage-views is python file in a script dir?? Test!
-manage-views = "scripts.manage-views:main"
+# It doesn't.
+# FIXME
+#manage-views = "scripts.manage-views:main"
 # It's not clear that any of the other scripts in script/ have any value.
 # If they do, refactor them so that they can be called (move everything into
 # a main() method without arguments) and add them here.
