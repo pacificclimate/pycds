@@ -10,7 +10,8 @@ import pycds.manage_views
 from pycds.manage_views import manage_views
 import pycds.orm.view_base
 
-if __name__ == "__main__":
+
+def main():
     parser = ArgumentParser(
         description="""Script to manage views in the PCDS/CRMP database.
 
@@ -69,3 +70,7 @@ Examples:
     session.commit()
 
     mv_logger.info("Done")
+
+
+if __name__ == "__main__":
+    main()
