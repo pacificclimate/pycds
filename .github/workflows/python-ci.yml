@@ -31,45 +31,77 @@ jobs:
         sudo apt-get update
         sudo apt-get install postgresql-plpython3-14 postgresql-14-postgis-3
 
-    - name: Install pipenv
-      run: |
-        pip install -U pipenv
+    # Is this necessary? Seems likely not:
+    # https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/#build-isolation
+    # It could if necessary be used to replicate more exactly what is done
+    # on real installations.
+#    - name: Create virtual environment
+#      run: |
+#        python -m venv venv
+#        source venv/bin/activate
 
-    - id: cache-pipenv
-      uses: actions/cache@v2
-      with:
-        path: ~/.local/share/virtualenvs
-        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-
-    - name: Install dependencies if changed
-      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
-      env:
-        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+    - name: Install project
       run: |
-        pipenv install --deploy --dev
-
-    - name: Re-install dependencies if alternative python version
-      if: ${{ matrix.python-version != '3.8' }}
-      env:
-        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
-      run: |
-        mv Pipfile.lock do-not-use
-        pipenv install --python ${{ matrix.python-version }} --dev
+        pip install .
 
     - name: Test with pytest (full)
       if: github.ref == 'refs/heads/master'
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        pipenv run pytest -v --tb=short tests
+        pytest -v --tb=short tests
 
     - name: Test with pytest (fast)
       if: github.ref != 'refs/heads/master'
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        pipenv run pytest -m "not slow" -v --tb=short tests
+        pytest -m "not slow" -v --tb=short tests
+#
+#    - name: Code format check
+#      if: ${{ matrix.python-version == '3.8' }}
+#      run: pipenv run black . --check
 
-    - name: Code format check
-      if: ${{ matrix.python-version == '3.8' }}
-      run: pipenv run black . --check
+# OLD vvv
+#    - name: Install pipenv
+#      run: |
+#        pip install -U pipenv
+#
+#    - id: cache-pipenv
+#      uses: actions/cache@v2
+#      with:
+#        path: ~/.local/share/virtualenvs
+#        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+#
+#    - name: Install dependencies if changed
+#      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        pipenv install --deploy --dev
+#
+#    - name: Re-install dependencies if alternative python version
+#      if: ${{ matrix.python-version != '3.8' }}
+#      env:
+#        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+#      run: |
+#        mv Pipfile.lock do-not-use
+#        pipenv install --python ${{ matrix.python-version }} --dev
+#
+#    - name: Test with pytest (full)
+#      if: github.ref == 'refs/heads/master'
+#      env:
+#        PYCDS_SCHEMA_NAME: other
+#      run: |
+#        pipenv run pytest -v --tb=short tests
+#
+#    - name: Test with pytest (fast)
+#      if: github.ref != 'refs/heads/master'
+#      env:
+#        PYCDS_SCHEMA_NAME: other
+#      run: |
+#        pipenv run pytest -m "not slow" -v --tb=short tests
+#
+#    - name: Code format check
+#      if: ${{ matrix.python-version == '3.8' }}
+#      run: pipenv run black . --check
