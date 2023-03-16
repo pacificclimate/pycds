@@ -143,7 +143,11 @@ def upgrade():
         sa.Column("comments", sa.String(length=255), nullable=True),
         sa.Column("freq", sa.String(), nullable=True),
         sa.Column("sensor_id", sa.Integer(), nullable=True),
-        sa.Column("the_geom", geoalchemy2.types.Geometry(srid=4326), nullable=True),
+        sa.Column(
+            "the_geom",
+            geoalchemy2.types.Geometry(srid=4326, spatial_index=False),
+            nullable=True,
+        ),
         sa.ForeignKeyConstraint(
             ["sensor_id"], [f"{schema_name}.meta_sensor.sensor_id"]
         ),
