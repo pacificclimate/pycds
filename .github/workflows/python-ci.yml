@@ -66,7 +66,7 @@ jobs:
 #    from click import _unicodefun  # type: ignore
 #ImportError: cannot import name '_unicodefun' from 'click' (/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/click/__init__.py)
 #Error: Process completed with exit code 1.
-#
-#    - name: Code format check
-#      if: ${{ matrix.python-version == '3.8' }}
-#      run: pipenv run black . --check
+
+    - name: Code format check
+      if: ${{ matrix.python-version == '3.8' }}
+      run: poetry run black . --check
