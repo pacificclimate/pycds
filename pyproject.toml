@@ -1,13 +1,20 @@
-[project]
-name = "PyCDS"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "pycds"
 version = "4.0.1"
 description = "An ORM representation of the PCDS and CRMP database"
-keywords = ["sql", "database", "pcds", "crmp", "climate", "meteorology"]
-requires-python = ">=3.8"
+license = "GPL-3.0-only"
 authors = [
-    {name = "James Hiebert", email = "hiebert@uvic.ca"},
-    {name = "Rod Glover", email = "rglover@uvic.ca"},
+    "James Hiebert <hiebert@uvic.ca>",
+    "Rod Glover <rglover@uvic.ca>",
 ]
+readme = "README.md"
+homepage = "http://www.pacificclimate.org/"
+repository = "https://github.com/pacificclimate/pycds"
+keywords = ["sql", "database", "pcds", "crmp", "climate", "meteorology"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -15,43 +22,36 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Internet",
     "Topic :: Scientific/Engineering",
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-dependencies = [
-    "alembic == 1.5.2",
-    "black == 19.10b0",
-    "geoalchemy2",
-    "psycopg2",
-    "SQLAlchemy == 1.4.15",
-    "sqlalchemy-citext",
+packages = [
+    { include = "pycds*" },
 ]
+# Possibly unnecessary: see https://python-poetry.org/docs/pyproject/#include-and-exclude
+#include = ["data/crmp_subset_data.sql"]
 
-[project.optional-dependencies]
-test = [
-    "alembic-verify == 0.1.4",  # loosen?
-    "pytest",
-    "pytest-describe",
-    "pytest-mock",
-    "sqlalchemy-diff",
-    "testing.postgresql",
-    "zipp == 3.5.0",  # necessary? See https://github.com/pacificclimate/pycds/pull/104
-]
+[tool.poetry.dependencies]
+python = "^3.8"
+alembic = "1.5.2"
+black = "19.10b0"
+geoalchemy2 = "*"
+psycopg2 = "*"
+SQLAlchemy = "1.4.15"
+sqlalchemy-citext = "*"
 
-[project.scripts]
-# Does this actually work when manage-views is python file in a script dir?? Test!
-# It doesn't.
-# FIXME
-# Deferred until later - Poetry may have a different requirement, although it seems unlikely.
-#manage-views = "scripts.manage-views:main"
-# It's not clear that any of the other scripts in script/ have any value.
-# If they do, refactor them so that they can be called (move everything into
-# a main() method without arguments) and add them here.
-
-[project.urls]
-homepage = "http://www.pacificclimate.org/"
-repository = "https://github.com/pacificclimate/pycds"
+[tool.poetry.group.dev.dependencies]
+#pytest = "^7.2.2"
+alembic-verify = "0.1.4"  # loosen?
+pytest = "*"
+pytest-describe = "*"
+pytest-mock = "*"
+sqlalchemy-diff = "*"
+"testing.postgresql" = "*"
+zipp = "3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/104
