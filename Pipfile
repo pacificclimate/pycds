@@ -46,4 +46,4 @@ zipp = "==3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/
 # (which we must use in order to access old versions of Postgres etc.),
 # the Python test-matrix installations fail.
 # [requires]
-python_version = "3.10"
+#python_version = "3.10"
