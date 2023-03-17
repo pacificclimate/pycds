@@ -40,7 +40,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 alembic = "1.5.2"
-black = "19.10b0"
+black = "*"
 geoalchemy2 = "*"
 psycopg2 = "*"
 SQLAlchemy = "1.4.15"
