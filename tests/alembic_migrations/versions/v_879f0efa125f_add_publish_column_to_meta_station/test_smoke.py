@@ -25,7 +25,9 @@ def check_if_column_exists(col_name, sch_cols):
 
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name,
+    prepared_schema_from_migrations_left,
+    alembic_config_left,
+    schema_name,
 ):
     """Test the schema migration from 7b139906ac46 to 879f0efa125f."""
 

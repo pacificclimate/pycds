@@ -117,7 +117,9 @@ def daily_temperature_extremum(extremum):
                 History.id.label("history_id"),
                 good_obs.c.vars_id.label("vars_id"),
                 func_schema.effective_day(
-                    good_obs.c.time, cast(extremum, String), cast(History.freq, String),
+                    good_obs.c.time,
+                    cast(extremum, String),
+                    cast(History.freq, String),
                 ).label("obs_day"),
                 extremum_func(good_obs.c.datum).label("statistic"),
                 func.sum(
@@ -166,7 +168,9 @@ class DailyMinTemperature(Base, ReplaceableManualMatview):
     __selectable__ = daily_temperature_extremum("min").selectable
 
 
-def monthly_average_of_daily_temperature_extremum_with_total_coverage(extremum,):
+def monthly_average_of_daily_temperature_extremum_with_total_coverage(
+    extremum,
+):
     """Return a SQLAlchemy query for a monthly average of a specified
     extremum of daily temperature, with monthly total data coverage.
 
@@ -209,10 +213,10 @@ def monthly_average_of_daily_temperature_extremum_with_avg_coverage(extremum):
     """
     # TODO: Rename. Geez.
 
-    avg_daily_extreme_temperature = monthly_average_of_daily_temperature_extremum_with_total_coverage(
-        extremum
-    ).subquery(
-        "avg_daily_extreme_temperature"
+    avg_daily_extreme_temperature = (
+        monthly_average_of_daily_temperature_extremum_with_total_coverage(
+            extremum
+        ).subquery("avg_daily_extreme_temperature")
     )
 
     func_schema = getattr(func, get_schema_name())

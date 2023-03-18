@@ -34,7 +34,8 @@ test_items = [
     "prepared_schema_from_migrations_left", ("bdc28573df56",), indirect=True
 )
 @pytest.mark.parametrize(
-    "table_name, unique_constraint_name, primary_key_name, pkey_columns", test_items,
+    "table_name, unique_constraint_name, primary_key_name, pkey_columns",
+    test_items,
 )
 @pytest.mark.parametrize("unique_exists", [True, False])
 @pytest.mark.parametrize("primary_key_exists", [True, False])
@@ -49,7 +50,7 @@ def test_upgrade(
     primary_key_exists,
     schema_name,
 ):
-    """Test the schema migration from bdc28573df56 to e688e520d265. """
+    """Test the schema migration from bdc28573df56 to e688e520d265."""
 
     # Set up database to revision bdc28573df56
     engine, script = prepared_schema_from_migrations_left
@@ -96,7 +97,8 @@ def test_upgrade(
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
-    "table_name, unique_constraint_name, primary_key_name, pkey_columns", test_items,
+    "table_name, unique_constraint_name, primary_key_name, pkey_columns",
+    test_items,
 )
 def test_downgrade(
     prepared_schema_from_migrations_left,
@@ -107,7 +109,7 @@ def test_downgrade(
     pkey_columns,
     schema_name,
 ):
-    """Test the schema migration from e688e520d265 to bdc28573df56 . """
+    """Test the schema migration from e688e520d265 to bdc28573df56 ."""
 
     # Set up database to revision e688e520d265
     engine, script = prepared_schema_from_migrations_left

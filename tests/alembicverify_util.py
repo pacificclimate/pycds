@@ -37,12 +37,12 @@ def prepare_schema_from_migrations(uri, config, db_setup=None, revision="head"):
 
 
 def get_current_revision(config, engine, script, **kwargs):
-    """Inspection helper. Get the current revision of a set of migrations. """
+    """Inspection helper. Get the current revision of a set of migrations."""
     return _get_revision(config, engine, script, **kwargs)
 
 
 def get_head_revision(config, engine, script, **kwargs):
-    """Inspection helper. Get the head revision of a set of migrations. """
+    """Inspection helper. Get the head revision of a set of migrations."""
     return _get_revision(config, engine, script, **kwargs, revision_type="head")
 
 

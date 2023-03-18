@@ -29,7 +29,7 @@ table_names = {
 #     "prepared_schema_from_migrations_left", ("8fd8f556c548",), indirect=True
 # )
 def test_upgrade(prepared_schema_from_migrations_left, schema_name):
-    """Test the schema migration from 4a2f1879293a to 84b7fc2596d5. """
+    """Test the schema migration from 4a2f1879293a to 84b7fc2596d5."""
 
     # Set up database to version 84b7fc2596d5
     engine, script = prepared_schema_from_migrations_left
@@ -46,7 +46,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
-    """Test the schema migration from 84b7fc2596d5 to 4a2f1879293a. """
+    """Test the schema migration from 84b7fc2596d5 to 4a2f1879293a."""
 
     # Set up database to version 84b7fc2596d5
     engine, script = prepared_schema_from_migrations_left

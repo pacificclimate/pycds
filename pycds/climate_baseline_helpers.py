@@ -359,7 +359,7 @@ def verify_baseline_network_and_variables(session):
     network = networks.first()
 
     # Temperature variables
-    for (name, keyword, kwd) in [
+    for name, keyword, kwd in [
         ("Tx_Climatology", "maximum", "Max."),
         ("Tn_Climatology", "minimum", "Min."),
     ]:
@@ -443,7 +443,9 @@ def verify_baseline_values(
     )
 
     expect_value(
-        "{} station count".format(var_name), stations_with_dvs.count(), station_count,
+        "{} station count".format(var_name),
+        stations_with_dvs.count(),
+        station_count,
     )
 
     derived_values = (

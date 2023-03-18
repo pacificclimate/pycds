@@ -134,6 +134,9 @@ def compile(element, compiler, **kw):
     # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
     # signature is included in the DROP FUNCTION statement. So ditch it.
     name = re.sub(
-        r" (DEFAULT|=) [^,)]*([,)])", r"\2", element.identifier, flags=re.MULTILINE,
+        r" (DEFAULT|=) [^,)]*([,)])",
+        r"\2",
+        element.identifier,
+        flags=re.MULTILINE,
     )
     return f"DROP FUNCTION {name}"

@@ -68,7 +68,8 @@ def test_obs_count_per_day_history(sesh_with_large_data):
 
     obs_count_over_hx_q = (
         sesh_with_large_data.query(
-            Obs.history_id.label("history_id"), func.count(Obs.id).label("count"),
+            Obs.history_id.label("history_id"),
+            func.count(Obs.id).label("count"),
         )
         .select_from(Obs)
         .group_by(Obs.history_id)

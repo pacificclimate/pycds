@@ -122,25 +122,37 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
     def action(sesh):
         moti = Network(
             **TestNetwork(
-                "MOTI", "Ministry of Transportation and Infrastructure", "000000",
+                "MOTI",
+                "Ministry of Transportation and Infrastructure",
+                "000000",
             )._asdict()
         )
         moe = Network(
             **TestNetwork(
-                "MOTI", "Ministry of Transportation and Infrastructure", "000000",
+                "MOTI",
+                "Ministry of Transportation and Infrastructure",
+                "000000",
             )._asdict()
         )
         sesh.add_all([moti, moe])
 
         simon = Contact(
             **TestContact(
-                "Simon", "Avalanche Guy", "MOTI", "simn@moti.bc.gov.ca", "250-555-1212",
+                "Simon",
+                "Avalanche Guy",
+                "MOTI",
+                "simn@moti.bc.gov.ca",
+                "250-555-1212",
             )._asdict()
         )
         simon.networks = [moti]
         ted = Contact(
             **TestContact(
-                "Ted", "Air Quailty Guy", "MOE", "ted@moti.bc.gov.ca", "250-555-2121",
+                "Ted",
+                "Air Quailty Guy",
+                "MOE",
+                "ted@moti.bc.gov.ca",
+                "250-555-2121",
             )._asdict()
         )
         ted.networks = [moe]
@@ -270,8 +282,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
 
 def insert_crmp_data(sesh, schema_name=get_schema_name()):
-    """Insert data from CRMP database dump into into tables in named schema.
-    """
+    """Insert data from CRMP database dump into into tables in named schema."""
 
     def action(sesh):
         fname = resource_filename("pycds", "data/crmp_subset_data.sql")

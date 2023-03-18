@@ -21,7 +21,10 @@ def prepared_schema_from_migrations_left(
         mocker.patch("pycds.database.db_supports_matviews", return_value=request.param)
 
     engine, script = prepare_schema_from_migrations(
-        uri_left, alembic_config_left, db_setup=db_setup, revision="7a3b247c577b",
+        uri_left,
+        alembic_config_left,
+        db_setup=db_setup,
+        revision="7a3b247c577b",
     )
 
     yield engine, script
