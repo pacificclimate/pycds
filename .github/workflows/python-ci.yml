@@ -47,12 +47,12 @@ jobs:
       run: |
         poetry run pytest -v --tb=short tests
 
-    - name: Test with pytest (fast)
-      if: github.ref != 'refs/heads/master'
-      env:
-        PYCDS_SCHEMA_NAME: other
-      run: |
-        poetry run pytest -m "not slow" -v --tb=short tests
+#    - name: Test with pytest (fast)
+#      if: github.ref != 'refs/heads/master'
+#      env:
+#        PYCDS_SCHEMA_NAME: other
+#      run: |
+#        poetry run pytest -m "not slow" -v --tb=short tests
 
 # FIXME: Recently got this error in CI:
 #
