@@ -38,15 +38,45 @@ ORM layer.
 
 ## Releasing
 
-To create a versioned release:
+### Note
 
-1. Increment `__version__` in `setup.py`.
-2. Summarize the changes from the last release in `NEWS.md`.
-3. Commit these changes, then tag the release:
+Below we describe incrementing the package version manually. We could consider 
+using the command 
+[`poetry version`](https://python-poetry.org/docs/cli/#version) 
+instead to get Poetry to do it for us.
 
-```
-git add setup.py NEWS.md
-git commit -m"Bump to version x.x.x"
-git tag -a -m"x.x.x" x.x.x
-git push --follow-tags
-```
+## Production release
+
+1. Modify `project.version` in `pyproject.toml`: First remove any suffix
+   to the version number, as our convention is to reserve those for test builds
+   (e.g., `1.2.3` is a release build, `1.2.3.dev7` is a test build).
+   Then increment the release build version.
+1. Summarize release changes in `NEWS.md`
+1. Commit these changes, then tag the release
+   ```bash
+   git add pyproject.toml NEWS.md
+   git commit -m"Bump to version X.Y.Z"
+   git tag -a -m"X.Y.Z" X.Y.Z
+   git push --follow-tags
+   ```
+1. Our GitHub Action `pypi-publish.yml` will build and release the package 
+   on our PyPI server.
+
+### Dev/test release
+
+The process is very similar to a production release, but uses a different
+version number convention, and omits any notice in NEWS.md.
+
+1. Modify `project.version` in `pyproject.toml`: Add or increment the suffix
+   in the pattern `.devN`, where N is any number of numeric digits (e.g., `1.2.3.dev11`).
+   Our convention is to reserve those for test releases
+   (e.g., `1.2.3` is a release build, `1.2.3.dev11` is a test build).
+2. Commit changes and tag the release:
+   ```bash
+   git add pyproject.toml
+   git commit -m"Create test version X.Y.Z.devN"
+   git tag -a -m"X.Y.Z.devN" X.Y.Z.devN
+   git push --follow-tags
+   ```
+1. Our GitHub Action `pypi-publish.yml` will build and release the package
+   on our PyPI server.
