@@ -37,7 +37,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        poetry env use system  # Necessary?
+        # poetry env use system  # Necessary?
         poetry install
 
     - name: Test with pytest (full)
@@ -47,25 +47,12 @@ jobs:
       run: |
         poetry run pytest -v --tb=short tests
 
-#    - name: Test with pytest (fast)
-#      if: github.ref != 'refs/heads/master'
-#      env:
-#        PYCDS_SCHEMA_NAME: other
-#      run: |
-#        poetry run pytest -m "not slow" -v --tb=short tests
-
-# FIXME: Recently got this error in CI:
-#
-# Run pipenv run black . --check
-#Traceback (most recent call last):
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/bin/black", line 8, in <module>
-#    sys.exit(patched_main())
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/black.py", line 4134, in patched_main
-#    patch_click()
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/black.py", line 4123, in patch_click
-#    from click import _unicodefun  # type: ignore
-#ImportError: cannot import name '_unicodefun' from 'click' (/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/click/__init__.py)
-#Error: Process completed with exit code 1.
+    - name: Test with pytest (fast)
+      if: github.ref != 'refs/heads/master'
+      env:
+        PYCDS_SCHEMA_NAME: other
+      run: |
+        poetry run pytest -m "not slow" -v --tb=short tests
 
     - name: Code format check
       if: ${{ matrix.python-version == '3.8' }}
