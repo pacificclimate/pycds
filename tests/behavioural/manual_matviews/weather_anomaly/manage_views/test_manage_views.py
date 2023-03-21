@@ -30,7 +30,6 @@ def test_refresh(
     var_temp_point,
     var_precip_net1_1,
 ):
-
     # Initially, each view should be empty, because no data
     for view in exp_views:
         assert prepared_sesh_left.query(view).count() == 0

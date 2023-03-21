@@ -27,7 +27,10 @@ def upgrade():
 
     op.drop_replaceable_object(ObsWithFlags)
     op.alter_column(
-        "meta_vars", "net_var_name", type_=ci.CIText(), schema=schema_name,
+        "meta_vars",
+        "net_var_name",
+        type_=ci.CIText(),
+        schema=schema_name,
     )
     op.create_unique_constraint(
         "network_variable_name_unique",
@@ -41,10 +44,16 @@ def upgrade():
 def downgrade():
     op.drop_replaceable_object(ObsWithFlags)
     op.drop_constraint(
-        "network_variable_name_unique", "meta_vars", schema=schema_name, type_="unique",
+        "network_variable_name_unique",
+        "meta_vars",
+        schema=schema_name,
+        type_="unique",
     )
     op.alter_column(
-        "meta_vars", "net_var_name", type_=sa.String(), schema=schema_name,
+        "meta_vars",
+        "net_var_name",
+        type_=sa.String(),
+        schema=schema_name,
     )
     op.create_replaceable_object(ObsWithFlags)
 

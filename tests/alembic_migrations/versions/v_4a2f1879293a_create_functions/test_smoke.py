@@ -31,7 +31,7 @@ function_names = {
 
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(prepared_schema_from_migrations_left, schema_name):
-    """Test the schema migration from 522eed334c85 to 4a2f1879293a. """
+    """Test the schema migration from 522eed334c85 to 4a2f1879293a."""
 
     # Set up database to version 4a2f1879293a
     engine, script = prepared_schema_from_migrations_left
@@ -45,7 +45,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
-    """Test the schema migration from 4a2f1879293a to 522eed334c85. """
+    """Test the schema migration from 4a2f1879293a to 522eed334c85."""
 
     # Set up database to version 4a2f1879293a
     engine, script = prepared_schema_from_migrations_left

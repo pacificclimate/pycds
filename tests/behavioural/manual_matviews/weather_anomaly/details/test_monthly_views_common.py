@@ -89,7 +89,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_a_partial_set_of_observations_for_one_month():
-
                     days = range(1, 32, 2)
                     hours = range(1, 24, 2)
 
@@ -167,7 +166,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -253,7 +255,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -289,7 +294,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_many_observations_per_variable():
-
                     days = range(1, 32, 2)
                     hours = range(1, 24, 2)
 
@@ -367,7 +371,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -419,7 +426,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
-
                     months = [4, 6, 9, 11]
                     days = range(1, 5)
 
@@ -470,7 +476,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -492,7 +501,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -516,7 +528,10 @@ def describe_with_1_network():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -563,7 +578,6 @@ def describe_with_2_networks():
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
-
                     months = range(1, 4)
                     days = range(1, 10)
                     hours = range(4, 20)
@@ -628,7 +642,10 @@ def describe_with_2_networks():
                                 MonthlyAverageOfDailyMinTemperature,
                                 MonthlyAverageOfDailyMinTemperature,
                             ),
-                            (MonthlyTotalPrecipitation, MonthlyTotalPrecipitation,),
+                            (
+                                MonthlyTotalPrecipitation,
+                                MonthlyTotalPrecipitation,
+                            ),
                         ],
                         indirect=["obs_sesh"],
                         ids=id,
@@ -666,7 +683,11 @@ def describe_with_2_networks():
                             ]
                         ) == set(
                             [
-                                (stn.id, var.id, datetime.datetime(2000, month, 1),)
+                                (
+                                    stn.id,
+                                    var.id,
+                                    datetime.datetime(2000, month, 1),
+                                )
                                 for (var, stn) in var_stn
                                 for month in months
                             ]

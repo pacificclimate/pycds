@@ -54,7 +54,9 @@ def downgrade():
         for index in VarsPerHistory.__table__.indexes:
             logger.debug(f"Dropping index '{index.name}'")
             op.drop_index(
-                index_name=index.name, table_name=index.table.name, schema=schema_name,
+                index_name=index.name,
+                table_name=index.table.name,
+                schema=schema_name,
             )
         op.drop_replaceable_object(VarsPerHistory)
         # Note: This will create the table in the database even if it didn't

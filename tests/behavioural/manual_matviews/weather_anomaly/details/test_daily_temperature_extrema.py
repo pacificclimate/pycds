@@ -95,7 +95,10 @@ def describe_with_1_network():
 
                     @mark.parametrize(
                         "DailyExtremeTemperature, statistic",
-                        [(DailyMaxTemperature, 3.0), (DailyMinTemperature, 1.0),],
+                        [
+                            (DailyMaxTemperature, 3.0),
+                            (DailyMinTemperature, 1.0),
+                        ],
                     )
                     def it_returns_the_expected_extreme_value(
                         refreshed_sesh, DailyExtremeTemperature, statistic
@@ -354,7 +357,9 @@ def describe_with_1_network():
                                 sesh.flush()
 
                             @mark.parametrize(
-                                "flag_assoc_sesh", ["native", "pcic"], indirect=True,
+                                "flag_assoc_sesh",
+                                ["native", "pcic"],
+                                indirect=True,
                             )
                             def setup_is_correct(flag_assoc_sesh):
                                 obs = flag_assoc_sesh.query(Obs)
@@ -512,7 +517,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_many_observations_on_different_days():
-
                     n_days = 3
 
                     @fixture
@@ -595,7 +599,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_observations_in_both_histories():
-
                     n_hours = 4
 
                     @fixture
@@ -683,7 +686,6 @@ def describe_with_1_network():
                         yield sesh
 
                 def describe_with_observations_for_both_variables():
-
                     # max and min temperature observations, by day, then hour
                     tmax = {
                         11: {7: 0, 16: 5},
@@ -749,7 +751,11 @@ def describe_with_1_network():
                                 [
                                     (datetime.datetime(2000, 1, 11), -5.0, 1.0),
                                     (datetime.datetime(2000, 1, 12), 0.0, 1.0),
-                                    (datetime.datetime(2000, 1, 13), -10.0, 1.0,),
+                                    (
+                                        datetime.datetime(2000, 1, 13),
+                                        -10.0,
+                                        1.0,
+                                    ),
                                 ],
                             ),
                         ],
@@ -794,7 +800,6 @@ def describe_with_2_networks():
                         yield sesh
 
                 def describe_with_observations_for_each_station_variable():
-
                     n_days = 3
                     n_hours = 4
 
@@ -808,7 +813,7 @@ def describe_with_2_networks():
                     ):
                         observations = []
                         id = 0
-                        for (var, hx) in [
+                        for var, hx in [
                             (var_temp_point, history_stn1_hourly),
                             (var_temp_point2, history_stn2_hourly),
                         ]:
@@ -852,7 +857,11 @@ def describe_with_2_networks():
                             ]
                         ) == set(
                             [
-                                (stn.id, var.id, datetime.datetime(2000, 1, day),)
+                                (
+                                    stn.id,
+                                    var.id,
+                                    datetime.datetime(2000, 1, day),
+                                )
                                 for (var, stn) in [
                                     (var_temp_point, history_stn1_hourly),
                                     (var_temp_point2, history_stn2_hourly),

@@ -87,8 +87,7 @@ def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
 
 @fixture(scope="session")
 def pycds_engine(base_engine):
-    """Test-session scoped database engine, with pycds ORM created in it.
-    """
+    """Test-session scoped database engine, with pycds ORM created in it."""
     pycds.Base.metadata.create_all(bind=base_engine)
     yield base_engine
 

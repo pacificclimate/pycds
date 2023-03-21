@@ -89,8 +89,7 @@ def obs1_temp_sesh(
     var_temp_point,
     history_stn1_hourly,
 ):
-    """Yield a session with particular observations added to variable1_sesh.
-    """
+    """Yield a session with particular observations added to variable1_sesh."""
     observations = [
         Obs(
             variable=var_temp_point,
@@ -115,8 +114,7 @@ def obs1_precip_sesh(
     var_precip_net1_1,
     history_stn1_hourly,
 ):
-    """Yield a session with particular observations added to variable1_sesh.
-    """
+    """Yield a session with particular observations added to variable1_sesh."""
     observations = [
         Obs(
             variable=var_precip_net1_1,

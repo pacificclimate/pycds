@@ -62,5 +62,7 @@ def downgrade():
         for index in ORMClass.__table__.indexes:
             logger.debug(f"Dropping index '{index.name} on table {index.table.name}'")
             op.drop_index(
-                index_name=index.name, table_name=index.table.name, schema=schema_name,
+                index_name=index.name,
+                table_name=index.table.name,
+                schema=schema_name,
             )

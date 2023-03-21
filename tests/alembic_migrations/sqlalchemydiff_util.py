@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 
 
 def prepare_schema_from_models(uri, sqlalchemy_base, db_setup=None):
-    """Creates the database schema from the ``SQLAlchemy`` models. """
+    """Creates the database schema from the ``SQLAlchemy`` models."""
     engine = create_engine(uri)
     if db_setup:
         db_setup(engine)

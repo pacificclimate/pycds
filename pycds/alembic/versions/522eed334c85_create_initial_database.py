@@ -224,7 +224,10 @@ def upgrade():
         sa.ForeignKeyConstraint(["vars_id"], [f"{schema_name}.meta_vars.vars_id"]),
         sa.PrimaryKeyConstraint("obs_raw_id"),
         sa.UniqueConstraint(
-            "obs_time", "history_id", "vars_id", name="time_place_variable_unique",
+            "obs_time",
+            "history_id",
+            "vars_id",
+            name="time_place_variable_unique",
         ),
         schema=schema_name,
     )
@@ -259,7 +262,8 @@ def upgrade():
         sa.Column("obs_raw_id", sa.BigInteger(), nullable=True),
         sa.Column("native_flag_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["native_flag_id"], [f"{schema_name}.meta_native_flag.native_flag_id"],
+            ["native_flag_id"],
+            [f"{schema_name}.meta_native_flag.native_flag_id"],
         ),
         sa.ForeignKeyConstraint(["obs_raw_id"], [f"{schema_name}.obs_raw.obs_raw_id"]),
         sa.UniqueConstraint(

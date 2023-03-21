@@ -237,7 +237,10 @@ class Obs(Base):
     # Constraints
     __table_args__ = (
         UniqueConstraint(
-            "obs_time", "history_id", "vars_id", name="time_place_variable_unique",
+            "obs_time",
+            "history_id",
+            "vars_id",
+            name="time_place_variable_unique",
         ),
     )
 

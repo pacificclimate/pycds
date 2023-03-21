@@ -41,7 +41,9 @@ Examples:
     )
     parser.add_argument("operation", help="Operation to perform", choices=["refresh"])
     parser.add_argument(
-        "views", help="Views to affect", choices=["daily", "monthly-only", "all"],
+        "views",
+        help="Views to affect",
+        choices=["daily", "monthly-only", "all"],
     )
     args = parser.parse_args()
 

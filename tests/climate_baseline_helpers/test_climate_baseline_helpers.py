@@ -89,7 +89,10 @@ def describe_create__pcic__climate__baseline__variables():
 
     @mark.parametrize(
         "name, keyword, kwd",
-        [("Tx_Climatology", "maximum", "Max."), ("Tn_Climatology", "minimum", "Min."),],
+        [
+            ("Tx_Climatology", "maximum", "Max."),
+            ("Tn_Climatology", "minimum", "Min."),
+        ],
     )
     def it_creates_temperature_variables(
         sesh_with_climate_baseline_variables, name, keyword, kwd
@@ -240,7 +243,12 @@ def describe_load__pcic__climate__baseline__values():
                 )
                 @mark.parametrize(
                     "exclude, n_exclude_matching",
-                    [([], 0), (["100"], 1), (["foo"], 0), (["100", "foo", "200"], 2),],
+                    [
+                        ([], 0),
+                        (["100"], 1),
+                        (["foo"], 0),
+                        (["100", "foo", "200"], 2),
+                    ],
                 )
                 def it_correctly_converts_and_loads_values_into_the_database(
                     sesh_with_station_and_history_records,
@@ -351,7 +359,10 @@ def describe_load__pcic__climate__baseline__values():
                     ["Tx_Climatology", "Tn_Climatology", "Precip_Climatology"],
                 )
                 def it_loads_only_non_absent_values(
-                    sesh_with_station_and_history_records, stations, var_name, source,
+                    sesh_with_station_and_history_records,
+                    stations,
+                    var_name,
+                    source,
                 ):
                     sesh = sesh_with_station_and_history_records
 
@@ -450,7 +461,10 @@ def describe_verify__baseline__network__and__variables():
                 ],
             )
             def it_raises_an_exception(
-                sesh_with_climate_baseline_variables, var_name, attr_name, attr_value,
+                sesh_with_climate_baseline_variables,
+                var_name,
+                attr_name,
+                attr_value,
             ):
                 sesh = sesh_with_climate_baseline_variables
                 variable = next(
@@ -527,7 +541,10 @@ def describe_verify__baseline__values():
                         [],
                         [{"station_native_id": "100", "values": range(1, 13)}],
                         [
-                            {"station_native_id": "100", "values": range(1, 13),},
+                            {
+                                "station_native_id": "100",
+                                "values": range(1, 13),
+                            },
                             {
                                 "station_native_id": "200",
                                 "values": [
@@ -579,7 +596,10 @@ def describe_verify__baseline__values():
                 ):
                     sesh = sesh_with_climate_baseline_values
                     expected_stations_and_values = [
-                        {"station_native_id": station_native_id, "values": values,}
+                        {
+                            "station_native_id": station_native_id,
+                            "values": values,
+                        }
                     ]
                     with raises(AssertionError) as excinfo:
                         verify_baseline_values(

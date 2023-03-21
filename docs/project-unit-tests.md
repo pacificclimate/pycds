@@ -2,17 +2,36 @@
 
 ## Table of contents
 
-- [Continuous Integration testing](#continuous-integration-testing)
-- [Docker container for running tests](#docker-container-for-running-tests)
-    - [Introduction](#introduction)
-    - [Instructions](#instructions)
-    - [Notes and caveats](#notes-and-caveats)
+- [Continuous integration testing](#continuous-integration-testing)
+- [Running unit tests locally](#running-unit-tests-locally)
+- [Unit test organization](#unit-test-organization)
+   - [Unit tests for migrations](#unit-tests-for-migrations)
+   - [Behavioural tests](#behavioural-tests)
 - [BDD Test Framework (`pytest-describe`)](#bdd-test-framework-pytest-describe)
-    - [Behaviour Driven Development](#behaviour-driven-development)
-    - [Realistic test setup and teardown](#realistic-test-setup-and-teardown)
-    - [Fixtures](#fixtures)
-    - [Helper function `add_then_delete_objs`](#helper-function-add_then_delete_objs)
+   - [Behaviour Driven Development](#behaviour-driven-development)
+   - [Realistic test setup and teardown](#realistic-test-setup-and-teardown)
+   - [Fixtures](#fixtures)
+   - [Helper function `add_then_delete_objs`](#helper-function-add_then_delete_objs)
 - [Pytest output formatter](#pytest-output-formatter)
+
+_TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
+
+## Continuous integration testing
+
+Project unit tests are run automatically in an environment approximating our
+production environment. This is done by the GitHub workflow 
+`.github/workflows/python-ci.yml`.
+
+## Running unit tests locally
+
+You may find it useful to look at the GitHub Action for the CI tests
+to see how the tests are set up and run. Ultimately it is simple, however.
+
+To run the unit tests locally:
+
+1. Activate the environment in which you wish to run the tests: 
+   `poetry env use ...`
+1. Run the tests: `poetry run pytest tests/`
 
 ## Unit test organization
 
@@ -29,108 +48,6 @@ Migration tests are organized in a way that parallels the arrangement of the mig
 Behavioural tests test the _behaviour_ of a database schema object after migration. For example, test whether a view or materialized view contains the rows expected given a certain database content.
 
 Behavioural tests are placed in the directory `tests/behavioural`. 
-
-## Continuous Integration testing
-
-Project unit tests are run automatically in an environment approximating our
-production environment. This is done by the GitHub workflow `python-ci`.
-
-## Docker container for running tests
-
-### Introduction
-
-It is difficult to establish an appropriate run-time environment on
-a workstation for running tests (particularly since the transition to 
-Ubuntu 20.04).
-
-To fill that gap, we've defined Docker infrastructure that allows you to 
-build and run a Docker container for testing that is equivalent to the 
-production environment. The infrastructure is in `docker/local-pytest/`.
-
-### Instructions
-
-1. **Advance prep**
-
-    Do each of the following things **once per workstation**.
-    
-    1. Configure Docker user namespace mapping.
-    
-        1. Clone [`pdp-docker`](https://github.com/pacificclimate/pdp-docker).
-     
-        1. Follow the instructions in the `pdp-docker` documentation:
-         [Setting up Docker namespace remapping (with recommended parameters)](https://github.com/pacificclimate/pdp-docker#setting-up-docker-namespace-remapping-with-recommended-parameters).
-               
-1. **Build the image**
-
-    The image need only be (re)built when:
-    
-    1. the project is first cloned, or
-    1. the local-test Dockerfile changes.
-    
-    To build the image:
-    
-    ```
-    make local-pytest-image
-    ```
-   
-1. **Mount the gluster `/storage` volume**
-   
-    Mount locally to `/storage` so that those data files are accessible on 
-    your workstation.
-
-    ```
-    sudo mount -t cifs -o username=XXXX@uvic.ca //pcic-storage.pcic.uvic.ca/storage/ /storage
-    ```
-
-1. **Start the test container**
-
-    ```
-    make local-pytest-run 
-    ```
-    
-    This starts the container, installs the local codebase, gives you a 
-    bash shell. You should see a standard bash prompt.
-
-1. **Change code and run tests**
-
-   Each time you wish to run tests on your local codebase, enter a suitable
-   command at the prompt. For example:
-    
-   ```
-   pipenv run pytest -v -m "not slow" --tb=short tests -x
-   ```
-   
-   Alternatively, run                               
-
-   ```
-   pipenv shell
-   ```
-   
-   to obtain a shell in which the virtual environment created by `pipenv` is 
-   activated. All commands run from this shell take place within the virtual 
-   environment. To exit this shell (but not the container), enter `exit`.
-
-   
-1. **Do not stop the container until you have finished all changes and
-   testing you wish to make for a given session.** 
-   It is far more time efficient run tests inside the same container 
-   (avoiding startup time) than to restart the container for each test.
-    
-   Your local codebase is mounted to the container. Any code changes you make 
-   externally (in your local filesystem) are reflected "live" inside the 
-   container.
-
-2. **Stop the test container**
-
-    When you have completed a develop-and-test session and no longer wish to
-    have the test container running, enter Ctrl+D or `exit` on the 
-    command line. The container is stopped and automatically removed.
-
-### Notes and caveats
-
-1. As noted above, running tests in the test container in read/write mode 
-leaves problematic pycache junk behind in the host filesystem. This can be 
-cleaned up by running `py3clean .`.
 
 ## BDD Test Framework (`pytest-describe`)
 

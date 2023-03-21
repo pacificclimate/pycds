@@ -37,7 +37,7 @@ def test_mock(mocker, item_names):
 )
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(prepared_schema_from_migrations_left, prior_index_names, schema_name):
-    """Test the schema migration from 7a3b247c577b to bdc28573df56. """
+    """Test the schema migration from 7a3b247c577b to bdc28573df56."""
 
     # Set up database to revision bdc28573df56
     engine, script = prepared_schema_from_migrations_left

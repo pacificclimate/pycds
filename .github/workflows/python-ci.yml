@@ -31,90 +31,28 @@ jobs:
         sudo apt-get update
         sudo apt-get install postgresql-plpython3-14 postgresql-14-postgis-3
 
-    # Is this necessary? Seems likely not:
-    # https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/#build-isolation
-    # It could if necessary be used to replicate more exactly what is done
-    # on real installations.
-#    - name: Create virtual environment
-#      run: |
-#        python -m venv venv
-#        source venv/bin/activate
-#
-#    - name: Install project
-#      run: |
-#        pip install .[test]
-#
-#    - name: Test with pytest (full)
-#      if: github.ref == 'refs/heads/master'
-#      env:
-#        PYCDS_SCHEMA_NAME: other
-#      run: |
-#        pytest -v --tb=short tests
-#
-#    - name: Test with pytest (fast)
-#      if: github.ref != 'refs/heads/master'
-#      env:
-#        PYCDS_SCHEMA_NAME: other
-#      run: |
-#        pytest -m "not slow" -v --tb=short tests
-#
-#    - name: Code format check
-#      if: ${{ matrix.python-version == '3.8' }}
-#      run: pipenv run black . --check
-
-    - name: Install pipenv
+    - name: Install Poetry
       run: |
-        pip install -U pipenv
+        curl -sSL https://install.python-poetry.org | python3 -
 
-    - id: cache-pipenv
-      uses: actions/cache@v2
-      with:
-        path: ~/.local/share/virtualenvs
-        key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-
-    - name: Install dependencies if changed
-      if: steps.cache-pipenv.outputs.cache-hit != 'true' && ${{ matrix.python-version == '3.8' }}
-      env:
-        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
+    - name: Install dependencies
       run: |
-        pipenv install --deploy --dev
-
-    - name: Re-install dependencies if alternative python version
-      if: ${{ matrix.python-version != '3.8' }}
-      env:
-        PIP_INDEX_URL: https://pypi.pacificclimate.org/simple
-      run: |
-        mv Pipfile.lock do-not-use
-        pipenv install --python ${{ matrix.python-version }} --dev
+        poetry install
 
     - name: Test with pytest (full)
       if: github.ref == 'refs/heads/master'
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        pipenv run pytest -v --tb=short tests
+        poetry run pytest -v --tb=short tests
 
     - name: Test with pytest (fast)
       if: github.ref != 'refs/heads/master'
       env:
         PYCDS_SCHEMA_NAME: other
       run: |
-        pipenv run pytest -m "not slow" -v --tb=short tests
+        poetry run pytest -m "not slow" -v --tb=short tests
 
-# Recently got this error in CI:
-#
-# Run pipenv run black . --check
-#Traceback (most recent call last):
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/bin/black", line 8, in <module>
-#    sys.exit(patched_main())
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/black.py", line 4134, in patched_main
-#    patch_click()
-#  File "/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/black.py", line 4123, in patch_click
-#    from click import _unicodefun  # type: ignore
-#ImportError: cannot import name '_unicodefun' from 'click' (/home/runner/.local/share/virtualenvs/pycds-ihtmok65/lib/python3.8/site-packages/click/__init__.py)
-#Error: Process completed with exit code 1.
-#
-# Not worth fixing just now, but should be dealt with in next PR.
-#    - name: Code format check
-#      if: ${{ matrix.python-version == '3.8' }}
-#      run: pipenv run black . --check
+    - name: Code format check
+      if: ${{ matrix.python-version == '3.8' }}
+      run: poetry run black . --check
