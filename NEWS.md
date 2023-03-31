@@ -1,5 +1,31 @@
 # News / Release Notes
 
+## 4.2.0
+
+*Release Date: 2023-Mar-31*
+
+This release looks big, but quite a bit of it is internal.
+
+The most important change is to fix the script manage-views, which is used
+to update the Weather Anomaly matviews. Additionally, there have been some
+small tweaks to the ORM and to migrations to fix inconsistencies discovered
+late.
+
+Most of the rest is internal: code cleanup, adoption of Poetry as the 
+dependency management and build tool, fixes for testing problems.
+
+- [Add crmp2 and update migrations to accommodate crmp database idiosyncracies #144](https://github.com/pacificclimate/pycds/pull/144)
+- [Use Poetry #154](https://github.com/pacificclimate/pycds/pull/154)
+- [Fix transient failures in CI tests #150](https://github.com/pacificclimate/pycds/pull/150)
+- [Convert to pyproject.toml #152](https://github.com/pacificclimate/pycds/pull/152)
+- [Fix import and usage of WA views #148](https://github.com/pacificclimate/pycds/pull/148)
+- [Change PK in CrmpNetworkGeoserver table declaration #143](https://github.com/pacificclimate/pycds/pull/143)
+- [Restore caching and Python matrix #142](https://github.com/pacificclimate/pycds/pull/142)
+- [Add not-null constraints to FKs in obs_raw_native_flags and obs_raw_pcic_flags #141](https://github.com/pacificclimate/pycds/pull/141)
+- [Upgrade pytest #140](https://github.com/pacificclimate/pycds/pull/140)
+- [Replace plpythonu with plpython3u #139](https://github.com/pacificclimate/pycds/pull/139)
+- [Code cleanup #138](https://github.com/pacificclimate/pycds/pull/138)
+
 ## 4.0.1
 
 *Release Date: 2022-Dec-07*
