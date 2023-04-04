@@ -33,6 +33,7 @@ classifiers = [
 ]
 packages = [
     { include = "pycds*" },
+    { include = "scripts" },
 ]
 # Possibly unnecessary: see https://python-poetry.org/docs/pyproject/#include-and-exclude
 #include = ["data/crmp_subset_data.sql"]
@@ -55,3 +56,6 @@ pytest-mock = "*"
 sqlalchemy-diff = "*"
 "testing.postgresql" = "*"
 zipp = "3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/104
+
+[tool.poetry.scripts]
+manage-views = "scripts.manage-views:main"
