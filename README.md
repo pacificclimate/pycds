@@ -28,6 +28,7 @@ ORM layer.
 
 - [Background](docs/background.md)
 - [Installation](docs/installation.md)
+- [Scripts](docs/scripts.md)
 - [ORM contents and usage](docs/orm.md)
 - [Database creation and migration](docs/database-maintenance.md)
 - [Managing non-mutable database content](docs/managing-non-mutable.md)
