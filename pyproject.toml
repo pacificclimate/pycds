@@ -55,3 +55,6 @@ pytest-mock = "*"
 sqlalchemy-diff = "*"
 "testing.postgresql" = "*"
 zipp = "3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/104
+
+[tool.poetry.scripts]
+manage-views = "pycds.scripts.manage_views:main"
