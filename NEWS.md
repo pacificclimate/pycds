@@ -1,5 +1,16 @@
 # News / Release Notes
 
+## 4.3.0
+
+*Release Date: 2023-Apr-05*
+
+Key change in this release is to install script `manage-views`.
+
+Changes:
+
+- [Document scripts and keepalive usage](https://github.com/pacificclimate/pycds/pull/158)
+- [Install selected scripts with Poetry](https://github.com/pacificclimate/pycds/pull/157)
+
 ## 4.2.0
 
 *Release Date: 2023-Mar-31*
