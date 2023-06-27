@@ -52,11 +52,11 @@ alembic-verify = "0.1.4"  # loosen?
 # behaviour changes.
 black = "23.3.0"
 sqlalchemy-diff = "*"
-"testing.postgresql" = "*"
 zipp = "3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/104
 pytest = "^7.4.0"
 pytest-describe = "^2.1.0"
 pytest-mock = "^3.11.1"
+testing-postgresql = "^1.3.0"
 
 [tool.poetry.scripts]
 manage-views = "pycds.scripts.manage_views:main"
