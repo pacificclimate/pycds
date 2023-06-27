@@ -50,5 +50,6 @@ def test_index(schema_name, prepared_schema_from_migrations_left):
             "column_names": ["history_id", "vars_id"],
             "unique": False,
             "include_columns": [],
+            "dialect_options": {"postgresql_include": []},
         }
     ]
