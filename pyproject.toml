@@ -51,7 +51,6 @@ alembic-verify = "0.1.4"  # loosen?
 # Always pin Black to a specific version to ease the disruptions when its default
 # behaviour changes.
 black = "23.3.0"
-zipp = "3.5.0"  # necessary? See https://github.com/pacificclimate/pycds/pull/104
 pytest = "^7.4.0"
 pytest-describe = "^2.1.0"
 pytest-mock = "^3.11.1"
