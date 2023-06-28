@@ -5,6 +5,7 @@ on: push
 jobs:
   test:
 
+    # For example of update to 22.04, see station-data-portal-backend
     runs-on: ubuntu-20.04
     strategy:
       matrix:
