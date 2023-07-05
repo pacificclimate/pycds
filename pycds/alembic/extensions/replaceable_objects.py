@@ -204,17 +204,20 @@ class ReplaceableObject:
 
 
 class ReplaceableStoredProcedure(ReplaceableObject):
-    def __init__(self, identifier, definition, schema=None, escape=True):
+    def __init__(self, identifier, definition, schema=None, escape=True, replace=False):
         # DDL statements substitute special % expressions, and literal '%' must
         # be escaped as '%%'. This is the default behaviour of this class. This
         # is of particular concern for stored procedures as some of the
         # languages themselves use %-substitution.
         super().__init__(identifier, definition, schema)
         self.escape = escape
+        self.replace = replace
 
     def create(self):
         definition = ddl_escape(self.definition) if self.escape else self.definition
-        return CreateStoredProcedure(self.qualified_name(), definition)
+        return CreateStoredProcedure(
+            self.qualified_name(), definition=definition, replace=self.replace
+        )
 
     def drop(self):
         return DropStoredProcedure(self.qualified_name())
