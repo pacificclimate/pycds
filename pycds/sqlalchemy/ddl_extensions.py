@@ -117,12 +117,15 @@ class StoredProcedureDDL(DDLElement):
 
 
 class CreateStoredProcedure(StoredProcedureDDL):
-    pass
+    def __init__(self, name, definition=None, replace=False):
+        super().__init__(name, definition)
+        self.replace = replace
 
 
 @compiler.compiles(CreateStoredProcedure)
 def compile(element, compiler, **kw):
-    return f"CREATE FUNCTION {element.identifier} {element.definition}"
+    opt_replace = "OR REPLACE" if element.replace else ""
+    return f"CREATE {opt_replace} FUNCTION {element.identifier} {element.definition}"
 
 
 class DropStoredProcedure(StoredProcedureDDL):
