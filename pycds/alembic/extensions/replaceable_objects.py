@@ -216,9 +216,7 @@ class ReplaceableStoredProcedure(ReplaceableObject):
     def create(self):
         definition = ddl_escape(self.definition) if self.escape else self.definition
         return CreateStoredProcedure(
-            self.qualified_name(),
-            definition=definition,
-            replace=self.replace
+            self.qualified_name(), definition=definition, replace=self.replace
         )
 
     def drop(self):

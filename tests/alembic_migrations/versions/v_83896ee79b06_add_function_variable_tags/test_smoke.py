@@ -17,7 +17,9 @@ function_name = "variable_tags"
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, alembic_config_left, schema_name):
+def test_upgrade(
+    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+):
     """Test the schema migration to 83896ee79b06."""
 
     # Set up database to target version (83896ee79b06)
