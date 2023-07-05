@@ -20,7 +20,7 @@ schema_name = get_schema_name()
 
 
 variable_tags = ReplaceableStoredProcedure(
-    "variable_tags(var meta_vars)",
+    f"variable_tags(var {schema_name}.meta_vars)",
     f"""
     RETURNS text[]
     LANGUAGE 'sql'
@@ -33,6 +33,7 @@ variable_tags = ReplaceableStoredProcedure(
         END;
     $BODY$
     """,
+    replace=True,
     schema=schema_name,
 )
 
