@@ -32,8 +32,8 @@ from pycds.sqlalchemy.ddl_extensions import (
     CreateMaterializedView,
     DropMaterializedView,
     RefreshMaterializedView,
-    CreateStoredProcedure,
-    DropStoredProcedure,
+    CreateFunction,
+    DropFunction,
 )
 
 
@@ -200,10 +200,10 @@ class ReplaceableObject:
         raise NotImplementedError()
 
 
-# Replaceable stored procedure
+# Replaceable function
 
 
-class ReplaceableStoredProcedure(ReplaceableObject):
+class ReplaceableFunction(ReplaceableObject):
     def __init__(self, identifier, definition, schema=None, escape=True, replace=False):
         # DDL statements substitute special % expressions, and literal '%' must
         # be escaped as '%%'. This is the default behaviour of this class. This
@@ -215,9 +215,9 @@ class ReplaceableStoredProcedure(ReplaceableObject):
 
     def create(self):
         definition = ddl_escape(self.definition) if self.escape else self.definition
-        return CreateStoredProcedure(
+        return CreateFunction(
             self.qualified_name(), definition=definition, replace=self.replace
         )
 
     def drop(self):
-        return DropStoredProcedure(self.qualified_name())
+        return DropFunction(self.qualified_name())

@@ -7,7 +7,7 @@ Create Date: 2020-01-28 16:43:12.112378
 """
 from alembic import op
 from pycds.context import get_schema_name, get_su_role_name
-from pycds.alembic.extensions.replaceable_objects import ReplaceableStoredProcedure
+from pycds.alembic.extensions.replaceable_objects import ReplaceableFunction
 
 
 schema_name = get_schema_name()
@@ -19,7 +19,7 @@ branch_labels = None
 depends_on = None
 
 
-closest_stns_within_threshold = ReplaceableStoredProcedure(
+closest_stns_within_threshold = ReplaceableFunction(
     """
     closest_stns_within_threshold(
         IN x numeric,
@@ -58,7 +58,7 @@ closest_stns_within_threshold = ReplaceableStoredProcedure(
     schema=schema_name,
 )
 
-daily_ts = ReplaceableStoredProcedure(
+daily_ts = ReplaceableFunction(
     """
     daily_ts(
         IN station_id integer,
@@ -98,7 +98,7 @@ daily_ts = ReplaceableStoredProcedure(
 
 
 # Return the number of days in the month of the given date.
-daysinmonth = ReplaceableStoredProcedure(
+daysinmonth = ReplaceableFunction(
     """
     daysinmonth(d timestamp)
     """,
@@ -117,7 +117,7 @@ daysinmonth = ReplaceableStoredProcedure(
 
 # Execute function `query_one_station`. This function does not appear to be
 # in use in any production code. Possibly it is in use ad-hoc.
-do_query_one_station = ReplaceableStoredProcedure(
+do_query_one_station = ReplaceableFunction(
     """
     do_query_one_station(station_id integer)
     """,
@@ -160,7 +160,7 @@ do_query_one_station = ReplaceableStoredProcedure(
 # For minimum temperature:
 #   effective day does not depend on observation frequency; it is always the
 #   day of observation
-effective_day = ReplaceableStoredProcedure(
+effective_day = ReplaceableFunction(
     """
     effective_day(
         obs_time timestamp without time zone,
@@ -209,7 +209,7 @@ effective_day = ReplaceableStoredProcedure(
 #
 # NOTE: Production code: This function is called by functions
 # `query_one_station` and `query_one_station_climo` .
-getstationvariabletable = ReplaceableStoredProcedure(
+getstationvariabletable = ReplaceableFunction(
     """
     getstationvariabletable(
         station_id integer,
@@ -237,7 +237,7 @@ getstationvariabletable = ReplaceableStoredProcedure(
 
 
 # Returns the last day of the month, as a date, of the month of the input date.
-lastdateofmonth = ReplaceableStoredProcedure(
+lastdateofmonth = ReplaceableFunction(
     """
     lastdateofmonth(date)
     """,
@@ -253,7 +253,7 @@ lastdateofmonth = ReplaceableStoredProcedure(
 )
 
 
-monthly_ts = ReplaceableStoredProcedure(
+monthly_ts = ReplaceableFunction(
     """
     monthly_ts(
         IN station_id integer,
@@ -297,7 +297,7 @@ monthly_ts = ReplaceableStoredProcedure(
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-query_one_station = ReplaceableStoredProcedure(
+query_one_station = ReplaceableFunction(
     """
     query_one_station(station_id integer)
     """,
@@ -320,7 +320,7 @@ query_one_station = ReplaceableStoredProcedure(
 # variables reported by the specified station. For the definition of the
 # row set, see function `getStationVariableTable`.
 # NOTE: Production code: This function is called by the PDP PCDS backend.
-query_one_station_climo = ReplaceableStoredProcedure(
+query_one_station_climo = ReplaceableFunction(
     """
     query_one_station_climo(station_id integer)
     """,
@@ -339,7 +339,7 @@ query_one_station_climo = ReplaceableStoredProcedure(
 )
 
 
-season = ReplaceableStoredProcedure(
+season = ReplaceableFunction(
     """
     season(d timestamp without time zone)
     """,
@@ -365,7 +365,7 @@ season = ReplaceableStoredProcedure(
 )
 
 
-updatesdateedate = ReplaceableStoredProcedure(
+updatesdateedate = ReplaceableFunction(
     """
     updatesdateedate()
     """,
