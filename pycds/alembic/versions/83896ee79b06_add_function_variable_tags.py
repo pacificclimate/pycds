@@ -7,7 +7,7 @@ Create Date: 2023-06-28 10:12:38.733792
 """
 from alembic import op
 from pycds.context import get_schema_name
-from pycds.alembic.extensions.replaceable_objects import ReplaceableStoredProcedure
+from pycds.alembic.extensions.replaceable_objects import ReplaceableFunction
 
 # revision identifiers, used by Alembic.
 revision = "83896ee79b06"
@@ -19,7 +19,7 @@ depends_on = None
 schema_name = get_schema_name()
 
 
-variable_tags = ReplaceableStoredProcedure(
+variable_tags = ReplaceableFunction(
     f"variable_tags(var {schema_name}.meta_vars)",
     f"""
     RETURNS text[]

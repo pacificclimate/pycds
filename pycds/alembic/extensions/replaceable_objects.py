@@ -203,7 +203,7 @@ class ReplaceableObject:
 # Replaceable stored procedure
 
 
-class ReplaceableStoredProcedure(ReplaceableObject):
+class ReplaceableFunction(ReplaceableObject):
     def __init__(self, identifier, definition, schema=None, escape=True, replace=False):
         # DDL statements substitute special % expressions, and literal '%' must
         # be escaped as '%%'. This is the default behaviour of this class. This
