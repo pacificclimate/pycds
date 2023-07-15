@@ -22,3 +22,4 @@ releases will "freeze" later sets of views.
 """
 
 from .version_7a3b247c577b import VarsPerHistory
+from .version_96729d6db8b3 import ClimoObsCount
