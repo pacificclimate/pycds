@@ -47,6 +47,7 @@ __all__ = [
     "StationObservationStats",
     # Alembic-managed native matviews
     "VarsPerHistory",
+    "ClimoObsCount",
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
@@ -60,7 +61,6 @@ __all__ = [
     "ObsWithFlags",
     # Externally managed manual matviews
     "ObsCountPerMonthHistory",
-    "ClimoObsCount",
     "CollapsedVariables",
     "StationObservationStats",
 ]
