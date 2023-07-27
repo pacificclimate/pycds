@@ -1,48 +1,5 @@
-"""
-This module defines SQLAlchemy DDLElement constructs that represent DDL
-statements not built in to SQLAlchemy. Effectively, it adds new "commands" to
-SQLAlchemy on a par with those such as `sqlalchemy.schema.CreateSchema`.
-
-The definition pattern is:
-- Define a subclass of `DDLElement` that represents the command.
-- Define a compilation (implementation) of the command.
-"""
-import re
-from sqlalchemy.schema import DDLElement
 from sqlalchemy.ext import compiler
-
-
-# Views of all types
-
-
-class ViewCommonDDL(DDLElement):
-    """Base class for several varieties of view commands."""
-
-    def __init__(self, name, selectable=None):
-        self.name = name
-        self.selectable = selectable
-
-
-# View commands (not materialized)
-
-
-class CreateView(ViewCommonDDL):
-    pass
-
-
-@compiler.compiles(CreateView)
-def compile(element, compiler, **kw):
-    body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
-    return f"CREATE VIEW {element.name} AS {body}"
-
-
-class DropView(ViewCommonDDL):
-    pass
-
-
-@compiler.compiles(DropView)
-def compile(element, compiler, **kw):
-    return f"DROP VIEW {element.name}"
+from ..ddl_extensions.view_common import ViewCommonDDL
 
 
 # Native or manual materialized view commands
@@ -103,43 +60,3 @@ def compile(element, compiler, **kw):
         body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
         return f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
     raise ValueError(f"Invalid materialized view type '{element.type_}'")
-
-
-# Stored procedure commands
-
-
-class FunctionDDL(DDLElement):
-    """Base class for function commands."""
-
-    def __init__(self, identifier, definition=None):
-        self.identifier = identifier
-        self.definition = definition
-
-
-class CreateFunction(FunctionDDL):
-    def __init__(self, name, definition=None, replace=False):
-        super().__init__(name, definition)
-        self.replace = replace
-
-
-@compiler.compiles(CreateFunction)
-def compile(element, compiler, **kw):
-    opt_replace = "OR REPLACE" if element.replace else ""
-    return f"CREATE {opt_replace} FUNCTION {element.identifier} {element.definition}"
-
-
-class DropFunction(FunctionDDL):
-    pass
-
-
-@compiler.compiles(DropFunction)
-def compile(element, compiler, **kw):
-    # PostgreSQL throws an error if the "DEFAULT ..." portion of the function
-    # signature is included in the DROP FUNCTION statement. So ditch it.
-    name = re.sub(
-        r" (DEFAULT|=) [^,)]*([,)])",
-        r"\2",
-        element.identifier,
-        flags=re.MULTILINE,
-    )
-    return f"DROP FUNCTION {name}"
