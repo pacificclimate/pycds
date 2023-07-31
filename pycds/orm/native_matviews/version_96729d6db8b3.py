@@ -1,11 +1,15 @@
-from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text
+from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text, cast
 from sqlalchemy.orm import Query
-from sqlalchemy.dialects.postgresql import ARRAY, TEXT
+from sqlalchemy.dialects.postgresql import array, ARRAY, TEXT
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.tables import Obs, Variable
 from pycds.orm.view_base import Base
+from pycds import get_schema_name
 
+
+schema_name = get_schema_name()
+schema_func = getattr(func, schema_name)
 
 class ClimoObsCount(Base, ReplaceableNativeMatview):
     """This class maps to a manual materialized view that is required for
@@ -30,9 +34,9 @@ class ClimoObsCount(Base, ReplaceableNativeMatview):
         .select_from(Obs)
         .join(Variable)
         .where(
-            func.variable_tags(
+            schema_func.variable_tags(
                 text(Variable.__tablename__), type_=ARRAY(TEXT)
-            ).contains(["climatology"])
+            ).contains(array(["climatology"]))
         )
         .group_by(Obs.history_id)
     ).selectable
