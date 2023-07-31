@@ -88,11 +88,12 @@ class ReplaceableView(ReplaceableOrmClass):
 
     @classmethod
     def create(cls):
-        return CreateView(cls.qualified_name(), cls.__selectable__)
+        return CreateView(cls.qualified_name(), selectable=cls.__selectable__)
 
     @classmethod
     def drop(cls):
-        return DropView(cls.qualified_name(), cls.__selectable__)
+        # TODO: Raise if_exists to place of invocation. Tricky.
+        return DropView(cls.qualified_name(), if_exists=True)
 
     # TODO: For SQLAlchemy 1.4/2.0, replace with
     # @declared_attr
