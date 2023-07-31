@@ -8,11 +8,9 @@ Create Date: 2023-07-14 15:35:03.045034
 import logging
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountMv
 from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountV
-# import pycds.alembic.extensions.operation_plugins.view
 
 # revision identifiers, used by Alembic.
 revision = "96729d6db8b3"

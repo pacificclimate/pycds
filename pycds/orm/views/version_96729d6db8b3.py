@@ -1,4 +1,4 @@
-from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text
+from sqlalchemy import Column, Integer, BigInteger, ForeignKey
 from pycds.orm.view_base import Base
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.native_matviews.version_96729d6db8b3 import (

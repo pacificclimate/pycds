@@ -1,4 +1,4 @@
-from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text, cast
+from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text
 from sqlalchemy.orm import Query
 from sqlalchemy.dialects.postgresql import array, ARRAY, TEXT
 
