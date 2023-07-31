@@ -1,3 +1,4 @@
+from sqlalchemy import Index, Column, Integer, BigInteger, ForeignKey, func, text
 from pycds.orm.view_base import Base
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
@@ -14,7 +15,9 @@ class ClimoObsCount(Base, ReplaceableView):
 
     __tablename__ = "climo_obs_count_v"
 
-    count = ClimoObsCountMv.count
-    history_id = ClimoObsCountMv.history_id
+    count = Column(BigInteger)
+    history_id = Column(
+        Integer, ForeignKey("meta_history.history_id"), primary_key=True
+    )
 
     __selectable__ = ClimoObsCountMv.__selectable__
