@@ -21,9 +21,16 @@ def compile(element, compiler, **kw):
 
 
 class DropView(ViewCommonDDL):
-    pass
+    def __init__(self, name, if_exists=False):
+        super().__init__(name)
+        self.if_exists = if_exists
 
 
 @compiler.compiles(DropView)
 def compile(element, compiler, **kw):
-    return f"DROP VIEW {element.name}"
+    command_parts = [
+        "DROP VIEW",
+        element.if_exists and "IF EXISTS",
+        element.name,
+    ]
+    return " ".join(filter(None, command_parts))
