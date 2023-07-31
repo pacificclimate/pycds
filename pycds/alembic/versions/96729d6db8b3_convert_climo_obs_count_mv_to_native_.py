@@ -25,7 +25,7 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    op.drop_view(ClimoObsCountV.__tablename__, if_exists=True, schema=schema_name)
+    op.drop_replaceable_object(ClimoObsCountV)
     op.drop_table_if_exists(ClimoObsCountMv.__tablename__, schema=schema_name)
     op.create_replaceable_object(ClimoObsCountMv, schema=schema_name)
     for index in ClimoObsCountMv.__table__.indexes:
