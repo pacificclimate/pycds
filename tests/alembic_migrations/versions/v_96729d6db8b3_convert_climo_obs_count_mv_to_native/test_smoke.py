@@ -13,7 +13,7 @@ from pycds.database import get_schema_item_names
 
 
 logger = logging.getLogger("tests")
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+# logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 matviews = {"climo_obs_count_mv": {"indexes": {"climo_obs_count_idx"}}}
