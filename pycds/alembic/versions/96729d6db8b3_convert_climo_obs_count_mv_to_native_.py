@@ -56,6 +56,7 @@ def downgrade():
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
     )
+    # TODO: Replace with op.create_replaceable_object(ClimoObsCountV)
     op.create_view(
         ClimoObsCountV.__tablename__,
         ClimoObsCountV.__selectable__,
