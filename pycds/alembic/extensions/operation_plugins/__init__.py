@@ -21,5 +21,6 @@ from .simple_operations import (
     role,
     table,
 )
-import replaceable_object_operations
-# import reversible_operation
+from ..operation_plugins import replaceable_object_operations
+
+# from ..operation_plugins  reversible_operation

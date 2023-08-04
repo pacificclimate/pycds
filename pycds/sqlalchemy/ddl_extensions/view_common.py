@@ -7,4 +7,3 @@ class ViewCommonDDL(DDLElement):
     def __init__(self, name, selectable=None):
         self.name = name
         self.selectable = selectable
-
