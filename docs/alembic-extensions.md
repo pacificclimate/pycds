@@ -63,11 +63,8 @@ class SetRoleOp(MigrateOperation):
 
 @Operations.implementation_for(SetRoleOp)
 def implement_set_role(operations, operation):
-  # TODO: Refactor into a DDL extension.
-  operations.execute(f"SET ROLE '{operation.role_name}'")
+  operations.execute(SetRole(operation.role_name))
 ```
-
-Note that this example, sadly, emits an ad-hoc literal rather than using a properly defined [custom DDL construct](./sqlalchemy-extensions.md) (which would be named `SetRole`).
 
 ### Replaceable object extensions
 

@@ -32,5 +32,4 @@ def compile_my_command(element, compiler, **kw):
     return "..."
 ```
 
-Note that the commands in any given module (e.g., view) often define and use a 
-common subclass of `DDLElement` to avoid repetitive code.
+Note that the commands in any given module (e.g., view) often define and use a common subclass of `DDLElement` to avoid repetitive code.
