@@ -2,15 +2,14 @@
 Base class for reversible Alembic migration operations. This is a subclass
 of MigrateOperation.
 
-A reversible operation is one capable of emitting create and drop
-instructions for an object, and of "reversing" the creation (or dropping)
-of such an object. It does this by accessing other migration scripts in
-order to use different (previous or later) versions, enabling an object
-from one revision to be replaced by its version from another revision.
-It does this so it can invoke the appropriate drop/create operation on
-the old object before invoking the create/drop operation on the new object
-in order to replace one with the other. Access to different versions of
-an object is provided by method `_get_object_from_version`.
+This is required because such an operation must invoke the appropriate drop/create
+operation on the old object before invoking the create/drop operation on the new
+object in order to replace one with the other. It does this by accessing other
+migration scripts so that it can use different (previous or later) versions, enabling
+an object from one revision to be replaced by its version from another revision.
+
+Access to different versions of an object is provided by method
+`_get_object_from_version`.
 """
 from alembic.operations import MigrateOperation
 

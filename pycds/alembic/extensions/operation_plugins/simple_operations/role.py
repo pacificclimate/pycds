@@ -6,30 +6,30 @@ A plugin has 2 parts:
 - an implementation of the operation; a method that executes a SQL command
 """
 from alembic.operations import Operations, MigrateOperation
+from pycds.sqlalchemy.ddl_extensions import SetRole, ResetRole
 
 
 @Operations.register_operation("set_role")
 class SetRoleOp(MigrateOperation):
-    """Provide SET ROLE command"""
+    """SET ROLE operation"""
 
     def __init__(self, role_name):
         self.role_name = role_name
 
     @classmethod
-    def set_role(cls, operations, name, **kw):
+    def set_role(cls, operations, role_name, **kw):
         """Issue a SET ROLE command."""
-        return operations.invoke(cls(name))
+        return operations.invoke(cls(role_name))
 
 
 @Operations.implementation_for(SetRoleOp)
-def set_role(operations, operation):
-    # TODO: Refactor into a DDL extension.
-    operations.execute(f"SET ROLE '{operation.role_name}'")
+def implement_set_role(operations, operation):
+    operations.execute(SetRole(operation.role_name))
 
 
 @Operations.register_operation("reset_role")
 class ResetRoleOp(MigrateOperation):
-    """Provide RESET ROLE command"""
+    """RESET ROLE operation"""
 
     @classmethod
     def reset_role(cls, operations, **kw):
@@ -38,6 +38,5 @@ class ResetRoleOp(MigrateOperation):
 
 
 @Operations.implementation_for(ResetRoleOp)
-def reset_role(operations, operation):
-    # TODO: Refactor into a DDL extension.
-    operations.execute(f"RESET ROLE")
+def implement_reset_role(operations, operation):
+    operations.execute(ResetRole())

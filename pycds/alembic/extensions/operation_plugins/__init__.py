@@ -15,11 +15,12 @@ https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
 """
 
 # Imports are required to register the new operations.
-from ..operation_plugins import (
+from .simple_operations import (
     constraint,
     index,
-    replaceable_object,
-    reversible_operation,
     role,
     table,
 )
+from ..operation_plugins import replaceable_object_operations
+
+# from ..operation_plugins  reversible_operation

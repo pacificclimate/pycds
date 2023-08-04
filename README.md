@@ -36,6 +36,9 @@ ORM layer.
     - [Project unit tests](docs/project-unit-tests.md)
     - [Test migrations with a test database](docs/test-migrations.md)
     - [Unit tests in client code](docs/unit-tests-in-client-code.md)
+- Development notes
+  - [SQLAlchemy extensions](docs/sqlalchemy-extensions.md)
+  - [Alembic extensions](docs/alembic-extensions.md)
 
 ## Releasing
 
