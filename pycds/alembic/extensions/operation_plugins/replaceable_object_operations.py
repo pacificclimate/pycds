@@ -5,8 +5,6 @@ A plugin has 2 parts:
 - an operation that is registered with Alembic; a subclass of MigrateOperation
 - an implementation of the operation; a method that executes a SQL command
 
-Replaceable object reversible operations
-
 A reversible operation must know how to produce create and drop
 commands for the target objects. This is done here by requiring any
 target replaceable object to provide methods `create`  and
