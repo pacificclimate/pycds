@@ -7,7 +7,7 @@ A plugin has 2 parts:
 
 Replaceable object reversible operations
 
-The reversible operations must know how to produce create and drop
+A reversible operation must know how to produce create and drop
 commands for the target objects. This is done here by requiring any
 target replaceable object to provide methods `create`  and
 `drop` that return the requisite commands. These are invoked in the
