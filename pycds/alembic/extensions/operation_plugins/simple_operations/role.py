@@ -10,7 +10,7 @@ from alembic.operations import Operations, MigrateOperation
 
 @Operations.register_operation("set_role")
 class SetRoleOp(MigrateOperation):
-    """Provide SET ROLE command"""
+    """SET ROLE operation"""
 
     def __init__(self, role_name):
         self.role_name = role_name
@@ -22,14 +22,14 @@ class SetRoleOp(MigrateOperation):
 
 
 @Operations.implementation_for(SetRoleOp)
-def set_role(operations, operation):
+def implement_set_role(operations, operation):
     # TODO: Refactor into a DDL extension.
     operations.execute(f"SET ROLE '{operation.role_name}'")
 
 
 @Operations.register_operation("reset_role")
 class ResetRoleOp(MigrateOperation):
-    """Provide RESET ROLE command"""
+    """RESET ROLE operation"""
 
     @classmethod
     def reset_role(cls, operations, **kw):
@@ -38,6 +38,6 @@ class ResetRoleOp(MigrateOperation):
 
 
 @Operations.implementation_for(ResetRoleOp)
-def reset_role(operations, operation):
+def implement_reset_role(operations, operation):
     # TODO: Refactor into a DDL extension.
     operations.execute(f"RESET ROLE")
