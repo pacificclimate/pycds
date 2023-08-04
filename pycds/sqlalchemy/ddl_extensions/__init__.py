@@ -13,4 +13,5 @@ from ..ddl_extensions.materialized_view import (
     DropMaterializedView,
     RefreshMaterializedView,
 )
+from ..ddl_extensions.role import SetRole, ResetRole
 from ..ddl_extensions.view import CreateView, DropView
