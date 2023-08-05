@@ -137,24 +137,6 @@ INSERT INTO meta_history (history_id, station_id, station_name, lon, lat, elev, 
 
 
 --
--- Data for Name: climo_obs_count_mv; Type: TABLE DATA; Schema: subset; Owner: -
---
-
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 816);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1516);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (2, 2516);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1216);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1016);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1616);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (12, 516);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (36, 1816);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1716);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (48, 1316);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (21, 3516);
-INSERT INTO climo_obs_count_mv (count, history_id) VALUES (5, 2016);
-
-
---
 -- Data for Name: station_obs_stats_mv; Type: TABLE DATA; Schema: subset; Owner: -
 --
 
