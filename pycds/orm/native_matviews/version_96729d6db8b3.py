@@ -11,6 +11,7 @@ from pycds import get_schema_name
 schema_name = get_schema_name()
 schema_func = getattr(func, schema_name)
 
+
 class ClimoObsCount(Base, ReplaceableNativeMatview):
     """This class maps to a manual materialized view that is required for
     web app performance. It is used for approximating the number of

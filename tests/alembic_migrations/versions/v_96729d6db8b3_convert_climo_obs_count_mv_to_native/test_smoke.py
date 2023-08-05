@@ -25,7 +25,9 @@ def check_matviews(engine, schema_name, present):
     if present:
         # Check that table has been replaced with matview
         names = get_schema_item_names(engine, "tables", schema_name=schema_name)
-        assert names & matview_names == set(), "matview(s) should not be present as table(s)"
+        assert (
+            names & matview_names == set()
+        ), "matview(s) should not be present as table(s)"
         names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
         assert names >= matview_names, "matview(s) should be present as matviews"
 
@@ -41,7 +43,9 @@ def check_matviews(engine, schema_name, present):
     else:
         # Check that matview is not present and table is
         names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
-        assert names & matview_names == set(), "matview(s) should not be present as matviews"
+        assert (
+            names & matview_names == set()
+        ), "matview(s) should not be present as matviews"
         names = get_schema_item_names(engine, "tables", schema_name=schema_name)
         assert names >= matview_names, "matview(s) should be present as table(s)"
 
@@ -53,7 +57,9 @@ def check_matviews(engine, schema_name, present):
                 table_name=table_name,
                 schema_name=schema_name,
             )
-            assert names & contents["indexes"] == set(), "table indexes should not be present"
+            assert (
+                names & contents["indexes"] == set()
+            ), "table indexes should not be present"
 
 
 @pytest.mark.parametrize(

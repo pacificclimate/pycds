@@ -9,7 +9,9 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
-from pycds.orm.native_matviews.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountMv
+from pycds.orm.native_matviews.version_96729d6db8b3 import (
+    ClimoObsCount as ClimoObsCountMv,
+)
 from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountV
 
 # revision identifiers, used by Alembic.
