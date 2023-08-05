@@ -34,7 +34,7 @@ PyCDS defines a handful of operation extensions, which can be divided into two c
   - Provide extensions for managing "replaceable objects" such as functions and views.
   - Use a considerably more complex set of extra mechanisms we supply in PyCDS.
 
-### Simple extensions
+## Simple extensions
 
 Simple extensions provide simple new operations such as SET ROLE, or extended functionality such as an IF NOT EXISTS clause in a create operation. These are defined in the package `pycds.alembic.extensions.operation_plugins.simple_operations`.
 
@@ -66,7 +66,7 @@ def implement_set_role(operations, operation):
   operations.execute(SetRole(operation.role_name))
 ```
 
-### Replaceable object extensions
+## Replaceable object extensions
 
 Although relatively simple in outline, the detailed implementation of these objects and operations on them can be hard to understand. This section is intended to guide you in understanding them and adding new extensions as necessary following the same patterns.
 
@@ -80,7 +80,7 @@ Replaceable object extensions are defined with three component parts:
    - subclasses of reversible operations
    - accept replaceable objects as arguments
 
-#### Replaceable objects
+### Replaceable objects
 
 Module `pycds/alembic/extensions/replaceable_objects`.
 
@@ -92,7 +92,7 @@ To implement these classes, we use a variation of the [replaceable object recipe
 
 We factor out the create and drop instructions as SQLAlchemy DDL commands, which we define elsewhere as [DDL extensions](sqlalchemy-extensions.md).
 
-#### Reversible operation
+### Reversible operation
 
 Module `pycds/alembic/extensions/operation_plugins/reversible_operation`.
 
@@ -102,7 +102,7 @@ A reversible operation is one capable of emitting create and drop instructions f
 
 Reversal is required because such an operation must invoke the appropriate drop/create operation on the old object before invoking the create/drop operation on the new object in order to replace one with the other in a migration. It does this by accessing other migration scripts so that it can use different (previous or later) versions, enabling an object from one revision to be replaced by its version from another revision.
 
-#### Replaceable object operations
+### Replaceable object operations
 
 Module `pycds/alembic/extensions/operation_plugins/replaceable_object_operations`.
 
@@ -112,7 +112,7 @@ All replaceable objects conform to the same API, that is, are instances of a sub
 
 Therefore, we do not need to specialize the operations for each different kind of replaceable object (view, matview, function). Instead, we have three generic operations (`create_replaceable_object`, `drop_replaceable_object`, `replace_replaceable_object`) that manage all types of replaceable object.
 
-#### An example
+### An example
 
 Let's consider how SQL functions are managed by Alembic using this setup.
 
@@ -129,7 +129,7 @@ Let's consider how SQL functions are managed by Alembic using this setup.
    - the upgrade operation invokes `alembic.op.create_replaceable_object(example_function)`.
    - The downgrade operation invokes `alembic.op.drop_replaceable_object(example_function)`.
 
-#### Defining and using a new type of replaceable object
+### Defining and using a new type of replaceable object
 
 Let's suppose we want to start managing a new type of replaceable database object. Call it a "gronk".
 
@@ -143,5 +143,12 @@ The process to add gronks to Alembic management is as follows:
    - Follow the pattern for other such replaceable objects. 
    - The class's `create` and `drop` operations will return instances of DDL commands `CreateGronk` and `DropGronk`.
 3. Define new instances of `ReplaceableGronk` as required in the ORM. 
-   - Use them in migrations as targets of the (already available) operations `create_replaceable_object`, `drop_replaceable_object`, `replace_replaceable_object`.
+4. Use instances of `ReplaceableGronk` in migrations as targets of the (already available) operations `create_replaceable_object`, `drop_replaceable_object`, `replace_replaceable_object`.
+
+### Further advice
+
+1. When converting an existing legacy "fake" materialized view to a native materialized view:
+   1. Define the view it depends on as a new instance of `ReplaceableView`. (Typically this view is outside the current purview PyCDS.)
+   2. Use the existing operations `create_replaceable_object` and `replace_replaceable_object` to manage the new view within a migration.
+   3. Do NOT define new Alembic operations `create_view`, `drop_view`. These are unnecessary and undesirable given the existence of `create_replaceable_object` and `replace_replaceable_object`.
 
