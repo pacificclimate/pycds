@@ -9,57 +9,14 @@ import pytest
 from alembic import command
 
 import pycds.database
-from pycds.database import get_schema_item_names
+from .. import check_matviews
 
 
 logger = logging.getLogger("tests")
 # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
-matviews = {"climo_obs_count_mv": {"indexes": {"climo_obs_count_idx"}}}
-matview_names = set(matviews)
-
-
-def check_matviews(engine, schema_name, present):
-    """Check whether matviews are present or absent."""
-    if present:
-        # Check that table has been replaced with matview
-        names = get_schema_item_names(engine, "tables", schema_name=schema_name)
-        assert (
-            names & matview_names == set()
-        ), "matview(s) should not be present as table(s)"
-        names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
-        assert names >= matview_names, "matview(s) should be present as matviews"
-
-        # Check that indexes were installed too
-        for table_name, contents in matviews.items():
-            names = get_schema_item_names(
-                engine,
-                "indexes",
-                table_name=table_name,
-                schema_name=schema_name,
-            )
-            assert names == contents["indexes"], "matview indexes should be installed"
-    else:
-        # Check that matview is not present and table is
-        names = get_schema_item_names(engine, "matviews", schema_name=schema_name)
-        assert (
-            names & matview_names == set()
-        ), "matview(s) should not be present as matviews"
-        names = get_schema_item_names(engine, "tables", schema_name=schema_name)
-        assert names >= matview_names, "matview(s) should be present as table(s)"
-
-        # Check that matview indexes are not present
-        for table_name, contents in matviews.items():
-            names = get_schema_item_names(
-                engine,
-                "indexes",
-                table_name=table_name,
-                schema_name=schema_name,
-            )
-            assert (
-                names & contents["indexes"] == set()
-            ), "table indexes should not be present"
+matview_defns = {"climo_obs_count_mv": {"indexes": {"climo_obs_count_idx"}}}
 
 
 @pytest.mark.parametrize(
@@ -74,7 +31,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 
     # Matviews present if and only if supported by database.
     # check_matviews(engine, schema_name, pycds.database.db_supports_matviews(engine))
-    check_matviews(engine, schema_name, True)
+    check_matviews(engine, matview_defns, schema_name, True)
 
 
 @pytest.mark.parametrize(
@@ -93,4 +50,4 @@ def test_downgrade(
     command.downgrade(alembic_config_left, "-1")
 
     # Matviews are always absent after downgrade
-    check_matviews(engine, schema_name, False)
+    check_matviews(engine, matview_defns, schema_name, False)
