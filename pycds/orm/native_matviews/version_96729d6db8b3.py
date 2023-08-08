@@ -13,10 +13,10 @@ schema_func = getattr(func, schema_name)
 
 
 class ClimoObsCount(Base, ReplaceableNativeMatview):
-    """This class maps to a manual materialized view that is required for
-    web app performance. It is used for approximating the number of
-    climatologies which will be returned by station selection
-    criteria.
+    """
+    This class defines a materialized view required for web app performance. It is
+    used to approximate the number of climatologies which will be returned by station
+    selection criteria.
     """
 
     __tablename__ = "climo_obs_count_mv"
@@ -41,6 +41,5 @@ class ClimoObsCount(Base, ReplaceableNativeMatview):
         )
         .group_by(Obs.history_id)
     ).selectable
-
 
 Index("climo_obs_count_idx", ClimoObsCount.history_id)
