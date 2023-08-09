@@ -1,8 +1,8 @@
-# SQLAlchemy extensions
+# Creating and using SQLAlchemy extensions
 
 ## Introduction
 
-SQLAlchemy provides constructs for the SQL statements it needs to emit, which is to say the kinds of operations it supports, such as [CREATE TABLE](https://docs.sqlalchemy.org/en/20/core/ddl.html#sqlalchemy.schema.CreateTable). Such items are called data definition language (DDL) constructs. SQLAlchemy [documents](https://docs.sqlalchemy.org/en/14/core/ddl.html) existing.
+SQLAlchemy provides constructs for the SQL statements it needs to emit, which is to say the kinds of operations it supports, such as [CREATE TABLE](https://docs.sqlalchemy.org/en/20/core/ddl.html#sqlalchemy.schema.CreateTable). Such items are called data definition language (DDL) constructs. SQLAlchemy documents its [existing DDL constructs](https://docs.sqlalchemy.org/en/14/core/ddl.html).
 
 SQLAlchemy doesn't provide DDL constructs for all the SQL statements we'd like to emit. For example, it does not have DDL constructs for CREATE FUNCTION or SET ROLE. If we wish to use those statements without repeating code wherever we do so, and risking inconsistencies, we have to define them ourselves.
 
@@ -14,7 +14,7 @@ For greater insight, it is worth examining SQLAlchemy [source code for existing 
 
 ## DDL extensions defined in PyCDS
 
-We have created several DDL extensions. They are all defined in package [`pycds.sqlalchemy.ddl_extensions`](../../pycds/pycds/sqlalchemy/ddl_extensions). Extensions are partitioned into modules that address a single type of object or operation, e.g., operations on views.
+We have created several DDL extensions. They are all defined in package [`pycds.sqlalchemy.ddl_extensions`](../../../pycds/pycds/sqlalchemy/ddl_extensions). Extensions are partitioned into modules that address a single type of object or operation, e.g., operations on views.
 
 The basic pattern is as follows. This is pretty much identical to the pattern shown in [Dialect-specific compilation rules](https://docs.sqlalchemy.org/en/14/core/compiler.html#dialect-specific-compilation-rules).
 ```python
