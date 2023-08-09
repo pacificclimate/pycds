@@ -10,9 +10,9 @@ from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
-    ClimoObsCount as ClimoObsCountMv,
+    ClimoObsCount as ClimoObsCountMatview,
 )
-from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountV
+from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountView
 
 # revision identifiers, used by Alembic.
 revision = "96729d6db8b3"
@@ -27,10 +27,10 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    op.drop_replaceable_object(ClimoObsCountV)
-    op.drop_table_if_exists(ClimoObsCountMv.__tablename__, schema=schema_name)
-    op.create_replaceable_object(ClimoObsCountMv, schema=schema_name)
-    for index in ClimoObsCountMv.__table__.indexes:
+    op.drop_replaceable_object(ClimoObsCountView)
+    op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
+    op.create_replaceable_object(ClimoObsCountMatview, schema=schema_name)
+    for index in ClimoObsCountMatview.__table__.indexes:
         op.create_index(
             index_name=index.name,
             table_name=index.table.name,
@@ -41,13 +41,13 @@ def upgrade():
 
 
 def downgrade():
-    for index in ClimoObsCountMv.__table__.indexes:
+    for index in ClimoObsCountMatview.__table__.indexes:
         op.drop_index(
             index_name=index.name,
             table_name=index.table.name,
             schema=schema_name,
         )
-    op.drop_replaceable_object(ClimoObsCountMv)
+    op.drop_replaceable_object(ClimoObsCountMatview)
     op.create_table(
         "climo_obs_count_mv",
         sa.Column("count", sa.BigInteger(), nullable=True),
@@ -58,4 +58,4 @@ def downgrade():
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
     )
-    op.create_replaceable_object(ClimoObsCountV)
+    op.create_replaceable_object(ClimoObsCountView)
