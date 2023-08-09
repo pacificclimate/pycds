@@ -8,7 +8,6 @@ import logging
 import pytest
 from alembic import command
 
-import pycds.database
 from .. import check_matviews
 
 
