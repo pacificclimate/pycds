@@ -4,7 +4,7 @@
 
 ## Introduction
 
-To support writing migrations, Alembic provides methods, called _operations_, that emit SQL statements needed to implement a migration. For example, there is the Alembic operation [`create_table`](https://alembic.sqlalchemy.org/en/latest/ops.html#alembic.operations.Operations.create_table), which creates a table. In migrations, operations are available by importing `alembic.op`. For example:
+Alembic provides methods, called _operations_, that emit SQL statements needed to implement a migration. For example, there is the Alembic operation [`create_table`](https://alembic.sqlalchemy.org/en/latest/ops.html#alembic.operations.Operations.create_table), which creates a table. In migrations, operations are available by importing `alembic.op`. For example:
 
 ```python
 from alembic import op
@@ -68,6 +68,21 @@ def implement_set_role(operations, operation):
 
 ## Replaceable object extensions
 
+## Introduction
+
+Database tables can be mutated "in place": for example, columns can be added,
+dropped, or renamed.
+
+Other items, including functions and views, are not mutable.
+When a change to them is required they must be replaced in their entirety,
+i.e., dropped and recreated. Such objects are called replaceable objects,
+and PyCDS manages them accordingly.
+
+All important changes to a CRMP/PCDS database are now managed by Alembic
+migrations, including changes to replaceable objects. (Older versions of
+PyCDS did not use Alembic, and a different, now deprecated mechanism was
+used to make changes.)
+
 Although relatively simple in outline, the detailed implementation of these objects and operations on them can be hard to understand. This section is intended to guide you in understanding them and adding new extensions as necessary following the same patterns.
 
 These extensions are based quite closely on the Alembic Cookbook section [ReplaceableObjects](https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects).
@@ -78,7 +93,7 @@ That cookbook chapter has the following note:
 
 PyCDS was written before Alembic Utils had integrated this recipe, and we have not yet updated to include that work.
 
-### Outline
+### Overview
 
 Replaceable object extensions are defined with three component parts:
 1. Replaceable objects
@@ -98,17 +113,31 @@ Module `pycds.alembic.extensions.replaceable_objects`.
 
 This module defines classes for creating replaceable objects. A replaceable object is an instance of one of these classes.
 
-A replaceable object represents a database entity that, unlike a table, cannot be mutated in place, and must instead be replaced (dropped, re-created) as a whole in order to update it. Examples of such objects are functions and views. In particular, this module defines
-- `ReplaceableObject`: base class for all replaceable objects
-- `ReplaceableOrmClass`: base class for replaceable objects that also have an ORM mapping (e.g., a view)
-- `ReplaceableFunction`: replaceable object class for representing functions 
-- `ReplaceableManualMatview`: replaceable object class for representing "manual" materialized views (manually maintained tables that stand in for true matviews; soon to be deprecated)
-- `ReplaceableNativeMatview`: replaceable object class for representing true materialized views
-- `ReplaceableView`: replaceable object class for representing views
+A replaceable object represents a database entity that, unlike a table, cannot be mutated in place, and must instead be replaced (dropped, re-created) as a whole in order to update it. Examples of such objects are functions and views. 
+
+Each type of replaceable object needs a representation. That representation
+is quite flexible, but it must provide the following two methods:
+
+- `create()`: Returns a DDL object or string containing SQL instructions that
+  create the object.
+- `drop()`: Returns a DDL object or string containing SQL instructions that
+  drop the object.
+
+For replaceable objects whose representation is a *class* (e.g., views,
+matviews), the API must be implemented as class methods.
+
+To support various kinds of replaceable objects, this module defines:
+
+- Class `ReplaceableObject`: base class for all replaceable object classes
+- Class `ReplaceableOrmClass`: base class for replaceable objects that also have an ORM mapping (e.g., a view)
+- Class `ReplaceableFunction`: replaceable object class for representing functions 
+- Class `ReplaceableManualMatview`: replaceable object class for representing "manual" materialized views (manually maintained tables that stand in for true matviews; soon to be deprecated)
+- Class `ReplaceableNativeMatview`: replaceable object class for representing true materialized views
+- Class `ReplaceableView`: replaceable object class for representing views
 
 To implement these classes, we use a variation of the [replaceable object recipe](https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects) in the Alembic Cookbook.
 
-We factor out the create and drop instructions as SQLAlchemy DDL commands, which we define elsewhere as [DDL extensions](sqlalchemy-extensions.md).
+**Note**: We factor out the create and drop instructions as SQLAlchemy DDL commands, which we define elsewhere as [DDL extensions](sqlalchemy-extensions.md).
 
 ### Reversible operation
 
