@@ -7,7 +7,7 @@ from pycds.database import check_migration_version
 
 
 def test_get_current_head():
-    assert get_current_head() == "83896ee79b06"
+    assert get_current_head() == "96729d6db8b3"
 
 
 @pytest.mark.usefixtures("new_db_left")

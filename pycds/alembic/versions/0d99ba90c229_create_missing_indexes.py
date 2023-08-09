@@ -10,8 +10,22 @@ by earlier migrations.
 import logging
 from alembic import op
 from pycds.context import get_schema_name
-from pycds.orm.tables import (
-    ClimoObsCount,
+
+# WARNING: This migration uses a mixture of genuine tables and tables mapped to
+# externally managed matviews (i.e., tables that are managed to provide a matview
+# like behaviour but which are not simply tables). Eventually all externally managed
+# matviews will be brought under management by PyCDS, but some have not yet been.
+#
+# This poses a problem (which actually exists for all types of table objects):
+# The definitions of the indexes on any given table may change with future migrations.
+# We must be careful to pluck the definitions from the earliest revision in which
+# the table actually becomes a matview. (This also ought to be done for true tables,
+# but we do not manage per-revision definitions of them, which, it appears by this
+# argument, we ought.)
+#
+# Whenever an externally managed matview table mapping is moved into management by
+# PyCDS, its definition needs to be updated. See ClimoObsCount below for an example.
+from pycds import (
     CollapsedVariables,
     History,
     Station,
@@ -19,6 +33,7 @@ from pycds.orm.tables import (
     ObsCountPerMonthHistory,
     StationObservationStats,
 )
+from pycds.orm.native_matviews.version_96729d6db8b3 import ClimoObsCount
 
 
 # revision identifiers, used by Alembic.

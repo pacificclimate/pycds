@@ -47,6 +47,7 @@ __all__ = [
     "StationObservationStats",
     # Alembic-managed native matviews
     "VarsPerHistory",
+    "ClimoObsCount",
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
@@ -60,7 +61,6 @@ __all__ = [
     "ObsWithFlags",
     # Externally managed manual matviews
     "ObsCountPerMonthHistory",
-    "ClimoObsCount",
     "CollapsedVariables",
     "StationObservationStats",
 ]
@@ -83,7 +83,6 @@ from .orm.tables import (
     PCICFlag,
     DerivedValue,
     ObsCountPerMonthHistory,
-    ClimoObsCount,
     CollapsedVariables,
     StationObservationStats,
 )
@@ -95,7 +94,7 @@ from .orm.views import (
     ObsWithFlags,
 )
 
-from .orm.native_matviews import VarsPerHistory
+from .orm.native_matviews import VarsPerHistory, ClimoObsCount
 
 from .orm.manual_matviews import (
     DailyMaxTemperature,

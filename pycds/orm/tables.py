@@ -400,23 +400,6 @@ Index(
 )
 
 
-class ClimoObsCount(Base):
-    """This class maps to a manual materialized view that is required for
-    web app performance. It is used for approximating the number of
-    climatologies which will be returned by station selection
-    criteria.
-    """
-
-    __tablename__ = "climo_obs_count_mv"
-    count = Column(BigInteger)
-    history_id = Column(
-        Integer, ForeignKey("meta_history.history_id"), primary_key=True
-    )
-
-
-Index("climo_obs_count_idx", ClimoObsCount.history_id)
-
-
 class CollapsedVariables(Base):
     """This class maps to a manual materialized view that supports the
     view CrmpNetworkGeoserver."""
