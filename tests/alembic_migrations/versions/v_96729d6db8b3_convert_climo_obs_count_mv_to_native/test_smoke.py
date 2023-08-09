@@ -24,14 +24,13 @@ matview_defns = {"climo_obs_count_mv": {"indexes": {"climo_obs_count_idx"}}}
 )
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(prepared_schema_from_migrations_left, schema_name):
-    """Test the schema migration from 84b7fc2596d5 to 7a3b247c577b."""
+    """Test the upgrade schema migration."""
 
-    # Set up database to revision 7a3b247c577b
+    # Set up database at latest revision
     engine, script = prepared_schema_from_migrations_left
 
-    # Matviews present if and only if supported by database.
-    # check_matviews(engine, schema_name, pycds.database.db_supports_matviews(engine))
-    check_matviews(engine, matview_defns, schema_name, True)
+    # Matviews should be present, tables absent.
+    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
 
 
 @pytest.mark.parametrize(
@@ -43,11 +42,11 @@ def test_downgrade(
 ):
     """Test the schema migration from 7a3b247c577b to 84b7fc2596d5."""
 
-    # Set up database to revision 7a3b247c577b
+    # Set up database at latest revision
     engine, script = prepared_schema_from_migrations_left
 
-    # Run downgrade migration to revision
+    # Run downgrade migration to prev revision
     command.downgrade(alembic_config_left, "-1")
 
-    # Matviews are always absent after downgrade
-    check_matviews(engine, matview_defns, schema_name, False)
+    # Matviews should absent after downgrade, tables present
+    check_matviews(engine, matview_defns, schema_name, matviews_present=False)
