@@ -41,7 +41,7 @@ using the command
 [`poetry version`](https://python-poetry.org/docs/cli/#version) 
 instead to get Poetry to do it for us.
 
-## Production release
+### Production release
 
 1. Modify `tool.poetry.version` in `pyproject.toml`: First remove any suffix
    to the version number, as our convention is to reserve those for test builds
