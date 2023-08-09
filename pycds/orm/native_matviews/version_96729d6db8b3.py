@@ -42,4 +42,5 @@ class ClimoObsCount(Base, ReplaceableNativeMatview):
         .group_by(Obs.history_id)
     ).selectable
 
+
 Index("climo_obs_count_idx", ClimoObsCount.history_id)

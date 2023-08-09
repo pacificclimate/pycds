@@ -12,6 +12,7 @@ from alembic.operations import (
 )
 from alembic.operations.ops import CreateTableOp
 
+from pycds.util import compact_join
 
 logger = logging.getLogger("alembic")
 
@@ -54,10 +55,11 @@ def drop_table_if_exists(operations, operation):
     # TODO: Possibly refactor this into a command DropTableWithOptions to accommodate
     #   the possibility of omitting IF EXISTS and adding other options like CASCADE
     schema_prefix = f"{operation.schema}." if operation.schema is not None else ""
-    command_parts = [
-        "DROP TABLE",
-        "IF EXISTS",
-        f"{schema_prefix}{operation.name}",
-        operation.cascade and "CASCADE",
-    ]
-    operations.execute(" ".join(filter(None, command_parts)))
+    operations.execute(
+        compact_join(
+            "DROP TABLE",
+            "IF EXISTS",
+            f"{schema_prefix}{operation.name}",
+            operation.cascade and "CASCADE",
+        )
+    )

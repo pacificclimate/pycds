@@ -59,3 +59,11 @@ def ddl_escape(s):
     See https://docs.sqlalchemy.org/en/14/core/ddl.html#sqlalchemy.schema.DDL
     """
     return s.replace("%", "%%")
+
+
+def compact_join(*parts, separator=" "):
+    """
+    Compact (eliminate falsy values from) arguments and join them with a separator.
+    Typically used to construct a SQL statement with optional parts.
+    """
+    return separator.join(filter(None, parts))
