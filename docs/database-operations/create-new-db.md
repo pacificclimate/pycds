@@ -27,4 +27,4 @@ To create a new PyCDS database at the latest revision:
    [PYCDS_SCHEMA_NAME=<schema name>] [PYCDS_SU_ROLE_NAME=<role name>] alembic -x db=<db-label> upgrade head
    ```
 
-If you wish to create the database at a different revision, replace `head` above  with the revision id.
+If you wish to create the database at a different revision, replace `head` above  with the desired revision id.

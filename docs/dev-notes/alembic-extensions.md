@@ -1,4 +1,4 @@
-# Alembic extensions
+# Creating and using Alembic extensions
 
 **IMPORTANT NOTE**: Alembic documentation seems only to be available for the latest release. This project currently uses a non-latest release, 1.5.8. Therefore, links to (latest) Alembic documentation may point at information that does not precisely match the code in this project. In particular, some code here may seem redundant now that Alembic has filled some holes present in ver 1.5.8.
 

@@ -3,26 +3,13 @@
 
 # PyCDS
 
-PyCDS is a Python package that provides an
-[Object Relational Mapping (ORM)](http://en.wikipedia.org/wiki/Object-relational_mapping)
-layer for accessing meteorological observations stored in a relational 
-database in a standard database model, referred to variously as a CRMP 
-database or a PCDS database.
+PyCDS is a Python package that provides an [Object Relational Mapping (ORM)](http://en.wikipedia.org/wiki/Object-relational_mapping) layer for accessing meteorological observations stored in a relational database in a standard database model, referred to variously as a CRMP database or a PCDS database.
 
-This package uses [Alembic](https://alembic.sqlalchemy.org/) to manage 
-database creation and migration. For details, 
-see [Database creation and migration](docs/database-maintenance.md).
+This package uses [Alembic](https://alembic.sqlalchemy.org/) to manage database creation and migration. For details, see _Database operations with Alembic_, below.
 
-This type of database (PCDS/CRMP schema) is currently used at 
-PCIC to store BC's long-term weather archive, the Provincial Climate Data 
-Set (PCDS), and the Northern Climate Database (Metnorth). For details, see 
-[Background](docs/background.md).
+This type of database (PCDS/CRMP schema) is currently used at PCIC to store BC's long-term weather archive, the Provincial Climate Data Set (PCDS), and the Northern Climate Database (Metnorth). For details, see [Background](docs/background.md).
 
-With this package, one can recreate the database schema in a
-[PostgreSQL](http://www.postgresql.org) or [SQLite](http://www.sqlite.org)
-database and/or use the package as an object mapper for programmatic database 
-access. PyCDS uses [SQLAlchemy](http://www.sqlalchemy.org) to provide the 
-ORM layer.
+With this package, one can recreate the database schema in a [PostgreSQL](http://www.postgresql.org) or [SQLite](http://www.sqlite.org) database and/or use the package as an object mapper for programmatic database access. PyCDS uses [SQLAlchemy](http://www.sqlalchemy.org) to provide the ORM layer.
 
 ## Documentation
 
@@ -30,15 +17,20 @@ ORM layer.
 - [Installation](docs/installation.md)
 - [Scripts](docs/scripts.md)
 - [ORM contents and usage](docs/orm.md)
-- [Database creation and migration](docs/database-maintenance.md)
-- [Managing non-mutable database content](docs/managing-non-mutable.md)
+- Database operations with Alembic
+  - [Introduction](docs/database-operations/introduction.md)
+  - [Creating a new migration](docs/database-operations/create-new-migration.md)
+  - [Applying a migration: Upgrade](docs/database-operations/migrate-upgrade.md)
+  - [Applying a migration: Downgrade](docs/database-operations/migrate-downgrade.md)
+  - [Creating a new PyCDS database](docs/database-operations/create-new-db.md)
+  - [Creating the initial migration](docs/database-operations/create-initial-migration.md)
 - Testing
-    - [Project unit tests](docs/project-unit-tests.md)
-    - [Test migrations with a test database](docs/test-migrations.md)
-    - [Unit tests in client code](docs/unit-tests-in-client-code.md)
+    - [Project unit tests](docs/testing/project-unit-tests.md)
+    - [Test migrations with a test database](docs/testing/test-migrations.md)
+    - [Unit tests in client code](docs/testing/unit-tests-in-client-code.md)
 - Development notes
-  - [SQLAlchemy extensions](docs/sqlalchemy-extensions.md)
-  - [Alembic extensions](docs/alembic-extensions.md)
+  - [Creating and using SQLAlchemy extensions](docs/dev-notes/sqlalchemy-extensions.md)
+  - [Creating and using Alembic extensions](docs/dev-notes/alembic-extensions.md)
 
 ## Releasing
 
