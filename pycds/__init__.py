@@ -44,10 +44,10 @@ __all__ = [
     "PCICFlag",
     "DerivedValue",
     "CollapsedVariables",
-    "StationObservationStats",
     # Alembic-managed native matviews
     "VarsPerHistory",
     "ClimoObsCount",
+    "StationObservationStats",
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
@@ -62,7 +62,6 @@ __all__ = [
     # Externally managed manual matviews
     "ObsCountPerMonthHistory",
     "CollapsedVariables",
-    "StationObservationStats",
 ]
 
 from pycds.context import get_schema_name, get_su_role_name
@@ -84,7 +83,6 @@ from .orm.tables import (
     DerivedValue,
     ObsCountPerMonthHistory,
     CollapsedVariables,
-    StationObservationStats,
 )
 
 from .orm.views import (
@@ -94,7 +92,7 @@ from .orm.views import (
     ObsWithFlags,
 )
 
-from .orm.native_matviews import VarsPerHistory, ClimoObsCount
+from .orm.native_matviews import VarsPerHistory, ClimoObsCount, StationObservationStats
 
 from .orm.manual_matviews import (
     DailyMaxTemperature,
