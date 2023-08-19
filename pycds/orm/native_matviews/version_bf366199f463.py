@@ -21,12 +21,12 @@ schema_func = getattr(func, schema_name)
 
 
 # The selectable in the matview uses this subquery.
-stats_by_station = (
+stats_by_history = (
     select(
-        func.min(Obs).label("min_obs_time"),
-        func.max(Obs).label("max_obs_time"),
         Obs.history_id.label("history_id"),
-        func.count(Obs.obs_time).distinct().label("obs_count"),
+        func.min(Obs.time).label("min_obs_time"),
+        func.max(Obs.time).label("max_obs_time"),
+        func.count(Obs.time).distinct().label("obs_count"),
     )
     .select_from(Obs)
     .group_by(Obs.history_id)
@@ -50,12 +50,16 @@ class StationObservationStats(Base, ReplaceableNativeMatview):
     max_obs_time = Column(DateTime)
     obs_count = Column(BigInteger)
 
-    __selectable__ = Query(
-        History.station_id.label("station_id"),
-        stats_by_station.station_id.label("station_id"),
-        stats_by_station.max_obs_time.label("max_obs_time"),
-        stats_by_station.min_obs_time.label("min_obs_time"),
-        stats_by_station.obs_count.label("obs_count"),
+    __selectable__ = (
+        Query(
+            History.station_id.label("station_id"),
+            stats_by_history.c.history_id.label("history_id"),
+            stats_by_history.c.max_obs_time.label("max_obs_time"),
+            stats_by_history.c.min_obs_time.label("min_obs_time"),
+            stats_by_history.c.obs_count.label("obs_count"),
+        )
+        .select_from(stats_by_history)
+        .join(History, History.id == stats_by_history.c.history_id)
     )
 
 
