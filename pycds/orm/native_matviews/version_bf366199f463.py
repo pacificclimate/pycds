@@ -52,11 +52,13 @@ class StationObservationStats(Base, ReplaceableNativeMatview):
 
     __selectable__ = (
         Query(
-            History.station_id.label("station_id"),
-            stats_by_history.c.history_id.label("history_id"),
-            stats_by_history.c.max_obs_time.label("max_obs_time"),
-            stats_by_history.c.min_obs_time.label("min_obs_time"),
-            stats_by_history.c.obs_count.label("obs_count"),
+            [
+                History.station_id.label("station_id"),
+                stats_by_history.c.history_id.label("history_id"),
+                stats_by_history.c.max_obs_time.label("max_obs_time"),
+                stats_by_history.c.min_obs_time.label("min_obs_time"),
+                stats_by_history.c.obs_count.label("obs_count"),
+            ]
         )
         .select_from(stats_by_history)
         .join(History, History.id == stats_by_history.c.history_id)
