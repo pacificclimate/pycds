@@ -146,7 +146,7 @@ def sesh_with_large_data(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()
     insert_crmp_data(sesh)
-    sesh.execute(RefreshMaterializedView(StationObservationStats))
+    sesh.execute(StationObservationStats.refresh())
 
     yield sesh
 
