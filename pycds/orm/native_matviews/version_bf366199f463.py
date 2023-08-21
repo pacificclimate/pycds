@@ -26,7 +26,7 @@ stats_by_history = (
         Obs.history_id.label("history_id"),
         func.min(Obs.time).label("min_obs_time"),
         func.max(Obs.time).label("max_obs_time"),
-        func.count(Obs.time).distinct().label("obs_count"),
+        func.count(Obs.time.distinct()).label("obs_count"),
     )
     .select_from(Obs)
     .group_by(Obs.history_id)
@@ -62,7 +62,7 @@ class StationObservationStats(Base, ReplaceableNativeMatview):
         )
         .select_from(stats_by_history)
         .join(History, History.id == stats_by_history.c.history_id)
-    )
+    ).selectable
 
 
 Index(
