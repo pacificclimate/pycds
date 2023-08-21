@@ -8,10 +8,12 @@ from pycds.orm.views import (
     ObsCountPerDayHistory,
     ObsWithFlags,
 )
+from pycds.orm.native_matviews import StationObservationStats
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_crmp_network_geoserver(sesh_with_large_data):
+    sesh_with_large_data.execute(StationObservationStats.refresh())
     q = sesh_with_large_data.query(CrmpNetworkGeoserver.network_name)
     rv = q.all()
 
