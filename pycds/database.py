@@ -5,7 +5,7 @@ from pycds.context import get_schema_name
 
 
 def check_migration_version(
-    executor, schema_name=get_schema_name(), version="96729d6db8b3"
+    executor, schema_name=get_schema_name(), version="bf366199f463"
 ):
     """Check that the migration version of the database schema is compatible
     with the current version of this package.
