@@ -6,7 +6,7 @@ from pycds.orm.native_matviews import StationObservationStats
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_vars_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data):
     """Test that StationObservationStats definition is correct."""
 
     q = sesh_with_large_data.query(StationObservationStats)
