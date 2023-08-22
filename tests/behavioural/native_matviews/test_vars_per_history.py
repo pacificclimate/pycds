@@ -4,7 +4,7 @@ from pycds.orm.native_matviews import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_vars_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data):
     """Test that VarsPerHistory definition is correct."""
 
     # No content before matview is refreshed
@@ -34,8 +34,6 @@ def test_vars_content(sesh_with_large_data):
     }
     result_pairs = {(row.history_id, row.vars_id) for row in q.all()}
     assert expected_pairs <= result_pairs
-    for pair in expected_pairs:
-        assert pair in result_pairs
 
 
 @pytest.mark.usefixtures("new_db_left")
