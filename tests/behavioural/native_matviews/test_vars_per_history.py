@@ -19,8 +19,7 @@ def test_vars_content(sesh_with_large_data):
 
     # This test sucks, relying as it does on hardcoded magic numbers taken from
     # the large dataset. But it's what we've got just now.
-    pairs = tuple((row.history_id, row.vars_id) for row in q.all())
-    for pair in (
+    expected_pairs = {
         (8316, 555),
         (2716, 497),
         (5716, 526),
@@ -32,8 +31,11 @@ def test_vars_content(sesh_with_large_data):
         (3516, 562),
         (7816, 527),
         (5816, 519),
-    ):
-        assert pair in pairs
+    }
+    result_pairs = {(row.history_id, row.vars_id) for row in q.all()}
+    assert expected_pairs <= result_pairs
+    for pair in expected_pairs:
+        assert pair in result_pairs
 
 
 @pytest.mark.usefixtures("new_db_left")
