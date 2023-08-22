@@ -1,18 +1,18 @@
 import pytest
 import sqlalchemy
-from pycds.orm.native_matviews import VarsPerHistory
+from pycds.orm.native_matviews import ClimoObsCount
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_matview_content(sesh_with_large_data):
-    """Test that VarsPerHistory definition is correct."""
+    """Test that ClimoObsCount definition is correct."""
 
     # No content before matview is refreshed
-    q = sesh_with_large_data.query(VarsPerHistory)
+    q = sesh_with_large_data.query(ClimoObsCount)
     assert q.count() == 0
 
     # Refresh
-    sesh_with_large_data.execute(VarsPerHistory.refresh())
+    sesh_with_large_data.execute(ClimoObsCount.refresh())
 
     # Et voila
     assert q.count() > 0
@@ -20,34 +20,37 @@ def test_matview_content(sesh_with_large_data):
     # This test sucks, relying as it does on hardcoded magic numbers taken from
     # the large dataset. But it's what we've got just now.
     expected_pairs = {
-        (8316, 555),
-        (2716, 497),
-        (5716, 526),
-        (1816, 556),
-        (1616, 556),
-        (7716, 526),
-        (5916, 526),
-        (8016, 528),
-        (3516, 562),
-        (7816, 527),
-        (5816, 519),
+        (48, 816),
+        (48, 1516),
+        (2, 2516),
+        (48, 1216),
+        (48, 1016),
+        (48, 1616),
+        (12, 516),
+        (36, 1816),
+        (48, 1716),
+        (48, 1316),
+        (21, 3516),
+        (5, 2016),
     }
-    result_pairs = {(row.history_id, row.vars_id) for row in q.all()}
+    result_pairs = {(row.count, row.history_id) for row in q.all()}
     assert expected_pairs <= result_pairs
+    for pair in expected_pairs:
+        assert pair in result_pairs
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_index(schema_name, prepared_schema_from_migrations_left):
-    """Test that VarsPerHistory has the expected index."""
+    """Test that ClimoObsCount has the expected index."""
     engine, script = prepared_schema_from_migrations_left
     inspector = sqlalchemy.inspect(engine)
     indexes = inspector.get_indexes(
-        table_name=(VarsPerHistory.base_name()), schema=schema_name
+        table_name=(ClimoObsCount.base_name()), schema=schema_name
     )
     assert indexes == [
         {
-            "name": "var_hist_idx",
-            "column_names": ["history_id", "vars_id"],
+            "name": "climo_obs_count_idx",
+            "column_names": ["history_id"],
             "unique": False,
             "include_columns": [],
             "dialect_options": {"postgresql_include": []},

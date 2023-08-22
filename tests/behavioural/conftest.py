@@ -5,8 +5,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
 
+from pycds.sqlalchemy.ddl_extensions import RefreshMaterializedView
 from ..alembicverify_util import prepare_schema_from_migrations
 from ..helpers import insert_crmp_data
+from pycds import StationObservationStats
 
 
 @pytest.fixture
@@ -96,7 +98,7 @@ def env_config(schema_name):
 
 @pytest.fixture(scope="module")
 def target_revision():
-    return "879f0efa125f"
+    return "bf366199f463"
 
 
 @pytest.fixture(scope="function")

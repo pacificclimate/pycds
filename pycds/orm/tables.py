@@ -413,24 +413,3 @@ class CollapsedVariables(Base):
 
 
 Index("collapsed_vars_idx", CollapsedVariables.history_id)
-
-
-class StationObservationStats(Base):
-    __tablename__ = "station_obs_stats_mv"
-    station_id = Column(Integer, ForeignKey("meta_station.station_id"))
-    history_id = Column(
-        Integer, ForeignKey("meta_history.history_id"), primary_key=True
-    )
-    min_obs_time = Column(DateTime)
-    max_obs_time = Column(DateTime)
-    obs_count = Column(BigInteger)
-
-
-Index(
-    "station_obs_stats_mv_idx",
-    StationObservationStats.min_obs_time,
-    StationObservationStats.max_obs_time,
-    StationObservationStats.obs_count,
-    StationObservationStats.station_id,
-    StationObservationStats.history_id,
-)

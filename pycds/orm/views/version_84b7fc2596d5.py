@@ -29,9 +29,9 @@ from pycds.orm.tables import (
     History,
     Variable,
     Obs,
-    StationObservationStats,
     CollapsedVariables,
 )
+from pycds.orm.native_matviews import StationObservationStats
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.view_base import Base
 
