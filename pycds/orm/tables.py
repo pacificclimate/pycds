@@ -398,18 +398,3 @@ Index(
     ObsCountPerMonthHistory.date_trunc,
     ObsCountPerMonthHistory.history_id,
 )
-
-
-class CollapsedVariables(Base):
-    """This class maps to a manual materialized view that supports the
-    view CrmpNetworkGeoserver."""
-
-    __tablename__ = "collapsed_vars_mv"
-    history_id = Column(
-        Integer, ForeignKey("meta_history.history_id"), primary_key=True
-    )
-    vars = Column(String)
-    display_names = Column(String)
-
-
-Index("collapsed_vars_idx", CollapsedVariables.history_id)
