@@ -100,7 +100,7 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
         .select_from(History)
         .join(Station)
         .join(Network)
-        .outerjoin(CollapsedVariables)
+        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
         .outerjoin(
             StationObservationStats,
             StationObservationStats.history_id == History.id,
