@@ -6,7 +6,7 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     func,
-    cast,
+    select,
 )
 from sqlalchemy.orm import Query
 
@@ -33,28 +33,24 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
     vars = Column(String)
     display_names = Column(String)
 
-    # TODO: Can this and other view, matview queries use the sqlalchemy function
-    #  select() instead of Query()....selectable? If so, do so everywhere.
     __selectable__ = (
-        Query(
-            [
-                VarsPerHistory.history_id.label("history_id"),
-                func.array_to_string(
-                    func.array_agg(
-                        Variable.standard_name
-                        + func.regexp_replace(Variable.cell_method, "time: ", "_", "g")
-                    ),
-                    ", ",
-                ).label("vars"),
-                func.array_to_string(func.array_agg(Variable.display_name), "|").label(
-                    "display_names"
+        select(
+            VarsPerHistory.history_id.label("history_id"),
+            func.array_to_string(
+                func.array_agg(
+                    Variable.standard_name
+                    + func.regexp_replace(Variable.cell_method, "time: ", "_", "g")
                 ),
-            ]
+                ", ",
+            ).label("vars"),
+            func.array_to_string(func.array_agg(Variable.display_name), "|").label(
+                "display_names"
+            ),
         )
         .select_from(VarsPerHistory)
         .join(Variable, Variable.id == VarsPerHistory.vars_id)
         .group_by(VarsPerHistory.history_id)
-    ).selectable
+    )
 
 
 Index("collapsed_vars_idx", CollapsedVariables.history_id)
