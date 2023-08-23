@@ -44,9 +44,7 @@ def upgrade():
     drop_dependent_objects()
 
     # Drop fake matview table and its associated view
-    op.drop_table_if_exists(
-        CollapsedVariablesMatview.__tablename__, schema=schema_name
-    )
+    op.drop_table_if_exists(CollapsedVariablesMatview.__tablename__, schema=schema_name)
     op.drop_replaceable_object(CollapsedVariablesView)
 
     # Replace them with the native matview
