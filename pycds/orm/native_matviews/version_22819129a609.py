@@ -34,6 +34,8 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
     display_names = Column(String)
 
     __selectable__ = (
+        # This query is likely wrong.
+        # See https://github.com/pacificclimate/pycds/issues/180
         select(
             VarsPerHistory.history_id.label("history_id"),
             func.array_to_string(
