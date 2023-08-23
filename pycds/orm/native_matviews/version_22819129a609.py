@@ -3,12 +3,15 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
+    Text,
     ForeignKey,
     func,
+    cast,
 )
 from sqlalchemy.orm import Query
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
+
 # TODO: These ought to be able to be imported from top-level pycds, but maybe that
 #  produces some kind of error.
 from pycds.orm.tables import Variable
@@ -39,13 +42,13 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
                 func.array_to_string(
                     func.array_agg(
                         Variable.standard_name
-                        + func.regexp_replace(Variable.cell_method, "time: ", "_", "g"),
-                        ", "
-                    )
+                        + func.regexp_replace(Variable.cell_method, "time: ", "_", "g")
+                    ),
+                    ", ",
                 ).label("vars"),
-                func.array_to_string(
-                    func.array_agg(Variable.display_name), "|"
-                ).label("display_names")
+                func.array_to_string(func.array_agg(Variable.display_name), "|").label(
+                    "display_names"
+                ),
             ]
         )
         .select_from(VarsPerHistory)
@@ -55,3 +58,6 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
 
 
 Index("collapsed_vars_idx", CollapsedVariables.history_id)
+
+# SELECT crmp.vars_per_history_mv.history_id AS history_id, array_to_string(array_agg(crmp.meta_vars.standard_name || regexp_replace(crmp.meta_vars.cell_method, 'time: ', '_', 'g'), ', ')) AS vars, array_to_string(array_agg(crmp.meta_vars.display_name), '|') AS display_names
+# FROM crmp.vars_per_history_mv JOIN crmp.meta_vars ON crmp.meta_vars.vars_id = crmp.vars_per_history_mv.vars_id GROUP BY crmp.vars_per_history_mv.history_id
