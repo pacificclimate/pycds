@@ -17,9 +17,9 @@ from pycds.orm.native_matviews.version_bf366199f463 import (
 
 class StationObservationStats(Base, ReplaceableView):
     """
-    This view is required for the externally-managed fake materialized view (later
-    replaced with a native matview) `station_obs_stats_mv`. To prevent unnecessary code
-    repetition, its selectable is copied from the native matview that replaces it.
+    This view is required for the fake materialized view (later replaced with a native
+    matview) `station_obs_stats_mv`. To prevent unnecessary code repetition, its
+    selectable is copied from the native matview that replaces it.
     Columns cannot be copied so.
     """
 

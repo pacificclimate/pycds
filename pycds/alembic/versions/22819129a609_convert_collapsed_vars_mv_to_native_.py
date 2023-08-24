@@ -30,12 +30,10 @@ schema_name = get_schema_name()
 
 
 def drop_dependent_objects():
-    """What it says on the box"""
     op.drop_replaceable_object(CrmpNetworkGeoserver)
 
 
 def create_dependent_objects():
-    """What it says on the box"""
     op.create_replaceable_object(CrmpNetworkGeoserver)
 
 

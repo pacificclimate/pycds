@@ -16,9 +16,9 @@ from pycds.orm.native_matviews.version_22819129a609 import (
 
 class CollapsedVariables(Base, ReplaceableView):
     """
-    This view is required for the externally-managed fake materialized view (later
-    replaced with a native matview) `collapsed_vars_mv`. To prevent unnecessary code
-    repetition, its selectable is copied from the native matview that replaces it.
+    This view is required for the fake materialized view (later replaced with a native
+    matview) `collapsed_vars_mv`. To prevent unnecessary code repetition, its
+    selectable is copied from the native matview that replaces it.
     Columns cannot be copied so.
     """
 

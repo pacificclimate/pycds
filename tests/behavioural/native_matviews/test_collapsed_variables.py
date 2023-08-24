@@ -21,17 +21,13 @@ def test_matview_content(sesh_with_large_data):
     sesh_with_large_data.execute(CollapsedVariables.refresh())
 
     # Et voila
-    count = q.count()
-    assert count > 0
-    # print("### count", count)
+    assert q.count() > 0
 
     # Test content
 
     result = q.all()
 
     for row in result:
-        # print("### row", row.__dict__)
-
         # We'll compare the content of the matview to the results of a query for the
         # relevant Variables without using VarsPerHistory as an intermediary.
         relevant_variables = (
@@ -44,13 +40,8 @@ def test_matview_content(sesh_with_large_data):
         assert len(var_names) > 0
         assert all(len(name) > 0 for name in var_names)
 
-        # It seems likely that the intent of this matview's query is that the following
-        # assertion *ought* to be true, but in the pre-migration CRMP, the `vars`
-        # column of the matview contains all kinds of probably unintended junk such as
-        # "lwe_thickness_of_precipitation_amountt: sum within months t: mean over years, ..."
-        # This is probably due to an unanticipated (but valid) change in the content
-        # of the `cell_method` column for some variables. Therefore it's likely the
-        # query for this view/matview is wrong.
+        # The *intent* of this matview's query is probably expressed by the following
+        # assertion, but it's likely the query for this view/matview is wrong.
         # See https://github.com/pacificclimate/pycds/issues/180
         # assert all(re.fullmatch(r"\w+", name) for name in var_names)
 
@@ -64,7 +55,6 @@ def test_matview_content(sesh_with_large_data):
         assert len(display_names) > 0
         assert all(len(name) > 0 for name in display_names)
         relevant_display_names = {v.display_name for v in relevant_variables}
-        # print("relevant_display_names", relevant_display_names)
         assert all(name in relevant_display_names for name in display_names)
 
 
