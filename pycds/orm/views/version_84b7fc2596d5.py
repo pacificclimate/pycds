@@ -29,9 +29,8 @@ from pycds.orm.tables import (
     History,
     Variable,
     Obs,
-    CollapsedVariables,
 )
-from pycds.orm.native_matviews import StationObservationStats
+from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.view_base import Base
 
@@ -101,7 +100,7 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
         .select_from(History)
         .join(Station)
         .join(Network)
-        .outerjoin(CollapsedVariables)
+        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
         .outerjoin(
             StationObservationStats,
             StationObservationStats.history_id == History.id,

@@ -82,7 +82,6 @@ from .orm.tables import (
     PCICFlag,
     DerivedValue,
     ObsCountPerMonthHistory,
-    CollapsedVariables,
 )
 
 from .orm.views import (
@@ -92,7 +91,12 @@ from .orm.views import (
     ObsWithFlags,
 )
 
-from .orm.native_matviews import VarsPerHistory, ClimoObsCount, StationObservationStats
+from .orm.native_matviews import (
+    VarsPerHistory,
+    ClimoObsCount,
+    StationObservationStats,
+    CollapsedVariables,
+)
 
 from .orm.manual_matviews import (
     DailyMaxTemperature,

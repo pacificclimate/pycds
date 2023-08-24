@@ -44,7 +44,8 @@ def upgrade():
     #  I am dropping.
     drop_dependent_objects()
 
-    # Drop fake matview table and replace with real native matview
+    # Drop fake matview table and its associated view, and replace them with the
+    # native matview
     op.drop_replaceable_object(StationObservationStatsView)
     op.drop_table_if_exists(
         StationObservationStatsMatview.__tablename__, schema=schema_name
