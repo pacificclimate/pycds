@@ -374,27 +374,3 @@ class DerivedValue(Base):
             name="obs_derived_value_time_place_variable_unique",
         ),
     )
-
-
-class ObsCountPerMonthHistory(Base):
-    """This class maps to a manual materialized view that is required for web
-    app performance. It is used for approximating the number of
-    observations which will be returned by station selection criteria.
-    """
-
-    __tablename__ = "obs_count_per_month_history_mv"
-    count = Column(Integer)
-    date_trunc = Column(DateTime, primary_key=True)
-    history_id = Column(
-        Integer, ForeignKey("meta_history.history_id"), primary_key=True
-    )
-
-    # Relationships
-    history = relationship("History")
-
-
-Index(
-    "obs_count_per_month_history_idx",
-    ObsCountPerMonthHistory.date_trunc,
-    ObsCountPerMonthHistory.history_id,
-)
