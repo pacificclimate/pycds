@@ -25,3 +25,4 @@ from .version_7a3b247c577b import VarsPerHistory
 from .version_96729d6db8b3 import ClimoObsCount
 from .version_bf366199f463 import StationObservationStats
 from .version_22819129a609 import CollapsedVariables
+from .version_bb2a222a1d4a import ObsCountPerMonthHistory
