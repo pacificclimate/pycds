@@ -8,7 +8,6 @@ from sqlalchemy import (
     func,
     select,
 )
-from sqlalchemy.orm import Query
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 

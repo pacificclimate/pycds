@@ -26,3 +26,4 @@ from .version_84b7fc2596d5 import HistoryStationNetwork
 from .version_84b7fc2596d5 import ObsCountPerDayHistory
 from .version_84b7fc2596d5 import ObsWithFlags
 from .version_22819129a609 import CollapsedVariables
+from .version_bb2a222a1d4a import ObsCountPerMonthHistory
