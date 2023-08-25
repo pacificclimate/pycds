@@ -21,7 +21,7 @@ class ObsCountPerMonthHistory(Base, ReplaceableView):
     Columns cannot be copied so.
     """
 
-    __tablename__ = "obs_count_per_month_history_mv"
+    __tablename__ = "obs_count_per_month_history_v"
 
     count = Column(Integer)
     date_trunc = Column(DateTime, primary_key=True)

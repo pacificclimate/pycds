@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.view_base import Base
-from pycds.orm.tables import Obs
+from pycds.orm.tables import Obs, History
 
 
 class ObsCountPerMonthHistory(Base, ReplaceableNativeMatview):
@@ -29,16 +29,30 @@ class ObsCountPerMonthHistory(Base, ReplaceableNativeMatview):
         Integer, ForeignKey("meta_history.history_id"), primary_key=True
     )
 
+    # TODO: The original *table* declaration included this relationship declaration.
+    #  The various attempts below produce errors, as do the post-hoc attempts following
+    #  the class definition.
     # Relationships
-    history = relationship("History")
+    # history = relationship(History, primaryjoin=(History.id == ObsCountPerMonthHistory.history_id))
+    # history = relationship(History, foreign_keys=[History.id])
+    # history = relationship("History")
 
     __selectable__ = (
         select(
-            func.count().label("count"),
-            func.date_trunc('month', Obs.obs_time).label("date_trunc"),
+            func.count(Obs.id).label("count"),
+            func.date_trunc("month", Obs.time).label("date_trunc"),
             Obs.history_id.label("history_id"),
         )
+        .select_from(Obs)
+        .group_by(func.date_trunc("month", Obs.time), Obs.history_id)
     )
+
+
+# See comment above.
+# ObsCountPerMonthHistory.__mapper__.add_property("history", relationship(History, primaryjoin=(History.id == ObsCountPerMonthHistory.history_id)))
+# ObsCountPerMonthHistory.__mapper__.add_property("history", relationship("History", primaryjoin="History.id == ObsCountPerMonthHistory.history_id"))
+# ObsCountPerMonthHistory.__mapper__.add_property("history", relationship("History"))
+# ObsCountPerMonthHistory.__mapper__.add_property("history", relationship(History))
 
 
 Index(

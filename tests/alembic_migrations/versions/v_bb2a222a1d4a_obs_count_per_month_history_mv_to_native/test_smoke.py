@@ -15,7 +15,7 @@ logger = logging.getLogger("tests")
 # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
-matview_defns = {"collapsed_vars_mv": {"indexes": {"collapsed_vars_idx"}}}
+matview_defns = {"obs_count_per_month_history_mv": {"indexes": {"obs_count_per_month_history_idx"}}}
 
 
 @pytest.mark.parametrize(
