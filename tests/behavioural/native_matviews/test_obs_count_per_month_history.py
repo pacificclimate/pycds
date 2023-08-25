@@ -2,7 +2,6 @@ from datetime import datetime
 
 import pytest
 import sqlalchemy
-from pycds.database import get_schema_item_names
 from pycds.orm.native_matviews import ObsCountPerMonthHistory
 
 
@@ -30,11 +29,7 @@ def test_matview_content(sesh_with_large_data):
         return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
 
     expected_rows = {
-        (
-            count,
-            ptime(month),
-            history_id,
-        )
+        (count, ptime(month), history_id)
         for count, month, history_id in (
             # The data previously inserted into the *table* that was maintained as a
             # fake matview is as follows.
@@ -583,14 +578,7 @@ def test_matview_content(sesh_with_large_data):
     }
 
     # Goofy column order, but the test data is in that order
-    result_rows = {
-        (
-            row.count,
-            row.date_trunc,
-            row.history_id,
-        )
-        for row in q.all()
-    }
+    result_rows = {(row.count, row.date_trunc, row.history_id) for row in q.all()}
 
     assert expected_rows <= result_rows
 

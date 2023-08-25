@@ -30,7 +30,9 @@ schema_name = get_schema_name()
 
 def upgrade():
     # Drop fake matview table and its associated view
-    op.drop_table_if_exists(ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name)
+    op.drop_table_if_exists(
+        ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
+    )
     op.drop_replaceable_object(ObsCountPerMonthHistoryView)
 
     # Replace them with the native matview
