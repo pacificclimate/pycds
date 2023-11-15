@@ -1,5 +1,16 @@
 # News / Release Notes
 
+## 4.4.0
+
+*Release Date: 2023-Apr-05*
+
+Major change: Add function `variable_tags`.
+
+Changes:
+- [Add function variable_tags](https://github.com/pacificclimate/pycds/pull/167)
+- [Don't use `*` version specs for dependencies](https://github.com/pacificclimate/pycds/pull/164)
+- [Loosen SQLAlchemy-related version requirements](https://github.com/pacificclimate/pycds/pull/163)
+
 ## 4.3.0
 
 *Release Date: 2023-Apr-05*
