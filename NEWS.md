@@ -2,7 +2,7 @@
 
 ## 4.4.0
 
-*Release Date: 2023-Apr-05*
+*Release Date: 2023-Nov-15*
 
 Major change: Add function `variable_tags`.
 
