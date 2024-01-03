@@ -1,6 +1,3 @@
-import re
-from datetime import datetime
-
 import pytest
 import sqlalchemy
 from pycds import VarsPerHistory, Variable, Obs

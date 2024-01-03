@@ -1,10 +1,17 @@
 from sqlalchemy.orm import declarative_base
 
 from sqlalchemy import (
-    Index, Column, Integer, String, Text, ForeignKey, column, distinct, func, select,
-    text, MetaData,
+    Index,
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    func,
+    select,
+    text,
+    MetaData,
 )
-from sqlalchemy.dialects.postgresql import aggregate_order_by, array, ARRAY, TEXT
+from sqlalchemy.dialects.postgresql import aggregate_order_by, ARRAY, TEXT
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 
@@ -30,6 +37,8 @@ def variable_tags(Table):
     return schema_func.variable_tags(text(Table.__tablename__), type_=ARRAY(TEXT))
 
 
+# TODO: end utility module
+
 # This CTE is used in the selectable for matview `CollapsedVariables`. For each history,
 # it aggregates values computed from columns of `Variable`. `VarsPerHistory` provides
 # the connection between variables and histories. The main reason for its existence is
@@ -41,12 +50,12 @@ aggregated_vars = (
     select(
         VarsPerHistory.history_id.label("history_id"),
         func.array_agg(VarsPerHistory.vars_id).label("vars_ids"),
-        func.array_agg(
-            aggregate_order_by(variable_tags(Variable), Variable.id)
-        ).label("all_variable_tags"),
-        func.array_agg(
-            aggregate_order_by(Variable.display_name, Variable.id)
-        ).label("display_names"),
+        func.array_agg(aggregate_order_by(variable_tags(Variable), Variable.id)).label(
+            "all_variable_tags"
+        ),
+        func.array_agg(aggregate_order_by(Variable.display_name, Variable.id)).label(
+            "display_names"
+        ),
         # See comment below re. column `vars`.
         func.array_agg(
             Variable.standard_name
@@ -57,7 +66,6 @@ aggregated_vars = (
     .join(Variable, Variable.id == VarsPerHistory.vars_id)
     .group_by(VarsPerHistory.history_id)
 ).cte("aggregated_vars")
-# print("### aggregated_vars\n", str(aggregated_vars))
 
 # This subquery is used in the selectable for the matview.
 unique_variable_tags_sq = (
@@ -65,14 +73,6 @@ unique_variable_tags_sq = (
     .select_from(func.unnest(aggregated_vars.c.all_variable_tags))
     .distinct()
 ).subquery()
-print("### unique_variable_tags\n", str(unique_variable_tags_sq))
-
-# unique_variable_tags = (
-#     select(text("climatology"))
-# ).subquery()
-# print("### unique_variable_tags\n", str(unique_variable_tags))
-
-print("### CollapsedVariables: start")
 
 
 class CollapsedVariables(Base, ReplaceableNativeMatview):
@@ -105,8 +105,4 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
     ).select_from(aggregated_vars)
 
 
-print("### CollapsedVariables.__selectable__", str(CollapsedVariables.__selectable__))
-
 Index("collapsed_vars_idx", CollapsedVariables.history_id)
-
-print("### CollapsedVariables: done")
