@@ -20,6 +20,7 @@ from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatvie
 from pycds.orm.tables import Variable
 from pycds.orm.native_matviews import VarsPerHistory
 from pycds.context import get_schema_name
+from pycds.util import variable_tags
 
 # Only one definition is permitted for each named object (e.g., table) in given metadata
 # object. Therefore, we must use a separate declarative base for multiple definitions of
@@ -28,16 +29,8 @@ from pycds.context import get_schema_name
 # TODO: Define a factory for these?
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 
-# TODO: Move this out to a utility module, and make it visible to clients.
 schema_name = get_schema_name()
-schema_func = getattr(func, schema_name)  # Explicitly specify schema of function
 
-
-def variable_tags(Table):
-    return schema_func.variable_tags(text(Table.__tablename__), type_=ARRAY(TEXT))
-
-
-# TODO: end utility module
 
 # This CTE is used in the selectable for matview `CollapsedVariables`. For each history,
 # it aggregates values computed from columns of `Variable`. `VarsPerHistory` provides

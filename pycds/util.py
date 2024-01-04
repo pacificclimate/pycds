@@ -1,4 +1,14 @@
 import re
+from sqlalchemy import func, text
+from sqlalchemy.dialects.postgresql import ARRAY, TEXT
+from pycds.context import get_schema_name
+
+
+schema_func = getattr(func, get_schema_name())  # Explicitly specify schema of function
+
+
+def variable_tags(Table):
+    return schema_func.variable_tags(text(Table.__tablename__), type_=ARRAY(TEXT))
 
 
 # TODO: Does this have any current utility? It is not used in any current code.
