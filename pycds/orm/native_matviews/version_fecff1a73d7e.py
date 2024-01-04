@@ -101,7 +101,7 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
         # Column `vars` is peculiar and much of its former use has been replaced
         # by column `unique_variable_tags`. Unfortunately it is still in use in
         # parts of pdp_util. TODO: What parts? Filtering, I think.
-        func.array_to_string(aggregated_vars.c.cell_methods, "|").label("vars"),
+        func.array_to_string(aggregated_vars.c.cell_methods, ", ").label("vars"),
     ).select_from(aggregated_vars)
 
 
