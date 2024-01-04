@@ -10,8 +10,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
-from pycds.orm.view_base import Base
 from pycds.orm.tables import Obs, History
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class ObsCountPerMonthHistory(Base, ReplaceableNativeMatview):

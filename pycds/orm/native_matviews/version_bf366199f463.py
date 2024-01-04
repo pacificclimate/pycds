@@ -12,8 +12,11 @@ from sqlalchemy.sql.expression import select
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.tables import Obs, Variable, History
-from pycds.orm.view_base import Base
 from pycds import get_schema_name
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 schema_name = get_schema_name()

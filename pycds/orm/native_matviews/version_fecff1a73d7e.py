@@ -22,9 +22,6 @@ from pycds.orm.native_matviews import VarsPerHistory
 from pycds.context import get_schema_name
 from pycds.util import variable_tags
 
-# Only one definition is permitted for each named object (e.g., table) in given metadata
-# object. Therefore, we must use a separate declarative base for multiple definitions of
-# an object with the same name, such as this matview.
 # TODO: Do this everywhere, and remove the common base(s) for non-table objects.
 # TODO: Define a factory for these?
 Base = declarative_base(metadata=MetaData(schema=get_schema_name()))

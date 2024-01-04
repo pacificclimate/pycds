@@ -32,7 +32,10 @@ from pycds.orm.tables import (
 )
 from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
-from pycds.orm.view_base import Base
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class CrmpNetworkGeoserver(Base, ReplaceableView):

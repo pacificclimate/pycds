@@ -14,7 +14,10 @@ from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatvie
 # These cannot be imported from pycds because it is not yet fully initialized.
 from pycds.orm.tables import Variable
 from pycds.orm.native_matviews import VarsPerHistory
-from pycds.orm.view_base import Base
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class CollapsedVariables(Base, ReplaceableNativeMatview):

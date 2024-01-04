@@ -8,10 +8,13 @@ from sqlalchemy import (
 )
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
-from pycds.orm.view_base import Base
 from pycds.orm.native_matviews.version_22819129a609 import (
     CollapsedVariables as CollapsedVariablesMatview,
 )
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class CollapsedVariables(Base, ReplaceableView):
