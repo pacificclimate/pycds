@@ -8,10 +8,12 @@ Create Date: 2023-12-19 14:36:43.362862
 import logging
 from alembic import op
 from pycds.orm.native_matviews.version_22819129a609 import (
-    CollapsedVariables as OldCollapsedVariables
+    CollapsedVariables as OldCollapsedVariables,
 )
 from pycds import (
-    get_schema_name, CrmpNetworkGeoserver, CollapsedVariables as NewCollapsedVariables,
+    get_schema_name,
+    CrmpNetworkGeoserver,
+    CollapsedVariables as NewCollapsedVariables,
 )
 
 # revision identifiers, used by Alembic.

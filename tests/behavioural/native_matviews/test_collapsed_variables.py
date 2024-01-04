@@ -31,8 +31,7 @@ def test_matview_content(sesh_with_large_data):
         # relevant Variables without using VarsPerHistory as an intermediary.
         relevant_variables = (
             sesh_with_large_data.query(
-                Variable,
-                variable_tags(Variable).label("var_tags")
+                Variable, variable_tags(Variable).label("var_tags")
             )
             .join(Obs, Obs.vars_id == Variable.id)
             .where(Obs.history_id == collapsed_var.history_id)
@@ -56,7 +55,9 @@ def test_matview_content(sesh_with_large_data):
             assert name in relevant_var_values
 
         # Column `display_names`
-        display_names = {name for name in collapsed_var.display_names.split("|") if name}
+        display_names = {
+            name for name in collapsed_var.display_names.split("|") if name
+        }
         assert len(display_names) > 0
         assert all(len(name) > 0 for name in display_names)
         relevant_display_names = {v.Variable.display_name for v in relevant_variables}
@@ -69,9 +70,7 @@ def test_matview_content(sesh_with_large_data):
 
         # Column `unique_variable_tags`
         relevant_variable_tags = reduce(
-            set.union,
-            (set(v.var_tags) for v in relevant_variables),
-            set()
+            set.union, (set(v.var_tags) for v in relevant_variables), set()
         )
         assert set(collapsed_var.unique_variable_tags) == relevant_variable_tags
 
