@@ -210,8 +210,6 @@ class ObsWithFlags(Base, ReplaceableView):
     declaration does not affect the view.
     """
 
-    # TODO: Why is this called 'ObsWithFlags'? There are no flags!
-    #  Better name: ObsWithMetadata
     __tablename__ = "obs_with_flags"
 
     vars_id = Column(Integer)

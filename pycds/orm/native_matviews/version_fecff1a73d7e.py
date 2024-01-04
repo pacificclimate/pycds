@@ -20,12 +20,10 @@ from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatvie
 from pycds.orm.tables import Variable
 from pycds.orm.native_matviews import VarsPerHistory
 from pycds.context import get_schema_name
+from pycds.orm.view_base import make_declarative_base
 from pycds.util import variable_tags
 
-# TODO: Do this everywhere, and remove the common base(s) for non-table objects.
-# TODO: Define a factory for these?
-Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
-
+Base = make_declarative_base()
 schema_name = get_schema_name()
 
 
@@ -88,9 +86,10 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
         func.array_to_string(aggregated_vars.c.display_names, "|").label(
             "display_names"
         ),
-        # Column `vars` is peculiar and much of its former use has been replaced
+        # Column `vars` is very peculiar and much of its former use has been replaced
         # by column `unique_variable_tags`. Unfortunately it is still in use in
-        # parts of pdp_util. TODO: What parts? Filtering, I think.
+        # pdp_util for filtering based on "variable identifiers" (which are these
+        # values).
         func.array_to_string(aggregated_vars.c.cell_methods, ", ").label("vars"),
     ).select_from(aggregated_vars)
 
