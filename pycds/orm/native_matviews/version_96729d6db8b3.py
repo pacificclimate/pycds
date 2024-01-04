@@ -6,7 +6,7 @@ from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatvie
 from pycds.orm.tables import Obs, Variable
 from pycds import get_schema_name
 from pycds.orm.view_base import make_declarative_base
-from pycds.util import schema_func
+from pycds.util import variable_tags
 
 
 Base = make_declarative_base()
@@ -35,11 +35,7 @@ class ClimoObsCount(Base, ReplaceableNativeMatview):
         )
         .select_from(Obs)
         .join(Variable)
-        .where(
-            schema_func.variable_tags(
-                text(Variable.__tablename__), type_=ARRAY(TEXT)
-            ).contains(array(["climatology"]))
-        )
+        .where(variable_tags(Variable).contains(array(["climatology"])))
         .group_by(Obs.history_id)
     ).selectable
 
