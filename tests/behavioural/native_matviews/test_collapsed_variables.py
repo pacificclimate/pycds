@@ -1,7 +1,9 @@
+from functools import reduce
 import pytest
 import sqlalchemy
 from pycds import VarsPerHistory, Variable, Obs
 from pycds.orm.native_matviews import CollapsedVariables
+from pycds.util import variable_tags
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -22,18 +24,22 @@ def test_matview_content(sesh_with_large_data):
 
     # Test content
 
-    result = q.all()
+    collapsed_variables = q.all()
 
-    for row in result:
+    for collapsed_var in collapsed_variables:
         # We'll compare the content of the matview to the results of a query for the
         # relevant Variables without using VarsPerHistory as an intermediary.
         relevant_variables = (
-            sesh_with_large_data.query(Variable)
+            sesh_with_large_data.query(
+                Variable,
+                variable_tags(Variable).label("var_tags")
+            )
             .join(Obs, Obs.vars_id == Variable.id)
-            .where(Obs.history_id == row.history_id)
+            .where(Obs.history_id == collapsed_var.history_id)
         ).all()
 
-        var_names = row.vars.split(", ")
+        # Column `vars`
+        var_names = collapsed_var.vars.split(", ")
         assert len(var_names) > 0
         assert all(len(name) > 0 for name in var_names)
 
@@ -43,17 +49,31 @@ def test_matview_content(sesh_with_large_data):
         # assert all(re.fullmatch(r"\w+", name) for name in var_names)
 
         relevant_var_values = {
-            v.standard_name + v.cell_method.replace("time: ", "_")
+            v.Variable.standard_name + v.Variable.cell_method.replace("time: ", "_")
             for v in relevant_variables
         }
         for name in var_names:
             assert name in relevant_var_values
 
-        display_names = {name for name in row.display_names.split("|") if name}
+        # Column `display_names`
+        display_names = {name for name in collapsed_var.display_names.split("|") if name}
         assert len(display_names) > 0
         assert all(len(name) > 0 for name in display_names)
-        relevant_display_names = {v.display_name for v in relevant_variables}
+        relevant_display_names = {v.Variable.display_name for v in relevant_variables}
         assert all(name in relevant_display_names for name in display_names)
+
+        # Column `vars_ids`
+        relevant_vars_ids = {v.Variable.id for v in relevant_variables}
+        assert all(vars_id in relevant_vars_ids for vars_id in collapsed_var.vars_ids)
+        assert set(collapsed_var.vars_ids) == relevant_vars_ids
+
+        # Column `unique_variable_tags`
+        relevant_variable_tags = reduce(
+            set.union,
+            (set(v.var_tags) for v in relevant_variables),
+            set()
+        )
+        assert set(collapsed_var.unique_variable_tags) == relevant_variable_tags
 
 
 @pytest.mark.usefixtures("new_db_left")
