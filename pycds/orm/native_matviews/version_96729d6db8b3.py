@@ -6,13 +6,11 @@ from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatvie
 from pycds.orm.tables import Obs, Variable
 from pycds import get_schema_name
 from pycds.orm.view_base import make_declarative_base
+from pycds.util import schema_func
 
 
 Base = make_declarative_base()
-
-
 schema_name = get_schema_name()
-schema_func = getattr(func, schema_name)
 
 
 class ClimoObsCount(Base, ReplaceableNativeMatview):
