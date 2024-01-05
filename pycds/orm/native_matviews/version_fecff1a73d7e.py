@@ -62,6 +62,21 @@ unique_variable_tags_sq = (
     .distinct()
 ).subquery()
 
+# This query defines the matview.
+selectable = select(
+    aggregated_vars.c.history_id.label("history_id"),
+    aggregated_vars.c.vars_ids.label("vars_ids"),
+    func.array(unique_variable_tags_sq).label("unique_variable_tags"),
+    func.array_to_string(aggregated_vars.c.display_names, "|").label(
+        "display_names"
+    ),
+    # Column `vars` is very peculiar and much of its former use has been replaced
+    # by column `unique_variable_tags`. Unfortunately it is still in use in
+    # pdp_util for filtering based on "variable identifiers" (which are these
+    # values).
+    func.array_to_string(aggregated_vars.c.cell_methods, ", ").label("vars"),
+).select_from(aggregated_vars)
+
 
 class CollapsedVariables(Base, ReplaceableNativeMatview):
     """
@@ -79,19 +94,7 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
     display_names = Column(String)
     vars = Column(String)
 
-    __selectable__ = select(
-        aggregated_vars.c.history_id.label("history_id"),
-        aggregated_vars.c.vars_ids.label("vars_ids"),
-        func.array(unique_variable_tags_sq).label("unique_variable_tags"),
-        func.array_to_string(aggregated_vars.c.display_names, "|").label(
-            "display_names"
-        ),
-        # Column `vars` is very peculiar and much of its former use has been replaced
-        # by column `unique_variable_tags`. Unfortunately it is still in use in
-        # pdp_util for filtering based on "variable identifiers" (which are these
-        # values).
-        func.array_to_string(aggregated_vars.c.cell_methods, ", ").label("vars"),
-    ).select_from(aggregated_vars)
+    __selectable__ = selectable
 
 
 Index("collapsed_vars_idx", CollapsedVariables.history_id)
