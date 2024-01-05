@@ -21,7 +21,7 @@ this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
 """
 
-from .version_84b7fc2596d5 import CrmpNetworkGeoserver
+from .version_6cb393f711c3 import CrmpNetworkGeoserver
 from .version_84b7fc2596d5 import HistoryStationNetwork
 from .version_84b7fc2596d5 import ObsCountPerDayHistory
 from .version_84b7fc2596d5 import ObsWithFlags
