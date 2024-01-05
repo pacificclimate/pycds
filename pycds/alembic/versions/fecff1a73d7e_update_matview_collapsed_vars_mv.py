@@ -10,10 +10,12 @@ from alembic import op
 from pycds.orm.native_matviews.version_22819129a609 import (
     CollapsedVariables as OldCollapsedVariables,
 )
+from pycds.orm.native_matviews.version_fecff1a73d7e import (
+    CollapsedVariables as NewCollapsedVariables,
+)
 from pycds import (
     get_schema_name,
     CrmpNetworkGeoserver,
-    CollapsedVariables as NewCollapsedVariables,
 )
 
 # revision identifiers, used by Alembic.
