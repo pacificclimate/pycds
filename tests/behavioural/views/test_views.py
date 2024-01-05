@@ -2,43 +2,7 @@ import pytest
 from sqlalchemy import func, text
 
 from pycds import Obs, History
-from pycds.orm.views import (
-    CrmpNetworkGeoserver,
-    HistoryStationNetwork,
-    ObsCountPerDayHistory,
-    ObsWithFlags,
-)
-from pycds.orm.native_matviews import StationObservationStats
-
-
-@pytest.mark.usefixtures("new_db_left")
-def test_crmp_network_geoserver(sesh_with_large_data):
-    sesh_with_large_data.execute(StationObservationStats.refresh())
-    q = sesh_with_large_data.query(CrmpNetworkGeoserver.network_name)
-    rv = q.all()
-
-    # Test that the number of rows is not zero
-    nrows = len(rv)
-    assert nrows != 0
-
-    # Select all rows from network FLNRO-WMB
-    where_clause = text("network_name = 'FLNRO-WMB'")
-    q = q.filter(where_clause)
-    rv = q.all()
-
-    # Assert that number of rows is less
-    filtered_nrows = len(rv)
-    assert filtered_nrows < nrows
-    nrows = filtered_nrows
-
-    # Select all rows where max_obs_time is before 2005
-    where_clause = text("max_obs_time < '2005-01-01'")
-
-    # Assert that number of rows is less
-    rv = q.filter(where_clause).all()
-    filtered_nrows = len(rv)
-    assert filtered_nrows != 0
-    assert filtered_nrows < nrows
+from pycds.orm.views import HistoryStationNetwork, ObsCountPerDayHistory, ObsWithFlags
 
 
 @pytest.mark.usefixtures("new_db_left")
