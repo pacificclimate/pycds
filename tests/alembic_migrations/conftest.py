@@ -102,8 +102,8 @@ def env_config(schema_name):
 @pytest.fixture(scope="module")
 def target_revision():
     """
-    Placeholder for fixture that must be defined individually for each
-    migration test module.
+    Require that the target revision be defined individually for each migration test
+    module.
     """
     raise NotImplementedError("`target_revision` not defined for this migration.")
 
