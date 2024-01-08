@@ -1,3 +1,8 @@
 *.pyc
 venv
 *.egg*
+# don't commit poetry cache
+.cache 
+# ignore ide specific folders
+.idea
+.vscode

@@ -33,6 +33,7 @@ from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, synonym
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
 
 from citext import CIText
@@ -297,6 +298,7 @@ class Variable(Base):
         UniqueConstraint(
             "network_id", "net_var_name", name="network_variable_name_unique"
         ),
+        CheckConstraint("net_var_name ~ '\W'", name="ck_net_var_name_valid_identifier"),
     )
 
     def __repr__(self):
