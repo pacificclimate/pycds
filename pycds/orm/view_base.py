@@ -1,5 +1,5 @@
 """
-Declarative base factory all views and matviews.
+Declarative base factory for all views and matviews.
 
 Things which are not actually tables but which are mapped as tables in the ORM
 (namely, views and matviews), cannot share the same base with tables because

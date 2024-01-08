@@ -8,6 +8,12 @@ schema_func = getattr(func, get_schema_name())  # Explicitly specify schema of f
 
 
 def variable_tags(Table):
+    """
+    Apply the database function `variable_tags` to `Table`. This is necessarily the
+    table class `Variable`, but it may not be a direct ref to that class in code, so
+    it is passed as a parameter. Usage is typically
+    `select(..., variable_tags(Variable), ...)`.
+    """
     return schema_func.variable_tags(text(Table.__tablename__), type_=ARRAY(TEXT))
 
 

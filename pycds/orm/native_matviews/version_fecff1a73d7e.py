@@ -24,44 +24,18 @@ from pycds.util import variable_tags
 Base = make_declarative_base()
 schema_name = get_schema_name()
 
-# The native matview `CollapsedVariables` provides aggregated information about all the
-# variables associated to a given history -- which is to say all the variables for which
-# there are observations associated to that history. It exists to speed up critical
-# queries in the backends.
-#
-# Most columns are self-explanatory; see comments in column definition below. Further
-# explanation for specific columns:
-#
-# - `unique_variable_tags`: The set (rendered as a SQLAlchemy native array) of all
-#   results of the `variable_tags` function applied to each variable associated to
-#   the history. It enables us to distinguish stations (histories) that report
-#   climatological variables from those which do not, which is critical for some apps.
-#   It is a flattened and unique version of the array of all variable tags arrays
-#   returned by the function.
-#
-# - `vars`: A string formed by concatenating an "identifier" derived from each value
-#   of `cell_method` to each variable associated to the history (separator: ', '). It
-#   is a legacy value, formerly used both to distinguish stations with climatological
-#   variables from those without, and for filtering stations based on the "identifier".
-#   The first usage has been replaced by column `unique_variable_tags`; the second is
-#   regrettably still in use. The identifier is formed by a regex replacement (see CTE
-#   `aggregated_vars` below) that yields a string that is no longer a programming
-#   language identifier and is in any case idiosyncratic. For more information, see
-#   issue https://github.com/pacificclimate/pycds/issues/180.
-
-
 # This CTE is used in the selectable for matview `CollapsedVariables`. For each history,
 # it aggregates values computed from columns of `Variable`. `VarsPerHistory` provides
 # the connection between variables and histories. The main reason for its existence is
-# to enable the arrays of variable tags to be flattened and unique'd, which requires or
-# at least is most easily done with an intermediate stage created here. Other things are
-# placed here too, mainly for readability, but they could just as easily be computed
-# directly within the matview selectable.
+# column `all_variable_tags`, which is an intermediate stage to computing the matview
+# column `unique_variable_tags`. Other values are placed here too, mainly for
+# readability; they could just as easily be computed directly within the matview
+# selectable.
 aggregated_vars = (
     select(
         VarsPerHistory.history_id.label("history_id"),
         func.array_agg(VarsPerHistory.vars_id).label("vars_ids"),
-        # Array of all variable tags for all variables associated to history.
+        # (2D) Array of all variable tags for all variables associated to history.
         # Supports computation of `unique_variable_tags`.
         func.array_agg(aggregate_order_by(variable_tags(Variable), Variable.id)).label(
             "all_variable_tags"
@@ -93,10 +67,7 @@ selectable = select(
     aggregated_vars.c.vars_ids.label("vars_ids"),
     func.array(unique_variable_tags_sq).label("unique_variable_tags"),
     func.array_to_string(aggregated_vars.c.display_names, "|").label("display_names"),
-    # Column `vars` is very peculiar and much of its former use has been replaced
-    # by column `unique_variable_tags`. Unfortunately it is still in use in
-    # pdp_util for filtering based on "variable identifiers" (which are these
-    # values).
+    # Column `vars`: See notes above.
     func.array_to_string(aggregated_vars.c.cell_methods, ", ").label("vars"),
 ).select_from(aggregated_vars)
 
@@ -104,7 +75,30 @@ selectable = select(
 class CollapsedVariables(Base, ReplaceableNativeMatview):
     """
     This class defines a materialized view that supports the view CrmpNetworkGeoserver,
-    to improve that view's performance.
+    to improve that view's performance. It provides aggregated information about all
+    variables associated to a given history -- which is to say all the variables for
+    which there are observations associated to that history. It exists to speed up
+    critical queries in the backends.
+
+    Most columns are self-explanatory; see comments in column definition below. Further
+    explanation for specific columns:
+
+    - `unique_variable_tags`: The set (rendered as a SQLAlchemy native array) of all
+      results of the `variable_tags` function applied to each variable associated to
+      the history. It enables us to distinguish stations (histories) that report
+      climatological variables from those which do not, which is critical for some apps.
+      It is a flattened and unique version of the array of all variable tags arrays
+      returned by the function.
+
+    - `vars`: A string formed by concatenating an "identifier" derived from each value
+      of `cell_method` to each variable associated to the history (separator: ', '). It
+      is a legacy value, formerly used both to distinguish stations with climatological
+      variables from those without, and for filtering stations based on the "identifier".
+      The first usage has been replaced by column `unique_variable_tags`; the second is
+      regrettably still in use. The identifier is formed by a regex replacement (see CTE
+      `aggregated_vars` below) that yields a string that is no longer a programming
+      language identifier and is in any case idiosyncratic. For more information, see
+      issue https://github.com/pacificclimate/pycds/issues/180.
     """
 
     __tablename__ = "collapsed_vars_mv"
