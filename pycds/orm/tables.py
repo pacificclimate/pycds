@@ -298,7 +298,9 @@ class Variable(Base):
         UniqueConstraint(
             "network_id", "net_var_name", name="network_variable_name_unique"
         ),
-        CheckConstraint("net_var_name !~ '\W'", name="ck_net_var_name_valid_identifier"),
+        CheckConstraint(
+            "net_var_name !~ '\W'", name="ck_net_var_name_valid_identifier"
+        ),
     )
 
     def __repr__(self):
