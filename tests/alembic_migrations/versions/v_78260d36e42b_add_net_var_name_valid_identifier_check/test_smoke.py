@@ -82,7 +82,7 @@ def test_check_good_constraint_values(
 @pytest.mark.parametrize(
     "prepared_schema_from_migrations_left", (final_revision,), indirect=True
 )
-@pytest.mark.parametrize("test_value", ["bad string", "bad\nnewline"])
+@pytest.mark.parametrize("test_value", ["bad space", "bad\nnewline", "bad-dash"])
 def test_check_bad_constraint_values(
     prepared_schema_from_migrations_left, schema_name, test_value
 ):

@@ -230,7 +230,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
         variables = [
             TestVariable(
-                "air-temperature",
+                "air_temperature",
                 "degC",
                 "air_temperature",
                 "time: point",
@@ -241,7 +241,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
                 moti,
             ),
             TestVariable(
-                "average-direction",
+                "average_direction",
                 "km/h",
                 "wind_from_direction",
                 "time: mean",
@@ -252,7 +252,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
                 moti,
             ),
             TestVariable(
-                "dew-point",
+                "dew_point",
                 "degC",
                 "dew_point_temperature",
                 "time: point",
