@@ -1,5 +1,3 @@
-from sqlalchemy.orm import declarative_base
-
 from sqlalchemy import (
     Index,
     Column,
@@ -26,6 +24,31 @@ from pycds.util import variable_tags
 Base = make_declarative_base()
 schema_name = get_schema_name()
 
+# The native matview `CollapsedVariables` provides aggregated information about all the
+# variables associated to a given history -- which is to say all the variables for which
+# there are observations associated to that history. It exists to speed up critical
+# queries in the backends.
+#
+# Most columns are self-explanatory; see comments in column definition below. Further
+# explanation for specific columns:
+#
+# - `unique_variable_tags`: The set (rendered as a SQLAlchemy native array) of all
+#   results of the `variable_tags` function applied to each variable associated to
+#   the history. It enables us to distinguish stations (histories) that report
+#   climatological variables from those which do not, which is critical for some apps.
+#   It is a flattened and unique version of the array of all variable tags arrays
+#   returned by the function.
+#
+# - `vars`: A string formed by concatenating an "identifier" derived from each value
+#   of `cell_method` to each variable associated to the history (separator: ', '). It
+#   is a legacy value, formerly used both to distinguish stations with climatological
+#   variables from those without, and for filtering stations based on the "identifier".
+#   The first usage has been replaced by column `unique_variable_tags`; the second is
+#   regrettably still in use. The identifier is formed by a regex replacement (see CTE
+#   `aggregated_vars` below) that yields a string that is no longer a programming
+#   language identifier and is in any case idiosyncratic. For more information, see
+#   issue https://github.com/pacificclimate/pycds/issues/180.
+
 
 # This CTE is used in the selectable for matview `CollapsedVariables`. For each history,
 # it aggregates values computed from columns of `Variable`. `VarsPerHistory` provides
@@ -38,6 +61,8 @@ aggregated_vars = (
     select(
         VarsPerHistory.history_id.label("history_id"),
         func.array_agg(VarsPerHistory.vars_id).label("vars_ids"),
+        # Array of all variable tags for all variables associated to history.
+        # Supports computation of `unique_variable_tags`.
         func.array_agg(aggregate_order_by(variable_tags(Variable), Variable.id)).label(
             "all_variable_tags"
         ),
@@ -84,12 +109,20 @@ class CollapsedVariables(Base, ReplaceableNativeMatview):
 
     __tablename__ = "collapsed_vars_mv"
 
+    # Id of history record.
     history_id = Column(
         Integer, ForeignKey("meta_history.history_id"), primary_key=True
     )
+    # Array of id's of all variables associated with the history, ordered by id.
     vars_ids = Column(ARRAY(Integer))
+    # Array of all variable tags returned for all variables associated with the history,
+    # flattened and reduced to unique values (no repetitions in array). Arbitrary order.
     unique_variable_tags = Column(ARRAY(TEXT))
+    # String aggregate of `display_name` of all variables associated with the history,
+    # separated by '|', ordered by id.
     display_names = Column(String)
+    # String aggregate of "identifiers" computed from `cell_method`  of all variables
+    # associated with the history, separated by ', ', ordered by id.
     vars = Column(String)
 
     __selectable__ = selectable
