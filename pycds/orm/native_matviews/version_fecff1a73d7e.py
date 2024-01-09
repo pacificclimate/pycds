@@ -45,8 +45,11 @@ aggregated_vars = (
         ),
         # See comment below re. column `vars`.
         func.array_agg(
-            Variable.standard_name
-            + func.regexp_replace(Variable.cell_method, "time: ", "_", "g")
+            aggregate_order_by(
+                Variable.standard_name
+                + func.regexp_replace(Variable.cell_method, "time: ", "_", "g"),
+                Variable.id,
+            )
         ).label("cell_methods"),
     )
     .select_from(VarsPerHistory)
