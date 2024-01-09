@@ -298,8 +298,11 @@ class Variable(Base):
         UniqueConstraint(
             "network_id", "net_var_name", name="network_variable_name_unique"
         ),
+        # Values should conform to valid postgres identifiers:
+        # https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
         CheckConstraint(
-            "net_var_name !~ '\W'", name="ck_net_var_name_valid_identifier"
+            "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
+            name="ck_net_var_name_valid_identifier",
         ),
     )
 

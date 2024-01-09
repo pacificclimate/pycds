@@ -19,27 +19,39 @@ table_name = "meta_vars"
 constraint_name = "ck_net_var_name_valid_identifier"
 
 
+# Updates existing table data to conform to the new constraint. Because this table is small it is written for
+# readability over pure performance doing each replacement seperately.
 def update_table():
     op.execute(
-        f"""UPDATE {schema_name}.{table_name} SET net_var_name=regexp_replace(net_var_name, '\\W', '_', 'g') WHERE net_var_name ~ '\\W';"""
+        f"""
+        CREATE EXTENSION unaccent;
+
+        -- strip diacritics from characters to make what we can valid ascii
+        UPDATE crmp.meta_vars SET net_var_name=unaccent(net_var_name);
+        -- replace first characters that aren't letters or underscores with an underscore
+        UPDATE crmp.meta_vars SET net_var_name=regexp_replace(net_var_name, '^[^a-zA-Z_]', '_', 'g');
+        -- replace all other whitespace & non valid characters
+        UPDATE crmp.meta_vars SET net_var_name=regexp_replace(net_var_name, '[^a-zA-Z0-9_$]', '_', 'g');
+        """
     )
 
 
 def regress_table():
     # kept for convention.
     # basically impossible to reverse as we can't know what has been removed and what was an underscore already
-    op.noop()
+    pass
 
 
 def upgrade():
     update_table()
     op.create_check_constraint(
-        constraint_name, table_name, """net_var_name !~ '\\W'""", schema=schema_name
+        constraint_name,
+        table_name,
+        "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
+        schema=schema_name,
     )
-    pass
 
 
 def downgrade():
     op.drop_constraint(constraint_name, table_name, schema=schema_name, type_="check")
-    # regress_table()
-    pass
+    regress_table()
