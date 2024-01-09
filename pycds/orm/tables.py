@@ -33,6 +33,7 @@ from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, synonym
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
 
 from citext import CIText
@@ -296,6 +297,12 @@ class Variable(Base):
     __table_args__ = (
         UniqueConstraint(
             "network_id", "net_var_name", name="network_variable_name_unique"
+        ),
+        # Values should conform to valid postgres identifiers:
+        # https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+        CheckConstraint(
+            "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
+            name="ck_net_var_name_valid_identifier",
         ),
     )
 
