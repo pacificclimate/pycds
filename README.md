@@ -19,16 +19,19 @@ With this package, one can recreate the database schema in a [PostgreSQL](http:/
 - [ORM contents and usage](docs/orm.md)
 - Database operations with Alembic
   - [Introduction](docs/database-operations/introduction.md)
-  - [Creating a new migration](docs/database-operations/create-new-migration.md)
   - [Applying a migration: Upgrade](docs/database-operations/migrate-upgrade.md)
   - [Applying a migration: Downgrade](docs/database-operations/migrate-downgrade.md)
   - [Creating a new PyCDS database](docs/database-operations/create-new-db.md)
-  - [Creating the initial migration](docs/database-operations/create-initial-migration.md)
 - Testing
     - [Project unit tests](docs/testing/project-unit-tests.md)
     - [Test migrations with a test database](docs/testing/test-migrations.md)
     - [Unit tests in client code](docs/testing/unit-tests-in-client-code.md)
-- Development notes
+- Development
+  - Migrations
+    - [Introduction](docs/dev-notes/migrations/introduction.md)
+    - [IMPORTANT ADVICE AND GUIDELINES](docs/dev-notes/migrations/important-notes.md)
+    - [Creating a new migration](docs/dev-notes/migrations/create-new-migration.md)
+    - [Creating the initial migration](docs/dev-notes/migrations/create-initial-migration.md)
   - [Creating and using SQLAlchemy extensions](docs/dev-notes/sqlalchemy-extensions.md)
   - [Creating and using Alembic extensions](docs/dev-notes/alembic-extensions.md)
 
