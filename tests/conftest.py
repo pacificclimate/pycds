@@ -9,6 +9,7 @@ from pytest import fixture
 import testing.postgresql
 
 import pycds
+import pycds.alembic.info
 
 
 def pytest_runtest_setup():
@@ -102,3 +103,14 @@ def pycds_sesh(pycds_engine, set_search_path):
     yield sesh
     sesh.rollback()
     sesh.close()
+
+
+@fixture(scope="module")
+def target_revision():
+    """
+    Define the target revision for tests. Typically, the target revision is the head
+    revision in the migration sequence, and this is the default set here. This fixture
+    can be overridden for tests not at the head revision (e.g., tests of each individual
+    migration in tests/alembic_migrations). See the overrides there.
+    """
+    return pycds.alembic.info.get_current_head()

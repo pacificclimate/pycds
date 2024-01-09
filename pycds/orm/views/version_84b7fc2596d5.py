@@ -32,7 +32,10 @@ from pycds.orm.tables import (
 )
 from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
-from pycds.orm.view_base import Base
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class CrmpNetworkGeoserver(Base, ReplaceableView):
@@ -207,8 +210,6 @@ class ObsWithFlags(Base, ReplaceableView):
     declaration does not affect the view.
     """
 
-    # TODO: Why is this called 'ObsWithFlags'? There are no flags!
-    #  Better name: ObsWithMetadata
     __tablename__ = "obs_with_flags"
 
     vars_id = Column(Integer)

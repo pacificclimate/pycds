@@ -9,10 +9,13 @@ from sqlalchemy import (
 )
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
-from pycds.orm.view_base import Base
 from pycds.orm.native_matviews.version_bf366199f463 import (
     StationObservationStats as StationObservationStatsMv,
 )
+from pycds.orm.view_base import make_declarative_base
+
+
+Base = make_declarative_base()
 
 
 class StationObservationStats(Base, ReplaceableView):

@@ -11,11 +11,6 @@ from pycds import (
 )
 
 
-# @pytest.fixture(scope="module")
-# def target_revision():
-#     return "8fd8f556c548"
-
-
 @pytest.fixture(scope="function")
 def prepared_sesh_left(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left

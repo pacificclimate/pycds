@@ -62,10 +62,6 @@ Examples:
     engine = create_engine(args.dsn)
     session = sessionmaker(bind=engine)()
 
-    mv_logger.debug("Creating all ORM objects")
-    pycds.Base.metadata.create_all(bind=engine)
-    pycds.orm.view_base.Base.metadata.create_all(bind=engine)
-
     mv_logger.debug(f"Executing '{args.operation}' on views {args.views}")
     manage_views(session, args.operation, args.views)
 

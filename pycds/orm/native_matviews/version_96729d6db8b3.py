@@ -4,12 +4,13 @@ from sqlalchemy.dialects.postgresql import array, ARRAY, TEXT
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.tables import Obs, Variable
-from pycds.orm.view_base import Base
 from pycds import get_schema_name
+from pycds.orm.view_base import make_declarative_base
+from pycds.util import variable_tags
 
 
+Base = make_declarative_base()
 schema_name = get_schema_name()
-schema_func = getattr(func, schema_name)
 
 
 class ClimoObsCount(Base, ReplaceableNativeMatview):
@@ -34,11 +35,7 @@ class ClimoObsCount(Base, ReplaceableNativeMatview):
         )
         .select_from(Obs)
         .join(Variable)
-        .where(
-            schema_func.variable_tags(
-                text(Variable.__tablename__), type_=ARRAY(TEXT)
-            ).contains(array(["climatology"]))
-        )
+        .where(variable_tags(Variable).contains(array(["climatology"])))
         .group_by(Obs.history_id)
     ).selectable
 
