@@ -34,7 +34,9 @@ schema_name = get_schema_name()
 aggregated_vars = (
     select(
         VarsPerHistory.history_id.label("history_id"),
-        func.array_agg(VarsPerHistory.vars_id).label("vars_ids"),
+        func.array_agg(
+            aggregate_order_by(VarsPerHistory.vars_id, VarsPerHistory.vars_id)
+        ).label("vars_ids"),
         # (2D) Array of all variable tags for all variables associated to history.
         # Supports computation of `unique_variable_tags`.
         func.array_agg(aggregate_order_by(variable_tags(Variable), Variable.id)).label(
