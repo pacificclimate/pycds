@@ -20,7 +20,7 @@ from pycds import (
 
 # revision identifiers, used by Alembic.
 revision = "fecff1a73d7e"
-down_revision = "bb2a222a1d4a"
+down_revision = "78260d36e42b"
 branch_labels = None
 depends_on = None
 
