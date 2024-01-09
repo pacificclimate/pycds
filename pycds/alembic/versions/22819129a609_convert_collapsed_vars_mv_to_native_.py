@@ -15,7 +15,7 @@ from pycds.orm.native_matviews.version_22819129a609 import (
 from pycds.orm.views.version_22819129a609 import (
     CollapsedVariables as CollapsedVariablesView,
 )
-from pycds import CrmpNetworkGeoserver
+from pycds.orm.views.version_84b7fc2596d5 import CrmpNetworkGeoserver
 
 
 # revision identifiers, used by Alembic.

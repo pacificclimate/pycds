@@ -8,7 +8,6 @@ Create Date: 2023-08-18 15:55:38.242505
 import logging
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_bf366199f463 import (
     StationObservationStats as StationObservationStatsMatview,
@@ -16,7 +15,10 @@ from pycds.orm.native_matviews.version_bf366199f463 import (
 from pycds.orm.views.version_bf366199f463 import (
     StationObservationStats as StationObservationStatsView,
 )
-from pycds import CrmpNetworkGeoserver
+# Important: We must obtain replaceable database objects from the appropriate revision
+# of the database. Otherwise, later migrations will cause errors in earlier migrations
+# due to a mismatch between the expected version and the latest (head) version.
+from pycds.orm.views.version_84b7fc2596d5 import CrmpNetworkGeoserver
 
 # revision identifiers, used by Alembic.
 revision = "bf366199f463"
@@ -29,13 +31,12 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
+# TODO: Use CrmpNetworkGeoserver taken from appropriate revision
 def drop_dependent_objects():
-    """What it says on the box"""
     op.drop_replaceable_object(CrmpNetworkGeoserver)
 
 
 def create_dependent_objects():
-    """What it says on the box"""
     op.create_replaceable_object(CrmpNetworkGeoserver)
 
 
