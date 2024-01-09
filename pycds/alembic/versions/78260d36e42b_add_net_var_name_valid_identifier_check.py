@@ -27,11 +27,11 @@ def update_table():
         CREATE EXTENSION unaccent;
 
         -- strip diacritics from characters to make what we can valid ascii
-        UPDATE crmp.meta_vars SET net_var_name=unaccent(net_var_name);
+        UPDATE {schema_name}.{table_name} SET net_var_name=unaccent(net_var_name);
         -- replace first characters that aren't letters or underscores with an underscore
-        UPDATE crmp.meta_vars SET net_var_name=regexp_replace(net_var_name, '^[^a-zA-Z_]', '_', 'g');
+        UPDATE {schema_name}.{table_name} SET net_var_name=regexp_replace(net_var_name, '^[^a-zA-Z_]', '_', 'g');
         -- replace all other whitespace & non valid characters
-        UPDATE crmp.meta_vars SET net_var_name=regexp_replace(net_var_name, '[^a-zA-Z0-9_$]', '_', 'g');
+        UPDATE {schema_name}.{table_name} SET net_var_name=regexp_replace(net_var_name, '[^a-zA-Z0-9_$]', '_', 'g');
         """
     )
 
@@ -54,4 +54,5 @@ def upgrade():
 
 def downgrade():
     op.drop_constraint(constraint_name, table_name, schema=schema_name, type_="check")
+    op.execute("DROP EXTENSION unaccent;")
     regress_table()
