@@ -19,6 +19,7 @@ logger = logging.getLogger("tests")
 prior_revision = "bb2a222a1d4a"
 final_revision = "78260d36e42b"
 
+
 def get_insert_statement(schema_name, insertion_value, vars_id=1):
     return (
         f"INSERT INTO {schema_name}.meta_vars(vars_id, net_var_name, standard_name, cell_method, display_name)\n"
@@ -31,7 +32,9 @@ def get_insert_statement(schema_name, insertion_value, vars_id=1):
     "prepared_schema_from_migrations_left", (prior_revision,), indirect=True
 )
 def test_upgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name,
+    prepared_schema_from_migrations_left,
+    alembic_config_left,
+    schema_name,
 ):
     """test migration from bb2a222a1d4a to 78260d36e42b."""
 
@@ -47,10 +50,12 @@ def test_upgrade(
         (5, "$badDollar", "_badDollar"),
         (6, "schön", "schon"),
         (7, "forêt", "foret"),
-        (8, "tréma", "trema")
+        (8, "tréma", "trema"),
     ]
+
     def inserter(x):
         return get_insert_statement(schema_name, x[2], x[0])
+
     statement = "\n".join(list(map(inserter, test_values)))
     engine.execute(statement)
 
