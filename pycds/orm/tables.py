@@ -267,6 +267,14 @@ class TimeBound(Base):
     end = Column(DateTime)
 
 
+def no_newline_ck_name(column):
+    return f"ck_{column}_no_newlines"
+
+
+def no_newline_ck_check(column):
+    return f"{column} !~ '[\r\n]'"
+
+
 class Variable(Base):
     """This class maps to the table which records the details of the
     physical quantities which are recorded by the weather stations.
@@ -276,11 +284,20 @@ class Variable(Base):
     id = Column("vars_id", Integer, primary_key=True)
     name = Column("net_var_name", CIText())
     unit = Column(String)
-    standard_name = Column(String, nullable=False)
+    standard_name = Column(
+        String,
+        nullable=False,
+    )
     cell_method = Column(String, nullable=False)
     precision = Column(Float)
-    description = Column("long_description", String)
-    display_name = Column(String, nullable=False)
+    description = Column(
+        "long_description",
+        String,
+    )
+    display_name = Column(
+        String,
+        nullable=False,
+    )
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
@@ -303,6 +320,24 @@ class Variable(Base):
         CheckConstraint(
             "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
             name="ck_net_var_name_valid_identifier",
+        ),
+        CheckConstraint(no_newline_ck_check("unit"), name=no_newline_ck_name("unit")),
+        CheckConstraint(
+            no_newline_ck_check("short_name"), name=no_newline_ck_name("short_name")
+        ),
+        CheckConstraint(
+            no_newline_ck_check("display_name"), name=no_newline_ck_name("display_name")
+        ),
+        CheckConstraint(
+            no_newline_ck_check("cell_method"), name=no_newline_ck_name("cell_method")
+        ),
+        CheckConstraint(
+            no_newline_ck_check("standard_name"),
+            name=no_newline_ck_name("standard_name"),
+        ),
+        CheckConstraint(
+            no_newline_ck_check("long_description"),
+            name=no_newline_ck_name("long_description"),
         ),
     )
 
