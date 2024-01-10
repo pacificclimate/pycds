@@ -6,7 +6,6 @@ Create Date: 2024-01-09 16:22:39.469951
 
 """
 from alembic import op
-import sqlalchemy as sa
 
 from pycds.context import get_su_role_name
 from pycds.orm.functions.version_4a2f1879293a import (
