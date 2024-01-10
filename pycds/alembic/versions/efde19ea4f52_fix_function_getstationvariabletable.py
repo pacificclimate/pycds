@@ -8,6 +8,7 @@ Create Date: 2024-01-09 16:22:39.469951
 from alembic import op
 import sqlalchemy as sa
 
+from pycds.context import get_su_role_name
 from pycds.orm.functions.version_4a2f1879293a import (
     getstationvariabletable as old_getstationvariabletable,
 )
@@ -23,10 +24,14 @@ depends_on = None
 
 
 def upgrade():
+    op.set_role(get_su_role_name())
     op.drop_replaceable_object(old_getstationvariabletable)
     op.create_replaceable_object(new_getstationvariabletable)
+    op.reset_role()
 
 
 def downgrade():
+    op.set_role(get_su_role_name())
     op.drop_replaceable_object(new_getstationvariabletable)
     op.create_replaceable_object(old_getstationvariabletable)
+    op.reset_role()
