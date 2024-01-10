@@ -22,5 +22,3 @@ variable_tags = ReplaceableFunction(
     replace=True,
     schema=schema_name,
 )
-
-

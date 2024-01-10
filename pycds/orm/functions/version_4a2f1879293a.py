@@ -381,5 +381,3 @@ updatesdateedate = ReplaceableFunction(
     """,
     schema=schema_name,
 )
-
-

@@ -1,5 +1,4 @@
 import datetime
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 from pytest import mark
 
