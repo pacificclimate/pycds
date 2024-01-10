@@ -42,6 +42,7 @@ def test_matview_content(sesh_with_large_data):
         assert len(var_names) > 0
         assert all(len(name) > 0 for name in var_names)
 
+        # FIXME: The definition has changed
         # The *intent* of this matview's query is probably expressed by the following
         # assertion, but it's likely the query for this view/matview is wrong.
         # See https://github.com/pacificclimate/pycds/issues/180
