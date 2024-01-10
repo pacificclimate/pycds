@@ -33,8 +33,9 @@ Instructions:
       2. Ensure the specified schema name is used for all objects, including functions, views and materialized views. This should come without special effort due to the structure of how these items are declared, but it is worth verifying.
 
    2. Do this for both upgrade and downgrade functions in the script!
+   3. Data and schema migrations are not handled separately and should be included as part of the migration where applicable.
 
-4. Write some tests for the migration. Examples can be found in the existing code.
+4. Write some tests for the migration, including tests for the data migration where applicable. Examples can be found in the existing code.
 
 5. Commit the new migration script and its tests to the repo.
 

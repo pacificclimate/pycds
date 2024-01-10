@@ -32,7 +32,6 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
-# TODO: Use CrmpNetworkGeoserver taken from appropriate revision
 def drop_dependent_objects():
     op.drop_replaceable_object(CrmpNetworkGeoserver)
 
