@@ -15,6 +15,7 @@ from pycds.orm.native_matviews.version_bf366199f463 import (
 from pycds.orm.views.version_bf366199f463 import (
     StationObservationStats as StationObservationStatsView,
 )
+
 # Important: We must obtain replaceable database objects from the appropriate revision
 # of the database. Otherwise, later migrations will cause errors in earlier migrations
 # due to a mismatch between the expected version and the latest (head) version.
