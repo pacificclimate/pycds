@@ -19,7 +19,7 @@ logger = logging.getLogger("tests")
 down_revision = "6cb393f711c3"
 target_revision = "5c841d2c01d1"
 
-columns_to_apply = [
+columns_to_test = [
     "unit",
     "standard_name",
     "cell_method",
@@ -29,8 +29,13 @@ columns_to_apply = [
 ]
 
 
-# This higher order function turns a test value into a column prefixed value optionally quoted with single quotes for SQL statements
 def column_value(value, quoted=True):
+    """
+    This higher order function turns a test value into a column prefixed value optionally quoted
+    with single quotes for SQL statements. Prefixing the values lets us make sure we aren't
+    getting false positives by accidentally looking at the wrong column when looping over values later.
+    """
+
     def wrap_sql_string(column_name):
         prefixed = f"{column_name}_{value}"
         return f"'{prefixed}'" if quoted else prefixed
@@ -40,8 +45,8 @@ def column_value(value, quoted=True):
 
 def get_insert_statement(schema_name, insertion_value, vars_id=1):
     return (
-        f"INSERT INTO {schema_name}.meta_vars(vars_id, {', '.join(columns_to_apply)})\n"
-        f"VALUES ({vars_id}, {',  '.join(list(map(column_value(insertion_value), columns_to_apply)))});\n"
+        f"INSERT INTO {schema_name}.meta_vars(vars_id, {', '.join(columns_to_test)})\n"
+        f"VALUES ({vars_id}, {',  '.join(list(map(column_value(insertion_value), columns_to_test)))});\n"
     )
 
 
@@ -76,16 +81,13 @@ def test_upgrade(
     command.upgrade(alembic_config_left, "+1")
 
     result = engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_apply)} FROM {schema_name}.meta_vars ORDER BY vars_id"
+        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars ORDER BY vars_id"
     )
 
-    for index, row in enumerate(result):
-        test_sample = test_values[index]
+    for row, test_sample in zip(result, test_values):
         assert row == (
             test_sample[0],
-            # Spread our tested columns test values to create a tuple, each is made unique by prefixing the
-            # column name so we shouldn't get any false positive tests due to column mis-ordering
-            *list(map(column_value(test_sample[2], quoted=False), columns_to_apply)),
+            *list(map(column_value(test_sample[2], quoted=False), columns_to_test)),
         )
 
 
@@ -111,7 +113,7 @@ def test_downgrade(
     command.downgrade(alembic_config_left, "-1")
 
     result = engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_apply)} FROM {schema_name}.meta_vars"
+        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
     )
 
     row = next(result)
@@ -122,7 +124,7 @@ def test_downgrade(
         *list(
             map(
                 column_value("good value that does not contain newlines", quoted=False),
-                columns_to_apply,
+                columns_to_test,
             )
         ),
     )
@@ -147,14 +149,14 @@ def test_check_good_constraint_values(
     engine.execute(statement)
 
     result = engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_apply)} FROM {schema_name}.meta_vars"
+        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
     )
 
     row = next(result)
 
     assert row == (
         1,
-        *list(map(column_value(test_value, quoted=False), columns_to_apply)),
+        *list(map(column_value(test_value, quoted=False), columns_to_test)),
     )
 
 

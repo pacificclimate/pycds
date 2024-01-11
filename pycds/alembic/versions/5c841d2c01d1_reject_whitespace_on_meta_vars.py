@@ -9,6 +9,7 @@ Create Date: 2024-01-10 00:06:47.471826
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
+from pycds.orm.tables import no_newline_ck_name, no_newline_ck_check
 
 
 # revision identifiers, used by Alembic.
@@ -34,12 +35,6 @@ replace_value = " "
 
 # This migration applies the same check and update operation to multiple columns. We can reduce some of this repetition
 # by defining some string templates that apply the column
-def constraint_name_template(column):
-    return f"ck_{column}_no_newlines"
-
-
-def constraint_check_template(column):
-    return f"{column} !~ '[\r\n]'"
 
 
 def strip_newlines_update_template(column):
@@ -65,9 +60,9 @@ def upgrade():
     update_table()
     for column in columns_to_apply:
         op.create_check_constraint(
-            constraint_name_template(column),
+            no_newline_ck_name(column),
             table_name,
-            constraint_check_template(column),
+            no_newline_ck_check(column),
             schema=schema_name,
         )
 
@@ -75,7 +70,7 @@ def upgrade():
 def downgrade():
     for column in columns_to_apply:
         op.drop_constraint(
-            constraint_name_template(column),
+            no_newline_ck_name(column),
             table_name,
             schema=schema_name,
             type_="check",

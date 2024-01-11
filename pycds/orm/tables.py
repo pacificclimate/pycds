@@ -45,6 +45,15 @@ Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 metadata = Base.metadata
 
 
+# string templating functions for check functions applied against multiple columns
+def no_newline_ck_name(column):
+    return f"ck_{column}_no_newlines"
+
+
+def no_newline_ck_check(column):
+    return f"{column} !~ '[\r\n]'"
+
+
 class Network(Base):
     """This class maps to the table which represents various `networks` of
     data for the Climate Related Monitoring Program. There is one
@@ -267,14 +276,6 @@ class TimeBound(Base):
     end = Column(DateTime)
 
 
-def no_newline_ck_name(column):
-    return f"ck_{column}_no_newlines"
-
-
-def no_newline_ck_check(column):
-    return f"{column} !~ '[\r\n]'"
-
-
 class Variable(Base):
     """This class maps to the table which records the details of the
     physical quantities which are recorded by the weather stations.
@@ -310,6 +311,14 @@ class Variable(Base):
     derived_values = relationship("DerivedValue", back_populates="variable")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
+    _newline_checked_columns_ = [
+        "unit",
+        "standard_name",
+        "cell_method",
+        "display_name",
+        "short_name",
+        "long_description",
+    ]
     # Constraints
     __table_args__ = (
         UniqueConstraint(
@@ -321,24 +330,9 @@ class Variable(Base):
             "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
             name="ck_net_var_name_valid_identifier",
         ),
-        CheckConstraint(no_newline_ck_check("unit"), name=no_newline_ck_name("unit")),
-        CheckConstraint(
-            no_newline_ck_check("short_name"), name=no_newline_ck_name("short_name")
-        ),
-        CheckConstraint(
-            no_newline_ck_check("display_name"), name=no_newline_ck_name("display_name")
-        ),
-        CheckConstraint(
-            no_newline_ck_check("cell_method"), name=no_newline_ck_name("cell_method")
-        ),
-        CheckConstraint(
-            no_newline_ck_check("standard_name"),
-            name=no_newline_ck_name("standard_name"),
-        ),
-        CheckConstraint(
-            no_newline_ck_check("long_description"),
-            name=no_newline_ck_name("long_description"),
-        ),
+    ) + tuple(
+        CheckConstraint(no_newline_ck_check(column), name=no_newline_ck_name(column))
+        for column in _newline_checked_columns_
     )
 
     def __repr__(self):

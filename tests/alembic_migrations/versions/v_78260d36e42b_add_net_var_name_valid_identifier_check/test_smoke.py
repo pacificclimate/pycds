@@ -65,8 +65,7 @@ def test_upgrade(
         f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars ORDER BY vars_id"
     )
 
-    for index, row in enumerate(result):
-        test_sample = test_values[index]
+    for row, test_sample in zip(result, test_values):
         assert row == (test_sample[0], test_sample[2])
 
 
