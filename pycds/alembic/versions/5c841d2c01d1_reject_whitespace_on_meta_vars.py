@@ -39,7 +39,7 @@ replace_value = " "
 
 def strip_newlines_update_template(column):
     return f"""
-        UPDATE {schema_name}.meta_vars SET {column} = regexp_replace({column}, '[\r\n]+', '{replace_value}', 'g') 
+        UPDATE {schema_name}.{table_name} SET {column} = regexp_replace({column}, '[\r\n]+', '{replace_value}', 'g') 
         WHERE {column} ~ '[\r\n]+';
     """
 
