@@ -31,7 +31,6 @@ __all__ = [
     "get_su_role_name",
     "schema_func",
     "variable_tags",
-
     # Tables
     "Base",
     "Network",
@@ -48,21 +47,18 @@ __all__ = [
     "PCICFlag",
     "DerivedValue",
     "CollapsedVariables",
-
     # Alembic-managed native matviews
     "VarsPerHistory",
     "ClimoObsCount",
     "StationObservationStats",
     "ObsCountPerMonthHistory",
     "CollapsedVariables",
-
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
     "MonthlyAverageOfDailyMaxTemperature",
     "MonthlyAverageOfDailyMinTemperature",
     "MonthlyTotalPrecipitation",
-
     # Alembic-managed views
     "CrmpNetworkGeoserver",
     "HistoryStationNetwork",
