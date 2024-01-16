@@ -1,8 +1,21 @@
 # IMPORTANT ADVICE AND GUIDELINES
 
+## Table of contents
+
+- [Introduction](#introduction)
+- [Order of development activity](#order-of-development-activity)
+- [Multiple versions of the same replaceable object](#multiple-versions-of-the-same-replaceable-object)
+   - [Locations of versions of replaceable objects](#locations-of-versions-of-replaceable-objects)
+- [Obtaining the correct version of replaceable objects in migrations](#obtaining-the-correct-version-of-replaceable-objects-in-migrations)
+- [Creating functions (stored procedures) using untrusted languages](#creating-functions-stored-procedures-using-untrusted-languages)
+
+_TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
+
+## Introduction
+
 As noted elsewhere, creating a migration is not in principle very complicated. But in this project, where we manage many non-table objects, there are complications. We try to document those complications here.
 
-## Order of activity
+## Order of development activity
 
 1. Replaceable objects require multiple versions to be retained under the revision identifier (see notes below). So the first step is usually to create a new skeleton migration from which the revision identifier can be obtained.
 
@@ -33,3 +46,17 @@ Recall that a replaceable object (a.k.a. non-table object) is one that cannot be
 
 When dependent objects must be dropped and recreated in the course of updating an primary object, ensure you get each dependent object from the correct version directory, and not from the top-level `pycds` module. If you do not do this, migrations will fail or potentially update the database with the wrong objects.
 
+## Creating functions (stored procedures) using untrusted languages
+
+In order to perform certain operations, the migration user needs superuser privileges. These operations include:
+
+- Create a stored procedure using an untrusted language (we use `plpython3u` for some) 
+- Create or drop an extension. (This should be rare, since extensions are not generally under control of the ORM.)
+
+We do not give high privilege to users unless they require it. In migrations, we get superuser privilege by temporarily setting the role to a superuser role name that is granted to the user only for the period when database migrations are performed. After those operations have been performed, the superuser role should be reset. For example:
+
+```python
+    op.set_role(get_su_role_name())
+    op.create_replaceable_object(function_in_untrusted_language)
+    op.reset_role()
+```

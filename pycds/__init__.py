@@ -28,6 +28,9 @@ fail with errors of the form "could not find object X in schema Y".
 __all__ = [
     # Utility methods
     "get_schema_name",
+    "get_su_role_name",
+    "schema_func",
+    "variable_tags",
     # Tables
     "Base",
     "Network",
@@ -64,6 +67,7 @@ __all__ = [
 ]
 
 from pycds.context import get_schema_name, get_su_role_name
+from pycds.util import schema_func, variable_tags
 
 from .orm.tables import (
     Base,

@@ -35,6 +35,8 @@ With this package, one can recreate the database schema in a [PostgreSQL](http:/
   - [Creating and using SQLAlchemy extensions](docs/dev-notes/sqlalchemy-extensions.md)
   - [Creating and using Alembic extensions](docs/dev-notes/alembic-extensions.md)
 
+_TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
+
 ## Releasing
 
 ### Note
