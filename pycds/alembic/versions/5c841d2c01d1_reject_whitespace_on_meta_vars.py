@@ -1,7 +1,7 @@
-"""Add whitespace constraints to meta_vars
+"""Add whitespace constraints to meta_vars columns
 
 Revision ID: 5c841d2c01d1
-Revises: 6cb393f711c3
+Revises: 78260d36e42b
 Create Date: 2024-01-10 00:06:47.471826
 
 """
@@ -13,7 +13,7 @@ from pycds.orm.tables import no_newline_ck_name, no_newline_ck_check
 
 # revision identifiers, used by Alembic.
 revision = "5c841d2c01d1"
-down_revision = "efde19ea4f52"
+down_revision = "78260d36e42b"
 branch_labels = None
 depends_on = None
 

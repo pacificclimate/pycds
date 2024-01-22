@@ -1,7 +1,7 @@
 """Convert climo_obs_count_mv to native matview
 
 Revision ID: 96729d6db8b3
-Revises: 83896ee79b06
+Revises: 5c841d2c01d1
 Create Date: 2023-07-14 15:35:03.045034
 
 """
@@ -16,7 +16,7 @@ from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountV
 
 # revision identifiers, used by Alembic.
 revision = "96729d6db8b3"
-down_revision = "83896ee79b06"
+down_revision = "5c841d2c01d1"
 branch_labels = None
 depends_on = None
 

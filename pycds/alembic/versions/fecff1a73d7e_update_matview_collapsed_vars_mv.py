@@ -1,4 +1,4 @@
-"""Update matview collapsed_vars_mv
+"""Add columns vars_ids and unique_variable_tags to matview collapsed_vars_mv
 
 Revision ID: fecff1a73d7e
 Revises: bb2a222a1d4a
@@ -20,7 +20,7 @@ from pycds import (
 
 # revision identifiers, used by Alembic.
 revision = "fecff1a73d7e"
-down_revision = "78260d36e42b"
+down_revision = "bb2a222a1d4a"
 branch_labels = None
 depends_on = None
 
