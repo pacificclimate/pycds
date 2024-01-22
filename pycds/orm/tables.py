@@ -45,6 +45,15 @@ Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 metadata = Base.metadata
 
 
+# string templating functions for check functions applied against multiple columns
+def no_newline_ck_name(column):
+    return f"ck_{column}_no_newlines"
+
+
+def no_newline_ck_check(column):
+    return f"{column} !~ '[\r\n]'"
+
+
 class Network(Base):
     """This class maps to the table which represents various `networks` of
     data for the Climate Related Monitoring Program. There is one
@@ -276,11 +285,20 @@ class Variable(Base):
     id = Column("vars_id", Integer, primary_key=True)
     name = Column("net_var_name", CIText())
     unit = Column(String)
-    standard_name = Column(String, nullable=False)
+    standard_name = Column(
+        String,
+        nullable=False,
+    )
     cell_method = Column(String, nullable=False)
     precision = Column(Float)
-    description = Column("long_description", String)
-    display_name = Column(String, nullable=False)
+    description = Column(
+        "long_description",
+        String,
+    )
+    display_name = Column(
+        String,
+        nullable=False,
+    )
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
@@ -293,6 +311,14 @@ class Variable(Base):
     derived_values = relationship("DerivedValue", back_populates="variable")
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
+    _newline_checked_columns_ = [
+        "unit",
+        "standard_name",
+        "cell_method",
+        "display_name",
+        "short_name",
+        "long_description",
+    ]
     # Constraints
     __table_args__ = (
         UniqueConstraint(
@@ -304,6 +330,9 @@ class Variable(Base):
             "net_var_name ~ '^[a-zA-Z_][a-zA-Z0-9_$]*$'",
             name="ck_net_var_name_valid_identifier",
         ),
+    ) + tuple(
+        CheckConstraint(no_newline_ck_check(column), name=no_newline_ck_name(column))
+        for column in _newline_checked_columns_
     )
 
     def __repr__(self):
