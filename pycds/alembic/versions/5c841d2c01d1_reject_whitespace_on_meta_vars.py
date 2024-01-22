@@ -1,5 +1,4 @@
-"""Updates text columns in meta_var to strip newlines and add constraints
-preventing further whitespace from being added.
+"""Add whitespace constraints to meta_vars
 
 Revision ID: 5c841d2c01d1
 Revises: 6cb393f711c3
@@ -14,7 +13,7 @@ from pycds.orm.tables import no_newline_ck_name, no_newline_ck_check
 
 # revision identifiers, used by Alembic.
 revision = "5c841d2c01d1"
-down_revision = "6cb393f711c3"
+down_revision = "efde19ea4f52"
 branch_labels = None
 depends_on = None
 

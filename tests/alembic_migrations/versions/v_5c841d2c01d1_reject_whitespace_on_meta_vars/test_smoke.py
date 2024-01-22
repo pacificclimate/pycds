@@ -16,7 +16,7 @@ from psycopg2.errors import CheckViolation
 logger = logging.getLogger("tests")
 
 # this is the revision *before* the migration is to be run.
-down_revision = "6cb393f711c3"
+down_revision = "efde19ea4f52"
 target_revision = "5c841d2c01d1"
 
 columns_to_test = [
