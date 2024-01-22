@@ -1,4 +1,4 @@
-"""update CrmpNetworkGeoserver
+"""Add columns vars_ids and unique_variable_tags to crmp_network_geoserver
 
 Revision ID: 6cb393f711c3
 Revises: fecff1a73d7e

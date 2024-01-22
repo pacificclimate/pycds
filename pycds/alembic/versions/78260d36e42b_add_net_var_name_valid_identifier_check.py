@@ -1,7 +1,7 @@
-"""Add net_var_name valid identifier check constraint
+"""Add meta_vars.net_var_name valid identifier constraint
 
 Revision ID: 78260d36e42b
-Revises: bb2a222a1d4a
+Revises: 83896ee79b06
 Create Date: 2024-01-04 23:22:47.992791
 
 """
@@ -10,7 +10,7 @@ from pycds import get_schema_name
 
 # revision identifiers, used by Alembic.
 revision = "78260d36e42b"
-down_revision = "bb2a222a1d4a"
+down_revision = "83896ee79b06"
 branch_labels = None
 depends_on = None
 
