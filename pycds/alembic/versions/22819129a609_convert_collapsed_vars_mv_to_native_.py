@@ -16,8 +16,11 @@ from pycds.orm.views.version_22819129a609 import (
     CollapsedVariables as CollapsedVariablesView,
 )
 from pycds.orm.views.version_84b7fc2596d5 import CrmpNetworkGeoserver
-from pycds.alembic.util import grant_standard_table_privileges
-
+from pycds.alembic.util import (
+    grant_standard_table_privileges,
+    create_view_or_matview,
+    drop_view_or_matview,
+)
 
 # revision identifiers, used by Alembic.
 revision = "22819129a609"
@@ -30,14 +33,12 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
-# TODO: Move to util module
 def drop_dependent_objects():
-    op.drop_replaceable_object(CrmpNetworkGeoserver, schema=schema_name)
+    drop_view_or_matview(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def create_dependent_objects():
-    op.create_replaceable_object(CrmpNetworkGeoserver, schema=schema_name)
-    grant_standard_table_privileges(CrmpNetworkGeoserver, schema=schema_name)
+    create_view_or_matview(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def upgrade():
@@ -49,17 +50,7 @@ def upgrade():
     op.drop_replaceable_object(CollapsedVariablesView, schema=schema_name)
 
     # Replace them with the native matview
-    op.create_replaceable_object(CollapsedVariablesMatview, schema=schema_name)
-    grant_standard_table_privileges(CollapsedVariablesMatview, schema=schema_name)
-    # TODO: Factor index creation (and dropping) out to op.create_indexes(indexes)
-    for index in CollapsedVariablesMatview.__table__.indexes:
-        op.create_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            columns=[col.name for col in index.columns],
-            unique=index.unique,
-            schema=schema_name,
-        )
+    create_view_or_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
@@ -70,13 +61,7 @@ def downgrade():
     drop_dependent_objects()
 
     # Drop real native matview
-    for index in CollapsedVariablesMatview.__table__.indexes:
-        op.drop_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            schema=schema_name,
-        )
-    op.drop_replaceable_object(CollapsedVariablesMatview, schema=schema_name)
+    drop_view_or_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Replace with fake matview table
     op.create_table(
@@ -91,8 +76,7 @@ def downgrade():
         schema=schema_name,
     )
     grant_standard_table_privileges("collapsed_vars_mv", schema=schema_name)
-    op.create_replaceable_object(CollapsedVariablesView, schema=schema_name)
-    grant_standard_table_privileges(CollapsedVariablesView, schema=schema_name)
+    create_view_or_matview(CollapsedVariablesView, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
