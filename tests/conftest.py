@@ -54,6 +54,8 @@ def set_up_db_cluster(db_uri, user="testuser"):
     # TODO: See if more things, e.g., extensions, languages can be done here.
     engine = create_engine(db_uri)
 
+    for role in ("inspector", "viewer", "steward"):
+        engine.execute(f"CREATE ROLE {role}")
     engine.execute(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
     engine.execute(f"CREATE USER {user};")
 
