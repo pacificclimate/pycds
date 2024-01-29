@@ -34,11 +34,11 @@ schema_name = get_schema_name()
 
 
 def drop_dependent_objects():
-    drop_view_or_matview(CrmpNetworkGeoserver, schema=schema_name)
+    drop_view_or_matview(CrmpNetworkGeoserver, schema=schema_name, drop_indexes=False)
 
 
 def create_dependent_objects():
-    create_view_or_matview(CrmpNetworkGeoserver, schema=schema_name)
+    create_view_or_matview(CrmpNetworkGeoserver, schema=schema_name, create_indexes=False)
 
 
 def upgrade():

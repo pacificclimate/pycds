@@ -27,6 +27,7 @@ def drop_view_or_matview(obj, schema=None, drop_indexes=True):
     if drop_indexes:
         # Drop any indexes on the matview
         for index in obj.__table__.indexes:
+            print(f"### dropping {index.name} on {schema}.{index.table.name}")
             op.drop_index(
                 index_name=index.name,
                 table_name=index.table.name,
