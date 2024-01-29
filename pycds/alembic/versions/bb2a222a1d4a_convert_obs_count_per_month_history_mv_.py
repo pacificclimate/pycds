@@ -9,8 +9,10 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds.alembic.util import (
-    drop_view_or_matview, create_view_or_matview,
     grant_standard_table_privileges,
+    create_view,
+    create_matview,
+    drop_matview,
 )
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_bb2a222a1d4a import (
@@ -40,12 +42,12 @@ def upgrade():
     op.drop_replaceable_object(ObsCountPerMonthHistoryView)
 
     # Replace them with the native matview
-    create_view_or_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
+    create_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
 
 
 def downgrade():
     # Drop real native matview
-    drop_view_or_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
+    drop_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
 
     # Replace with fake matview table and associated view
     op.create_table(
@@ -59,5 +61,7 @@ def downgrade():
         sa.PrimaryKeyConstraint("date_trunc", "history_id"),
         schema=schema_name,
     )
-    grant_standard_table_privileges("obs_count_per_month_history_mv", schema=schema_name)
-    create_view_or_matview(ObsCountPerMonthHistoryView, schema=schema_name)
+    grant_standard_table_privileges(
+        "obs_count_per_month_history_mv", schema=schema_name
+    )
+    create_view(ObsCountPerMonthHistoryView, schema=schema_name)

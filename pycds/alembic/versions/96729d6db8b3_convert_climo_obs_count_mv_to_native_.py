@@ -9,8 +9,10 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds.alembic.util import (
-    drop_view_or_matview, create_view_or_matview,
     grant_standard_table_privileges,
+    create_matview,
+    create_view,
+    drop_matview,
 )
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
@@ -33,11 +35,11 @@ schema_name = get_schema_name()
 def upgrade():
     op.drop_replaceable_object(ClimoObsCountView)
     op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
-    create_view_or_matview(ClimoObsCountMatview, schema=schema_name)
+    create_matview(ClimoObsCountMatview, schema=schema_name)
 
 
 def downgrade():
-    drop_view_or_matview(ClimoObsCountMatview, schema=schema_name)
+    drop_matview(ClimoObsCountMatview, schema=schema_name)
     op.create_table(
         "climo_obs_count_mv",
         sa.Column("count", sa.BigInteger(), nullable=True),
@@ -49,4 +51,4 @@ def downgrade():
         schema=schema_name,
     )
     grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
-    create_view_or_matview(ClimoObsCountView, schema=schema_name)
+    create_view(ClimoObsCountView, schema=schema_name)

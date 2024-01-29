@@ -9,8 +9,9 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from pycds.alembic.util import (
-    create_view_or_matview, drop_view_or_matview,
     grant_standard_table_privileges,
+    create_matview,
+    drop_matview,
 )
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
@@ -34,7 +35,7 @@ def upgrade():
     if db_supports_matviews(engine):
         logger.debug("This database supports native materialized views")
         op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
-        create_view_or_matview(VarsPerHistory, schema=schema_name)
+        create_matview(VarsPerHistory, schema=schema_name)
     else:
         logger.info(
             "This database does not support native materialized views: "
@@ -46,7 +47,7 @@ def downgrade():
     engine = op.get_bind().engine
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
-        drop_view_or_matview(VarsPerHistory, schema=schema_name)
+        drop_matview(VarsPerHistory, schema=schema_name)
         # Note: This will create the table in the database even if it didn't
         # exist before. At the time of writing, this is the desired behaviour.
         op.create_table(

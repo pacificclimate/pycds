@@ -18,8 +18,10 @@ from pycds.orm.views.version_22819129a609 import (
 from pycds.orm.views.version_84b7fc2596d5 import CrmpNetworkGeoserver
 from pycds.alembic.util import (
     grant_standard_table_privileges,
-    create_view_or_matview,
-    drop_view_or_matview,
+    create_view,
+    drop_view,
+    create_matview,
+    drop_matview,
 )
 
 # revision identifiers, used by Alembic.
@@ -34,11 +36,11 @@ schema_name = get_schema_name()
 
 
 def drop_dependent_objects():
-    drop_view_or_matview(CrmpNetworkGeoserver, schema=schema_name, drop_indexes=False)
+    drop_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def create_dependent_objects():
-    create_view_or_matview(CrmpNetworkGeoserver, schema=schema_name, create_indexes=False)
+    create_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def upgrade():
@@ -47,10 +49,10 @@ def upgrade():
 
     # Drop fake matview table and its associated view
     op.drop_table_if_exists(CollapsedVariablesMatview.__tablename__, schema=schema_name)
-    op.drop_replaceable_object(CollapsedVariablesView, schema=schema_name)
+    drop_view(CollapsedVariablesView, schema=schema_name)
 
     # Replace them with the native matview
-    create_view_or_matview(CollapsedVariablesMatview, schema=schema_name)
+    create_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
@@ -61,7 +63,7 @@ def downgrade():
     drop_dependent_objects()
 
     # Drop real native matview
-    drop_view_or_matview(CollapsedVariablesMatview, schema=schema_name)
+    drop_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Replace with fake matview table
     op.create_table(
@@ -76,7 +78,7 @@ def downgrade():
         schema=schema_name,
     )
     grant_standard_table_privileges("collapsed_vars_mv", schema=schema_name)
-    create_view_or_matview(CollapsedVariablesView, schema=schema_name)
+    create_view(CollapsedVariablesView, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
