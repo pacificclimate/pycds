@@ -4,6 +4,14 @@ from sqlalchemy.sql.ddl import DDLElement
 from alembic import op
 
 
+def create_view(obj, schema=None, grant_privs=True):
+    create_view_or_matview(obj, schema=schema, grant_privs=grant_privs, create_indexes=False)
+
+
+def create_matview(obj, **kwargs):
+    create_view_or_matview(obj, **kwargs)
+
+
 def create_view_or_matview(obj, schema=None, grant_privs=True, create_indexes=True):
     """Drop a matview, and optionally create the indexes associated with it. """
     # Create the matview
@@ -22,12 +30,19 @@ def create_view_or_matview(obj, schema=None, grant_privs=True, create_indexes=Tr
             )
 
 
+def drop_view(obj, schema=None):
+    drop_view_or_matview(obj, schema=schema, drop_indexes=False)
+
+
+def drop_matview(obj, **kwargs):
+    drop_view_or_matview(obj, **kwargs)
+
+
 def drop_view_or_matview(obj, schema=None, drop_indexes=True):
     """Drop a matview, and optionally drop the indexes associated with it. """
     if drop_indexes:
         # Drop any indexes on the matview
         for index in obj.__table__.indexes:
-            print(f"### dropping {index.name} on {schema}.{index.table.name}")
             op.drop_index(
                 index_name=index.name,
                 table_name=index.table.name,
