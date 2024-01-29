@@ -5,7 +5,9 @@ from alembic import op
 
 
 def create_view(obj, schema=None, grant_privs=True):
-    create_view_or_matview(obj, schema=schema, grant_privs=grant_privs, create_indexes=False)
+    create_view_or_matview(
+        obj, schema=schema, grant_privs=grant_privs, create_indexes=False
+    )
 
 
 def create_matview(obj, **kwargs):
@@ -13,7 +15,7 @@ def create_matview(obj, **kwargs):
 
 
 def create_view_or_matview(obj, schema=None, grant_privs=True, create_indexes=True):
-    """Drop a matview, and optionally create the indexes associated with it. """
+    """Drop a matview, and optionally create the indexes associated with it."""
     # Create the matview
     op.create_replaceable_object(obj, schema=schema)
     if grant_privs:
@@ -39,7 +41,7 @@ def drop_matview(obj, **kwargs):
 
 
 def drop_view_or_matview(obj, schema=None, drop_indexes=True):
-    """Drop a matview, and optionally drop the indexes associated with it. """
+    """Drop a matview, and optionally drop the indexes associated with it."""
     if drop_indexes:
         # Drop any indexes on the matview
         for index in obj.__table__.indexes:
@@ -50,7 +52,6 @@ def drop_view_or_matview(obj, schema=None, drop_indexes=True):
             )
     # Drop the matview
     op.drop_replaceable_object(obj, schema=schema)
-
 
 
 def grant_standard_table_privileges(
