@@ -2,6 +2,7 @@ from typing import List, Union, Tuple
 
 from sqlalchemy.sql.ddl import DDLElement
 from alembic import op
+from pycds.context import get_standard_table_privileges
 
 
 def create_view(obj, schema=None, grant_privs=True):
@@ -56,11 +57,7 @@ def drop_view_or_matview(obj, schema=None, drop_indexes=True):
 
 def grant_standard_table_privileges(
     obj: Union[DDLElement, str],
-    role_privileges: List[Tuple[str, Tuple[str]]] = (
-        ("inspector", ("SELECT",)),
-        ("viewer", ("SELECT",)),
-        ("steward", ("ALL",)),
-    ),
+    role_privileges: List[Tuple[str, Tuple[str]]] = get_standard_table_privileges(),
     schema: str = None,
 ) -> None:
     """Grant standard privileges on a table-like object (table, view, table_object).
