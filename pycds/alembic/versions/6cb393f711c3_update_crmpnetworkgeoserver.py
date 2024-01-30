@@ -8,6 +8,7 @@ Create Date: 2024-01-05 13:06:02.811787
 import logging
 from alembic import op
 from pycds import get_schema_name
+from pycds.alembic.util import drop_view, create_view
 from pycds.orm.views.version_84b7fc2596d5 import (
     CrmpNetworkGeoserver as OldCrmpNetworkGeoserver,
 )
@@ -27,19 +28,11 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
-def drop_view(view):
-    op.drop_replaceable_object(view, schema=schema_name)
-
-
-def create_view(view):
-    op.create_replaceable_object(view, schema=schema_name)
-
-
 def upgrade():
-    drop_view(OldCrmpNetworkGeoserver)
-    create_view(NewCrmpNetworkGeoserver)
+    drop_view(OldCrmpNetworkGeoserver, schema=schema_name)
+    create_view(NewCrmpNetworkGeoserver, schema=schema_name)
 
 
 def downgrade():
-    drop_view(NewCrmpNetworkGeoserver)
-    create_view(OldCrmpNetworkGeoserver)
+    drop_view(NewCrmpNetworkGeoserver, schema=schema_name)
+    create_view(OldCrmpNetworkGeoserver, schema=schema_name)
