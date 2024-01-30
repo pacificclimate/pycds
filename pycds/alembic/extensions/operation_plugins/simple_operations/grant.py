@@ -12,10 +12,9 @@ from pycds.sqlalchemy.ddl_extensions import GrantTablePrivileges
 
 @Operations.register_operation("grant_table_privileges")
 class GrantTablePrivilegesOp(MigrateOperation):
-    """GRANT on table-like object operation"""
+    """Alembic operation for GRANT directive on a table-like object"""
 
     def __init__(self, privileges, table_name, role_specification, schema=None):
-        # super().__init__()
         self.privileges = privileges
         self.table_name = table_name
         self.role_specification = role_specification

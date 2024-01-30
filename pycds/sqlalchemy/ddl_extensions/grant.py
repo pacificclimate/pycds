@@ -7,7 +7,7 @@ from sqlalchemy.ext import compiler
 
 
 class GrantTablePrivileges(DDLElement):
-    """"""
+    """SQLAlchemy implementation of the GRANT directive"""
 
     def __init__(self, privileges, table_name, role_specification, schema=None):
         self.privileges = privileges

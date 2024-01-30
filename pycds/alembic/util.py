@@ -16,13 +16,11 @@ def create_matview(obj, **kwargs):
 
 
 def create_view_or_matview(obj, schema=None, grant_privs=True, create_indexes=True):
-    """Drop a matview, and optionally create the indexes associated with it."""
-    # Create the matview
+    """Create a view or matview, and optionally create the indexes associated with it."""
     op.create_replaceable_object(obj, schema=schema)
     if grant_privs:
         grant_standard_table_privileges(obj, schema=schema)
     if create_indexes:
-        # Create any indices on the matview
         for index in obj.__table__.indexes:
             op.create_index(
                 index_name=index.name,
@@ -42,16 +40,14 @@ def drop_matview(obj, **kwargs):
 
 
 def drop_view_or_matview(obj, schema=None, drop_indexes=True):
-    """Drop a matview, and optionally drop the indexes associated with it."""
+    """Drop a view or matview, and optionally drop the indexes associated with it."""
     if drop_indexes:
-        # Drop any indexes on the matview
         for index in obj.__table__.indexes:
             op.drop_index(
                 index_name=index.name,
                 table_name=index.table.name,
                 schema=schema,
             )
-    # Drop the matview
     op.drop_replaceable_object(obj, schema=schema)
 
 
@@ -60,7 +56,7 @@ def grant_standard_table_privileges(
     role_privileges: List[Tuple[str, Tuple[str]]] = get_standard_table_privileges(),
     schema: str = None,
 ) -> None:
-    """Grant standard privileges on a table-like object (table, view, table_object).
+    """Grant standard privileges on a table-like object (table, view, matview).
 
     :param obj: Table-like ORM object or string identifying the object permissions
         are to be granted on.
