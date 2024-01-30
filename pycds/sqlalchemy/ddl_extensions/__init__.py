@@ -8,6 +8,7 @@ The definition pattern is:
 - Define a compilation (implementation) of the command.
 """
 from ..ddl_extensions.function import CreateFunction, DropFunction
+from ..ddl_extensions.grant import GrantTablePrivileges
 from ..ddl_extensions.materialized_view import (
     CreateMaterializedView,
     DropMaterializedView,

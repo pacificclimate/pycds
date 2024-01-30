@@ -13,7 +13,7 @@ Changes:
 
 ## 4.3.0
 
-*Release Date: 2023-Apr-05*
+*Release Date: 2023-Nov-11*
 
 Key change in this release is to install script `manage-views`.
 

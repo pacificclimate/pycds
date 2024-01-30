@@ -8,6 +8,11 @@ Create Date: 2021-01-18 17:06:14.064487
 import logging
 from alembic import op
 import sqlalchemy as sa
+from pycds.alembic.util import (
+    grant_standard_table_privileges,
+    create_matview,
+    drop_matview,
+)
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_7a3b247c577b import VarsPerHistory
 from pycds.database import db_supports_matviews
@@ -30,16 +35,7 @@ def upgrade():
     if db_supports_matviews(engine):
         logger.debug("This database supports native materialized views")
         op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
-        op.create_replaceable_object(VarsPerHistory)
-        for index in VarsPerHistory.__table__.indexes:
-            logger.debug(f"Creating index '{index.name}'")
-            op.create_index(
-                index_name=index.name,
-                table_name=index.table.name,
-                columns=[col.name for col in index.columns],
-                unique=index.unique,
-                schema=schema_name,
-            )
+        create_matview(VarsPerHistory, schema=schema_name)
     else:
         logger.info(
             "This database does not support native materialized views: "
@@ -51,14 +47,7 @@ def downgrade():
     engine = op.get_bind().engine
     if db_supports_matviews(engine):
         logger.debug("This database supports matviews")
-        for index in VarsPerHistory.__table__.indexes:
-            logger.debug(f"Dropping index '{index.name}'")
-            op.drop_index(
-                index_name=index.name,
-                table_name=index.table.name,
-                schema=schema_name,
-            )
-        op.drop_replaceable_object(VarsPerHistory)
+        drop_matview(VarsPerHistory, schema=schema_name)
         # Note: This will create the table in the database even if it didn't
         # exist before. At the time of writing, this is the desired behaviour.
         op.create_table(
@@ -72,6 +61,7 @@ def downgrade():
             sa.PrimaryKeyConstraint("history_id", "vars_id"),
             schema=schema_name,
         )
+        grant_standard_table_privileges("vars_per_history_mv", schema=schema_name)
     else:
         logger.info(
             "This database does not support native materialized views: "

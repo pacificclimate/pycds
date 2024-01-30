@@ -8,6 +8,7 @@ Create Date: 2023-08-18 15:55:38.242505
 import logging
 from alembic import op
 import sqlalchemy as sa
+from pycds.alembic.util import create_view, create_matview, drop_matview, drop_view
 from pycds import get_schema_name
 from pycds.orm.native_matviews.version_bf366199f463 import (
     StationObservationStats as StationObservationStatsMatview,
@@ -33,11 +34,11 @@ schema_name = get_schema_name()
 
 
 def drop_dependent_objects():
-    op.drop_replaceable_object(CrmpNetworkGeoserver)
+    drop_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def create_dependent_objects():
-    op.create_replaceable_object(CrmpNetworkGeoserver)
+    create_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def upgrade():
@@ -47,19 +48,11 @@ def upgrade():
 
     # Drop fake matview table and its associated view, and replace them with the
     # native matview
-    op.drop_replaceable_object(StationObservationStatsView)
+    drop_view(StationObservationStatsView, schema=schema_name)
     op.drop_table_if_exists(
         StationObservationStatsMatview.__tablename__, schema=schema_name
     )
-    op.create_replaceable_object(StationObservationStatsMatview, schema=schema_name)
-    for index in StationObservationStatsMatview.__table__.indexes:
-        op.create_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            columns=[col.name for col in index.columns],
-            unique=index.unique,
-            schema=schema_name,
-        )
+    create_matview(StationObservationStatsMatview, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
@@ -71,13 +64,7 @@ def downgrade():
     drop_dependent_objects()
 
     # Drop real native matview and replace with fake matview table
-    for index in StationObservationStatsMatview.__table__.indexes:
-        op.drop_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            schema=schema_name,
-        )
-    op.drop_replaceable_object(StationObservationStatsMatview)
+    drop_matview(StationObservationStatsMatview, schema=schema_name)
     op.create_table(
         "station_obs_stats_mv",
         sa.Column("station_id", sa.Integer(), nullable=False),
@@ -93,7 +80,7 @@ def downgrade():
         ),
         schema=schema_name,
     )
-    op.create_replaceable_object(StationObservationStatsView)
+    create_view(StationObservationStatsView, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()

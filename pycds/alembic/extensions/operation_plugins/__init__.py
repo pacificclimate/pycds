@@ -17,6 +17,7 @@ https://alembic.sqlalchemy.org/en/latest/api/operations.html#operation-plugins
 # Imports are required to register the new operations.
 from .simple_operations import (
     constraint,
+    grant,
     index,
     role,
     table,

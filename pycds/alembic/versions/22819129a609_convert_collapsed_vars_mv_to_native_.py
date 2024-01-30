@@ -16,7 +16,13 @@ from pycds.orm.views.version_22819129a609 import (
     CollapsedVariables as CollapsedVariablesView,
 )
 from pycds.orm.views.version_84b7fc2596d5 import CrmpNetworkGeoserver
-
+from pycds.alembic.util import (
+    grant_standard_table_privileges,
+    create_view,
+    drop_view,
+    create_matview,
+    drop_matview,
+)
 
 # revision identifiers, used by Alembic.
 revision = "22819129a609"
@@ -30,11 +36,11 @@ schema_name = get_schema_name()
 
 
 def drop_dependent_objects():
-    op.drop_replaceable_object(CrmpNetworkGeoserver)
+    drop_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def create_dependent_objects():
-    op.create_replaceable_object(CrmpNetworkGeoserver)
+    create_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def upgrade():
@@ -43,18 +49,10 @@ def upgrade():
 
     # Drop fake matview table and its associated view
     op.drop_table_if_exists(CollapsedVariablesMatview.__tablename__, schema=schema_name)
-    op.drop_replaceable_object(CollapsedVariablesView)
+    drop_view(CollapsedVariablesView, schema=schema_name)
 
     # Replace them with the native matview
-    op.create_replaceable_object(CollapsedVariablesMatview, schema=schema_name)
-    for index in CollapsedVariablesMatview.__table__.indexes:
-        op.create_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            columns=[col.name for col in index.columns],
-            unique=index.unique,
-            schema=schema_name,
-        )
+    create_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
@@ -65,13 +63,7 @@ def downgrade():
     drop_dependent_objects()
 
     # Drop real native matview
-    for index in CollapsedVariablesMatview.__table__.indexes:
-        op.drop_index(
-            index_name=index.name,
-            table_name=index.table.name,
-            schema=schema_name,
-        )
-    op.drop_replaceable_object(CollapsedVariablesMatview)
+    drop_matview(CollapsedVariablesMatview, schema=schema_name)
 
     # Replace with fake matview table
     op.create_table(
@@ -85,7 +77,8 @@ def downgrade():
         sa.PrimaryKeyConstraint("history_id"),
         schema=schema_name,
     )
-    op.create_replaceable_object(CollapsedVariablesView)
+    grant_standard_table_privileges("collapsed_vars_mv", schema=schema_name)
+    create_view(CollapsedVariablesView, schema=schema_name)
 
     # Restore dependent objects
     create_dependent_objects()
