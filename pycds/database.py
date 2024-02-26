@@ -1,4 +1,6 @@
 import re
+
+from sqlalchemy import inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
 from pycds.context import get_schema_name
@@ -142,3 +144,10 @@ def get_schema_item_names(
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}
+
+
+def matview_exists(engine, name, schema=None):
+    # TODO: Use this when we move to SQLA 2.x
+    # matview_names = inspect(engine).get_materialized_view_names(schema=schema)
+    matview_names = get_schema_item_names(engine, "matviews", schema_name=schema)
+    return name in matview_names

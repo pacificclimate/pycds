@@ -13,8 +13,10 @@ from pycds.alembic.util import (
     create_matview,
     create_view,
     drop_matview,
+    drop_view,
 )
 from pycds import get_schema_name
+from pycds.database import matview_exists
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
     ClimoObsCount as ClimoObsCountMatview,
 )
@@ -33,22 +35,28 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    op.drop_replaceable_object(ClimoObsCountView)
-    op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
-    create_matview(ClimoObsCountMatview, schema=schema_name)
+    engine = op.get_bind().engine
+    if not matview_exists(
+        engine, ClimoObsCountMatview.__tablename__, schema=schema_name
+    ):
+        drop_view(ClimoObsCountView, schema=schema_name)
+        op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
+        create_matview(ClimoObsCountMatview, schema=schema_name)
 
 
 def downgrade():
-    drop_matview(ClimoObsCountMatview, schema=schema_name)
-    op.create_table(
-        "climo_obs_count_mv",
-        sa.Column("count", sa.BigInteger(), nullable=True),
-        sa.Column("history_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"]
-        ),
-        sa.PrimaryKeyConstraint("history_id"),
-        schema=schema_name,
-    )
-    grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
-    create_view(ClimoObsCountView, schema=schema_name)
+    engine = op.get_bind().engine
+    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
+        drop_matview(ClimoObsCountMatview, schema=schema_name)
+        op.create_table(
+            "climo_obs_count_mv",
+            sa.Column("count", sa.BigInteger(), nullable=True),
+            sa.Column("history_id", sa.Integer(), nullable=False),
+            sa.ForeignKeyConstraint(
+                ["history_id"], [f"{schema_name}.meta_history.history_id"]
+            ),
+            sa.PrimaryKeyConstraint("history_id"),
+            schema=schema_name,
+        )
+        grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
+        create_view(ClimoObsCountView, schema=schema_name)

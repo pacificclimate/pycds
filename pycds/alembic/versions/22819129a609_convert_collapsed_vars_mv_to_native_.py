@@ -23,6 +23,7 @@ from pycds.alembic.util import (
     create_matview,
     drop_matview,
 )
+from pycds.database import matview_exists
 
 # revision identifiers, used by Alembic.
 revision = "22819129a609"
@@ -44,41 +45,51 @@ def create_dependent_objects():
 
 
 def upgrade():
-    #  We could do this with a DROP ... CASCADE, but that invites disasters.
-    drop_dependent_objects()
+    engine = op.get_bind().engine
+    if not matview_exists(
+        engine, CollapsedVariablesMatview.__tablename__, schema=schema_name
+    ):
+        #  We could do this with a DROP ... CASCADE, but that invites disasters.
+        drop_dependent_objects()
 
-    # Drop fake matview table and its associated view
-    op.drop_table_if_exists(CollapsedVariablesMatview.__tablename__, schema=schema_name)
-    drop_view(CollapsedVariablesView, schema=schema_name)
+        # Drop fake matview table and its associated view
+        op.drop_table_if_exists(
+            CollapsedVariablesMatview.__tablename__, schema=schema_name
+        )
+        drop_view(CollapsedVariablesView, schema=schema_name)
 
-    # Replace them with the native matview
-    create_matview(CollapsedVariablesMatview, schema=schema_name)
+        # Replace them with the native matview
+        create_matview(CollapsedVariablesMatview, schema=schema_name)
 
-    # Restore dependent objects
-    create_dependent_objects()
+        # Restore dependent objects
+        create_dependent_objects()
 
 
 def downgrade():
-    #  We could do this with a DROP ... CASCADE, but that invites disasters.
-    drop_dependent_objects()
+    engine = op.get_bind().engine
+    if matview_exists(
+        engine, CollapsedVariablesMatview.__tablename__, schema=schema_name
+    ):
+        #  We could do this with a DROP ... CASCADE, but that invites disasters.
+        drop_dependent_objects()
 
-    # Drop real native matview
-    drop_matview(CollapsedVariablesMatview, schema=schema_name)
+        # Drop real native matview
+        drop_matview(CollapsedVariablesMatview, schema=schema_name)
 
-    # Replace with fake matview table
-    op.create_table(
-        "collapsed_vars_mv",
-        sa.Column("history_id", sa.Integer(), nullable=False),
-        sa.Column("vars", sa.String(), nullable=True),
-        sa.Column("display_names", sa.String(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["history_id"], [f"{schema_name}.meta_history.history_id"]
-        ),
-        sa.PrimaryKeyConstraint("history_id"),
-        schema=schema_name,
-    )
-    grant_standard_table_privileges("collapsed_vars_mv", schema=schema_name)
-    create_view(CollapsedVariablesView, schema=schema_name)
+        # Replace with fake matview table
+        op.create_table(
+            "collapsed_vars_mv",
+            sa.Column("history_id", sa.Integer(), nullable=False),
+            sa.Column("vars", sa.String(), nullable=True),
+            sa.Column("display_names", sa.String(), nullable=True),
+            sa.ForeignKeyConstraint(
+                ["history_id"], [f"{schema_name}.meta_history.history_id"]
+            ),
+            sa.PrimaryKeyConstraint("history_id"),
+            schema=schema_name,
+        )
+        grant_standard_table_privileges("collapsed_vars_mv", schema=schema_name)
+        create_view(CollapsedVariablesView, schema=schema_name)
 
-    # Restore dependent objects
-    create_dependent_objects()
+        # Restore dependent objects
+        create_dependent_objects()
