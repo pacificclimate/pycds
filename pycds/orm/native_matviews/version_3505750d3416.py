@@ -1,4 +1,4 @@
-from sqlalchemy import Index, Column, Integer, Date, func
+from sqlalchemy import Index, Column, Integer, DateTime, func
 from sqlalchemy.orm import Query
 from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.tables import Obs
@@ -29,8 +29,8 @@ class VarsPerHistory(Base, ReplaceableNativeMatview):
 
     history_id = Column(Integer, primary_key=True)
     vars_id = Column(Integer, primary_key=True)
-    start_time = Column(Date)
-    end_time = Column(Date)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
 
     __selectable__ = (
         Query(

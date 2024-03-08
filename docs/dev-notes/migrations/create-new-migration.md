@@ -35,7 +35,17 @@ Instructions:
    2. Do this for both upgrade and downgrade functions in the script!
    3. Data and schema migrations are not handled separately and should be included as part of the migration where applicable.
 
-4. Write some tests for the migration, including tests for the data migration where applicable. Examples can be found in the existing code.
+4. Write some tests for the migration, including tests for the data migration where applicable. Examples can be found in the existing code. 
+    1. Note: if you update a view or matview, import it explicitly from the latest migration, such as
+        ```python 
+        from pycds.orm.native_matviews.version_3505750d3416 import VarsPerHistory
+        ```
+        instead of 
+    
+        ```python 
+        from pycds.orm.native_matviews import VarsPerHistory
+        ```
+        Importing without specifying a specific migration file will give you an arbitrary member of the set of all versions of VarsPerHistory, not necessarily the latest migration. In this case tests will be done with an up to date database, but possibly an out of date ORM.
 
 5. Commit the new migration script and its tests to the repo.
 

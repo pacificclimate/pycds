@@ -2,7 +2,7 @@ import pytest
 import sqlalchemy
 from sqlalchemy import inspect
 from datetime import datetime
-from pycds.orm.native_matviews import VarsPerHistory
+from pycds.orm.native_matviews.version_3505750d3416 import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -38,47 +38,49 @@ def test_matview_content(sesh_with_large_data):
     assert expected_pairs <= result_pairs
 
 
-#test start and stop times on newest revision
+# test start and stop times on newest revision
 @pytest.mark.usefixtures("new_db_left")
-# try explicitly set the migration.
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left",
-    ("3505750d3416",),
-    indirect=True,
-    )
 def test_matview_dates(sesh_with_large_data):
-    #version = sesh_with_large_data.execute("SELECT * FROM crmp.alembic_version")
-    #print(version.one())
-    # prints 3505750d3416, which is correct
-    
     q = sesh_with_large_data.query(VarsPerHistory)
     assert q.count() == 0
-    
+
     sesh_with_large_data.execute(VarsPerHistory.refresh())
     assert q.count() > 0
-    
-    #raw = sesh_with_large_data.execute("SELECT * FROM crmp.vars_per_history_mv")
-    #print(raw.all()[0])
-    #includes a start_time and end_time, which is correct
 
-    
     expected_timestamps = {
-        (8316, 555, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (2716, 497, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (5716, 526, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (1816, 556, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (1616, 556, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (7716, 526, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (5916, 526, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (8016, 528, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (3516, 562, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (7816, 527, datetime(1980, 1, 1), datetime(1980, 2, 1)),
-        (5816, 519, datetime(1980, 1, 1), datetime(1980, 2, 1)),
+        (6116, 526, datetime(1969, 6, 29, 0, 0), datetime(1970, 9, 28, 0, 0)),
+        (8216, 526, datetime(1975, 8, 5, 0, 0), datetime(1975, 8, 5, 0, 0)),
+        (6716, 528, datetime(1969, 12, 29, 0, 0), datetime(1971, 1, 29, 0, 0)),
+        (8516, 544, datetime(2012, 9, 16, 6, 0), datetime(2012, 9, 16, 6, 0)),
+        (
+            1716,
+            559,
+            datetime(2000, 1, 31, 23, 59, 59),
+            datetime(2000, 12, 31, 23, 59, 59),
+        ),
+        (
+            1816,
+            556,
+            datetime(2000, 1, 31, 23, 59, 59),
+            datetime(2000, 12, 31, 23, 59, 59),
+        ),
+        (3416, 437, datetime(2015, 9, 24, 10, 0), datetime(2015, 9, 24, 16, 0)),
+        (8316, 552, datetime(2013, 8, 22, 4, 0), datetime(2013, 8, 22, 10, 0)),
+        (1916, 494, datetime(2006, 9, 15, 0, 0), datetime(2006, 11, 3, 0, 0)),
+        (
+            1616,
+            558,
+            datetime(2000, 1, 31, 23, 59, 59),
+            datetime(2000, 12, 31, 23, 59, 59),
+        ),
+        (6316, 527, datetime(1977, 7, 6, 0, 0), datetime(1977, 10, 19, 0, 0)),
+        (3616, 434, datetime(2015, 9, 9, 3, 0), datetime(2015, 9, 24, 16, 0)),
     }
-    
-    #error here - start_time does not exist - why??
-    result_timestamps = {(row.history_id, row.vars_id, row.start_time, row.end_time) for row in q.all()}
-    
+
+    result_timestamps = {
+        (row.history_id, row.vars_id, row.start_time, row.end_time) for row in q.all()
+    }
+
     assert expected_timestamps <= result_timestamps
 
 
