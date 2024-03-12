@@ -35,7 +35,8 @@ Instructions:
    2. Do this for both upgrade and downgrade functions in the script!
    3. Data and schema migrations are not handled separately and should be included as part of the migration where applicable.
 
-4. Write some tests for the migration, including tests for the data migration where applicable. Examples can be found in the existing code.
+4. Write some tests for the migration, including tests for the data migration where applicable. Examples can be found in the existing code. 
+    1. Note: if you update a view or matview, you need to update __init__.py in the corresponding directory to indicate which version of the object is the most recent.
 
 5. Commit the new migration script and its tests to the repo.
 

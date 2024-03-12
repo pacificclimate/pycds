@@ -21,7 +21,7 @@ this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
 """
 
-from .version_7a3b247c577b import VarsPerHistory
+from .version_3505750d3416 import VarsPerHistory
 from .version_96729d6db8b3 import ClimoObsCount
 from .version_bf366199f463 import StationObservationStats
 from .version_fecff1a73d7e import CollapsedVariables
