@@ -2,7 +2,7 @@ import pytest
 import sqlalchemy
 from sqlalchemy import inspect
 from datetime import datetime
-from pycds.orm.native_matviews.version_3505750d3416 import VarsPerHistory
+from pycds.orm.native_matviews import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
