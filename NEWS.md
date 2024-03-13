@@ -1,5 +1,23 @@
 # News / Release Notes
 
+## 4.5.0
+
+*Release Date: 2024-Mar-13*
+
+This release features several adustments (permissions, reordering) to make migrations go more smoothly and some functional enhancements to matviews and tables. Improvements to matviews include adding `start_time` and `end_time` columns to `VarsPerHistory` and adding `vars_id` and `unique_variable_tags` to `CrmpNetworkGeoServer`. The `meta_vars` table has been updated to reject variable names containing newlines.
+
+Changes:
+- [Add variable_tags column to CollapsedVariables](https://github.com/pacificclimate/pycds/pull/190)
+- [Add check constraint to meta_vars.net_var_name](https://github.com/pacificclimate/pycds/pull/191)
+- [Update view CrmpNetworkGoserver with variable tags column](https://github.com/pacificclimate/pycds/pull/194)
+- [Update getstationvariable to distinguish climo variables correctly](https://github.com/pacificclimate/pycds/pull/195)
+- [Add constraints to reject whitespace on meta_vars](https://github.com/pacificclimate/pycds/pull/197)
+- [Reorder revisions after 879f0efa125f](https://github.com/pacificclimate/pycds/pull/203)
+- [Grant appropriate permissions on newly created objects in migrations](https://github.com/pacificclimate/pycds/pull/296)
+- [Fix permissions omission on one migration](https://github.com/pacificclimate/pycds/pull/207)
+- [Add columns for earliest and latest timestamps to vars_per_history_mv](https://github.com/pacificclimate/pycds/pull/210)
+
+
 ## 4.4.0
 
 *Release Date: 2023-Nov-15*
