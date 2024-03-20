@@ -36,7 +36,7 @@ def compiles(element, compiler, **kw):
             element.name,
             "AS",
             body,
-            )
+        )
     if element.type_ == "manual":
         # NOTE: No if_not_exists functionality.
         return f"CREATE TABLE {element.name} AS {body}"
@@ -76,7 +76,7 @@ def compiles(element, compiler, **kw):
             "REFRESH MATERIALIZED VIEW",
             element.concurrently and "CONCURRENTLY",
             element.name,
-            )
+        )
     if element.type_ == "manual":
         body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
         return f"TRUNCATE TABLE {element.name}; INSERT INTO {element.name} {body}"
