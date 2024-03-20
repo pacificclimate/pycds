@@ -44,9 +44,14 @@ def create_dependent_objects():
 
 def upgrade():
     engine = op.get_bind().engine
-    if not matview_exists(
+    if matview_exists(
         engine, StationObservationStatsMatview.__tablename__, schema=schema_name
     ):
+        logger.info(
+            f"A native materialized view '{StationObservationStatsMatview.__tablename__}' "
+            f"already exists in the database; skipping upgrade"
+        )
+    else:
         #  We could do this with a DROP ... CASCADE, but I like to be sure exactly what
         #  I am dropping.
         drop_dependent_objects()

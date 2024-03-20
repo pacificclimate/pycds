@@ -37,9 +37,14 @@ schema_name = get_schema_name()
 
 def upgrade():
     engine = op.get_bind().engine
-    if not matview_exists(
+    if matview_exists(
         engine, ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
     ):
+        logger.info(
+            f"A native materialized view '{ObsCountPerMonthHistoryMatview.__tablename__}' "
+            f"already exists in the database; skipping upgrade"
+        )
+    else:
         # Drop fake matview table and its associated view
         op.drop_table_if_exists(
             ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
@@ -51,26 +56,22 @@ def upgrade():
 
 
 def downgrade():
-    engine = op.get_bind().engine
-    if matview_exists(
-        engine, ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
-    ):
-        # Drop native matview
-        drop_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
+    # Drop native matview
+    drop_matview(ObsCountPerMonthHistoryMatview, schema=schema_name)
 
-        # Replace with fake matview table and associated view
-        op.create_table(
-            "obs_count_per_month_history_mv",
-            sa.Column("count", sa.Integer(), nullable=True),
-            sa.Column("date_trunc", sa.DateTime(), nullable=False),
-            sa.Column("history_id", sa.Integer(), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["history_id"], [f"{schema_name}.meta_history.history_id"]
-            ),
-            sa.PrimaryKeyConstraint("date_trunc", "history_id"),
-            schema=schema_name,
-        )
-        grant_standard_table_privileges(
-            "obs_count_per_month_history_mv", schema=schema_name
-        )
-        create_view(ObsCountPerMonthHistoryView, schema=schema_name)
+    # Replace with fake matview table and associated view
+    op.create_table(
+        "obs_count_per_month_history_mv",
+        sa.Column("count", sa.Integer(), nullable=True),
+        sa.Column("date_trunc", sa.DateTime(), nullable=False),
+        sa.Column("history_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
+        ),
+        sa.PrimaryKeyConstraint("date_trunc", "history_id"),
+        schema=schema_name,
+    )
+    grant_standard_table_privileges(
+        "obs_count_per_month_history_mv", schema=schema_name
+    )
+    create_view(ObsCountPerMonthHistoryView, schema=schema_name)

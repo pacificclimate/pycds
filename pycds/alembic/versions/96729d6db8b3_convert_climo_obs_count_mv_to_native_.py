@@ -30,33 +30,33 @@ depends_on = None
 
 
 logger = logging.getLogger("alembic")
-
 schema_name = get_schema_name()
 
 
 def upgrade():
     engine = op.get_bind().engine
-    if not matview_exists(
-        engine, ClimoObsCountMatview.__tablename__, schema=schema_name
-    ):
+    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
+        logger.info(
+            f"A native materialized view '{ClimoObsCountMatview.__tablename__}' "
+            f"already exists in the database; skipping upgrade"
+        )
+    else:
         drop_view(ClimoObsCountView, schema=schema_name)
         op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
         create_matview(ClimoObsCountMatview, schema=schema_name)
 
 
 def downgrade():
-    engine = op.get_bind().engine
-    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
-        drop_matview(ClimoObsCountMatview, schema=schema_name)
-        op.create_table(
-            "climo_obs_count_mv",
-            sa.Column("count", sa.BigInteger(), nullable=True),
-            sa.Column("history_id", sa.Integer(), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["history_id"], [f"{schema_name}.meta_history.history_id"]
-            ),
-            sa.PrimaryKeyConstraint("history_id"),
-            schema=schema_name,
-        )
-        grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
-        create_view(ClimoObsCountView, schema=schema_name)
+    drop_matview(ClimoObsCountMatview, schema=schema_name)
+    op.create_table(
+        "climo_obs_count_mv",
+        sa.Column("count", sa.BigInteger(), nullable=True),
+        sa.Column("history_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["history_id"], [f"{schema_name}.meta_history.history_id"]
+        ),
+        sa.PrimaryKeyConstraint("history_id"),
+        schema=schema_name,
+    )
+    grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
+    create_view(ClimoObsCountView, schema=schema_name)
