@@ -23,6 +23,7 @@ from pycds.alembic.util import (
     create_matview,
     drop_matview,
 )
+from pycds.database import matview_exists
 
 # revision identifiers, used by Alembic.
 revision = "22819129a609"
@@ -44,18 +45,29 @@ def create_dependent_objects():
 
 
 def upgrade():
-    #  We could do this with a DROP ... CASCADE, but that invites disasters.
-    drop_dependent_objects()
+    engine = op.get_bind().engine
+    if matview_exists(
+        engine, CollapsedVariablesMatview.__tablename__, schema=schema_name
+    ):
+        logger.info(
+            f"A native materialized view '{CollapsedVariablesMatview.__tablename__}' "
+            f"already exists in the database; skipping upgrade"
+        )
+    else:
+        #  We could do this with a DROP ... CASCADE, but that invites disasters.
+        drop_dependent_objects()
 
-    # Drop fake matview table and its associated view
-    op.drop_table_if_exists(CollapsedVariablesMatview.__tablename__, schema=schema_name)
-    drop_view(CollapsedVariablesView, schema=schema_name)
+        # Drop fake matview table and its associated view
+        op.drop_table_if_exists(
+            CollapsedVariablesMatview.__tablename__, schema=schema_name
+        )
+        drop_view(CollapsedVariablesView, schema=schema_name)
 
-    # Replace them with the native matview
-    create_matview(CollapsedVariablesMatview, schema=schema_name)
+        # Replace them with the native matview
+        create_matview(CollapsedVariablesMatview, schema=schema_name)
 
-    # Restore dependent objects
-    create_dependent_objects()
+        # Restore dependent objects
+        create_dependent_objects()
 
 
 def downgrade():

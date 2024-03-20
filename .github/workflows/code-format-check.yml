@@ -1,0 +1,31 @@
+name: Code format check
+
+on: push
+
+jobs:
+  check:
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install project
+        run: |
+          # We only need Black, and we want to use the project-specific version.
+          # (Defaults in Black change from time to time and we want only to deal with
+          # the consequences, if any, on our own schedule.)
+          poetry install --only dev
+
+      - name: Run check
+        run: poetry run black . --check

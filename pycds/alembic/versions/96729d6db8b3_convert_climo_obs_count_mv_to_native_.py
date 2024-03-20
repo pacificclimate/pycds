@@ -13,8 +13,10 @@ from pycds.alembic.util import (
     create_matview,
     create_view,
     drop_matview,
+    drop_view,
 )
 from pycds import get_schema_name
+from pycds.database import matview_exists
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
     ClimoObsCount as ClimoObsCountMatview,
 )
@@ -28,14 +30,20 @@ depends_on = None
 
 
 logger = logging.getLogger("alembic")
-
 schema_name = get_schema_name()
 
 
 def upgrade():
-    op.drop_replaceable_object(ClimoObsCountView)
-    op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
-    create_matview(ClimoObsCountMatview, schema=schema_name)
+    engine = op.get_bind().engine
+    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
+        logger.info(
+            f"A native materialized view '{ClimoObsCountMatview.__tablename__}' "
+            f"already exists in the database; skipping upgrade"
+        )
+    else:
+        drop_view(ClimoObsCountView, schema=schema_name)
+        op.drop_table_if_exists(ClimoObsCountMatview.__tablename__, schema=schema_name)
+        create_matview(ClimoObsCountMatview, schema=schema_name)
 
 
 def downgrade():
