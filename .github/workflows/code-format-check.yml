@@ -3,7 +3,7 @@ name: Code format check
 on: push
 
 jobs:
-  test:
+  check:
 
     runs-on: ubuntu-22.04
 
