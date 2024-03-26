@@ -8,6 +8,7 @@ Create Date: 2024-02-27 12:30:37.975526
 from alembic import op
 import sqlalchemy as sa
 
+from pycds.alembic.util import create_view, create_matview, drop_matview, drop_view
 from pycds.context import get_su_role_name, get_schema_name
 
 # matview being upgraded
@@ -29,45 +30,27 @@ down_revision = "efde19ea4f52"
 branch_labels = None
 depends_on = None
 
+schema_name = get_schema_name()
+
 
 # drop other objects that depend on the view being upgraded
 def drop_dependent_objects():
-    op.drop_replaceable_object(CrmpNetworkGeoserver)
-    op.drop_replaceable_object(CollapsedVariables)
+    drop_view(CrmpNetworkGeoserver, schema=schema_name)
+    drop_matview(CollapsedVariables, schema=schema_name)
 
 
 # recreate other objects that depend on the view being upgraded
 def create_dependent_objects():
-    op.create_replaceable_object(CollapsedVariables)
-    op.create_replaceable_object(CrmpNetworkGeoserver)
-    op.create_index_if_not_exists(
-        index_name="collapsed_vars_idx",
-        table_name="collapsed_vars_mv",
-        columns=["history_id"],
-        unique=False,
-        schema=get_schema_name(),
-    )
-
-
-def create_var_hist_index():
-    op.create_index_if_not_exists(
-        index_name="var_hist_idx",
-        table_name="vars_per_history_mv",
-        columns=["history_id", "vars_id"],
-        unique=False,
-        schema=get_schema_name(),
-    )
+    create_matview(CollapsedVariables, schema=schema_name)
+    create_view(CrmpNetworkGeoserver, schema=schema_name)
 
 
 def upgrade():
     op.set_role(get_su_role_name())
 
     drop_dependent_objects()
-
-    op.drop_replaceable_object(old_varsperhistory)
-    op.create_replaceable_object(new_varsperhistory)
-    # why does this have to be done explicitly?
-    create_var_hist_index()
+    drop_matview(old_varsperhistory, schema=schema_name)
+    create_matview(new_varsperhistory, schema=schema_name)
 
     create_dependent_objects()
 
@@ -79,9 +62,8 @@ def downgrade():
 
     drop_dependent_objects()
 
-    op.drop_replaceable_object(new_varsperhistory)
-    op.create_replaceable_object(old_varsperhistory)
-    create_var_hist_index()
+    drop_matview(new_varsperhistory, schema=schema_name)
+    create_matview(old_varsperhistory, schema=schema_name)
 
     create_dependent_objects()
 
