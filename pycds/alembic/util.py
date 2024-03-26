@@ -19,8 +19,8 @@ def create_matview(obj, **kwargs):
 def create_view_or_matview(obj, schema=None, grant_privs=True, create_indexes=True):
     """Create a view or matview, and optionally create the indexes associated with it."""
     if schema == None:
-        logging.info(
-            f"Warning schema name not set while attempting to create {obj}, this may result in an error if search paths are not set correctly or during testing."
+        logging.warn(
+            f"Schema name not set while attempting to create {obj}, this may result in an error if search paths are not set correctly or during testing."
         )
     op.create_replaceable_object(obj, schema=schema)
     if grant_privs:
@@ -47,8 +47,8 @@ def drop_matview(obj, **kwargs):
 def drop_view_or_matview(obj, schema=None, drop_indexes=True):
     """Drop a view or matview, and optionally drop the indexes associated with it."""
     if schema == None:
-        logging.info(
-            f"Warning schema name not set while attempting to drop {obj}, this may result in an error if search paths are not set correctly or during testing."
+        logging.warn(
+            f"Schema name not set while attempting to drop {obj}, this may result in an error if search paths are not set correctly or during testing."
         )
     if drop_indexes:
         for index in obj.__table__.indexes:
