@@ -6,14 +6,12 @@ from pycds.orm.manual_matviews import (
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
 
 daily_views = [DailyMaxTemperature, DailyMinTemperature]
 monthly_views = [
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 ]
 
 logger = logging.getLogger(__name__)

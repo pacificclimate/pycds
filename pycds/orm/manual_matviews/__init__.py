@@ -26,7 +26,6 @@ from .version_8fd8f556c548 import DailyMaxTemperature
 from .version_8fd8f556c548 import DailyMinTemperature
 from .version_8fd8f556c548 import MonthlyAverageOfDailyMaxTemperature
 from .version_8fd8f556c548 import MonthlyAverageOfDailyMinTemperature
-from .version_8fd8f556c548 import MonthlyTotalPrecipitation
 from .version_8fd8f556c548 import daily_temperature_extremum
 from .version_8fd8f556c548 import (
     monthly_average_of_daily_temperature_extremum_with_avg_coverage,

@@ -26,3 +26,4 @@ from .version_96729d6db8b3 import ClimoObsCount
 from .version_bf366199f463 import StationObservationStats
 from .version_fecff1a73d7e import CollapsedVariables
 from .version_bb2a222a1d4a import ObsCountPerMonthHistory
+from .version_081f17262852 import MonthlyTotalPrecipitation

@@ -5,8 +5,9 @@ from pycds.orm.manual_matviews import (
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
+
+from pycds.orm.native_matviews import MonthlyTotalPrecipitation
 
 
 # All tests in this directory need fixture `new_db_left`

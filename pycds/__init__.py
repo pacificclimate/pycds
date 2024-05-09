@@ -99,6 +99,7 @@ from .orm.native_matviews import (
     StationObservationStats,
     CollapsedVariables,
     ObsCountPerMonthHistory,
+    MonthlyTotalPrecipitation,
 )
 
 from .orm.manual_matviews import (
@@ -106,5 +107,4 @@ from .orm.manual_matviews import (
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
