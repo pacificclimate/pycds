@@ -43,8 +43,8 @@ from pycds import Obs
 from pycds.orm.manual_matviews import (
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
+from pycds.orm.native_matviews import MonthlyTotalPrecipitation
 
 
 def id(param):

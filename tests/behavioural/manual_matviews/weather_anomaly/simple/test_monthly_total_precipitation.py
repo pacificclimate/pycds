@@ -1,8 +1,9 @@
 from pycds.orm.manual_matviews import (
     monthly_total_precipitation_with_total_coverage,
     monthly_total_precipitation_with_avg_coverage,
-    MonthlyTotalPrecipitation,
 )
+
+from pycds.orm.native_matviews import MonthlyTotalPrecipitation
 
 import pytest
 
