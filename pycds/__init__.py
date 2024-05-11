@@ -53,12 +53,12 @@ __all__ = [
     "StationObservationStats",
     "ObsCountPerMonthHistory",
     "CollapsedVariables",
+    "MonthlyTotalPrecipitation",
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
     "MonthlyAverageOfDailyMaxTemperature",
     "MonthlyAverageOfDailyMinTemperature",
-    "MonthlyTotalPrecipitation",
     # Alembic-managed views
     "CrmpNetworkGeoserver",
     "HistoryStationNetwork",

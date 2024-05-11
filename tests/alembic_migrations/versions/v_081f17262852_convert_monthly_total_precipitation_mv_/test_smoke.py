@@ -15,12 +15,12 @@ logger = logging.getLogger("tests")
 
 from .. import check_matviews
 
-matview_defns = {"monthly_total_precipitation_mv": {"indexes": {}}}
+matview_defns = {"monthly_total_precipitation_mv"}
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(prepared_schema_from_migrations_left, schema_name):
-    """Test the schema migration to version 3505750d3416."""
+    """Test the schema migration to version 081f17262852."""
 
     # Set up database to version 3505750d3416
     engine, script = prepared_schema_from_migrations_left
@@ -33,7 +33,7 @@ def test_upgrade(prepared_schema_from_migrations_left, schema_name):
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
-    """Test the schema migration from 3505750d3416 to efde19ea4f52."""
+    """Test the schema migration from 081f17262852 to 3505750d3416."""
 
     # Set up database to version efde19ea4f52
     engine, script = prepared_schema_from_migrations_left
