@@ -34,6 +34,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Float,
+    Index,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Query
@@ -48,7 +49,7 @@ from pycds.orm.tables import (
     PCICFlag,
     Variable,
 )
-from pycds.alembic.extensions.replaceable_objects import ReplaceableManualMatview
+from pycds.alembic.extensions.replaceable_objects import ReplaceableNativeMatview
 from pycds.orm.view_base import make_declarative_base
 
 
@@ -152,7 +153,7 @@ def monthly_total_precipitation_with_avg_coverage():
     ).select_from(monthly_total_precip)
 
 
-class MonthlyTotalPrecipitation(Base, ReplaceableManualMatview):
+class MonthlyTotalPrecipitation(Base, ReplaceableNativeMatview):
     __tablename__ = "monthly_total_precipitation_mv"
 
     history_id = Column(Integer, primary_key=True)
@@ -162,3 +163,10 @@ class MonthlyTotalPrecipitation(Base, ReplaceableManualMatview):
     data_coverage = Column(Float)
 
     __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable
+
+
+Index(
+    "monthly_total_precipitation_mv_idx",
+    MonthlyTotalPrecipitation.history_id,
+    MonthlyTotalPrecipitation.vars_id,
+)

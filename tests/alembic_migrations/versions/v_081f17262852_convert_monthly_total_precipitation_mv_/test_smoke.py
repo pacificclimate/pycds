@@ -15,7 +15,11 @@ logger = logging.getLogger("tests")
 
 from .. import check_matviews
 
-matview_defns = {"monthly_total_precipitation_mv"}
+matview_defns = {
+    "monthly_total_precipitation_mv": {
+        "indexes": {"monthly_total_precipitation_mv_idx"}
+    }
+}
 
 
 @pytest.mark.usefixtures("new_db_left")
