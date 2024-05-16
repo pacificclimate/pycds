@@ -20,6 +20,15 @@ Notes:
     attached, which is required because the design of the manual materialized
     view implementation delays association of the session to the matview until
     it is explicitly created.
+  
+  - The variable with the network_variable_name cum_pcpn_amt is explicitly excluded
+    by name from the MonthlyTotalPrecipitation matview. This variable is reported by
+    some stations and represents cumulative precipitation since the last reset 
+    (resets occur at arbitrary intervals). It is reported once an hour and does
+    not mesh well with monthly weather calculations. As of May 2024,
+    stations that report this variable *also* report one called 
+    pcpn_amt_pst24hrs that reports precipitation received over the past 24 hours
+    and is used instead for MonthlyTotalPrecipitation.
 """
 
 from sqlalchemy import (
@@ -118,7 +127,10 @@ def monthly_total_precipitation_with_total_coverage():
                 )
             )
         )
-        .filter(Variable.cell_method == "time: sum")
+        .filter(
+            Variable.cell_method.in_(("time: sum", "time: sum (interval: 24 hour)"))
+        )
+        .filter(Variable.name != "cum_pcpn_amt")
         .filter(History.freq.in_(("1-hourly", "daily")))
         .group_by(History.id, good_obs.c.vars_id, "obs_month")
     )
