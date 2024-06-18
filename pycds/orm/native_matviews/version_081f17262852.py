@@ -128,7 +128,7 @@ def monthly_total_precipitation_with_total_coverage():
             )
         )
         .filter(
-            Variable.cell_method.in_(("time: sum", "time: sum (interval: 24 hour)"))
+            Variable.cell_method.in_(("time: sum"))
         )
         .filter(Variable.name != "cum_pcpn_amt")
         .filter(History.freq.in_(("1-hourly", "daily")))
