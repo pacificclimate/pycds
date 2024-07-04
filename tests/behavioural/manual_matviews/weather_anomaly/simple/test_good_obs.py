@@ -1,7 +1,7 @@
 """Tests of the `good_obs` query"""
 import pytest
 from pycds import Obs
-from pycds.orm.manual_matviews import good_obs
+from pycds.orm.native_matviews import good_obs
 
 
 @pytest.mark.slow

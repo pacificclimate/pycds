@@ -27,3 +27,19 @@ from .version_bf366199f463 import StationObservationStats
 from .version_fecff1a73d7e import CollapsedVariables
 from .version_bb2a222a1d4a import ObsCountPerMonthHistory
 from .version_081f17262852 import MonthlyTotalPrecipitation
+from .version_081f17262852 import DailyMaxTemperature
+from .version_081f17262852 import DailyMinTemperature
+from .version_081f17262852 import MonthlyAverageOfDailyMaxTemperature
+from .version_081f17262852 import MonthlyAverageOfDailyMinTemperature
+
+#only used for tests
+from .version_081f17262852 import daily_temperature_extremum
+from .version_081f17262852 import (
+    monthly_average_of_daily_temperature_extremum_with_avg_coverage,
+)
+from .version_081f17262852 import (
+    monthly_average_of_daily_temperature_extremum_with_total_coverage,
+)
+from .version_081f17262852 import monthly_total_precipitation_with_avg_coverage
+from .version_081f17262852 import monthly_total_precipitation_with_total_coverage
+from .version_081f17262852 import good_obs

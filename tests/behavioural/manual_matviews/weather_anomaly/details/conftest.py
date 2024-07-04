@@ -1,13 +1,12 @@
 from pytest import fixture
 
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
+    MonthlyTotalPrecipitation,
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
 )
-
-from pycds.orm.native_matviews import MonthlyTotalPrecipitation
 
 
 # All tests in this directory need fixture `new_db_left`

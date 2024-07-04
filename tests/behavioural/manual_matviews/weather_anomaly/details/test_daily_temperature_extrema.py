@@ -16,7 +16,7 @@ from pytest import fixture, mark, approx
 
 from .....helpers import add_then_delete_objs
 from pycds import Obs, NativeFlag, PCICFlag
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
     DailyMaxTemperature,
     DailyMinTemperature,
 )

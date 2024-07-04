@@ -40,12 +40,11 @@ from pytest import fixture, mark, approx
 
 from .....helpers import add_then_delete_objs
 from pycds import Obs
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
+    MonthlyTotalPrecipitation,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
 )
-from pycds.orm.native_matviews import MonthlyTotalPrecipitation
-
 
 def id(param):
     """Return a representation for a test parameter.
