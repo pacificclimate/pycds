@@ -77,7 +77,7 @@ from pycds.orm.view_base import make_declarative_base
 Base = make_declarative_base()
 
 
-# Quality control subquery used in all daily temperature extrema and 
+# Quality control subquery used in all daily temperature extrema and
 # monthly total precip matviews
 # This query returns all Obs items with no `discard==True` flags attached.
 good_obs = (
@@ -106,7 +106,7 @@ good_obs = (
 ).subquery("good_obs")
 
 
-#Subqueries and class used to generate MonthlyTotalPrecipitation mayview
+# Subqueries and class used to generate MonthlyTotalPrecipitation mayview
 def monthly_total_precipitation_with_total_coverage():
     """Return a SQLAlchemy query for monthly total of precipitation,
     with monthly total data coverage.
@@ -189,7 +189,7 @@ class MonthlyTotalPrecipitation(Base, ReplaceableNativeMatview):
     __selectable__ = monthly_total_precipitation_with_avg_coverage().selectable
 
 
-#Subquery and classes used to construct the daily temperature extreme matviews
+# Subquery and classes used to construct the daily temperature extreme matviews
 def daily_temperature_extremum(extremum):
     """Return a SQLAlchemy query for a specified extremum of daily temperature.
 
@@ -233,6 +233,7 @@ def daily_temperature_extremum(extremum):
         .group_by(History.id, good_obs.c.vars_id, "obs_day")
     )
 
+
 class DailyMaxTemperature(Base, ReplaceableNativeMatview):
     __tablename__ = "daily_max_temperature_mv"
 
@@ -257,7 +258,7 @@ class DailyMinTemperature(Base, ReplaceableNativeMatview):
     __selectable__ = daily_temperature_extremum("min").selectable
 
 
-#subqueries and classes used to construct monthly temperature extreme matviews
+# subqueries and classes used to construct monthly temperature extreme matviews
 def monthly_average_of_daily_temperature_extremum_with_total_coverage(
     extremum,
 ):
@@ -354,6 +355,7 @@ class MonthlyAverageOfDailyMinTemperature(Base, ReplaceableNativeMatview):
         "min"
     ).selectable
 
+
 Index(
     "monthly_total_precipitation_mv_idx",
     MonthlyTotalPrecipitation.history_id,
@@ -364,22 +366,22 @@ Index(
     "daily_max_temperature_mv_idx",
     DailyMaxTemperature.history_id,
     DailyMaxTemperature.vars_id,
-    )
-    
+)
+
 Index(
     "daily_min_temperature_mv_idx",
     DailyMinTemperature.history_id,
     DailyMinTemperature.vars_id,
-    )
-    
+)
+
 Index(
     "monthly_average_of_daily_max_temperature_mv_idx",
     MonthlyAverageOfDailyMaxTemperature.history_id,
     MonthlyAverageOfDailyMaxTemperature.vars_id,
-    )
-    
+)
+
 Index(
     "monthly_average_of_daily_min_temperature_mv_idx",
     MonthlyAverageOfDailyMinTemperature.history_id,
     MonthlyAverageOfDailyMinTemperature.vars_id,
-    )
+)

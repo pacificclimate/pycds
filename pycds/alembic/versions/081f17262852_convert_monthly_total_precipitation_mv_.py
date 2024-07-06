@@ -13,7 +13,8 @@ from pycds.alembic.util import (
     drop_matview,
     grant_standard_table_privileges,
 )
-from pycds import get_schema_name
+from pycds import get_schema_name, get_su_role_name
+
 from pycds.database import matview_exists
 
 from pycds.orm.native_matviews.version_081f17262852 import MonthlyTotalPrecipitation
@@ -28,21 +29,29 @@ from pycds.orm.native_matviews.version_081f17262852 import DailyMinTemperature
 from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     DailyMinTemperature as OldDailyMinTemperature,
 )
-from pycds.orm.native_matviews.version_081f17262852 import MonthlyAverageOfDailyMaxTemperature
+from pycds.orm.native_matviews.version_081f17262852 import (
+    MonthlyAverageOfDailyMaxTemperature,
+)
 from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     MonthlyAverageOfDailyMaxTemperature as OldMonthlyAverageOfDailyMaxTemperature,
 )
-from pycds.orm.native_matviews.version_081f17262852 import MonthlyAverageOfDailyMinTemperature
+from pycds.orm.native_matviews.version_081f17262852 import (
+    MonthlyAverageOfDailyMinTemperature,
+)
 from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     MonthlyAverageOfDailyMinTemperature as OldMonthlyAverageOfDailyMinTemperature,
 )
 
+# note that the last two matviews depend on the previous two matviews, so
+# this is the correct order to create the views, but they need to be dropped
+# in reverse order.
 native_managed_matviews = [
     (MonthlyTotalPrecipitation, OldMonthlyTotalPrecipitation),
     (DailyMaxTemperature, OldDailyMaxTemperature),
     (DailyMinTemperature, OldDailyMinTemperature),
     (MonthlyAverageOfDailyMaxTemperature, OldMonthlyAverageOfDailyMaxTemperature),
-    (MonthlyAverageOfDailyMinTemperature, OldMonthlyAverageOfDailyMinTemperature)]
+    (MonthlyAverageOfDailyMinTemperature, OldMonthlyAverageOfDailyMinTemperature),
+]
 
 # revision identifiers, used by Alembic.
 revision = "081f17262852"
@@ -55,32 +64,34 @@ schema_name = get_schema_name()
 
 
 def upgrade():
+    op.set_role(get_su_role_name())
     engine = op.get_bind().engine
-    
-    for native,managed in native_managed_matviews:
-        if matview_exists(
-            engine, native.__tablename__, schema=schema_name
-        ):
+
+    for native, managed in native_managed_matviews:
+        if matview_exists(engine, native.__tablename__, schema=schema_name):
             logger.info(
                 f"A native materialized view '{native.__tablename__}' "
                 f"already exists in the database; skipping upgrade"
             )
 
-    else:
-        # drop old "matview"-style table
-        op.drop_replaceable_object(managed)
+        else:
+            # drop old "matview"-style table
+            op.drop_replaceable_object(managed)
 
-        # Replace with native matview
-        create_matview(native, schema=schema_name)
+            # Replace with native matview
+            create_matview(native, schema=schema_name)
+
+    op.reset_role()
 
 
 def downgrade():
-    for native,managed in native_managed_matviews:
+    op.set_role(get_su_role_name())
+    for native, managed in reversed(native_managed_matviews):
         # Drop native matview
         drop_matview(native, schema=schema_name)
 
         op.create_replaceable_object(managed)
 
-        grant_standard_table_privileges(
-            managed.__tablename__, schema=schema_name
-        )
+        grant_standard_table_privileges(managed.__tablename__, schema=schema_name)
+
+    op.reset_role()

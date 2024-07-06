@@ -46,6 +46,7 @@ from pycds.orm.native_matviews import (
     MonthlyAverageOfDailyMinTemperature,
 )
 
+
 def id(param):
     """Return a representation for a test parameter.
 

@@ -32,7 +32,7 @@ from .version_081f17262852 import DailyMinTemperature
 from .version_081f17262852 import MonthlyAverageOfDailyMaxTemperature
 from .version_081f17262852 import MonthlyAverageOfDailyMinTemperature
 
-#only used for tests
+# only used for tests
 from .version_081f17262852 import daily_temperature_extremum
 from .version_081f17262852 import (
     monthly_average_of_daily_temperature_extremum_with_avg_coverage,

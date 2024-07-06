@@ -16,16 +16,23 @@ logger = logging.getLogger("tests")
 from .. import check_matviews
 
 matview_defns = {
-    "monthly_total_precipitation_mv":
-        {"indexes": {"monthly_total_precipitation_mv_idx"}},
-    "daily_max_temperature_mv":
-        {"indexes": {"daily_max_temperature_mv_idx",}},
-    "daily_min_temperature_mv":
-        {"indexes": {"daily_min_temperature_mv_idx"}},
-    "monthly_average_of_daily_max_temperature_mv":
-        {"indexes": {"monthly_average_of_daily_max_temperature_mv_idx"}},
-    "monthly_average_of_daily_min_temperature_mv":
-        {"indexes": {"monthly_average_of_daily_min_temperature_mv_idx",}},
+    "monthly_total_precipitation_mv": {
+        "indexes": {"monthly_total_precipitation_mv_idx"}
+    },
+    "daily_max_temperature_mv": {
+        "indexes": {
+            "daily_max_temperature_mv_idx",
+        }
+    },
+    "daily_min_temperature_mv": {"indexes": {"daily_min_temperature_mv_idx"}},
+    "monthly_average_of_daily_max_temperature_mv": {
+        "indexes": {"monthly_average_of_daily_max_temperature_mv_idx"}
+    },
+    "monthly_average_of_daily_min_temperature_mv": {
+        "indexes": {
+            "monthly_average_of_daily_min_temperature_mv_idx",
+        }
+    },
 }
 
 
