@@ -153,6 +153,7 @@ def var_precip_net1_1(network1):
     return Variable(
         network=network1,
         standard_name="thickness_of_rainfall_amount",
+        name="network_one_precipitation_one",
         cell_method="time: sum",
         display_name="foo bar",
     )
@@ -163,6 +164,7 @@ def var_precip_net1_2(network1):
     return Variable(
         network=network1,
         standard_name="thickness_of_rainfall_amount",
+        name="network_one_precipitation_two",
         cell_method="time: sum",
         display_name="foo bar",
     )
@@ -173,6 +175,7 @@ def var_precip_net2_1(network2):
     return Variable(
         network=network2,
         standard_name="thickness_of_rainfall_amount",
+        name="network_two_precipitation",
         cell_method="time: sum",
         display_name="foo bar",
     )
