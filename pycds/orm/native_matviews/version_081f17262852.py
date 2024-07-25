@@ -142,7 +142,7 @@ def monthly_total_precipitation_with_total_coverage():
             )
         )
         .filter(Variable.cell_method == "time: sum")
-        .filter(Variable.name != "cum_pcpn_amt")
+        .filter(not_(Variable.name == "cum_pcpn_amt"))
         .filter(History.freq.in_(("1-hourly", "daily")))
         .group_by(History.id, good_obs.c.vars_id, "obs_month")
     )

@@ -21,7 +21,7 @@ this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
 
 At present all manual matviews have been updated to native matviews, and this
-file is residual.
+file is present only in case of future downgrades.
 """
 
 from .version_8fd8f556c548 import Base

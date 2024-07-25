@@ -1,6 +1,6 @@
 """Smoke tests:
-- Upgrade adds columns to matview
-- Downgrade drops columns from matview
+- Upgrade drops matview-style tables and adds matviews
+- Downgrade drops matviews and restores matview-style tables
 """
 
 # -*- coding: utf-8 -*-
