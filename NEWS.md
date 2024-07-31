@@ -1,5 +1,16 @@
 # News / Release Notes
 
+## 4.5.1
+
+*Release Date: 2024-Jul-31*
+
+This release includes  some improvements to the migration process, and a migration that converts that managed matviews for the Weather Anomaly Viewer into native matviews. 
+
+Changes:
+- [Make migration of manual matviews conditional](https://github.com/pacificclimate/pycds/pull/212)
+- [Use utility functions when recreating objects to correct permissions](https://github.com/pacificclimate/pycds/pull/214)
+- [Remove pcpn_cum_amt from WAV matviews](https://github.com/pacificclimate/pycds/pull/217)
+
 ## 4.5.0
 
 *Release Date: 2024-Mar-13*
