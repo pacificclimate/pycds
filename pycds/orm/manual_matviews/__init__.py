@@ -19,21 +19,9 @@ As migrations that modify views are added, this file should be updated to
 export the latest version. When a PyCDS release is created, it will "freeze"
 this set of views. Following any PyCDS release, further migrations and further
 releases will "freeze" later sets of views.
+
+At present all manual matviews have been updated to native matviews, and this
+file is present only in case of future downgrades.
 """
 
 from .version_8fd8f556c548 import Base
-from .version_8fd8f556c548 import DailyMaxTemperature
-from .version_8fd8f556c548 import DailyMinTemperature
-from .version_8fd8f556c548 import MonthlyAverageOfDailyMaxTemperature
-from .version_8fd8f556c548 import MonthlyAverageOfDailyMinTemperature
-from .version_8fd8f556c548 import MonthlyTotalPrecipitation
-from .version_8fd8f556c548 import daily_temperature_extremum
-from .version_8fd8f556c548 import (
-    monthly_average_of_daily_temperature_extremum_with_avg_coverage,
-)
-from .version_8fd8f556c548 import (
-    monthly_average_of_daily_temperature_extremum_with_total_coverage,
-)
-from .version_8fd8f556c548 import monthly_total_precipitation_with_avg_coverage
-from .version_8fd8f556c548 import monthly_total_precipitation_with_total_coverage
-from .version_8fd8f556c548 import good_obs

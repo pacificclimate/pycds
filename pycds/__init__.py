@@ -53,12 +53,12 @@ __all__ = [
     "StationObservationStats",
     "ObsCountPerMonthHistory",
     "CollapsedVariables",
+    "MonthlyTotalPrecipitation",
     # Alembic-managed manual matviews
     "DailyMaxTemperature",
     "DailyMinTemperature",
     "MonthlyAverageOfDailyMaxTemperature",
     "MonthlyAverageOfDailyMinTemperature",
-    "MonthlyTotalPrecipitation",
     # Alembic-managed views
     "CrmpNetworkGeoserver",
     "HistoryStationNetwork",
@@ -99,12 +99,9 @@ from .orm.native_matviews import (
     StationObservationStats,
     CollapsedVariables,
     ObsCountPerMonthHistory,
-)
-
-from .orm.manual_matviews import (
+    MonthlyTotalPrecipitation,
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )

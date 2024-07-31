@@ -1,11 +1,11 @@
 from pytest import fixture
 
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
+    MonthlyTotalPrecipitation,
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
 
 

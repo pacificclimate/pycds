@@ -1,6 +1,6 @@
 import pytest
 
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
     daily_temperature_extremum,
     DailyMaxTemperature,
     DailyMinTemperature,

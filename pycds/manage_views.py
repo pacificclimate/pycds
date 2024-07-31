@@ -1,19 +1,18 @@
+# This script is deprecated, as there are no longer an managed matviews
 import logging
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableOrmClass
-from pycds.orm.manual_matviews import (
+from pycds.orm.native_matviews import (
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 )
 
 daily_views = [DailyMaxTemperature, DailyMinTemperature]
 monthly_views = [
     MonthlyAverageOfDailyMaxTemperature,
     MonthlyAverageOfDailyMinTemperature,
-    MonthlyTotalPrecipitation,
 ]
 
 logger = logging.getLogger(__name__)
