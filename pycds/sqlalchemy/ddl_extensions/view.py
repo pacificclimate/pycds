@@ -13,7 +13,12 @@ class CreateView(ViewCommonDDL):
 @compiler.compiles(CreateView)
 def compile(element, compiler, **kw):
     # TODO: Add escape
-    body = compiler.sql_compiler.process(element.selectable, literal_binds=True)
+    selectable = element.selectable
+    body = compiler.sql_compiler.process(
+        # We permit the selectable to be deferred until create time via a function call.
+        # Deferral is a way to avoid circular imports.
+        selectable() if callable(selectable) else selectable, literal_binds=True
+    )
     return compact_join(
         "CREATE",
         element.replace and "OR REPLACE",
