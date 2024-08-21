@@ -54,15 +54,24 @@ def no_newline_ck_check(column):
     return f"{column} !~ '[\r\n]'"
 
 
-class Network(Base):
-    """This class maps to the table which represents various `networks` of
-    data for the Climate Related Monitoring Program. There is one
-    network row for each data provider, typically a BC Ministry, crown
-    corporation or private company.
+class NetworkHistory(Base):
+    """
+    This class maps to the history table that backs view Network. It is part
+    of the metadata change tracking. For more detail on how the change tracking
+    view and history table work together, see the documentation in module
+    pycds/orm/trigger_functions/version_434b4a868241.py
     """
 
-    __tablename__ = "meta_network"
-    id = Column("network_id", Integer, primary_key=True)
+    __tablename__ = "meta_network_hx"
+
+    # History maintenance columns
+    network_hx_id = Column(Integer, nullable=False, primary_key=True)
+    deleted = Column(Boolean)
+    create_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    creator = Column(String, nullable=False)
+
+    # Metadata columns proper
+    id = Column("network_id", Integer, nullable=False)
     name = Column("network_name", String)
     long_name = Column("description", String)
     virtual = Column(String(255))
@@ -70,19 +79,20 @@ class Network(Base):
     color = Column("col_hex", String)
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
 
-    stations = relationship("Station", order_by="Station.id", back_populates="network")
-    meta_station = synonym("stations")
-    variables = relationship("Variable", back_populates="network")
-    meta_vars = synonym("variables")
-    contact = relationship("Contact", back_populates="networks")
-    meta_contact = synonym("contact")  # Retain backwards compatibility
-    native_flags = relationship(
-        "NativeFlag", order_by="NativeFlag.id", back_populates="network"
-    )
-    meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
+    # TODO: Should these be kept, and if so how?
+    # stations = relationship("Station", order_by="Station.id", back_populates="network")
+    # meta_station = synonym("stations")
+    # variables = relationship("Variable", back_populates="network")
+    # meta_vars = synonym("variables")
+    # contact = relationship("Contact", back_populates="networks")
+    # meta_contact = synonym("contact")  # Retain backwards compatibility
+    # native_flags = relationship(
+    #     "NativeFlag", order_by="NativeFlag.id", back_populates="network"
+    # )
+    # meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
     def __str__(self):
-        return f"<CRMP Network {self.name}>"
+        return f"<CRMP Network History {self.name}>"
 
 
 class Contact(Base):
