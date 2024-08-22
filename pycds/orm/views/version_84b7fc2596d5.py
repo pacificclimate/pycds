@@ -24,18 +24,59 @@ from sqlalchemy.orm import Query
 from geoalchemy2 import Geometry
 
 from pycds.orm.tables import (
-    Network,
     Station,
     History,
     Variable,
     Obs,
 )
+from pycds.orm.views import Network
 from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.view_base import make_declarative_base
 
 
 Base = make_declarative_base()
+
+
+def cng_select():
+    """Deferred selectable (to avoid circular imports) for CrmpNetworkGeoserver"""
+    return (
+        Query(
+            [
+                Network.name.label("network_name"),
+                Station.native_id.label("native_id"),
+                History.station_name.label("station_name"),
+                History.lon.label("lon"),
+                History.lat.label("lat"),
+                History.elevation.label("elev"),
+                StationObservationStats.min_obs_time.label("min_obs_time"),
+                StationObservationStats.max_obs_time.label("max_obs_time"),
+                History.freq.label("freq"),
+                History.tz_offset.label("tz_offset"),
+                History.province.label("province"),
+                History.station_id.label("station_id"),
+                History.id.label("history_id"),
+                History.country.label("country"),
+                History.comments.label("comments"),
+                History.the_geom.label("the_geom"),
+                History.sensor_id.label("sensor_id"),
+                Network.long_name.label("description"),
+                Station.network_id.label("network_id"),
+                Network.color.label("col_hex"),
+                CollapsedVariables.vars.label("vars"),
+                CollapsedVariables.display_names.label("display_names"),
+            ]
+        )
+        .select_from(History)
+        # TODO: Add ON clauses
+        .join(Station, Station.id == History.station_id)
+        .join(Network, Network.id == Station.network_id)
+        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
+        .outerjoin(
+            StationObservationStats,
+            StationObservationStats.history_id == History.id,
+            )
+    ).selectable
 
 
 class CrmpNetworkGeoserver(Base, ReplaceableView):
@@ -73,41 +114,38 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
     vars = Column(String)
     display_names = Column(String)
 
-    __selectable__ = (
+    __selectable__ = cng_select
+
+
+def hsn_select():
+    """Deferred selectable (to avoid circular imports) for HistoryStationNetwork"""
+    return (
         Query(
             [
-                Network.name.label("network_name"),
-                Station.native_id.label("native_id"),
+                Station.network_id.label("network_id"),
+                History.station_id.label("station_id"),
+                History.id.label("history_id"),
                 History.station_name.label("station_name"),
                 History.lon.label("lon"),
                 History.lat.label("lat"),
                 History.elevation.label("elev"),
-                StationObservationStats.min_obs_time.label("min_obs_time"),
-                StationObservationStats.max_obs_time.label("max_obs_time"),
-                History.freq.label("freq"),
+                History.sdate.label("sdate"),
+                History.edate.label("edate"),
                 History.tz_offset.label("tz_offset"),
                 History.province.label("province"),
-                History.station_id.label("station_id"),
-                History.id.label("history_id"),
                 History.country.label("country"),
                 History.comments.label("comments"),
                 History.the_geom.label("the_geom"),
                 History.sensor_id.label("sensor_id"),
+                Station.native_id.label("native_id"),
+                Network.name.label("network_name"),
                 Network.long_name.label("description"),
-                Station.network_id.label("network_id"),
-                Network.color.label("col_hex"),
-                CollapsedVariables.vars.label("vars"),
-                CollapsedVariables.display_names.label("display_names"),
+                Network.virtual.label("virtual"),
             ]
         )
         .select_from(History)
-        .join(Station)
-        .join(Network)
-        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
-        .outerjoin(
-            StationObservationStats,
-            StationObservationStats.history_id == History.id,
-        )
+        .join(Station, Station.id == History.station_id)
+        .join(Network, Network.id == Station.network_id)
     ).selectable
 
 
@@ -143,34 +181,7 @@ class HistoryStationNetwork(Base, ReplaceableView):
     virtual = Column(String(255))
     description = Column(String)
 
-    __selectable__ = (
-        Query(
-            [
-                Station.network_id.label("network_id"),
-                History.station_id.label("station_id"),
-                History.id.label("history_id"),
-                History.station_name.label("station_name"),
-                History.lon.label("lon"),
-                History.lat.label("lat"),
-                History.elevation.label("elev"),
-                History.sdate.label("sdate"),
-                History.edate.label("edate"),
-                History.tz_offset.label("tz_offset"),
-                History.province.label("province"),
-                History.country.label("country"),
-                History.comments.label("comments"),
-                History.the_geom.label("the_geom"),
-                History.sensor_id.label("sensor_id"),
-                Station.native_id.label("native_id"),
-                Network.name.label("network_name"),
-                Network.long_name.label("description"),
-                Network.virtual.label("virtual"),
-            ]
-        )
-        .select_from(History)
-        .join(Station)
-        .join(Network)
-    ).selectable
+    __selectable__ = hsn_select
 
 
 class ObsCountPerDayHistory(Base, ReplaceableView):

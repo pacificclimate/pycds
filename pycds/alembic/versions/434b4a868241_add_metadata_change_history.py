@@ -49,10 +49,9 @@ metadata_descriptors = [
             Column("publish", Boolean),
             Column("col_hex", String),
             Column("contact_id", Integer),
-            # TODO: Change to meta_contact_hx.contact_id. For now this is for a single-table test.
             ForeignKeyConstraint(
                 ["contact_id"],
-                [f"meta_contact.contact_id"],
+                [f"{schema_name}.meta_contact.contact_id"],
             ),
         ),
     ),
@@ -69,7 +68,7 @@ def upgrade():
     for view, metadata_id_name, metadata_specific_cols in metadata_descriptors:
         view_name = orig_metadata_table_name = view.__tablename__
         hx_id_name = f"{view_name}_hx_id"  # This can be any valid column name.
-        # history_table_name must match what update_metadata computes from view name
+        # History table name must match what update_metadata computes from view name
         history_table_name = f"{view_name}_hx"
 
         # Create history table
@@ -88,8 +87,8 @@ def upgrade():
 
         # Migrate data from original table to history table
         op.execute(
-            f"INSERT INTO {schema_name}.{history_table_name} VALUES"
-            f"   SELECT {metadata_id_name}, FALSE, now(), 'UNKNOWN', *"
+            f"INSERT INTO {schema_name}.{history_table_name} "
+            f"   SELECT {metadata_id_name}, FALSE, now(), 'UNKNOWN', * "
             f"   FROM {schema_name}.{orig_metadata_table_name}"
         )
 
@@ -111,6 +110,7 @@ def upgrade():
 def downgrade():
     for view, metadata_id_name, metadata_specific_cols in reversed(metadata_descriptors):
         view_name = orig_metadata_table_name = view.__tablename__
+        temp_metadata_table_name = f"{orig_metadata_table_name}_temp"
         history_table_name = f"{view_name}_hx"
 
         # Create original table
@@ -121,31 +121,30 @@ def downgrade():
         )
 
         # Migrate data from history table into original table.
-        # Oh my this is nasty. We need all but the first 2 columns of the view to
-        # repopulate the original metadata table. That's not a trivial ask in PG.
-        # This appears to be the best we can do.
-        op.execute(
-            f"DO $$"
-            f"DECLARE"
-            f"  columns text;"
-            f"BEGIN"
-            f"  -- Get all column names, in order, except the first 2"
-            f"  SELECT 'SELECT ' || string_agg(column_name, ', ') || ' FROM {view_name}' "
-            f"  FROM information_schema.columns "
-            f"  WHERE table_name = {view_name} "
-            f"  AND table_schema = {schema_name} "
-            f"  AND ordinal_position > 2 "
-            f"  ORDER BY ordinal_position"
-            f"  INTO columns;"
-            f"  -- Select those columns into the existing metadata table"
-            f"  EXECUTE "
-            f"  'INSERT INTO {orig_metadata_table_name} SELECT $1 FROM {view_name}'"
-            f"  USING columns;" 
-            f"END $$"
+        # Create table duplicate of view
+        op.create_table(
+            temp_metadata_table_name,
+            # Extra columns in view - we will drop these later
+            Column("create_time", DateTime),
+            Column("creator", String),
+            # Original columns
+            *metadata_specific_cols,
         )
+        # Copy data from view to table
+        op.execute(
+            f"INSERT INTO {temp_metadata_table_name}"
+            f"SELECT * FROM {view_name}"
+        )
+        # Drop first two columns from table to make it match original
+        op.drop_column(temp_metadata_table_name, "create_time")
+        op.drop_column(temp_metadata_table_name, "creator")
+        # Later we will rename this table to the original name, but first...
 
         # Drop view
         drop_view(view, schema=schema_name)
+
+        # Rename temp metadata table to original name
+        op.rename_table(temp_metadata_table_name, orig_metadata_table_name)
 
         # Drop history table
         op.drop_table(history_table_name)

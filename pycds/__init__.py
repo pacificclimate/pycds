@@ -71,7 +71,6 @@ from pycds.util import schema_func, variable_tags
 
 from .orm.tables import (
     Base,
-    Network,
     Contact,
     Station,
     History,
@@ -89,6 +88,7 @@ from .orm.tables import (
 from .orm.views import (
     CrmpNetworkGeoserver,
     HistoryStationNetwork,
+    Network,
     ObsCountPerDayHistory,
     ObsWithFlags,
 )

@@ -109,7 +109,9 @@ class Contact(Base):
     email = Column("email", String)
     phone = Column("phone", String)
 
-    networks = relationship("Network", order_by="Network.id", back_populates="contact")
+    # TODO: Add this back in later ... if possible. Or figure out what to do if not
+    #  possible. Oh, SQLAlchemy, your richness lays traps.
+    # networks = relationship("Network", order_by="Network.id", back_populates="contact")
 
 
 class Station(Base):
@@ -128,8 +130,9 @@ class Station(Base):
     publish = Column(Boolean, default=True, nullable=False)
 
     # Relationships
-    network = relationship("Network", back_populates="stations")
-    meta_network = synonym("network")
+    # TODO: Add this back in later ... if possible.
+    # network = relationship("Network", back_populates="stations")
+    # meta_network = synonym("network")
     histories = relationship("History", order_by="History.id", back_populates="station")
     meta_history = synonym("histories")  # Retain backwards compatibility
 
@@ -313,8 +316,9 @@ class Variable(Base):
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
 
     # Relationships
-    network = relationship("Network", back_populates="variables")
-    meta_network = synonym("network")
+    # TODO: Add this back in later ... if possible.
+    # network = relationship("Network", back_populates="variables")
+    # meta_network = synonym("network")
     obs = relationship("Obs", back_populates="variable")
     observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
@@ -369,7 +373,8 @@ class NativeFlag(Base):
     value = Column(String)
     discard = Column(Boolean)
 
-    network = relationship("Network", back_populates="native_flags")
+    # TODO: Add this back in later ... if possible.
+    # network = relationship("Network", back_populates="native_flags")
     flagged_obs = relationship(
         "Obs", secondary=ObsRawNativeFlags, back_populates="native_flags"
     )

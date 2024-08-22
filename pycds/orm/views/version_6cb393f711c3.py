@@ -24,17 +24,56 @@ from sqlalchemy.orm import Query
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from geoalchemy2 import Geometry
 
-from pycds.orm.tables import (
-    Network,
-    Station,
-    History,
-)
-from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
 from pycds.alembic.extensions.replaceable_objects import ReplaceableView
 from pycds.orm.view_base import make_declarative_base
 
 
 Base = make_declarative_base()
+
+
+def __selectable__():
+    # TODO: import straight from pycds here
+    from pycds.orm.tables import Station, History
+    from pycds.orm.views import Network
+    from pycds.orm.native_matviews import StationObservationStats, CollapsedVariables
+    return (
+        Query(
+            [
+                Network.name.label("network_name"),
+                Station.native_id.label("native_id"),
+                History.station_name.label("station_name"),
+                History.lon.label("lon"),
+                History.lat.label("lat"),
+                History.elevation.label("elev"),
+                StationObservationStats.min_obs_time.label("min_obs_time"),
+                StationObservationStats.max_obs_time.label("max_obs_time"),
+                History.freq.label("freq"),
+                History.tz_offset.label("tz_offset"),
+                History.province.label("province"),
+                History.station_id.label("station_id"),
+                History.id.label("history_id"),
+                History.country.label("country"),
+                History.comments.label("comments"),
+                History.the_geom.label("the_geom"),
+                History.sensor_id.label("sensor_id"),
+                Network.long_name.label("description"),
+                Station.network_id.label("network_id"),
+                Network.color.label("col_hex"),
+                CollapsedVariables.vars_ids.label("vars_ids"),
+                CollapsedVariables.unique_variable_tags.label("unique_variable_tags"),
+                CollapsedVariables.vars.label("vars"),
+                CollapsedVariables.display_names.label("display_names"),
+            ]
+        )
+        .select_from(History)
+        .join(Station, Station.id == History.station_id)
+        .join(Network, Network.id == Station.network_id)
+        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
+        .outerjoin(
+            StationObservationStats,
+            StationObservationStats.history_id == History.id,
+        )
+    ).selectable
 
 
 class CrmpNetworkGeoserver(Base, ReplaceableView):
@@ -74,41 +113,4 @@ class CrmpNetworkGeoserver(Base, ReplaceableView):
     vars_ids = Column(ARRAY(Integer))
     unique_variable_tags = Column(ARRAY(TEXT))
 
-    __selectable__ = (
-        Query(
-            [
-                Network.name.label("network_name"),
-                Station.native_id.label("native_id"),
-                History.station_name.label("station_name"),
-                History.lon.label("lon"),
-                History.lat.label("lat"),
-                History.elevation.label("elev"),
-                StationObservationStats.min_obs_time.label("min_obs_time"),
-                StationObservationStats.max_obs_time.label("max_obs_time"),
-                History.freq.label("freq"),
-                History.tz_offset.label("tz_offset"),
-                History.province.label("province"),
-                History.station_id.label("station_id"),
-                History.id.label("history_id"),
-                History.country.label("country"),
-                History.comments.label("comments"),
-                History.the_geom.label("the_geom"),
-                History.sensor_id.label("sensor_id"),
-                Network.long_name.label("description"),
-                Station.network_id.label("network_id"),
-                Network.color.label("col_hex"),
-                CollapsedVariables.vars_ids.label("vars_ids"),
-                CollapsedVariables.unique_variable_tags.label("unique_variable_tags"),
-                CollapsedVariables.vars.label("vars"),
-                CollapsedVariables.display_names.label("display_names"),
-            ]
-        )
-        .select_from(History)
-        .join(Station)
-        .join(Network)
-        .outerjoin(CollapsedVariables, CollapsedVariables.history_id == History.id)
-        .outerjoin(
-            StationObservationStats,
-            StationObservationStats.history_id == History.id,
-        )
-    ).selectable
+    __selectable__ = __selectable__
