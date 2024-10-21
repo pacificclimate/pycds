@@ -1,7 +1,7 @@
 ## View operations to hx table
 
 ```postgresql
-CREATE OR REPLACE FUNCTION view_ops_to_hx_table()
+CREATE OR REPLACE FUNCTION mdhx_view_ops_to_hx_table()
     RETURNS trigger
     LANGUAGE plpgsql
     PARALLEL UNSAFE
@@ -20,7 +20,7 @@ DECLARE
 
     -- Values derived from trigger function args
     this_metadata_history_id_seq_name text := 
-        metadata_history_id_seq_name(this_collection_name);
+        mdhx_hx_id_seq_name(this_collection_name);
  
     -- String containing INSERT statement to be executed in body of function with EXECUTE 
     -- statement. Here we derive the history table name from the view name. The $n params 

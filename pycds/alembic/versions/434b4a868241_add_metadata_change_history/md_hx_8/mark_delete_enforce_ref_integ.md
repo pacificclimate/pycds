@@ -36,7 +36,7 @@ Therefore:
 4. Do not allow deletion of any non-base record.
 
 ```postgresql
-CREATE OR REPLACE FUNCTION mark_delete_enforce_ref_integ_before()
+CREATE OR REPLACE FUNCTION mdhx_mark_delete_enforce_ref_integ_before()
     -- This trigger function detects a "mark item as deleted" operation. When it
     -- detects such, it performs a trial deletion of all history records with the same
     -- metadata id. The trial deletion may raise an error in the deletion cascade, or it 
@@ -52,7 +52,7 @@ $BODY$
 
         -- Values from special variables
         this_history_table_name text := tg_table_name;
-        this_collection_name text := metadata_collection_name_from_hx(tg_table_name);
+        this_collection_name text := mdhx_collection_name_from_hx(tg_table_name);
         
         this_metadata_id int;
 
@@ -107,7 +107,7 @@ $BODY$
         --    PARALLEL UNSAFE, as the PostgreSQL documentation requires (see 
         --    https://www.postgresql.org/docs/current/parallel-safety.html).
 
-        CALL create_table_mark_delete_in_progress();
+        CALL mdhx_create_table_mark_delete_in_progress();
 
         IF tg_op = 'INSERT' AND NOT NEW.deleted THEN
             -- This insertion is not of interest here. Allow to continue.
@@ -120,7 +120,7 @@ $BODY$
             -- the FK relations to this table.
             this_metadata_id := hstore(NEW) -> this_metadata_id_name;
 
-            SELECT * FROM get_mark_delete_in_progress() INTO
+            SELECT * FROM mdhx_get_mark_delete_in_progress() INTO
                 base_collection_name, base_metadata_id_name, base_metadata_id;
             
             IF base_collection_name IS NOT NULL THEN
@@ -133,7 +133,7 @@ $BODY$
             
             
             -- Mark this deletion in progress
-            CALL set_mark_delete_in_progress(
+            CALL mdhx_set_mark_delete_in_progress(
                 this_collection_name, this_metadata_id_name, this_metadata_id
              );
             -- TODO: Explicitly remove record added here instead of relying on 
@@ -155,7 +155,7 @@ $BODY$
                 WHEN OTHERS THEN
                     RAISE NOTICE '%: Mark-deleted op: Trial deletion failed',
                         this_collection_name;
-                    CALL unset_mark_delete_in_progress(
+                    CALL mdhx_unset_mark_delete_in_progress(
                         this_collection_name, this_metadata_id_name, this_metadata_id
                      );
                     RAISE;
@@ -165,7 +165,7 @@ $BODY$
             -- If we got this far, there was no referential integrity error. Mark item as 
             -- deleted.
             -- TODO: Remove record from mdip. DONE
-            CALL unset_mark_delete_in_progress(
+            CALL mdhx_unset_mark_delete_in_progress(
                 this_collection_name, this_metadata_id_name, this_metadata_id
              );
             RETURN NEW;
@@ -173,7 +173,7 @@ $BODY$
             RAISE NOTICE '%: DELETE detected, OLD = %', this_collection_name, OLD;
             -- If trial deletion in progress check whether item is marked deleted.
             -- Don't do the check if this is the base collection.
-            SELECT * FROM get_mark_delete_in_progress() INTO
+            SELECT * FROM mdhx_get_mark_delete_in_progress() INTO
                 base_collection_name, base_metadata_id_name, base_metadata_id;
             
             IF base_collection_name IS NULL THEN
@@ -222,7 +222,7 @@ $BODY$;
 ```
 
 ```postgresql
-CREATE OR REPLACE FUNCTION mark_delete_enforce_ref_integ_after()
+CREATE OR REPLACE FUNCTION mdhx_mark_delete_enforce_ref_integ_after()
     -- This trigger function "rolls back" a trial deletion is by reinserting the deleted 
     -- record. It is a necessary companion to TF mark_delete_enforce_ref_integ_before()
    RETURNS trigger

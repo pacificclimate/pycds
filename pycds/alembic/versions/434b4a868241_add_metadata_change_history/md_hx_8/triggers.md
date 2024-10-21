@@ -12,13 +12,13 @@ CREATE TRIGGER t100_view_ops
     INSTEAD OF INSERT OR DELETE OR UPDATE
     ON a
     FOR EACH ROW
-EXECUTE FUNCTION view_ops_to_hx_table('a_id');
+EXECUTE FUNCTION mdhx_view_ops_to_hx_table('a_id');
 
 CREATE TRIGGER t100_view_ops
     INSTEAD OF INSERT OR DELETE OR UPDATE
     ON b
     FOR EACH ROW
-EXECUTE FUNCTION view_ops_to_hx_table('b_id');
+EXECUTE FUNCTION mdhx_view_ops_to_hx_table('b_id');
 ```
 
 ## Hx table: Fill in history id's; referential integrity for referenced items
@@ -28,7 +28,7 @@ CREATE TRIGGER t100_add_check_foreign_keys
    BEFORE INSERT 
    ON b_hx
    FOR EACH ROW
-EXECUTE FUNCTION add_check_foreign_keys($${{a, a_id}}$$);
+EXECUTE FUNCTION mdhx_add_check_foreign_keys($${{a, a_id}}$$);
 ````
 
 ## Hx table: Referential integrity on item delete
@@ -39,13 +39,13 @@ CREATE TRIGGER t200_mark_delete_enforce_ref_integ_before
     BEFORE INSERT OR UPDATE OR DELETE
     ON a_hx
     FOR EACH ROW
-EXECUTE FUNCTION mark_delete_enforce_ref_integ_before('a_id');
+EXECUTE FUNCTION mdhx_mark_delete_enforce_ref_integ_before('a_id');
 
 CREATE TRIGGER t200_mark_delete_enforce_ref_integ_before
     BEFORE INSERT OR UPDATE OR DELETE
     ON b_hx
     FOR EACH ROW
-EXECUTE FUNCTION mark_delete_enforce_ref_integ_before('b_id');
+EXECUTE FUNCTION mdhx_mark_delete_enforce_ref_integ_before('b_id');
 ```
 
 ```postgresql
@@ -53,13 +53,13 @@ CREATE TRIGGER t201_mark_delete_enforce_ref_integ_after
    AFTER DELETE
    ON a_hx
    FOR EACH ROW
-EXECUTE FUNCTION mark_delete_enforce_ref_integ_after('a_id');
+EXECUTE FUNCTION mdhx_mark_delete_enforce_ref_integ_after('a_id');
 
 CREATE TRIGGER t201_mark_delete_enforce_ref_integ_after
    AFTER DELETE
    ON b_hx
    FOR EACH ROW
-EXECUTE FUNCTION mark_delete_enforce_ref_integ_after('b_id');
+EXECUTE FUNCTION mdhx_mark_delete_enforce_ref_integ_after('b_id');
 ```
 
 

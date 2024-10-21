@@ -3,7 +3,7 @@
 TODO: Rename better
 
 ```postgresql
-CREATE OR REPLACE FUNCTION add_check_foreign_keys() 
+CREATE OR REPLACE FUNCTION mdhx_add_check_foreign_keys() 
    RETURNS trigger
     LANGUAGE plpgsql
     PARALLEL UNSAFE 
@@ -32,13 +32,13 @@ $BODY$
        fk_metadata_id      integer;
        fk_metadata_history_id      integer;
        fk_deleted                  boolean;
-        mdip mark_delete_in_progress_type;
+       mdip mdhx_mark_delete_in_progress_type;
     BEGIN
         RAISE NOTICE 'BEGIN %', tg_name;
         -- Check whether this is a re-insertion of a trial deletion. 
         -- If so, don't intervene.
-        CALL create_table_mark_delete_in_progress();
-        SELECT * FROM get_mark_delete_in_progress() INTO
+        CALL mdhx_create_table_mark_delete_in_progress();
+        SELECT * FROM mdhx_get_mark_delete_in_progress() INTO
             mdip;
         IF mdip IS NOT NULL THEN
             -- TODO: Implicitly this should only occur when 
@@ -57,10 +57,10 @@ $BODY$
                   RAISE NOTICE 'fk_item = %', fk_item;
                   fk_metadata_collection_name := fk_item[1];
                   fk_metadata_id_name := fk_item[2];
-                  fk_metadata_history_id_name := metadata_history_id_name
-                                                 (fk_metadata_collection_name);
-                  fk_metadata_history_table_name := metadata_history_table_name
-                                                    (fk_metadata_collection_name);
+                  fk_metadata_history_id_name := 
+                      mdhx_hx_id_name(fk_metadata_collection_name);
+                  fk_metadata_history_table_name := 
+                      mdhx_hx_table_name(fk_metadata_collection_name);
                   fk_metadata_id := (hstore(NEW) -> fk_metadata_id_name)::integer;
                   -- Extract the foreign metadata history id corresponding to the metadata
                   -- id in this record. This will be the foreign key for this record.

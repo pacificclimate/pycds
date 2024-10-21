@@ -7,7 +7,7 @@ They should have a unique, short prefix (e.g., `mdhx_` to their names for this).
 
 ```postgresql
 
-CREATE OR REPLACE FUNCTION metadata_collection_name_from_hx(hx_table_name text)
+CREATE OR REPLACE FUNCTION mdhx_collection_name_from_hx(hx_table_name text)
     RETURNS text
     LANGUAGE 'plpgsql'
 AS $$
@@ -16,7 +16,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION metadata_view_name(collection_name text)
+CREATE OR REPLACE FUNCTION mdhx_view_name(collection_name text)
 RETURNS text
     LANGUAGE 'plpgsql'
 AS $$
@@ -25,7 +25,7 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE FUNCTION metadata_history_table_name(collection_name text)
+CREATE OR REPLACE FUNCTION mdhx_hx_table_name(collection_name text)
 RETURNS text
     LANGUAGE 'plpgsql'
 AS $$
@@ -34,7 +34,7 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE FUNCTION metadata_history_id_name(collection_name text)
+CREATE OR REPLACE FUNCTION mdhx_hx_id_name(collection_name text)
 RETURNS text
     LANGUAGE 'plpgsql'
 AS $$
@@ -43,7 +43,7 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE FUNCTION metadata_history_id_seq_name(collection_name text)
+CREATE OR REPLACE FUNCTION mdhx_hx_id_seq_name(collection_name text)
 RETURNS text
     LANGUAGE 'plpgsql'
 AS $$
@@ -56,13 +56,13 @@ $$;
 ## Mark delete in progress - temp table and queries
 
 ```postgresql
-CREATE TYPE mark_delete_in_progress_type AS (
+CREATE TYPE mdhx_mark_delete_in_progress_type AS (
     base_collection_name text,
     base_metadata_id_name text,
     base_metadata_id int
 );
 
-CREATE OR REPLACE PROCEDURE create_table_mark_delete_in_progress()
+CREATE OR REPLACE PROCEDURE mdhx_create_table_mark_delete_in_progress()
     LANGUAGE plpgsql
 AS $$
     BEGIN 
@@ -75,7 +75,7 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE PROCEDURE set_mark_delete_in_progress(
+CREATE OR REPLACE PROCEDURE mdhx_set_mark_delete_in_progress(
     this_collection_name text, this_metadata_id_name text, this_metadata_id int
 )
     LANGUAGE plpgsql
@@ -87,7 +87,7 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE PROCEDURE unset_mark_delete_in_progress(
+CREATE OR REPLACE PROCEDURE mdhx_unset_mark_delete_in_progress(
     this_collection_name text, this_metadata_id_name text, this_metadata_id int
 )
     LANGUAGE plpgsql
@@ -108,12 +108,12 @@ AS $$
     END;
 $$;
 
-CREATE OR REPLACE FUNCTION get_mark_delete_in_progress()
-    RETURNS mark_delete_in_progress_type
+CREATE OR REPLACE FUNCTION mdhx_get_mark_delete_in_progress()
+    RETURNS mdhx_mark_delete_in_progress_type
     LANGUAGE plpgsql
 AS $$
     DECLARE
-        result mark_delete_in_progress_type;
+        result mdhx_mark_delete_in_progress_type;
     BEGIN
         BEGIN
             SELECT * FROM mark_delete_in_progress STRICT INTO result;
