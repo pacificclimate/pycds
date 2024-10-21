@@ -257,6 +257,17 @@ AS $$
     END;
 $$;
 
+CREATE OR REPLACE PROCEDURE test_check_mdip_empty()
+    LANGUAGE plpgsql
+AS $$
+    BEGIN
+        RAISE NOTICE 'Check that mdip table is empty';
+        CALL mdhx_create_table_mark_delete_in_progress();
+        ASSERT (SELECT count(*) FROM mark_delete_in_progress) = 0,
+            'mdip table is not empty, but should be';
+        RAISE NOTICE '    Success';
+    END;
+$$;
 
 CREATE OR REPLACE PROCEDURE test_run()
    LANGUAGE plpgsql
@@ -301,6 +312,10 @@ AS $$
         SELECT bool_and(eql) FROM t INTO result_bool;
         ASSERT result_bool, 'View a does not contain expected rows';
         RAISE NOTICE '    Success';
+
+        ------
+        CALL test_check_mdip_empty();
+        
         
         -- Collection b
 
