@@ -12,12 +12,15 @@ $BODY$
 DECLARE
     -- Trigger function arguments from CREATE TRIGGER statement, provided by the special 
     -- variable tg_argv.
-    this_collection_name text := tg_argv[0];
-    this_metadata_id_name text := tg_argv[1];  -- Metadata id column name can be arbitrary; not determined by view/table name.
+    -- Metadata id column name can be arbitrary; not determined by view/table name.
+    this_metadata_id_name text := tg_argv[0];
+
+    -- Values from special variables
+    this_collection_name text := tg_table_name;
 
     -- Values derived from trigger function args
-    this_metadata_history_id_seq_name text := metadata_history_id_seq_name
-                                              (this_collection_name);
+    this_metadata_history_id_seq_name text := 
+        metadata_history_id_seq_name(this_collection_name);
  
     -- String containing INSERT statement to be executed in body of function with EXECUTE 
     -- statement. Here we derive the history table name from the view name. The $n params 

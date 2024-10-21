@@ -48,11 +48,11 @@ AS
 $BODY$
     DECLARE
         -- Trigger function arguments
-        this_collection_name text := tg_argv[0];
-        this_metadata_id_name text := tg_argv[1];
+        this_metadata_id_name text := tg_argv[0];
 
-        -- Derived names. Note that history_table_name = TG_TABLE_NAME.
-        this_history_table_name text := metadata_history_table_name(this_collection_name);
+        -- Values from special variables
+        this_history_table_name text := tg_table_name;
+        this_collection_name text := metadata_collection_name_from_hx(tg_table_name);
         
         this_metadata_id int;
 
@@ -231,11 +231,8 @@ CREATE OR REPLACE FUNCTION mark_delete_enforce_ref_integ_after()
 AS
 $BODY$
     DECLARE
-        -- Trigger function arguments
-        collection_name text := tg_argv[0];
-        
-        -- Derived names. Note that history table name is also = TG_TABLE_NAME.
-        history_table_name text := metadata_history_table_name(collection_name);
+        -- Values from special variables
+        history_table_name text := tg_table_name;
     BEGIN
         RAISE NOTICE '% After DELETE: re-inserting deleted record %',
             collection_name, OLD;
