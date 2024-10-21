@@ -1,4 +1,4 @@
-- [ ] Add `PARALLEL USAFE` to trigger fns
+- [x] Add `PARALLEL USAFE` to trigger fns
 - [ ] Revert `unset_mark_delete_in_progress` to implicit ON COMMIT behaviour
 - [ ] Substitute `TG_NAME` for a tf arg where possible (reduce effort, error)
 - [ ] Rename all functions with consistent prefix (`mdhx_`)

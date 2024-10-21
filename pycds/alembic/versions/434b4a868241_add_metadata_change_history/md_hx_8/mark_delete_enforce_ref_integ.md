@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION mark_delete_enforce_ref_integ_before()
     -- may complete without error. 
    RETURNS trigger
     LANGUAGE plpgsql
-    PARALLEL UNSAFE -- Writes to database (create/update temp table)
+    PARALLEL UNSAFE
 AS
 $BODY$
     DECLARE
@@ -227,6 +227,7 @@ CREATE OR REPLACE FUNCTION mark_delete_enforce_ref_integ_after()
     -- record. It is a necessary companion to TF mark_delete_enforce_ref_integ_before()
    RETURNS trigger
     LANGUAGE plpgsql
+    PARALLEL UNSAFE
 AS
 $BODY$
     DECLARE

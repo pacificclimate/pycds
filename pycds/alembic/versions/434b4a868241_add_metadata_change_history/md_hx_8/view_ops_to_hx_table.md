@@ -4,6 +4,7 @@
 CREATE OR REPLACE FUNCTION view_ops_to_hx_table()
     RETURNS trigger
     LANGUAGE plpgsql
+    PARALLEL UNSAFE
 AS
 $BODY$
 -- This trigger function inserts the appropriate new record into the corresponding 

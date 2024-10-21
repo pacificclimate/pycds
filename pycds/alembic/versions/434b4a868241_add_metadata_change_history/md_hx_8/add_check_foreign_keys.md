@@ -6,6 +6,7 @@ TODO: Rename better
 CREATE OR REPLACE FUNCTION add_check_foreign_keys() 
    RETURNS trigger
     LANGUAGE plpgsql
+    PARALLEL UNSAFE 
 AS
 $BODY$
     -- This trigger function updates the NEW record with the history id corresponding to 
