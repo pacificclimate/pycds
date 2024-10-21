@@ -233,6 +233,7 @@ $BODY$
     DECLARE
         -- Values from special variables
         history_table_name text := tg_table_name;
+        collection_name text := mdhx_collection_name_from_hx(history_table_name);
     BEGIN
         RAISE NOTICE '% After DELETE: re-inserting deleted record %',
             collection_name, OLD;
