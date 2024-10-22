@@ -124,9 +124,12 @@ $BODY$
                 base_collection_name, base_metadata_id_name, base_metadata_id;
             
             IF base_collection_name IS NOT NULL THEN
-                -- TODO: Implicitly this should only occur when 
-                --  base_collection_name = this_collection_name. Check it.
                 RAISE NOTICE '%: Mark-deleted op: Re-insertion', this_collection_name;
+                ASSERT mdip.base_collection_name = this_collection_name,
+                    'Mark delete is in progress. ' ||
+                    'Re-insertion should only occur for base collection "%", ' ||
+                    'but this is collection "%".', 
+                mdip.base_collection_name, this_collection_name;
                 -- This is a re-insertion. Just do it.
                 RETURN NEW;
             END IF;

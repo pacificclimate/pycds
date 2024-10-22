@@ -23,6 +23,10 @@ $BODY$
        -- Specifies metadata history table info for each foreign key in this table.
        -- Content: Array (in order of FK occurrence in this hx table) of 
        -- array[foreign_collection_name, foreign_metadata_id]
+        
+       -- Special values
+       this_collection_name text := mdhx_collection_name_from_hx(tg_table_name);
+        
        fk_item                     text[];
        fk_metadata_collection_name text;
        fk_metadata_id_name         text;
@@ -41,9 +45,12 @@ $BODY$
         SELECT * FROM mdhx_get_mark_delete_in_progress() INTO
             mdip;
         IF mdip IS NOT NULL THEN
-            -- TODO: Implicitly this should only occur when 
-            --  mdip.base_collection_name = this_collection_name. Check it.
             RAISE NOTICE 'Re-insertion, %', mdip;
+            ASSERT mdip.base_collection_name = this_collection_name, 
+                'Mark delete is in progress. ' ||
+                'Re-insertion should only occur for base collection "%", ' ||
+                'but this is collection "%".', 
+                mdip.base_collection_name, this_collection_name;
             -- This is a re-insertion. Just do it.
             RETURN NEW;
         END IF;
