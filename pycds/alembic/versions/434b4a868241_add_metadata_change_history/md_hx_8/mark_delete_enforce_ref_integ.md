@@ -52,12 +52,14 @@ $BODY$
 
         -- Values from special variables
         this_history_table_name text := tg_table_name;
+        
+        -- Derived values
         this_collection_name text := mdhx_collection_name_from_hx(tg_table_name);
+        this_history_id_name text := mdhx_hx_id_name(this_collection_name);
         
         this_metadata_id int;
 
         -- Table mark_delete_in_progress
-        mdip_item record;
         base_collection_name text;
         base_metadata_id_name text;
         base_metadata_id int;
@@ -193,15 +195,16 @@ $BODY$
                -- metadata item still uses the base metadata item (it is not marked 
                -- as deleted and its latest state refers to the base item).
                 this_metadata_id := hstore(OLD) -> this_metadata_id_name;
-                -- TODO: Use ORDER BY ..., hx_id DESC
                 uses_base_metadata_item := format(
-                    'SELECT DISTINCT ON (%1$I) not deleted and (%3$I = $2)'
+                    'SELECT DISTINCT ON (%1$I) not deleted and (%4$I = $2) '
                         'FROM %2$I WHERE %1$I = $1 '
-                        'ORDER BY %1$I, create_time DESC',
+                        'ORDER BY %1$I, %3$I DESC',
                     this_metadata_id_name,
                     this_history_table_name,
+                    this_history_id_name,
                     base_metadata_id_name
                 );
+                RAISE NOTICE 'uses_base_metadata_item query = "%"', uses_base_metadata_item;
                 EXECUTE uses_base_metadata_item INTO in_use 
                     USING this_metadata_id, base_metadata_id;
                 IF in_use THEN
