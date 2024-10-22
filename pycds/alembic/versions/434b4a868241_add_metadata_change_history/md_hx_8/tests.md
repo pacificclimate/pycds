@@ -265,116 +265,137 @@ AS $$
         CALL mdhx_create_table_mark_delete_in_progress();
         ASSERT (SELECT count(*) FROM mark_delete_in_progress) = 0,
             'mdip table is not empty, but should be';
-        RAISE NOTICE '    Success';
+        RAISE NOTICE '>>> Success';
     END;
 $$;
 
-CREATE OR REPLACE PROCEDURE test_run()
-   LANGUAGE plpgsql
+
+CREATE OR REPLACE PROCEDURE test_check_exception(title text, error_msg text, query text)
+    LANGUAGE plpgsql
 AS $$
-    DECLARE 
-        result_bool bool;
     BEGIN
-        RAISE NOTICE '';
-        RAISE NOTICE 'Reset tables and verify';
-        CALL test_table_reset();
-        ASSERT (SELECT count(*) FROM a) = 0, 'Collection a is not empty';
-        ASSERT (SELECT count(*) FROM a_hx) = 0, 'Hx table a is not empty';
-        ASSERT (SELECT count(*) FROM b) = 0, 'Collection b is not empty';
-        ASSERT (SELECT count(*) FROM b_hx) = 0, 'Hx table b is not empty';
-        
-        -- Collection a
-
-        ------
-        RAISE NOTICE 'Populate collection a';
-        INSERT INTO a(x) VALUES (100), (200), (300), (400);
-
-        UPDATE a SET x = 101 WHERE a_id = 1;
-        UPDATE a SET x = 102 WHERE a_id = 1;
-        DELETE FROM a WHERE a_id = 1;
-
-        UPDATE a SET x = 201 WHERE a_id = 2;
-        UPDATE a SET x = 202 WHERE a_id = 2;
-
-        UPDATE a SET x = 301 WHERE a_id = 3;
-
-        ------
-        RAISE NOTICE 'Check view a contains expected rows';
-        -- CALL test_print_table('a');
-        WITH expected(a_id, x) AS (
-            VALUES (2, 202), (3, 301), (4, 400)
-        ),
-        t AS (
-           select x.a_id, x.x, coalesce(a.a_id = x.a_id AND a.x = x.x, FALSE) 
-              AS eql
-           from a full outer join expected x on a.a_id = x.a_id
-        )
-        SELECT bool_and(eql) FROM t INTO result_bool;
-        ASSERT result_bool, 'View a does not contain expected rows';
-        RAISE NOTICE '    Success';
-
-        ------
-        CALL test_check_mdip_empty();
-        
-        
-        -- Collection b
-
-        ------
-        RAISE NOTICE 'Test insert into collection b of deleted item from a - expect exception';
+        RAISE NOTICE '>>> %', title;
         BEGIN
-           INSERT INTO b(a_id, y) VALUES (1, 99);
-           ASSERT FALSE, 'Collection b did not trap invalid reference to a';
-        EXCEPTION 
-            WHEN OTHERS THEN NULL ;
-        END;
-        RAISE NOTICE '    Success';
-
-        ------
-        RAISE NOTICE 'Populate collection b with legal values';
-        INSERT INTO b(a_id, y) VALUES (2, 200), (3, 300);
-
-        ------
-        RAISE NOTICE 'Check view b contains expected rows';
-        WITH expected(b_id, a_id, y) AS (
-           VALUES (2, 2, 200), (3, 3, 300)
-        ),
-        t AS (
-            select coalesce(b.b_id = x.b_id AND b.a_id = x.a_id AND b.y = x.y, FALSE)
-                AS eql
-            from b full outer join expected x using (b_id)
-        )
-        SELECT bool_and(eql) FROM t INTO result_bool;
-        ASSERT result_bool, 'View b does not contain expected rows';
-        RAISE NOTICE '    Success';
-
-        ------
-        RAISE NOTICE 'Attempt to update item in b with non-existent item in a';
-        BEGIN
-            UPDATE b SET a_id = 1 WHERE b_id = 2;
-            ASSERT FALSE, 'Collection b did not trap invalid reference to a';
+            EXECUTE query;
+            ASSERT FALSE, error_msg;
         EXCEPTION
             WHEN OTHERS THEN NULL ;
         END;
-        RAISE NOTICE '    Success';
-
-        ------
-        RAISE NOTICE 'Update item in b with valid ref to item in a';
-        UPDATE b SET a_id = 3 WHERE b_id = 2;
-
-        RAISE NOTICE 'Check view b contains expected rows.';
-        WITH expected(b_id, a_id, y) AS (
-            VALUES (2, 3, 200), (3, 3, 300)
-        ),
-             t AS (
-                 select coalesce(b.b_id = x.b_id AND b.a_id = x.a_id AND b.y = x.y, FALSE)
-                            AS eql
-                 from b full outer join expected x using (b_id)
-             )
-        SELECT bool_and(eql) FROM t INTO result_bool;
-        ASSERT result_bool, 'View b does not contain expected rows';
-        RAISE NOTICE '    Success';
-
-        ------
+        RAISE NOTICE '>>> Success: %', title;
     END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE test_run()
+    LANGUAGE plpgsql
+AS $$
+DECLARE
+    result_bool bool;
+BEGIN
+    RAISE NOTICE '*** BEGIN TESTS ***';
+    RAISE NOTICE '';
+    RAISE NOTICE '>>> Reset tables and verify';
+    CALL test_table_reset();
+    ASSERT (SELECT count(*) FROM a) = 0, 'Collection a is not empty';
+    ASSERT (SELECT count(*) FROM a_hx) = 0, 'Hx table a is not empty';
+    ASSERT (SELECT count(*) FROM b) = 0, 'Collection b is not empty';
+    ASSERT (SELECT count(*) FROM b_hx) = 0, 'Hx table b is not empty';
+    RAISE NOTICE '>>> Success';
+
+    -- Collection a
+
+    ------
+    RAISE NOTICE 'Populate collection a';
+    INSERT INTO a(x) VALUES (100), (200), (300), (400);
+
+    UPDATE a SET x = 101 WHERE a_id = 1;
+    UPDATE a SET x = 102 WHERE a_id = 1;
+    DELETE FROM a WHERE a_id = 1;
+
+    UPDATE a SET x = 201 WHERE a_id = 2;
+    UPDATE a SET x = 202 WHERE a_id = 2;
+
+    UPDATE a SET x = 301 WHERE a_id = 3;
+
+    ------
+    RAISE NOTICE '>>> Check view a contains expected rows';
+    -- CALL test_print_table('a');
+    WITH expected(a_id, x) AS (
+        VALUES (2, 202), (3, 301), (4, 400)
+    ),
+         t AS (
+             select x.a_id, x.x, coalesce(a.a_id = x.a_id AND a.x = x.x, FALSE)
+                 AS eql
+             from a full outer join expected x on a.a_id = x.a_id
+         )
+    SELECT bool_and(eql) FROM t INTO result_bool;
+    ASSERT result_bool, 'View a does not contain expected rows';
+    RAISE NOTICE '>>> Success';
+
+    ------
+    CALL test_check_mdip_empty();
+
+
+    -- Collection b
+
+    ------
+    CALL test_check_exception(
+        '!!! Test insert into collection b of deleted item from a',
+        'Collection b did not trap invalid reference to a',
+        'INSERT INTO b(a_id, y) VALUES (1, 99)'
+     );
+
+    ------
+    RAISE NOTICE 'Populate collection b with legal values';
+    INSERT INTO b(a_id, y) VALUES (2, 200), (3, 300);
+
+    ------
+    RAISE NOTICE '>>> Check view b contains expected rows';
+    WITH expected(b_id, a_id, y) AS (
+        VALUES (2, 2, 200), (3, 3, 300)
+    ),
+         t AS (
+             select coalesce(b.b_id = x.b_id AND b.a_id = x.a_id AND b.y = x.y, FALSE)
+                        AS eql
+             from b full outer join expected x using (b_id)
+         )
+    SELECT bool_and(eql) FROM t INTO result_bool;
+    ASSERT result_bool, 'View b does not contain expected rows';
+    RAISE NOTICE '>>> Success';
+
+    ------
+    CALL test_check_exception(
+        'Attempt to update item in b with non-existent item in a',
+        'Collection b did not trap invalid reference to a',
+        'UPDATE b SET a_id = 1 WHERE b_id = 2'
+     );
+
+    ------
+    RAISE NOTICE 'Update item in b with valid ref to item in a';
+    UPDATE b SET a_id = 3 WHERE b_id = 2;
+
+    RAISE NOTICE '>>> Check view b contains expected rows.';
+    WITH expected(b_id, a_id, y) AS (
+        VALUES (2, 3, 200), (3, 3, 300)
+    ),
+         t AS (
+             select coalesce(b.b_id = x.b_id AND b.a_id = x.a_id AND b.y = x.y, FALSE)
+                        AS eql
+             from b full outer join expected x using (b_id)
+         )
+    SELECT bool_and(eql) FROM t INTO result_bool;
+    ASSERT result_bool, 'View b does not contain expected rows';
+    RAISE NOTICE '>>> Success';
+
+    ------
+    -- TODO:
+    CALL test_check_exception(
+        'Attempt to delete item from collection "a" that is in use.',
+         'Collection a did not trap deletion of item in use',
+         'delete from a where a_id = 3'
+     );
+
+    RAISE NOTICE '*** END TESTS, NO ERRORS ***';
+END;
 $$;
 ```
