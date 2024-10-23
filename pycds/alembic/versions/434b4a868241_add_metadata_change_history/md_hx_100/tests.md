@@ -172,11 +172,11 @@ BEGIN
         a_hx_id INTEGER REFERENCES a_hx (a_hx_id)
     );
 
-    CREATE TRIGGER t100_add_check_foreign_keys
+    CREATE TRIGGER t100_add_foreign_hx_keys
         BEFORE INSERT
         ON b_hx
         FOR EACH ROW
-    EXECUTE FUNCTION mdhx_add_check_foreign_keys('{{a, a_id}}');
+    EXECUTE FUNCTION mdhx_add_foreign_hx_keys('{{a, a_id}}');
 
 END;
 $$;

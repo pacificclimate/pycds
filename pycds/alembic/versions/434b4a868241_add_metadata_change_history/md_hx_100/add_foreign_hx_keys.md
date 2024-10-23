@@ -1,27 +1,31 @@
-## Hx table: Fill in history id's
+## Hx table: Fill in foreign history id's
 
 TODO: Rename better
 
 ```postgresql
-CREATE OR REPLACE FUNCTION mdhx_add_check_foreign_keys()
+CREATE OR REPLACE FUNCTION mdhx_add_foreign_hx_keys()
     RETURNS trigger
     LANGUAGE plpgsql
     PARALLEL UNSAFE
 AS
 $BODY$
-    -- This trigger function updates the NEW record with the history id corresponding to 
-    -- the metadata id for each foreign key. FK correspondences are specified in the
-    -- trigger function arg. They must be specified in the same order they appear in 
-    -- the view and history table.
+    -- Foreign keys come in pairs: In a primary table, they refer to another primary 
+    -- table. In a history table, they refer to the corresponding history table. For 
+    -- any given primary table FK, there are in general many history table FKs 
+    -- corresponding to it, one for each history of the item. For any given newly 
+    -- inserted history record, the desired history FK is the latest one in the set 
+    -- selected by the primary FK.
+    -- 
+    -- This trigger function updates the NEW record with the latest history FK 
+    -- corresponding to each primary FK in the primary table. The corresponding primary
+    -- table names and primary FKs are passed in as arguments to the trigger function.
 DECLARE
     -- Trigger function arguments
     foreign_keys text[][] := tg_argv[0];
-    -- Specifies metadata history table info for each foreign key in this table.
+    -- Specifies metadata history table info for each primary foreign key in this table.
     -- Content: Array (in order of FK occurrence in this hx table) of 
-    -- array[foreign_collection_name, foreign_metadata_id]
+    -- array[foreign_collection_name, foreign_metadata_id]. 
 
-    -- Special values
-    this_collection_name text := mdhx_collection_name_from_hx(tg_table_name);
     fk_item text[];
     fk_metadata_collection_name text;
     fk_metadata_id_name text;
@@ -46,9 +50,10 @@ BEGIN
                 fk_metadata_history_table_name :=
                         mdhx_hx_table_name(fk_metadata_collection_name);
                 fk_metadata_id := (hstore(NEW) -> fk_metadata_id_name)::integer;
-                
-                -- Extract the foreign metadata history id corresponding to the metadata
-                -- id in this record. This will be the foreign key for this record.
+
+                -- Extract the most recent foreign metadata history id corresponding to 
+                -- the foreign metadata id in this record. This will be the foreign 
+                -- key to use.
                 fk_query := format(
                         'SELECT DISTINCT ON (%1$I) %2$I ' ||
                         'FROM %3$I WHERE %1$I = $1 ' ||
@@ -58,26 +63,9 @@ BEGIN
                         fk_metadata_history_table_name
                             );
                 RAISE NOTICE 'fk_query = %', fk_query;
-                -- TODO: Remove exception catches -- neither should occur, and if they do
-                --  we should let them bubble up.
-                BEGIN
-                    EXECUTE fk_query
-                        INTO STRICT fk_metadata_history_id
-                        USING fk_metadata_id;
-                EXCEPTION
-                    WHEN NO_DATA_FOUND THEN
-                        -- No such item: Referential integrity error. 
-                        -- This should never happen: We get here when a valid operation
-                        -- on the primary table has been performed (PG would raise an 
-                        -- error otherwise). Therefore the foreign item must exist in 
-                        -- its primary table and therefore also in its history table. 
-                        -- Therefore this query must always succeed.
-                        RAISE EXCEPTION
-                            'Metadata collection % contains no item with id %',
-                            fk_metadata_collection_name, fk_metadata_id;
-                    WHEN TOO_MANY_ROWS THEN
-                        RAISE EXCEPTION 'Internal error: too many rows';
-                END;
+                EXECUTE fk_query
+                    INTO STRICT fk_metadata_history_id
+                    USING fk_metadata_id;
                 RAISE NOTICE 'FK: % = %', fk_metadata_id_name, fk_metadata_history_id;
                 -- Update NEW with it.
                 NEW := NEW #= hstore(fk_metadata_history_id_name,
