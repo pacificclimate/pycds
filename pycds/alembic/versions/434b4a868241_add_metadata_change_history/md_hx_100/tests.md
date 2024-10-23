@@ -125,7 +125,7 @@ BEGIN
         AFTER INSERT OR DELETE OR UPDATE
         ON a
         FOR EACH ROW
-    EXECUTE FUNCTION mdhx_primary_ops_to_hx('a_id');
+    EXECUTE FUNCTION mdhx_primary_ops_to_hx();
 
     CREATE TABLE b (
         mod_time timestamp WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
@@ -139,7 +139,7 @@ BEGIN
         AFTER INSERT OR DELETE OR UPDATE
         ON b
         FOR EACH ROW
-    EXECUTE FUNCTION mdhx_primary_ops_to_hx('b_id');
+    EXECUTE FUNCTION mdhx_primary_ops_to_hx();
 
     -- History sequences
     CREATE SEQUENCE IF NOT EXISTS a_hx_id_seq;
@@ -204,6 +204,8 @@ $$
 BEGIN
     TRUNCATE b CASCADE;
     TRUNCATE a CASCADE;
+    ALTER SEQUENCE a_a_id_seq RESTART WITH 1;
+    ALTER SEQUENCE b_b_id_seq RESTART WITH 1;
     TRUNCATE b_hx CASCADE;
     TRUNCATE a_hx CASCADE;
     ALTER SEQUENCE a_hx_id_seq RESTART WITH 1;

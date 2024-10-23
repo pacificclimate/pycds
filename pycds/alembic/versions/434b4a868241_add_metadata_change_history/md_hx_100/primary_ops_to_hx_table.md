@@ -9,12 +9,9 @@ AS
 $BODY$
     -- This trigger function inserts a new record into the corresponding history table
     -- when a primary table receives an insert, update or delete operation. 
-    -- This trigger function is called AFTER a primary table operation.
+    -- This trigger function is called AFTER a primary table operation. Therefore it sees
+    -- the final values for NEW/OLD; in particular, any default values.
 DECLARE
-    -- Trigger function args.
-    -- Metadata id column name can be arbitrary; not determined by view/table name.
-    this_metadata_id_name text := tg_argv[0];
-
     -- Values from special variables
     this_collection_name text := tg_table_name;
 
