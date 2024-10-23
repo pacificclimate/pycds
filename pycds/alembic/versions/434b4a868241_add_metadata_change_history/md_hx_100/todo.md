@@ -1,5 +1,6 @@
-- [ ] Use primary tables instead of views; retain hx tables
-- [ ] xxx
+- [x] Use primary tables instead of views; retain hx tables
+- [ ] Factor out some common code
+- [x] Clean up code and documentation/comments
 - [ ] xxx
 - [ ] xxx
 - [ ] xxx
