@@ -1,0 +1,8 @@
+- [ ] Use primary tables instead of views; retain hx tables
+- [ ] xxx
+- [ ] xxx
+- [ ] xxx
+- [ ] xxx
+- [ ] xxx
+- [ ] xxx
+- [ ] xxx
