@@ -53,13 +53,13 @@ BEGIN
                 -- the foreign metadata id in this record. This will be the foreign 
                 -- key to use.
                 fk_query := format(
-                        'SELECT DISTINCT ON (%1$I) %2$I ' ||
-                        'FROM %3$I WHERE %1$I = $1 ' ||
-                        'ORDER BY %1$I, %2$I DESC',
+                        'SELECT max(%2$I) ' ||
+                        'FROM %3$I ' ||
+                        'WHERE %1$I = $1 ',
                         fk_metadata_id_name,
                         fk_metadata_history_id_name,
                         fk_metadata_history_table_name
-                            );
+                );
                 RAISE NOTICE 'fk_query = %', fk_query;
                 EXECUTE fk_query
                     INTO STRICT fk_metadata_history_id
