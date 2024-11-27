@@ -33,14 +33,14 @@ DECLARE
     fk_metadata_id integer;
     fk_metadata_history_id integer;
 BEGIN
-    RAISE NOTICE 'BEGIN %', tg_name;
+    -- RAISE NOTICE 'BEGIN %', tg_name;
     -- Add foreign key values for referenced foreign metadata items. If no such 
     -- value exists, or it exists but the corresponding item has been marked deleted, 
     -- that is a referential integrity error.
     IF foreign_keys IS NOT NULL THEN
         FOREACH fk_item SLICE 1 IN ARRAY foreign_keys
             LOOP
-                RAISE NOTICE 'fk_item = %', fk_item;
+                -- RAISE NOTICE 'fk_item = %', fk_item;
                 fk_metadata_collection_name := fk_item[1];
                 fk_metadata_id_name := fk_item[2];
                 fk_metadata_history_id_name :=
@@ -60,18 +60,18 @@ BEGIN
                         fk_metadata_history_id_name,
                         fk_metadata_history_table_name
                 );
-                RAISE NOTICE 'fk_query = %', fk_query;
+                -- RAISE NOTICE 'fk_query = %', fk_query;
                 EXECUTE fk_query
                     INTO STRICT fk_metadata_history_id
                     USING fk_metadata_id;
-                RAISE NOTICE 'FK: % = %', fk_metadata_id_name, fk_metadata_history_id;
+                -- RAISE NOTICE 'FK: % = %', fk_metadata_id_name, fk_metadata_history_id;
                 -- Update NEW with it.
                 NEW := NEW #= hstore(fk_metadata_history_id_name,
                                      fk_metadata_history_id::text);
-                RAISE NOTICE 'NEW(after fk update) = %', NEW;
+                -- RAISE NOTICE 'NEW(after fk update) = %', NEW;
             END LOOP;
     END IF;
-    RAISE NOTICE 'END %',tg_name;
+    -- RAISE NOTICE 'END %',tg_name;
     RETURN NEW;
 END;
 $BODY$;
