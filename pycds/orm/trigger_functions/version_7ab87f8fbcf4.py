@@ -117,12 +117,12 @@ hxtk_primary_control_hx_cols()
     VOLATILE NOT LEAKPROOF
 AS $BODY$
     -- This trigger function controls the values of the history columns, namely
-    -- mod_time and creator. This is necessary to prevent them from being carried 
+    -- mod_time and mod_user. This is necessary to prevent them from being carried 
     -- forward from the previous state or from being set explicitly by the user.
     -- This trigger function should be called by a BEFORE trigger on the primary table.
 BEGIN
     NEW.mod_time = now();
-    NEW.creator = current_user;
+    NEW.mod_user = current_user;
     RETURN NEW;
 END;
 $BODY$
