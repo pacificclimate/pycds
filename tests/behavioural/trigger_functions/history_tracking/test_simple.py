@@ -1,7 +1,5 @@
 import pytest
 
-from psycopg2.errors import ForeignKeyViolation
-
 
 @pytest.fixture()
 def sesh_with_basics(schema_name, sesh_in_prepared_schema_left):
@@ -12,7 +10,6 @@ def sesh_with_basics(schema_name, sesh_in_prepared_schema_left):
 
 @pytest.fixture()
 def sesh_with_test_tables(sesh_with_basics):
-    # TODO: Maybe create the tables using SA? A bit more flexible for populating them.
     sesh = sesh_with_basics
     sesh.execute(
         f"""

@@ -14,7 +14,6 @@ def test_function(
     fn_name, argument, expected, schema_name, sesh_in_prepared_schema_left
 ):
     result = sesh_in_prepared_schema_left.execute(
-        f"SELECT {schema_name}.{fn_name}(:argument) AS value",
-        {"argument": argument}
+        f"SELECT {schema_name}.{fn_name}(:argument) AS value", {"argument": argument}
     ).scalar()
     assert result == expected
