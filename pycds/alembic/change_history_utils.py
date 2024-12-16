@@ -5,7 +5,7 @@ These are Python functions, not database functions.
 from typing import Iterable, Any
 
 from alembic import op
-import sqlalchemy as sa
+
 from pycds import get_schema_name
 
 
@@ -93,7 +93,7 @@ def populate_history_table(collection_name: str, pri_id_name: str):
 def create_history_triggers(
     collection_name: str, foreign_keys: list, prefix: str = "t100"
 ):
-    # Enforce mod_time and mod_user values on primary table.
+    # Trigger: Enforce mod_time and mod_user values on primary table.
     op.execute(
         f"CREATE TRIGGER {prefix}_primary_control_hx_cols "
         f"    BEFORE INSERT OR DELETE OR UPDATE "
@@ -102,7 +102,7 @@ def create_history_triggers(
         f"    EXECUTE FUNCTION {qualified_name('mdhx_primary_control_hx_cols')}()"
     )
 
-    # Append history records to history table when primary updated.
+    # Trigger: Append history records to history table when primary updated.
     op.execute(
         f"CREATE TRIGGER {prefix}_primary_ops_to_hx "
         f"    AFTER INSERT OR DELETE OR UPDATE "  # TODO: Only INSERT?
@@ -111,7 +111,7 @@ def create_history_triggers(
         f"    EXECUTE FUNCTION {qualified_name('hxtk_primary_ops_to_hx')}()"
     )
 
-    # Add foreign key values to each record inserted into history table.
+    # Trigger: Add foreign key values to each record inserted into history table.
     fk_args = sql_array(sql_array(pair) for pair in foreign_keys)
     op.execute(
         f"CREATE TRIGGER {prefix}_add_foreign_hx_keys "

@@ -103,8 +103,6 @@ from pycds.context import get_schema_name
 schema_name = get_schema_name()
 
 
-
-
 hxtk_primary_control_hx_cols = ReplaceableFunction(
     """
 hxtk_primary_control_hx_cols()
