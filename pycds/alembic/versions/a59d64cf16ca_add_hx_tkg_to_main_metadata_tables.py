@@ -5,13 +5,16 @@ Revises: 7ab87f8fbcf4
 Create Date: 2024-12-16 14:54:41.332001
 
 """
-from alembic import op
-import sqlalchemy as sa
-
 from pycds import get_schema_name
-from pycds.alembic.change_history_utils import add_history_cols_to_primary, create_history_table, \
-    populate_history_table, create_history_triggers, drop_history_triggers, drop_history_table, \
-    drop_history_cols_from_primary
+from pycds.alembic.change_history_utils import (
+    add_history_cols_to_primary,
+    create_history_table,
+    populate_history_table,
+    create_history_triggers,
+    drop_history_triggers,
+    drop_history_table,
+    drop_history_cols_from_primary,
+)
 
 # revision identifiers, used by Alembic.
 revision = "a59d64cf16ca"

@@ -161,5 +161,5 @@ def test_downgrade(
                     "{DELETE,INSERT,UPDATE}",
                 ),
             ],
-            present=False
+            present=False,
         )
