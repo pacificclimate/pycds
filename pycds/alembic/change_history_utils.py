@@ -29,7 +29,7 @@ def hx_id_name(collection_name: str):
 
 
 def sql_array(a: Iterable[Any]) -> str:
-    return f"{{{", ".join(a)}}}"
+    return f"{{{', '.join(a)}}}"
 
 
 # TODO: Wrap .execute(...) commands in DDL objects.
