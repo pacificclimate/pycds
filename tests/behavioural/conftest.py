@@ -1,3 +1,4 @@
+import logging
 import os
 import pytest
 
@@ -113,6 +114,7 @@ def prepared_schema_from_migrations_left(
         )
 
     """
+    logging.getLogger('alembic').setLevel(logging.CRITICAL)
     engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
