@@ -24,7 +24,7 @@ def hx_table_name(collection_name: str, **kwargs) -> str:
     return f"{pri_table_name(collection_name, **kwargs)}_hx"
 
 
-def hx_id_name(collection_name: str):
+def hx_id_name(collection_name: str, **kwargs):
     return f"{collection_name}_hx_id"
 
 
