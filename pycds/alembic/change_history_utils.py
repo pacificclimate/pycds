@@ -115,7 +115,7 @@ def create_history_triggers(
     fk_args = sql_array(sql_array(pair) for pair in foreign_keys)
     op.execute(
         f"CREATE TRIGGER {prefix}_add_foreign_hx_keys "
-        f"    BEFORE INSERT " 
+        f"    BEFORE INSERT "
         f"    ON {hx_table_name(collection_name)} "
         f"    FOR EACH ROW "
         f"    EXECUTE FUNCTION {qualified_name('hxtk_add_foreign_hx_keys')}('{fk_args}')"
