@@ -18,7 +18,7 @@ find all the relationship attributes that a given class may have.)
 
 import datetime
 
-from sqlalchemy import MetaData, func
+from sqlalchemy import MetaData, func, literal_column
 from sqlalchemy import (
     Table,
     Column,
@@ -74,7 +74,9 @@ class Network(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     stations = relationship("Station", order_by="Station.id", back_populates="network")
@@ -110,7 +112,9 @@ class NetworkHistory(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
     deleted = Column(Boolean, default=False)
     meta_network_hx_id = Column(Integer, primary_key=True)
 
@@ -154,7 +158,9 @@ class Station(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     network = relationship("Network", back_populates="stations")
@@ -186,7 +192,9 @@ class StationHistory(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
     deleted = Column(Boolean, default=False)
     meta_station_hx_id = Column(Integer, primary_key=True)
     meta_network_hx_id = Column(
@@ -229,7 +237,9 @@ class History(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     sensor = relationship("MetaSensor")
@@ -279,7 +289,9 @@ class HistoryHistory(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
     deleted = Column(Boolean, default=False)
     meta_history_hx_id = Column(Integer, primary_key=True)
     meta_station_hx_id = Column(
@@ -412,7 +424,9 @@ class Variable(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     network = relationship("Network", back_populates="variables")
@@ -477,7 +491,9 @@ class VariableHistory(Base):
     mod_time = Column(
         DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
     )
-    mod_user = Column(String(64), nullable=False, server_default=func.current_user)
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
     deleted = Column(Boolean, default=False)
     meta_vars_hx_id = Column(Integer, primary_key=True)
     meta_network_hx_id = Column(
