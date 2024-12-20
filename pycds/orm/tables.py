@@ -71,7 +71,9 @@ class Network(Base):
     publish = Column(Boolean)
     color = Column("col_hex", String)
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
 
     # Relationships
@@ -105,7 +107,9 @@ class NetworkHistory(Base):
     publish = Column(Boolean)
     color = Column("col_hex", String)
     contact_id = Column(Integer)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
     deleted = Column(Boolean, default=False)
     meta_network_hx_id = Column(Integer, primary_key=True)
@@ -147,7 +151,9 @@ class Station(Base):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     publish = Column(Boolean, default=True, nullable=False)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
 
     # Relationships
@@ -177,7 +183,9 @@ class StationHistory(Base):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     publish = Column(Boolean, default=True, nullable=False)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
     deleted = Column(Boolean, default=False)
     meta_station_hx_id = Column(Integer, primary_key=True)
@@ -218,7 +226,9 @@ class History(Base):
     freq = Column(String)
     sensor_id = Column(ForeignKey("meta_sensor.sensor_id"))
     the_geom = Column(Geometry("GEOMETRY", 4326))
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
 
     # Relationships
@@ -266,7 +276,9 @@ class HistoryHistory(Base):
     freq = Column(String)
     sensor_id = Column(Integer)
     the_geom = Column(Geometry("GEOMETRY", 4326))
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
     deleted = Column(Boolean, default=False)
     meta_history_hx_id = Column(Integer, primary_key=True)
@@ -327,7 +339,9 @@ class Obs(Base):
     __tablename__ = "obs_raw"
     id = Column("obs_raw_id", BigInteger, primary_key=True)
     time = Column("obs_time", DateTime)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
@@ -395,7 +409,9 @@ class Variable(Base):
     display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
 
     # Relationships
@@ -458,7 +474,9 @@ class VariableHistory(Base):
     display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     mod_user = Column(String(64), nullable=False, server_default=func.current_user)
     deleted = Column(Boolean, default=False)
     meta_vars_hx_id = Column(Integer, primary_key=True)
@@ -515,7 +533,9 @@ class DerivedValue(Base):
     __tablename__ = "obs_derived_values"
     id = Column("obs_derived_value_id", Integer, primary_key=True)
     time = Column("value_time", DateTime)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(
+        DateTime, nullable=False, default=datetime.datetime.now(datetime.UTC)
+    )
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
