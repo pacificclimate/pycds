@@ -38,6 +38,7 @@ from geoalchemy2 import Geometry
 
 from citext import CIText
 
+from pycds.alembic.change_history_utils import hx_table_name
 from pycds.context import get_schema_name
 
 
@@ -99,10 +100,10 @@ class NetworkHistory(Base):
     This class maps to the table containing the change history for Network/meta_network.
     """
 
-    __tablename__ = "meta_network_hx"
+    __tablename__ = hx_table_name(Network.__tablename__, qualify=False)
 
     # Columns
-    id = Column("network_id", Integer)
+    network_id = Column(Integer, nullable=False)
     name = Column("network_name", String)
     long_name = Column("description", String)
     virtual = Column(String(255))
@@ -180,10 +181,10 @@ class StationHistory(Base):
     This class maps to the table containing the change history for Station/meta_station.
     """
 
-    __tablename__ = "meta_station"
+    __tablename__ = hx_table_name(Station.__tablename__, qualify=False)
 
     # Columns
-    id = Column("station_id", Integer)
+    station_id = Column(Integer, nullable=False)
     native_id = Column(String)
     network_id = Column(Integer)
     min_obs_time = Column(DateTime)
@@ -219,6 +220,8 @@ class History(Base):
     """
 
     __tablename__ = "meta_history"
+
+    # Columns
     id = Column("history_id", Integer, primary_key=True)
     station_id = Column("station_id", Integer, ForeignKey("meta_station.station_id"))
     station_name = Column(String)
@@ -268,10 +271,10 @@ class HistoryHistory(Base):
     See the GeoAlchemy2 documentation for details.
     """
 
-    __tablename__ = "meta_history"
+    __tablename__ = hx_table_name(History.__tablename__, qualify=False)
 
     # Columns
-    id = Column("history_id", Integer)
+    history_id = Column(Integer, nullable=False)
     station_id = Column("station_id", Integer)
     station_name = Column(String)
     lon = Column(Numeric)
@@ -475,10 +478,10 @@ class VariableHistory(Base):
     physical quantities which are recorded by the weather stations.
     """
 
-    __tablename__ = "meta_vars"
+    __tablename__ = hx_table_name(Variable.__tablename__, qualify=False)
 
     # Columns
-    id = Column("vars_id", Integer)
+    vars_id = Column(Integer, nullable=False)
     name = Column("net_var_name", CIText())
     unit = Column(String)
     standard_name = Column(String, nullable=False)
