@@ -96,7 +96,7 @@ def with_schema_name(sesh, schema_name, action):
     Restore existing search path after action.
     """
     old_search_path = sesh.execute("SHOW search_path").scalar()
-    sesh.execute(f"SET search_path TO {schema_name}")
+    sesh.execute(f"SET search_path TO {schema_name}, public")
     action(sesh)
     sesh.execute(f"SET search_path TO {old_search_path}")
 
@@ -283,6 +283,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
 def insert_crmp_data(sesh, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
+    print()
 
     def action(sesh):
         fname = resource_filename("pycds", "data/crmp_subset_data.sql")
