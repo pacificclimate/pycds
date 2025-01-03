@@ -13,7 +13,7 @@ from pycds.alembic.change_history_utils import hx_table_name, hx_id_name
     ],
 )
 def test_function(
-        db_fn_name, py_fn, argument, expected, schema_name, sesh_in_prepared_schema_left
+    db_fn_name, py_fn, argument, expected, schema_name, sesh_in_prepared_schema_left
 ):
     # Test db function
     result = sesh_in_prepared_schema_left.execute(
