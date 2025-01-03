@@ -1,7 +1,4 @@
-"""Smoke tests:
-- Upgrade creates functions
-- Downgrade drops functions
-"""
+"""Smoke tests"""
 
 # -*- coding: utf-8 -*-
 import logging
@@ -17,11 +14,16 @@ from pycds.database import get_schema_item_names
 logger = logging.getLogger("tests")
 
 
-table_names = ("meta_network",)
+table_info = (
+    ("meta_network", "network_id", []),
+    ("meta_station", "station_id", [("meta_network", "network_id")]),
+    ("meta_history", "history_id", [("meta_station", "station_id")]),
+    ("meta_vars", "vars_id", [("meta_network", "network_id")]),
+)
 
 
 def check_column(table, col_name, col_type=None, present=True):
-    """Check that expected column is present in a table"""
+    """Check that expected column is present in a table and of specified type"""
     if present:
         assert col_name in table.columns
         assert isinstance(table.columns[col_name].type, col_type)
@@ -59,6 +61,7 @@ def test_upgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
     """Test the schema migration to a59d64cf16ca."""
+    # TODO: Remove
     print("Testing in schema", schema_name)
 
     # Set up database to target version (a59d64cf16ca)
@@ -67,33 +70,25 @@ def test_upgrade(
     # Check that tables have been altered or created as expected.
     names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
     metadata = MetaData(schema=schema_name, bind=engine)
-    for name in table_names:
+    for table_name, pri_key_name, foreign_keys in table_info:
         # Primary table: columns added
-        pri_name = pri_table_name(name, qualify=False)
+        pri_name = pri_table_name(table_name, qualify=False)
         assert pri_name in names
         pri_table = Table(pri_name, metadata, autoload_with=engine)
         check_column(pri_table, "mod_time", TIMESTAMP)
         check_column(pri_table, "mod_user", VARCHAR)
 
-        # History table columns: primary plus two more
-        hx_name = hx_table_name(name, qualify=False)
+        # History table columns: primary plus additional columns
+        hx_name = hx_table_name(table_name, qualify=False)
         assert hx_name in names
         hx_table = Table(hx_name, metadata, autoload_with=engine)
         for col in pri_table.columns:
             check_column(hx_table, col.name, col.type.__class__)
         check_column(hx_table, "deleted", BOOLEAN)
-        check_column(hx_table, hx_id_name(name), INTEGER)
-
-        # TODO: History table contents - this will go elsewhere, when we have
-        #  a prepared test database available. Currently nothing in these tables.
-        pri_count = engine.execute(
-            select(func.count("*")).select_from(pri_table)
-        ).scalar()
-        print("pri_count", pri_count)
-        hx_count = engine.execute(
-            select(func.count("*")).select_from(hx_table)
-        ).scalar()
-        assert pri_count == hx_count
+        check_column(hx_table, hx_id_name(table_name), INTEGER)
+        for fk_table_name, fk_key_name in foreign_keys:
+            check_column(hx_table, fk_key_name, INTEGER)
+            check_column(hx_table, hx_id_name(fk_table_name), INTEGER)
 
         # Triggers
         check_triggers(
@@ -136,16 +131,16 @@ def test_downgrade(
     # Check that tables have been altered or dropped as expected.
     names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
     metadata = MetaData(schema=schema_name, bind=engine)
-    for name in table_names:
+    for table_name, _, _ in table_info:
         # Primary table: columns dropped
-        pri_name = pri_table_name(name, qualify=False)
+        pri_name = pri_table_name(table_name, qualify=False)
         assert pri_name in names
         pri_table = Table(pri_name, metadata, autoload_with=engine)
         check_column(pri_table, "mod_time", present=False)
         check_column(pri_table, "mod_user", present=False)
 
         # History table: dropped
-        hx_name = hx_table_name(name, qualify=False)
+        hx_name = hx_table_name(table_name, qualify=False)
         assert hx_name not in names
 
         # Triggers (primary): dropped
