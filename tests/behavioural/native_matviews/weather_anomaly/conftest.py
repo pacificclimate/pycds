@@ -12,9 +12,10 @@ from pycds import (
 
 
 @pytest.fixture(scope="function")
-def prepared_sesh_left(prepared_schema_from_migrations_left):
+def prepared_sesh_left(prepared_schema_from_migrations_left, schema_name):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()
+    sesh.execute(f"SET search_path TO {schema_name}, public")
 
     yield sesh
 
