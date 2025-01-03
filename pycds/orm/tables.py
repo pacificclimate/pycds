@@ -72,9 +72,7 @@ class Network(Base):
     publish = Column(Boolean)
     color = Column("col_hex", String)
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -110,9 +108,7 @@ class NetworkHistory(Base):
     publish = Column(Boolean)
     color = Column("col_hex", String)
     contact_id = Column(Integer)
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -156,9 +152,7 @@ class Station(Base):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     publish = Column(Boolean, default=True, nullable=False)
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -190,9 +184,7 @@ class StationHistory(Base):
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     publish = Column(Boolean, default=True, nullable=False)
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -237,9 +229,7 @@ class History(Base):
     freq = Column(String)
     sensor_id = Column(ForeignKey("meta_sensor.sensor_id"))
     the_geom = Column(Geometry("GEOMETRY", 4326))
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -289,9 +279,7 @@ class HistoryHistory(Base):
     freq = Column(String)
     sensor_id = Column(Integer)
     the_geom = Column(Geometry("GEOMETRY", 4326))
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -422,9 +410,7 @@ class Variable(Base):
     display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
@@ -489,9 +475,7 @@ class VariableHistory(Base):
     display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer)
-    mod_time = Column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
