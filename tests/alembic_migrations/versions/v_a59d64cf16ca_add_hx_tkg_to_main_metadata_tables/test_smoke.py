@@ -4,7 +4,7 @@
 import logging
 import pytest
 from alembic import command
-from sqlalchemy import Table, MetaData, func, select, text
+from sqlalchemy import Table, MetaData, text
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
 from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name

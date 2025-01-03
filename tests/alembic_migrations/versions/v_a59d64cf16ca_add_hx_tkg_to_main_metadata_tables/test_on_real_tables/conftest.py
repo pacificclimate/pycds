@@ -47,5 +47,3 @@ def sesh_with_large_data(prepared_schema_from_migrations_left, schema_name):
     yield sesh
 
     sesh.close()
-
-
