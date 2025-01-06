@@ -1,3 +1,4 @@
+import logging
 import os
 import pytest
 
@@ -45,6 +46,7 @@ def db_setup(schema_name):
         engine.execute("CREATE EXTENSION postgis")
         engine.execute("CREATE EXTENSION plpython3u")
         engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
+        engine.execute("CREATE EXTENSION IF NOT EXISTS hstore")
 
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
@@ -112,6 +114,7 @@ def prepared_schema_from_migrations_left(
         )
 
     """
+    logging.getLogger("alembic").setLevel(logging.CRITICAL)
     engine, script = prepare_schema_from_migrations(
         uri_left,
         alembic_config_left,
