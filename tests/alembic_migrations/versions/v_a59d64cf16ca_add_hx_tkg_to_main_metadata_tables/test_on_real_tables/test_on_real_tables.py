@@ -8,7 +8,7 @@ import logging
 
 import pytest
 from alembic import command
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, MetaData, Table
 from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
@@ -94,6 +94,16 @@ def test_table_contents(
 
     # Check the resulting tables
 
+    # Introspect tables and show what we got
+    # engine, script = prepared_schema_from_migrations_left
+    # metadata = MetaData(schema=schema_name, bind=engine)
+    # for table_name in (primary.__tablename__, history.__tablename__):
+    #     print()
+    #     print("Table", table_name)
+    #     table = Table(table_name, metadata, autoload_with=engine)
+    #     for column in table.columns:
+    #         print("  Column", column)
+
     # Count
     pri_count = table_count(primary)
     hx_count = table_count(history)
@@ -112,7 +122,6 @@ def test_table_contents(
         .select_from(primary)
         .join(history, primary.id == getattr(history, primary_id))
     )
-    print("Contents test", stmt)
     result = sesh.execute(stmt).scalar()
     assert result
 
