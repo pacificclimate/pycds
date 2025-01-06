@@ -6,7 +6,7 @@ jobs:
   test:
 
     # For example of update to 22.04, see station-data-portal-backend
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version:
@@ -30,7 +30,12 @@ jobs:
         curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
         sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
         sudo apt-get update
-        sudo apt-get install postgresql-plpython3-14 postgresql-14-postgis-3
+        sudo apt-get install postgresql-plpython3-16 postgresql-16-postgis-3
+
+    - name: Start Postgres
+      run: |
+        # See https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#postgresql
+        sudo systemctl start postgresql.service
 
     - name: Install Poetry
       run: |
