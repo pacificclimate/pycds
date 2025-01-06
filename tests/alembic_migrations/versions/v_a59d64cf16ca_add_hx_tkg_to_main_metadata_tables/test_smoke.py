@@ -61,8 +61,6 @@ def test_upgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
     """Test the schema migration to a59d64cf16ca."""
-    # TODO: Remove
-    print("Testing in schema", schema_name)
 
     # Set up database to target version (a59d64cf16ca)
     engine, script = prepared_schema_from_migrations_left

@@ -1,6 +1,8 @@
 """
 Utility functions supporting change history migrations.
-These are Python functions, not database functions.
+These are Python functions, not database functions, and they are used in coding the
+migration. Naming functions do correspond to equivalent database functions used by
+the change history functionality.
 """
 from typing import Iterable, Any
 
@@ -32,12 +34,9 @@ def sql_array(a: Iterable[Any]) -> str:
     return f"{{{', '.join(a)}}}"
 
 
-# TODO: Wrap .execute(...) commands in DDL objects.
-
-
 def add_history_cols_to_primary(collection_name: str):
-    # TODO: It seems that we can add only one column at a time using
-    #   op.add_column. Do it in one statement as below.
+    # op.add_column can add only one column at a time.
+    # Tables can be large, so for efficiency we add both columns in one command.
     op.execute(
         f"ALTER TABLE {pri_table_name(collection_name)} "
         f"  ADD COLUMN mod_time timestamp without time zone NOT NULL DEFAULT NOW(), "
