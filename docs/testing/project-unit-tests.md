@@ -24,8 +24,13 @@ production environment. This is done by the GitHub workflow
 
 ## Running unit tests locally
 
-You may find it useful to look at the GitHub Action for the CI tests
-to see how the tests are set up and run. Ultimately it is simple, however.
+Notes:
+- Consult the GitHub Action `.github/workflows/python-ci.yml` 
+  to see how unit tests are set up and run.
+- Tests rely on packages `plpython3` and `postgis` (ver 3). The installation 
+  specifications for these packages differ from platform to platform, but if you are 
+  on a reasonably up-to-date version of Ubuntu then the installation for them in  
+  `python-ci.yml` will probably be helpful.
 
 To run the unit tests locally:
 
