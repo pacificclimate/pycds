@@ -377,6 +377,33 @@ Index("obs_raw_history_id_idx", Obs.history_id)
 Index("obs_raw_id_idx", Obs.id)
 
 
+class ObsHistory(Base):
+    """This class maps to the table which records the details of weather
+    observations. Each row is one single data point for one single
+    quantity.
+    """
+
+    __tablename__ = hx_table_name(Obs.__tablename__, schema=None)
+
+    obs_raw_id = Column(BigInteger)
+    time = Column("obs_time", DateTime)
+    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    datum = Column(Float)
+    vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
+    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    obs_raw_hx_id = Column(BigInteger, primary_key=True)
+    meta_history_hx_id = Column(
+        Integer, ForeignKey("meta_history_hx.meta_history_hx_id")
+    )
+    meta_vars_hx_id = Column(
+        Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id")
+    )
+    
+
 class TimeBound(Base):
     """This class maps to a table which records the start and end times
     for an observation on a variable that spans a changeable time period,
