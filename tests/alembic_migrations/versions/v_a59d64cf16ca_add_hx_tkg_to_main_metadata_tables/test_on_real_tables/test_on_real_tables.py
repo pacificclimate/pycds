@@ -134,7 +134,7 @@ def test_table_contents(
             sesh.query(
                 func.array_agg(
                     aggregate_order_by(
-                        getattr(history, order_by), getattr(history, primary_id)
+                        getattr(history, primary_id), getattr(history, order_by)
                     )
                 ).label("pids")
             )
