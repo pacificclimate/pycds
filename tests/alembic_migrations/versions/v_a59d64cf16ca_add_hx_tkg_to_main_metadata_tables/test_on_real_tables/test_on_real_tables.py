@@ -129,29 +129,21 @@ def test_table_contents(
 
     # Order: Check that history table order by history key is the same as the order
     # by primary id.
-    t1 = (
-        sesh.query(
-            func.array_agg(
-                aggregate_order_by(
-                    getattr(history, primary_id), getattr(history, primary_id)
-                )
-            ).label("pids")
+    def hx_table_pids(order_by: str):
+        return (
+            sesh.query(
+                func.array_agg(
+                    aggregate_order_by(
+                        getattr(history, order_by), getattr(history, primary_id)
+                    )
+                ).label("pids")
+            )
+            .select_from(history)
+            .subquery()
         )
-        .select_from(history)
-        .subquery()
-    )
-    t2 = (
-        sesh.query(
-            func.array_agg(
-                aggregate_order_by(
-                    getattr(history, primary_id),
-                    getattr(history, hx_id_name(primary.__tablename__)),
-                )
-            ).label("pids")
-        )
-        .select_from(history)
-        .subquery()
-    )
+
+    t1 = hx_table_pids(primary_id)
+    t2 = hx_table_pids(hx_id_name(primary.__tablename__))
     result = sesh.query(t1.c.pids == t2.c.pids).scalar()
     assert result
 
