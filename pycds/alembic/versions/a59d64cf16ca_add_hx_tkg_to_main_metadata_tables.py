@@ -18,6 +18,7 @@ from pycds.alembic.change_history_utils import (
     create_history_table_triggers,
     create_primary_table_triggers, create_history_table_indexes,
 )
+from pycds.alembic.util import grant_standard_table_privileges
 
 # revision identifiers, used by Alembic.
 revision = "a59d64cf16ca"
@@ -53,6 +54,7 @@ def upgrade():
         # History table triggers must be created before the table is populated.
         create_history_table_triggers(table_name, foreign_keys)
         populate_history_table(table_name, primary_key_name)
+        grant_standard_table_privileges(table_name, schema=schema_name)
 
 
 def downgrade():
