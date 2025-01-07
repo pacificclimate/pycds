@@ -88,6 +88,11 @@ def test_upgrade(
             check_column(hx_table, fk_key_name, INTEGER)
             check_column(hx_table, hx_id_name(fk_table_name), INTEGER)
 
+        # History table indexes. This is a pretty loose test but it suffices.
+        assert {(pri_key_name,)} == {
+            tuple(c.name for c in i.columns) for i in hx_table.indexes
+        }
+
         # Triggers
         check_triggers(
             pri_table,

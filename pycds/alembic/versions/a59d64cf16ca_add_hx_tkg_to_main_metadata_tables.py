@@ -16,7 +16,7 @@ from pycds.alembic.change_history_utils import (
     drop_history_table,
     drop_history_cols_from_primary,
     create_history_table_triggers,
-    create_primary_table_triggers,
+    create_primary_table_triggers, create_history_table_indexes,
 )
 
 # revision identifiers, used by Alembic.
@@ -41,11 +41,15 @@ def upgrade():
     # We have to set the search_path so that the trigger functions fired when
     # the history table is populated can find the functions that they call.
     op.get_bind().execute(f"SET search_path TO {schema_name}, public")
+
     for table_name, primary_key_name, foreign_keys in table_info:
+        # Primary table
         add_history_cols_to_primary(table_name)
         create_primary_table_triggers(table_name)
 
+        # History table
         create_history_table(table_name, foreign_keys)
+        create_history_table_indexes(table_name, primary_key_name)
         # History table triggers must be created before the table is populated.
         create_history_table_triggers(table_name, foreign_keys)
         populate_history_table(table_name, primary_key_name)

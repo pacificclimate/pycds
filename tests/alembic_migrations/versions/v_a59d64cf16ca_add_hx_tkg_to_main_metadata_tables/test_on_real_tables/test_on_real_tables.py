@@ -103,6 +103,8 @@ def test_table_contents(
     #     table = Table(table_name, metadata, autoload_with=engine)
     #     for column in table.columns:
     #         print("  Column", column)
+    #     for index in table.indexes:
+    #         print("  Index", index)
 
     # Count
     pri_count = table_count(primary)

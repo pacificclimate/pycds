@@ -101,7 +101,7 @@ class NetworkHistory(Base):
     __tablename__ = hx_table_name(Network.__tablename__, qualify=False)
 
     # Columns
-    network_id = Column(Integer, nullable=False)
+    network_id = Column(Integer, nullable=False, index=True)
     name = Column("network_name", String)
     long_name = Column("description", String)
     virtual = Column(String(255))
@@ -178,7 +178,7 @@ class StationHistory(Base):
     __tablename__ = hx_table_name(Station.__tablename__, qualify=False)
 
     # Columns
-    station_id = Column(Integer, nullable=False)
+    station_id = Column(Integer, nullable=False, index=True)
     native_id = Column(String)
     network_id = Column(Integer)
     min_obs_time = Column(DateTime)
@@ -264,7 +264,7 @@ class HistoryHistory(Base):
     __tablename__ = hx_table_name(History.__tablename__, qualify=False)
 
     # Columns
-    history_id = Column(Integer, nullable=False)
+    history_id = Column(Integer, nullable=False, index=True)
     station_id = Column("station_id", Integer)
     station_name = Column(String)
     lon = Column(Numeric)
@@ -465,7 +465,7 @@ class VariableHistory(Base):
     __tablename__ = hx_table_name(Variable.__tablename__, qualify=False)
 
     # Columns
-    vars_id = Column(Integer, nullable=False)
+    vars_id = Column(Integer, nullable=False, index=True)
     name = Column("net_var_name", CIText())
     unit = Column(String)
     standard_name = Column(String, nullable=False)

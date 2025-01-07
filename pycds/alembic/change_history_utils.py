@@ -77,6 +77,17 @@ def drop_history_table(collection_name: str):
     op.execute(f"DROP TABLE {hx_table_name(collection_name)}")
 
 
+def create_history_table_indexes(collection_name: str, pri_id_name: str):
+    # How much do we care about index naming? SQLAlchemy uses a different pattern than
+    # appears typical in CRMP.
+    op.create_index(
+        None,  # Use default SQLA index name.
+        hx_table_name(collection_name, qualify=False),
+        [pri_id_name],
+        schema=schema_name,
+    )
+
+
 def populate_history_table(collection_name: str, pri_id_name: str):
     # Populate the history table with data from the primary table, in order of primary id.
     # That ordering guarantees that the newly generated history id's will be in the
