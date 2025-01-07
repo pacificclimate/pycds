@@ -64,4 +64,4 @@ def upgrade():
 def downgrade():
     drop_history_triggers(table_name)
     drop_history_table(table_name)
-    drop_history_cols_from_primary(table_name)
+    drop_history_cols_from_primary(table_name, columns=("mod_user",))

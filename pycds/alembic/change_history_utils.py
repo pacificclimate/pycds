@@ -37,10 +37,10 @@ def sql_array(a: Iterable[Any]) -> str:
 
 def add_history_cols_to_primary(
     collection_name: str,
-    columns=(
+    columns: tuple[str] = (
         "mod_time timestamp without time zone NOT NULL DEFAULT NOW()",
         'mod_user character varying(64) COLLATE pg_catalog."default" '
-        '   NOT NULL DEFAULT CURRENT_USER',
+        "   NOT NULL DEFAULT CURRENT_USER",
     ),
 ):
     # op.add_column can add only one column at a time.
@@ -49,12 +49,11 @@ def add_history_cols_to_primary(
     op.execute(f"ALTER TABLE {pri_table_name(collection_name)} {add_columns}")
 
 
-def drop_history_cols_from_primary(collection_name: str):
-    op.execute(
-        f"ALTER TABLE {pri_table_name(collection_name)} "
-        f"  DROP COLUMN mod_time, "
-        f"  DROP COLUMN mod_user"
-    )
+def drop_history_cols_from_primary(
+    collection_name: str, columns: tuple[str] = ("mod_time", "mod_user")
+):
+    drop_columns = ", ".join(f"DROP COLUMN {c}" for c in columns)
+    op.execute(f"ALTER TABLE {pri_table_name(collection_name)} {drop_columns}")
 
 
 def create_history_table(collection_name: str, foreign_keys: list[tuple[str, str]]):
