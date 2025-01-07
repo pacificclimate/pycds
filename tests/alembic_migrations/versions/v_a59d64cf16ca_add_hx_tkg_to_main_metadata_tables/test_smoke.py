@@ -70,14 +70,14 @@ def test_upgrade(
     metadata = MetaData(schema=schema_name, bind=engine)
     for table_name, pri_key_name, foreign_keys in table_info:
         # Primary table: columns added
-        pri_name = pri_table_name(table_name, qualify=False)
+        pri_name = pri_table_name(table_name, schema=None)
         assert pri_name in names
         pri_table = Table(pri_name, metadata, autoload_with=engine)
         check_column(pri_table, "mod_time", TIMESTAMP)
         check_column(pri_table, "mod_user", VARCHAR)
 
         # History table columns: primary plus additional columns
-        hx_name = hx_table_name(table_name, qualify=False)
+        hx_name = hx_table_name(table_name, schema=None)
         assert hx_name in names
         hx_table = Table(hx_name, metadata, autoload_with=engine)
         for col in pri_table.columns:
@@ -136,14 +136,14 @@ def test_downgrade(
     metadata = MetaData(schema=schema_name, bind=engine)
     for table_name, _, _ in table_info:
         # Primary table: columns dropped
-        pri_name = pri_table_name(table_name, qualify=False)
+        pri_name = pri_table_name(table_name, schema=None)
         assert pri_name in names
         pri_table = Table(pri_name, metadata, autoload_with=engine)
         check_column(pri_table, "mod_time", present=False)
         check_column(pri_table, "mod_user", present=False)
 
         # History table: dropped
-        hx_name = hx_table_name(table_name, qualify=False)
+        hx_name = hx_table_name(table_name, schema=None)
         assert hx_name not in names
 
         # Triggers (primary): dropped

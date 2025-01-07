@@ -98,7 +98,7 @@ class NetworkHistory(Base):
     This class maps to the table containing the change history for Network/meta_network.
     """
 
-    __tablename__ = hx_table_name(Network.__tablename__, qualify=False)
+    __tablename__ = hx_table_name(Network.__tablename__, schema=None)
 
     # Columns
     network_id = Column(Integer, nullable=False, index=True)
@@ -175,7 +175,7 @@ class StationHistory(Base):
     This class maps to the table containing the change history for Station/meta_station.
     """
 
-    __tablename__ = hx_table_name(Station.__tablename__, qualify=False)
+    __tablename__ = hx_table_name(Station.__tablename__, schema=None)
 
     # Columns
     station_id = Column(Integer, nullable=False, index=True)
@@ -261,7 +261,7 @@ class HistoryHistory(Base):
     See the GeoAlchemy2 documentation for details.
     """
 
-    __tablename__ = hx_table_name(History.__tablename__, qualify=False)
+    __tablename__ = hx_table_name(History.__tablename__, schema=None)
 
     # Columns
     history_id = Column(Integer, nullable=False, index=True)
@@ -462,7 +462,7 @@ class VariableHistory(Base):
     physical quantities which are recorded by the weather stations.
     """
 
-    __tablename__ = hx_table_name(Variable.__tablename__, qualify=False)
+    __tablename__ = hx_table_name(Variable.__tablename__, schema=None)
 
     # Columns
     vars_id = Column(Integer, nullable=False, index=True)

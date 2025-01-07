@@ -14,12 +14,13 @@ from pycds import get_schema_name
 schema_name = get_schema_name()
 
 
-def qualified_name(name: str) -> str:
-    return f"{schema_name}.{name}"
+def qualified_name(name: str, schema=schema_name) -> str:
+    prefix = f"{schema}." if schema else ""
+    return f"{prefix}{name}"
 
 
-def pri_table_name(collection_name: str, qualify=True) -> str:
-    return qualified_name(collection_name) if qualify else collection_name
+def pri_table_name(collection_name: str, schema=schema_name) -> str:
+    return qualified_name(collection_name, schema=schema)
 
 
 def hx_table_name(collection_name: str, **kwargs) -> str:
@@ -82,7 +83,7 @@ def create_history_table_indexes(collection_name: str, pri_id_name: str):
     # appears typical in CRMP.
     op.create_index(
         None,  # Use default SQLA index name.
-        hx_table_name(collection_name, qualify=False),
+        hx_table_name(collection_name, schema=None),
         [pri_id_name],
         schema=schema_name,
     )

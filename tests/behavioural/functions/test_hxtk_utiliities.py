@@ -23,4 +23,4 @@ def test_function(
 
     # Test local util function
     if py_fn is not None:
-        assert py_fn(argument, qualify=False) == expected
+        assert py_fn(argument, schema=None) == expected
