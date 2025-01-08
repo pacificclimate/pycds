@@ -9,8 +9,6 @@ import logging
 import pytest
 from alembic import command
 from sqlalchemy import select, func, and_, MetaData, Table
-from sqlalchemy.sql.operators import isnot_distinct_from
-from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from pycds import (
     Network,
@@ -22,8 +20,8 @@ from pycds import (
     Variable,
     VariableHistory,
 )
-from pycds.alembic.change_history_utils import hx_id_name
 from pycds.database import check_migration_version, get_schema_item_names
+from tests.alembic_migrations.helpers import check_history_table_contents
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 
@@ -78,12 +76,10 @@ def test_table_contents(
     """
     sesh = sesh_with_large_data
 
-    def table_count(table):
-        return sesh.execute(select(func.count("*")).select_from(table)).scalar()
-
     check_migration_version(sesh, version="7ab87f8fbcf4")
     # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
 
+    # TODO: Remove
     for item_type in ["tables", "routines"]:
         names = set(get_schema_item_names(sesh, item_type, schema_name=schema_name))
         print(f"### {item_type} in {schema_name}:", sorted(names))
@@ -93,68 +89,12 @@ def test_table_contents(
     check_migration_version(sesh, version="a59d64cf16ca")
 
     # Check the resulting tables
-
-    # Introspect tables and show what we got
-    # engine, script = prepared_schema_from_migrations_left
-    # metadata = MetaData(schema=schema_name, bind=engine)
-    # for table_name in (primary.__tablename__, history.__tablename__):
-    #     print()
-    #     print("Table", table_name)
-    #     table = Table(table_name, metadata, autoload_with=engine)
-    #     for column in table.columns:
-    #         print("  Column", column)
-    #     for index in table.indexes:
-    #         print("  Index", index)
-
-    # Count
-    pri_count = table_count(primary)
-    hx_count = table_count(history)
-    assert pri_count == hx_count
-
-    # Contents: check that every specified column matches between the two tables.
-    stmt = (
-        select(
-            func.every(
-                and_(
-                    isnot_distinct_from(getattr(primary, col), getattr(history, col))
-                    for col in columns
-                )
-            )
-        )
-        .select_from(primary)
-        .join(history, primary.id == getattr(history, primary_id))
+    check_history_table_contents(
+        sesh,
+        primary,
+        history,
+        primary_id,
+        columns,
+        foreign_tables,
+        schema_name,
     )
-    result = sesh.execute(stmt).scalar()
-    assert result
-
-    # Order: Check that history table order by history key is the same as the order
-    # by primary id.
-    def hx_table_pids(order_by: str):
-        return (
-            sesh.query(
-                func.array_agg(
-                    aggregate_order_by(
-                        getattr(history, primary_id), getattr(history, order_by)
-                    )
-                ).label("pids")
-            )
-            .select_from(history)
-            .subquery()
-        )
-
-    t1 = hx_table_pids(primary_id)
-    t2 = hx_table_pids(hx_id_name(primary.__tablename__))
-    result = sesh.query(t1.c.pids == t2.c.pids).scalar()
-    assert result
-
-    # Foreign keys: Check that foreign keys are non-null (value correctness is
-    # checked elsewhere).
-    if foreign_tables:
-        assert sesh.query(
-            func.every(
-                and_(
-                    getattr(history, hx_id_name(ft.__tablename__)).is_not(None)
-                    for ft in foreign_tables
-                )
-            )
-        ).scalar()

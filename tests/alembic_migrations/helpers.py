@@ -1,11 +1,15 @@
 from typing import Any
 
-from sqlalchemy import Table, MetaData, text
+from sqlalchemy import Table, MetaData, text, select, func
 import sqlalchemy.types
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
+from sqlalchemy import select, func, and_, MetaData, Table
+from sqlalchemy.sql.operators import isnot_distinct_from
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name
 from pycds.database import get_schema_item_names
+from pycds.alembic.change_history_utils import hx_id_name
 
 
 def check_column(table, col_name, col_type=None, present=True):
@@ -109,6 +113,10 @@ def check_history_tracking_upgrade(
     )
 
 
+def table_count(sesh, table):
+    return sesh.execute(select(func.count("*")).select_from(table)).scalar()
+
+
 def check_history_tracking_downgrade(
     engine,
     table_name: str,
@@ -147,3 +155,77 @@ def check_history_tracking_downgrade(
         ],
         present=False,
     )
+
+
+def check_history_table_contents(
+    sesh,
+    primary,
+    history,
+    primary_id,
+    columns,
+    foreign_tables,
+    schema_name,
+):
+    # Introspect tables and show what we got
+    metadata = MetaData(schema=schema_name, bind=sesh.get_bind())
+    for table_name in (primary.__tablename__, history.__tablename__):
+        print()
+        print("Table", table_name)
+        table = Table(table_name, metadata, autoload=True)
+        for column in table.columns:
+            print("  Column", column)
+        for index in table.indexes:
+            print("  Index", index)
+
+    # Count
+    pri_count = table_count(sesh, primary)
+    hx_count = table_count(sesh, history)
+    assert pri_count == hx_count
+
+    # Contents: check that every specified column matches between the two tables.
+    stmt = (
+        select(
+            func.every(
+                and_(
+                    isnot_distinct_from(getattr(primary, col), getattr(history, col))
+                    for col in columns
+                )
+            )
+        )
+        .select_from(primary)
+        .join(history, primary.id == getattr(history, primary_id))
+    )
+    result = sesh.execute(stmt).scalar()
+    assert result
+
+    # Order: Check that history table order by history key is the same as the order
+    # by primary id.
+    def hx_table_pids(order_by: str):
+        return (
+            sesh.query(
+                func.array_agg(
+                    aggregate_order_by(
+                        getattr(history, primary_id), getattr(history, order_by)
+                    )
+                ).label("pids")
+            )
+            .select_from(history)
+            .subquery()
+        )
+
+    t1 = hx_table_pids(primary_id)
+    t2 = hx_table_pids(hx_id_name(primary.__tablename__))
+    result = sesh.query(t1.c.pids == t2.c.pids).scalar()
+    assert result
+
+    # Foreign keys: Check that foreign keys are non-null (value correctness is
+    # checked elsewhere).
+    if foreign_tables:
+        assert sesh.query(
+            func.every(
+                and_(
+                    getattr(history, hx_id_name(ft.__tablename__)).is_not(None)
+                    for ft in foreign_tables
+                )
+            )
+        ).scalar()
