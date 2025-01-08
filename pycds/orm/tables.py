@@ -399,10 +399,8 @@ class ObsHistory(Base):
     meta_history_hx_id = Column(
         Integer, ForeignKey("meta_history_hx.meta_history_hx_id")
     )
-    meta_vars_hx_id = Column(
-        Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id")
-    )
-    
+    meta_vars_hx_id = Column(Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"))
+
 
 class TimeBound(Base):
     """This class maps to a table which records the start and end times

@@ -1,8 +1,8 @@
 import re
 
-from sqlalchemy import inspect
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm import sessionmaker
+
 from pycds.context import get_schema_name
 
 

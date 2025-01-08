@@ -1,15 +1,13 @@
-from typing import Any
-
-from sqlalchemy import Table, MetaData, text, select, func
 import sqlalchemy.types
-from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 from sqlalchemy import select, func, and_, MetaData, Table
-from sqlalchemy.sql.operators import isnot_distinct_from
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.sql.operators import isnot_distinct_from
+from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
-from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name
-from pycds.database import get_schema_item_names
 from pycds.alembic.change_history_utils import hx_id_name
+from pycds.alembic.change_history_utils import pri_table_name, hx_table_name
+from pycds.database import get_schema_item_names
 
 
 def check_column(table, col_name, col_type=None, present=True):
@@ -41,9 +39,6 @@ group by trigger_name
             assert item in triggers
         else:
             assert item not in triggers
-
-
-# TODO: Generalize for primary table PK type (int, bigint)
 
 
 def check_history_tracking_upgrade(

@@ -8,7 +8,6 @@ import logging
 
 import pytest
 from alembic import command
-from sqlalchemy import select, func, and_, MetaData, Table
 
 from pycds import (
     Network,
@@ -78,11 +77,6 @@ def test_table_contents(
 
     check_migration_version(sesh, version="7ab87f8fbcf4")
     # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
-
-    # TODO: Remove
-    for item_type in ["tables", "routines"]:
-        names = set(get_schema_item_names(sesh, item_type, schema_name=schema_name))
-        print(f"### {item_type} in {schema_name}:", sorted(names))
 
     # Now upgrade to a59d64cf16ca
     command.upgrade(alembic_config_left, "+1")

@@ -47,7 +47,7 @@ def upgrade():
         table_name,
         columns=(
             'mod_user character varying(64) COLLATE pg_catalog."default" '
-            '   NOT NULL DEFAULT CURRENT_USER',
+            "   NOT NULL DEFAULT CURRENT_USER",
         ),
     )
     create_primary_table_triggers(table_name)
