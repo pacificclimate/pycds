@@ -78,15 +78,35 @@ def drop_history_table(collection_name: str):
     op.execute(f"DROP TABLE {hx_table_name(collection_name)}")
 
 
-def create_history_table_indexes(collection_name: str, pri_id_name: str):
-    # How much do we care about index naming? SQLAlchemy uses a different pattern than
-    # appears typical in CRMP.
-    op.create_index(
-        None,  # Use default SQLA index name.
-        hx_table_name(collection_name, schema=None),
-        [pri_id_name],
-        schema=schema_name,
-    )
+def create_history_table_indexes(
+    collection_name: str,
+    pri_id_name: str,
+    foreign_keys: list[tuple[str, str]],
+    extras=None,
+):
+    """
+    Create indexes on the history table. For analysis on what indexes are needed,
+    see https://github.com/pacificclimate/pycds/issues/228
+    """
+
+    for columns in (
+        # Index on primary table primary key, mod_time, mod_user
+        ([pri_id_name], ["mod_time"], ["mod_user"])
+        # Index on all history foreign keys
+        + tuple(
+            [hx_id_name(fk_table_name)]
+            for fk_table_name, _ in (foreign_keys or tuple())
+        )
+        + (extras or tuple())
+    ):
+        # How much do we care about index naming? SQLAlchemy uses a different pattern than
+        # appears typical in CRMP.
+        op.create_index(
+            None,  # Use default SQLAlchemy index name.
+            hx_table_name(collection_name, schema=None),
+            columns,
+            schema=schema_name,
+        )
 
 
 def populate_history_table(collection_name: str, pri_id_name: str):
