@@ -96,7 +96,7 @@ def with_schema_name(sesh, schema_name, action):
     Restore existing search path after action.
     """
     old_search_path = sesh.execute("SHOW search_path").scalar()
-    sesh.execute(f"SET search_path TO {schema_name}")
+    sesh.execute(f"SET search_path TO {schema_name}, public")
     action(sesh)
     sesh.execute(f"SET search_path TO {old_search_path}")
 

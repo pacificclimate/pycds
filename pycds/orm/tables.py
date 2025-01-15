@@ -18,7 +18,7 @@ find all the relationship attributes that a given class may have.)
 
 import datetime
 
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, func, literal_column
 from sqlalchemy import (
     Table,
     Column,
@@ -38,6 +38,7 @@ from geoalchemy2 import Geometry
 
 from citext import CIText
 
+from pycds.alembic.change_history_utils import hx_table_name
 from pycds.context import get_schema_name
 
 
@@ -62,6 +63,8 @@ class Network(Base):
     """
 
     __tablename__ = "meta_network"
+
+    # Columns
     id = Column("network_id", Integer, primary_key=True)
     name = Column("network_name", String)
     long_name = Column("description", String)
@@ -69,7 +72,12 @@ class Network(Base):
     publish = Column(Boolean)
     color = Column("col_hex", String)
     contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
+    # Relationships
     stations = relationship("Station", order_by="Station.id", back_populates="network")
     meta_station = synonym("stations")
     variables = relationship("Variable", back_populates="network")
@@ -83,6 +91,32 @@ class Network(Base):
 
     def __str__(self):
         return f"<CRMP Network {self.name}>"
+
+
+class NetworkHistory(Base):
+    """
+    This class maps to the table containing the change history for Network/meta_network.
+    """
+
+    __tablename__ = hx_table_name(Network.__tablename__, schema=None)
+
+    # Columns
+    network_id = Column(Integer, nullable=False, index=True)
+    name = Column("network_name", String)
+    long_name = Column("description", String)
+    virtual = Column(String(255))
+    publish = Column(Boolean)
+    color = Column("col_hex", String)
+    contact_id = Column(Integer)
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    meta_network_hx_id = Column(Integer, primary_key=True)
+
+    def __str__(self):
+        return f"<CRMP NetworkHistory {self.name}>"
 
 
 class Contact(Base):
@@ -110,12 +144,18 @@ class Station(Base):
     """
 
     __tablename__ = "meta_station"
+
+    # Columns
     id = Column("station_id", Integer, primary_key=True)
     native_id = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
     min_obs_time = Column(DateTime)
     max_obs_time = Column(DateTime)
     publish = Column(Boolean, default=True, nullable=False)
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     network = relationship("Network", back_populates="stations")
@@ -128,6 +168,34 @@ class Station(Base):
 
 
 Index("fki_meta_station_network_id_fkey", Station.network_id)
+
+
+class StationHistory(Base):
+    """
+    This class maps to the table containing the change history for Station/meta_station.
+    """
+
+    __tablename__ = hx_table_name(Station.__tablename__, schema=None)
+
+    # Columns
+    station_id = Column(Integer, nullable=False, index=True)
+    native_id = Column(String)
+    network_id = Column(Integer)
+    min_obs_time = Column(DateTime)
+    max_obs_time = Column(DateTime)
+    publish = Column(Boolean, default=True, nullable=False)
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    meta_station_hx_id = Column(Integer, primary_key=True)
+    meta_network_hx_id = Column(
+        Integer, ForeignKey("meta_network_hx.meta_network_hx_id")
+    )
+
+    def __str__(self):
+        return f"<CRMP StationHistory {self.network.name}:{self.native_id}>"
 
 
 class History(Base):
@@ -144,6 +212,8 @@ class History(Base):
     """
 
     __tablename__ = "meta_history"
+
+    # Columns
     id = Column("history_id", Integer, primary_key=True)
     station_id = Column("station_id", Integer, ForeignKey("meta_station.station_id"))
     station_name = Column(String)
@@ -159,6 +229,10 @@ class History(Base):
     freq = Column(String)
     sensor_id = Column(ForeignKey("meta_sensor.sensor_id"))
     the_geom = Column(Geometry("GEOMETRY", 4326))
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     sensor = relationship("MetaSensor")
@@ -172,6 +246,48 @@ class History(Base):
 
 Index("fki_meta_history_station_id_fk", History.station_id)
 Index("meta_history_freq_idx", History.freq)
+
+
+class HistoryHistory(Base):
+    """This class maps to the table which represents a history record for
+    a weather station. Since a station can potentially (and do) move
+    small distances (e.g. from one end of the airport runway to
+    another) or change the frequency of its observations, this table
+    records the details of those changes.
+
+    WARNING: The GeoAlchemy2 `Geometry` column (attribute `the_geom`) forces
+    all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
+    This may or may not be desirable for all use cases, specifically views.
+    See the GeoAlchemy2 documentation for details.
+    """
+
+    __tablename__ = hx_table_name(History.__tablename__, schema=None)
+
+    # Columns
+    history_id = Column(Integer, nullable=False, index=True)
+    station_id = Column("station_id", Integer)
+    station_name = Column(String)
+    lon = Column(Numeric)
+    lat = Column(Numeric)
+    elevation = Column("elev", Float)
+    sdate = Column(Date)
+    edate = Column(Date)
+    tz_offset = Column(Interval)
+    province = Column(String)
+    country = Column(String)
+    comments = Column(String(255))
+    freq = Column(String)
+    sensor_id = Column(Integer)
+    the_geom = Column(Geometry("GEOMETRY", 4326))
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    meta_history_hx_id = Column(Integer, primary_key=True)
+    meta_station_hx_id = Column(
+        Integer, ForeignKey("meta_station_hx.meta_station_hx_id")
+    )
 
 
 # Association table for Obs *--* NativeFLag
@@ -282,25 +398,22 @@ class Variable(Base):
     """
 
     __tablename__ = "meta_vars"
+
+    # Columns
     id = Column("vars_id", Integer, primary_key=True)
     name = Column("net_var_name", CIText())
     unit = Column(String)
-    standard_name = Column(
-        String,
-        nullable=False,
-    )
+    standard_name = Column(String, nullable=False)
     cell_method = Column(String, nullable=False)
     precision = Column(Float)
-    description = Column(
-        "long_description",
-        String,
-    )
-    display_name = Column(
-        String,
-        nullable=False,
-    )
+    description = Column("long_description", String)
+    display_name = Column(String, nullable=False)
     short_name = Column(String)
     network_id = Column(Integer, ForeignKey("meta_network.network_id"))
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
 
     # Relationships
     network = relationship("Network", back_populates="variables")
@@ -342,6 +455,35 @@ class Variable(Base):
 
 
 Index("fki_meta_vars_network_id_fkey", Variable.network_id)
+
+
+class VariableHistory(Base):
+    """This class maps to the table which records the details of the
+    physical quantities which are recorded by the weather stations.
+    """
+
+    __tablename__ = hx_table_name(Variable.__tablename__, schema=None)
+
+    # Columns
+    vars_id = Column(Integer, nullable=False, index=True)
+    name = Column("net_var_name", CIText())
+    unit = Column(String)
+    standard_name = Column(String, nullable=False)
+    cell_method = Column(String, nullable=False)
+    precision = Column(Float)
+    description = Column("long_description", String)
+    display_name = Column(String, nullable=False)
+    short_name = Column(String)
+    network_id = Column(Integer)
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    meta_vars_hx_id = Column(Integer, primary_key=True)
+    meta_network_hx_id = Column(
+        Integer, ForeignKey("meta_network_hx.meta_network_hx_id")
+    )
 
 
 class NativeFlag(Base):
