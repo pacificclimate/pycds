@@ -52,7 +52,7 @@ def upgrade():
         # - None are nullable. In contrast, most in the model tables are.
         "meta_climatological_station",  # TODO: Revise name?
         Column("climatological_station_id", Integer, primary_key=True),
-        Column("station_type", What, nullable=False),  # TODO: Enumeration?
+        Column("station_type", String, nullable=False),  # TODO: Enumeration?
         Column("basin_id", Integer, nullable=False),  # TODO: Same as basin id in SCIP?
         Column("station_name", String, nullable=False),
         Column("province", String, nullable=False),
@@ -68,6 +68,7 @@ def upgrade():
         "meta_climatological_station_x_meta_history",
         Column(
             "climatological_station_id",
+            Integer,
             ForeignKey(
                 f"{schema_name}.meta_climatological_station.climatological_station_id"
             ),
@@ -75,6 +76,7 @@ def upgrade():
         ),
         Column(
             "history_id",
+            Integer,
             ForeignKey(f"{schema_name}.meta_history.history_id"),
             primary_key=True,
         ),
@@ -95,10 +97,10 @@ def upgrade():
         # TODO: Duration can be computed from climatology_bounds. Do this with a provided
         #  function or store in separate column (this one)?
         #  In either case, represent value as an enumeration type?
-        Column("duration", What, nullable=False),
+        Column("duration", String, nullable=False),
         # climatology_bounds corresponds to the attribute of the same name defined in
         # CF Metadata Standards, 7.4 Climatological Statistics
-        Column("climatology_bounds", ARRAY(ARRAY(String)), nullable=False),
+        Column("climatology_bounds", ARRAY(String, dimensions=2), nullable=False),
         Column("num_years", Integer, nullable=False),
         Column("unit", String, nullable=False),
         Column("precision", String, nullable=False),  # Type? Utility???
@@ -125,7 +127,7 @@ def upgrade():
             "climatological_variable_id",
             Integer,
             ForeignKey(
-                f"{schema_name}.meta_climatological_value.climatological_value_id"
+                f"{schema_name}.meta_climatological_variable.climatological_variable_id"
             ),
         ),
         schema=schema_name,

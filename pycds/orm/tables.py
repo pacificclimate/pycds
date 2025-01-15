@@ -619,10 +619,10 @@ class ClimatologicalStation(Base):
     #   prevent entry of erroneous values that just happen to be very long?)
     #
     # - None are nullable. In contrast, most in the model tables are.
-    __tablename__ = "climatological_station"
+    __tablename__ = "meta_climatological_station"
 
     climatological_station_id = Column(Integer, primary_key=True)
-    station_type = Column(What, nullable=False)  # TODO: Enumeration?
+    station_type = Column(String, nullable=False)  # TODO: Use Enumeration type?
     basin_id = Column(Integer, nullable=False)  # TODO: Same as basin id in SCIP?
     station_name = Column(String, nullable=False)
     province = Column(String, nullable=False)
@@ -662,10 +662,10 @@ class ClimatologicalVariable(Base):
     # TODO: Duration can be computed from climatology_bounds. Do this with a provided
     #  function or store in separate column (this one)?
     #  In either case, represent value as an enumeration type?
-    duration = Column(String, nullable=False)  # changed 'What' to 'String'
+    duration = Column(String, nullable=False)  # Use enumeration type?
     # climatology_bounds corresponds to the attribute of the same name defined in
     # CF Metadata Standards, 7.4 Climatological Statistics
-    climatology_bounds = Column(ARRAY(ARRAY(String)), nullable=False)
+    climatology_bounds = Column(ARRAY(String, dimensions=2), nullable=False)
     num_years = Column(Integer, nullable=False)
     unit = Column(String, nullable=False)
     precision = Column(String, nullable=False)  # Type? Utility???
