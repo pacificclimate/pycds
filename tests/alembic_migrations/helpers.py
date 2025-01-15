@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
+from pycds import get_schema_name
 from pycds.alembic.change_history_utils import hx_id_name
 from pycds.alembic.change_history_utils import pri_table_name, hx_table_name
 from pycds.database import get_schema_item_names
@@ -39,6 +40,40 @@ group by trigger_name
             assert item in triggers
         else:
             assert item not in triggers
+
+
+def check_table_orm_actual_match(engine, orm_table, schema_name=get_schema_name()):
+    """Check that table defined in ORM matches the actual table in the database.
+    This method is useful in smoke tests."""
+
+    # Check table existence
+    names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
+    assert orm_table.__tablename__ in names
+
+    # Reflect table
+    metadata = MetaData(schema=schema_name, bind=engine)
+    actual_table = Table(orm_table.__tablename__, metadata, autoload_with=engine)
+
+    # Check that table columns match
+    actual_cols = tuple((col.name, col.type.__class__) for col in actual_table.columns)
+    print("actual_cols", actual_cols)
+    orm_cols = tuple(
+        (col.name, col.type.__class__) for col in orm_table.__table__.columns
+    )
+    print("orm_cols", orm_cols)
+
+    def class_match(class1, class2):
+        if issubclass(class1, class2) or issubclass(class2, class1):
+            return True
+        # TODO: Some ad-hocery (or maybe better than that) around dialect vs non-dialect
+        #  types
+        return False
+
+    # assert actual_cols == orm_cols
+    for actual_col, orm_col in zip(actual_table.columns, orm_table.__table__.columns):
+        assert actual_col.name == orm_col.name
+        print(f"{actual_col.name}:", actual_col.type.__class__, orm_col.type.__class__)
+        assert class_match(actual_col.type.__class__, orm_col.type.__class__)
 
 
 def check_history_tracking_upgrade(
