@@ -77,10 +77,15 @@ def check_history_tracking_upgrade(
         check_column(hx_table, fk_key_name, INTEGER)
         check_column(hx_table, hx_id_name(fk_table_name), INTEGER)
 
-    # History table indexes. This is a pretty loose test but it suffices.
-    assert {(pri_key_name,)} == {
-        tuple(c.name for c in i.columns) for i in hx_table.indexes
-    }
+    # History table indexes. This test does not check index type, but it
+    # does check what columns are in each index.
+    assert {
+        (pri_key_name,),
+        ("mod_time",),
+        ("mod_user",),
+    } | {
+        (hx_id_name(fk_table_name),) for fk_table_name, _ in (foreign_keys or tuple())
+    } == {tuple(c.name for c in index.columns) for index in hx_table.indexes}
 
     # Triggers
     check_triggers(
