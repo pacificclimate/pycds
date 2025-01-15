@@ -283,6 +283,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
 def insert_crmp_data(sesh, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
+
     def action(sesh):
         fname = resource_filename("pycds", "data/crmp_subset_data.sql")
         with open(fname, "r") as f:
