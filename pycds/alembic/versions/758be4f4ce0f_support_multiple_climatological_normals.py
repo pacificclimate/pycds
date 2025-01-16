@@ -26,7 +26,7 @@ from pycds import get_schema_name
 # revision identifiers, used by Alembic.
 # TODO: When version control PRs are merged, "rebase" this onto the head revision.
 revision = "758be4f4ce0f"
-down_revision = "7ab87f8fbcf4"
+down_revision = "8c05da87cb79"
 branch_labels = None
 depends_on = None
 
