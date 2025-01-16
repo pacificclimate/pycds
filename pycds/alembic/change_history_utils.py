@@ -44,7 +44,7 @@ def add_history_cols_to_primary(
     ),
 ):
     # op.add_column can add only one column at a time.
-    # Tables can be large, so for efficiency we all columns in one command.
+    # Tables can be large, so for efficiency we add all columns in one command.
     add_columns = ", ".join(f"ADD COLUMN {c}" for c in columns)
     op.execute(f"ALTER TABLE {pri_table_name(collection_name)} {add_columns}")
 
