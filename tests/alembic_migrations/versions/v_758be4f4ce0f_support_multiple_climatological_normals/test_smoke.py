@@ -69,7 +69,7 @@ from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 from pycds import ClimatologicalStation, ClimatologicalStationXHistory, ClimatologicalVariable, ClimatologicalValue
 from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name
 from pycds.database import get_schema_item_names
-from tests.alembic_migrations.helpers import check_table_orm_actual_match
+from tests.alembic_migrations.helpers import check_orm_actual_tables_match
 
 logger = logging.getLogger("tests")
 
@@ -92,7 +92,7 @@ def test_upgrade(
     engine, script = prepared_schema_from_migrations_left
 
     # Check that table has been created as expected.
-    check_table_orm_actual_match(engine, orm_table, schema_name=schema_name)
+    check_orm_actual_tables_match(engine, orm_table, schema_name=schema_name)
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -108,6 +108,6 @@ def test_downgrade(
     # Run downgrade migration
     command.downgrade(alembic_config_left, "-1")
 
-    # Check that tables have been altered or dropped as expected.
+    # Check that tables have been dropped as expected.
     names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
     assert table.__tablename__ not in names
