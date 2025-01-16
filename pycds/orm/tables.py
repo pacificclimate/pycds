@@ -611,7 +611,7 @@ class ClimatologicalVariable(Base):
     #
     # - None are nullable. In contrast, most in the model tables are.
     __tablename__ = "meta_climatological_variable"
-    
+
     climatological_variable_id = Column(Integer, primary_key=True)
     # TODO: Duration can be computed from climatology_bounds. Do this with a provided
     #  function or store in separate column (this one)?
@@ -642,4 +642,6 @@ class ClimatologicalValue(Base):
     datum_time = Column(DateTime, nullable=False)
     datum = Column(Float, nullable=False)
     num_contributing_years = Column(Integer, nullable=False)
-    climatological_variable_id = Column(Integer, ForeignKey("meta_climatological_value.climatological_value_id"))
+    climatological_variable_id = Column(
+        Integer, ForeignKey("meta_climatological_value.climatological_value_id")
+    )

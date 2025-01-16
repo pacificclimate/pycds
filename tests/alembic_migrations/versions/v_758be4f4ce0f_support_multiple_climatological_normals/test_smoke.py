@@ -7,7 +7,12 @@ from alembic import command
 from sqlalchemy import Table, MetaData, text
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
-from pycds import ClimatologicalStation, ClimatologicalStationXHistory, ClimatologicalVariable, ClimatologicalValue
+from pycds import (
+    ClimatologicalStation,
+    ClimatologicalStationXHistory,
+    ClimatologicalVariable,
+    ClimatologicalValue,
+)
 from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name
 from pycds.database import get_schema_item_names
 from tests.alembic_migrations.helpers import check_orm_actual_tables_match
@@ -25,7 +30,7 @@ orm_tables = (
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize("orm_table", orm_tables)
 def test_upgrade(
-        orm_table, prepared_schema_from_migrations_left, alembic_config_left, schema_name
+    orm_table, prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
     """Test the schema migration to 758be4f4ce0f."""
 
