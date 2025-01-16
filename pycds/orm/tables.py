@@ -643,5 +643,5 @@ class ClimatologicalValue(Base):
     datum = Column(Float, nullable=False)
     num_contributing_years = Column(Integer, nullable=False)
     climatological_variable_id = Column(
-        Integer, ForeignKey("meta_climatological_value.climatological_value_id")
+        Integer, ForeignKey("meta_climatological_variable.climatological_variable_id")
     )
