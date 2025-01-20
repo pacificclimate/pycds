@@ -22,7 +22,7 @@ INSERT INTO meta_network (network_id, network_name, description, virtual, publis
 INSERT INTO meta_network (network_id, network_name, description, virtual, publish, col_hex, contact_id) VALUES (10, 'AGRI', 'BC Ministry of Agriculture', NULL, true, '#801899', NULL);
 INSERT INTO meta_network (network_id, network_name, description, virtual, publish, col_hex, contact_id) VALUES (9, 'ENV-AQN', 'BC Ministry of Environment - Air Quality Network', NULL, true, '#B03060', NULL);
 INSERT INTO meta_network (network_id, network_name, description, virtual, publish, col_hex, contact_id) VALUES (2, 'MoTIe', 'Ministry of Transportation and Infrastructure (electronic)', NULL, true, '#37ea00', NULL);
-
+SELECT setval('meta_network_network_id_seq'::regclass, max(network_id)) FROM meta_network;
 
 --
 -- Data for Name: meta_station; Type: TABLE DATA; Schema: subset; Owner: -
@@ -78,6 +78,7 @@ INSERT INTO meta_station (station_id, network_id, native_id, min_obs_time, max_o
 INSERT INTO meta_station (station_id, network_id, native_id, min_obs_time, max_obs_time, publish) VALUES (1013, 1, '1120486', '1991-04-01 00:00:00', '1992-09-30 00:00:00', true);
 INSERT INTO meta_station (station_id, network_id, native_id, min_obs_time, max_obs_time, publish) VALUES (4237, 17, '109147', '1967-05-28 00:00:00', '1977-12-12 00:00:00', true);
 INSERT INTO meta_station (station_id, network_id, native_id, min_obs_time, max_obs_time, publish) VALUES (11046, 5, 'TAT', NULL, NULL, true);
+SELECT setval('meta_station_station_id_seq'::regclass, max(station_id)) FROM meta_station;
 
 
 --
@@ -134,6 +135,7 @@ INSERT INTO meta_history (history_id, station_id, station_name, lon, lat, elev, 
 INSERT INTO meta_history (history_id, station_id, station_name, lon, lat, elev, sdate, edate, tz_offset, province, country, comments, the_geom, sensor_id, freq) VALUES (7816, 6132, 'MCDOUGAL', -123.588888888889, 54.8291666666667, 984, '1971-06-30', '1977-10-20', NULL, 'BC', NULL, NULL, '0101000020E610000063B0055BB0E55EC027222222226A4B40', NULL, 'irregular');
 INSERT INTO meta_history (history_id, station_id, station_name, lon, lat, elev, sdate, edate, tz_offset, province, country, comments, the_geom, sensor_id, freq) VALUES (916, 513, 'LOWRY LAKE', -125.133333, 49.433333, 305, NULL, NULL, NULL, 'BC', NULL, NULL, '0101000020E6100000909E228788485FC087A3AB7477B74840', NULL, 'daily');
 INSERT INTO meta_history (history_id, station_id, station_name, lon, lat, elev, sdate, edate, tz_offset, province, country, comments, the_geom, sensor_id, freq) VALUES (7016, 5335, 'REDDING', -116.337777777778, 49.6638888888889, 1059, '1966-05-13', '1970-10-31', NULL, 'BC', NULL, NULL, '0101000020E6100000D037AF269E155DC051FAA44FFAD44840', NULL, 'irregular');
+SELECT setval('meta_history_history_id_seq'::regclass, max(history_id)) FROM meta_history;
 
 
 --
@@ -144,6 +146,7 @@ INSERT INTO meta_native_flag (native_flag_id, flag_name, description, network_id
 INSERT INTO meta_native_flag (native_flag_id, flag_name, description, network_id, value, discard) VALUES (40, 'MoE_AP_1', NULL, 17, '1', NULL);
 INSERT INTO meta_native_flag (native_flag_id, flag_name, description, network_id, value, discard) VALUES (20, 'EC_trace', 'A trace occured; recorded value is 0 (code T)', 1, 'T', true);
 INSERT INTO meta_native_flag (native_flag_id, flag_name, description, network_id, value, discard) VALUES (42, 'MoE_AP_3', 'This appears to indicate that temperature data is not available', 17, '3', NULL);
+SELECT setval('meta_native_flag_native_flag_id_seq'::regclass, max(native_flag_id)) FROM meta_native_flag;
 
 
 --
@@ -265,6 +268,7 @@ INSERT INTO meta_vars (vars_id, network_id, unit, "precision", standard_name, ce
 INSERT INTO meta_vars (vars_id, network_id, unit, "precision", standard_name, cell_method, long_description, net_var_name, display_name, short_name) VALUES (559, 1, 'mm', NULL, 'lwe_thickness_of_precipitation_amount', 't: sum within months t: mean over years', 'Climatological mean of monthly total precipitation', 'Precip_Climatology', 'Precipitation Climatology', 'lwe_thickness_of_precipitation_amountt: sum within months t: mean over years');
 INSERT INTO meta_vars (vars_id, network_id, unit, "precision", standard_name, cell_method, long_description, net_var_name, display_name, short_name) VALUES (612, 17, 'mm', NULL, 'lwe_thickness_of_precipitation_amount', 't: sum within months t: mean over years', 'Climatological mean of monthly total precipitation', 'Precip_Climatology', 'Precipitation Climatology', 'lwe_thickness_of_precipitation_amountt: sum within months t: mean over years');
 INSERT INTO meta_vars (vars_id, network_id, unit, "precision", standard_name, cell_method, long_description, net_var_name, display_name, short_name) VALUES (616, 19, 'mm', NULL, 'lwe_thickness_of_precipitation_amount', 't: sum within months t: mean over years', 'Climatological mean of monthly total precipitation', 'Precip_Climatology', 'Precipitation Climatology', 'lwe_thickness_of_precipitation_amountt: sum within months t: mean over years');
+SELECT setval('meta_vars_vars_id_seq'::regclass, max(vars_id)) FROM meta_vars;
 
 
 --
@@ -2240,6 +2244,7 @@ INSERT INTO obs_raw (obs_raw_id, obs_time, mod_time, datum, vars_id, history_id)
 INSERT INTO obs_raw (obs_raw_id, obs_time, mod_time, datum, vars_id, history_id) VALUES (383675419, '2000-08-31 23:59:59', '2012-03-28 17:20:05.765127', 9.19560623, 557, 1616);
 INSERT INTO obs_raw (obs_raw_id, obs_time, mod_time, datum, vars_id, history_id) VALUES (380915387, '1971-08-01 00:00:00', '2011-11-07 23:14:20', 760, 527, 5916);
 INSERT INTO obs_raw (obs_raw_id, obs_time, mod_time, datum, vars_id, history_id) VALUES (383693659, '2000-03-31 23:59:59', '2012-03-28 17:31:24.446278', 27.4063168, 559, 1216);
+SELECT setval('obs_raw_obs_raw_id_seq'::regclass, max(obs_raw_id)) FROM obs_raw;
 
 
 --
