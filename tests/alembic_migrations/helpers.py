@@ -1,5 +1,5 @@
 import sqlalchemy.types
-from sqlalchemy import select, func, and_, MetaData, Table
+from sqlalchemy import select, func, and_, MetaData, Table, insert, update, delete
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.sql.operators import isnot_distinct_from
@@ -157,7 +157,7 @@ def check_history_tracking_downgrade(
     )
 
 
-def check_history_table_contents(
+def check_history_table_initial_contents(
     sesh,
     primary,
     history,
@@ -166,6 +166,9 @@ def check_history_table_contents(
     foreign_tables,
     schema_name,
 ):
+    """Check that the initial contents (immediately after copying) of the history table
+    are as expected."""
+
     # Introspect tables and show what we got
     metadata = MetaData(schema=schema_name, bind=sesh.get_bind())
     for table_name in (primary.__tablename__, history.__tablename__):
@@ -219,7 +222,7 @@ def check_history_table_contents(
     assert result
 
     # Foreign keys: Check that foreign keys are non-null (value correctness is
-    # checked elsewhere).
+    # checked in the migration that installs the history tracking utilities).
     if foreign_tables:
         assert sesh.query(
             func.every(
@@ -229,3 +232,100 @@ def check_history_table_contents(
                 )
             )
         ).scalar()
+
+
+def check_history_function(
+    sesh,
+    primary,
+    history,
+    primary_id,
+    insert_info,
+    update_info,
+    delete_info,
+    schema_name,
+):
+    """Perform some very cursory tests that the history function is indeed working.
+    Detailed tests are performed in the tests for the migration that installs the
+    history features."""
+
+    hx_id = getattr(history, hx_id_name(primary.__tablename__))
+
+    # Check insert
+    hx_count_pre = table_count(sesh, history)
+    sesh.add(primary(**insert_info))
+    sesh.flush()
+    hx_count_post = table_count(sesh, history)
+    assert hx_count_post == hx_count_pre + 1
+    result = (
+        sesh.query(
+            *(getattr(history, name) for name in insert_info.keys()), history.deleted
+        )
+        .select_from(history)
+        .order_by(hx_id.desc())
+        .first()
+    )
+    assert not result.deleted
+    assert all(
+        getattr(result, name) == insert_info[name] for name in insert_info.keys()
+    )
+
+    # Check update
+    hx_count_pre = table_count(sesh, history)
+    sesh.execute(
+        update(primary)
+        .where(
+            *(
+                getattr(primary, name) == update_info["where"][name]
+                for name in update_info["where"].keys()
+            )
+        )
+        .values(
+            {
+                getattr(primary, name): update_info["values"][name]
+                for name in update_info["values"].keys()
+            }
+        )
+    )
+    sesh.flush()
+    hx_count_post = table_count(sesh, history)
+    assert hx_count_post == hx_count_pre + 1
+    result = (
+        sesh.query(
+            *(getattr(history, name) for name in update_info["values"].keys()), history.deleted
+        )
+        .select_from(history)
+        .order_by(hx_id.desc())
+        .first()
+    )
+    assert not result.deleted
+    assert all(
+        getattr(result, name) == update_info["values"][name] for name in update_info["values"].keys()
+    )
+
+    # Check delete
+    hx_count_pre = table_count(sesh, history)
+    sesh.execute(
+        delete(primary)
+        .where(
+            *(
+                getattr(primary, name) == delete_info["where"][name]
+                for name in delete_info["where"].keys()
+            )
+        )
+    )
+    sesh.flush()
+    hx_count_post = table_count(sesh, history)
+    assert hx_count_post == hx_count_pre + 1
+    result = (
+        sesh.query(
+            *(getattr(history, name) for name in delete_info["where"].keys()), history.deleted
+        )
+        .select_from(history)
+        .order_by(hx_id.desc())
+        .first()
+    )
+    assert result.deleted
+    assert all(
+        getattr(result, name) == delete_info["where"][name] for name in delete_info["where"].keys()
+    )
+    pass

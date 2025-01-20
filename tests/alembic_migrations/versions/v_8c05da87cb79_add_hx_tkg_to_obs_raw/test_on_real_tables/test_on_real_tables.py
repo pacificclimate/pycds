@@ -16,7 +16,7 @@ from pycds import (
 )
 from pycds.database import check_migration_version, get_schema_item_names
 from pycds.orm.tables import ObsHistory
-from tests.alembic_migrations.helpers import check_history_table_contents
+from tests.alembic_migrations.helpers import check_history_table_initial_contents
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 
@@ -64,7 +64,7 @@ def test_table_contents(
     check_migration_version(sesh, version="8c05da87cb79")
 
     # Check the resulting tables
-    check_history_table_contents(
+    check_history_table_initial_contents(
         sesh,
         primary,
         history,
