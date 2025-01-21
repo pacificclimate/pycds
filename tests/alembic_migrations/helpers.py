@@ -170,15 +170,15 @@ def check_history_table_initial_contents(
     are as expected."""
 
     # Introspect tables and show what we got
-    metadata = MetaData(schema=schema_name, bind=sesh.get_bind())
-    for table_name in (primary.__tablename__, history.__tablename__):
-        print()
-        print("Table", table_name)
-        table = Table(table_name, metadata, autoload=True)
-        for column in table.columns:
-            print("  Column", column)
-        for index in table.indexes:
-            print("  Index", index)
+    # metadata = MetaData(schema=schema_name, bind=sesh.get_bind())
+    # for table_name in (primary.__tablename__, history.__tablename__):
+    #     print()
+    #     print("Table", table_name)
+    #     table = Table(table_name, metadata, autoload=True)
+    #     for column in table.columns:
+    #         print("  Column", column)
+    #     for index in table.indexes:
+    #         print("  Index", index)
 
     # Count
     pri_count = table_count(sesh, primary)
@@ -234,98 +234,65 @@ def check_history_table_initial_contents(
         ).scalar()
 
 
-def check_history_function(
+def check_history_tracking(
     sesh,
-    primary,
-    history,
-    primary_id,
+    primary_table,
+    history_table,
     insert_info,
     update_info,
     delete_info,
     schema_name,
 ):
-    """Perform some very cursory tests that the history function is indeed working.
+    """Perform some very cursory tests that history tracking is indeed working.
     Detailed tests are performed in the tests for the migration that installs the
     history features."""
 
-    hx_id = getattr(history, hx_id_name(primary.__tablename__))
+    hx_id = getattr(history_table, hx_id_name(primary_table.__tablename__))
 
-    # Check insert
-    hx_count_pre = table_count(sesh, history)
-    sesh.add(primary(**insert_info))
-    sesh.flush()
-    hx_count_post = table_count(sesh, history)
-    assert hx_count_post == hx_count_pre + 1
-    result = (
-        sesh.query(
-            *(getattr(history, name) for name in insert_info.keys()), history.deleted
-        )
-        .select_from(history)
-        .order_by(hx_id.desc())
-        .first()
-    )
-    assert not result.deleted
-    assert all(
-        getattr(result, name) == insert_info[name] for name in insert_info.keys()
-    )
+    def do_insert():
+        sesh.add(primary_table(**insert_info["values"]))
 
-    # Check update
-    hx_count_pre = table_count(sesh, history)
-    sesh.execute(
-        update(primary)
-        .where(
-            *(
-                getattr(primary, name) == update_info["where"][name]
-                for name in update_info["where"].keys()
+    def do_update():
+        sesh.execute(
+            update(primary_table)
+            .where(
+                *(
+                    getattr(primary_table, name) == update_info["where"][name]
+                    for name in update_info["where"].keys()
+                )
+            )
+            .values(
+                {
+                    getattr(primary_table, name): update_info["values"][name]
+                    for name in update_info["values"].keys()
+                }
             )
         )
-        .values(
-            {
-                getattr(primary, name): update_info["values"][name]
-                for name in update_info["values"].keys()
-            }
-        )
-    )
-    sesh.flush()
-    hx_count_post = table_count(sesh, history)
-    assert hx_count_post == hx_count_pre + 1
-    result = (
-        sesh.query(
-            *(getattr(history, name) for name in update_info["values"].keys()), history.deleted
-        )
-        .select_from(history)
-        .order_by(hx_id.desc())
-        .first()
-    )
-    assert not result.deleted
-    assert all(
-        getattr(result, name) == update_info["values"][name] for name in update_info["values"].keys()
-    )
 
-    # Check delete
-    hx_count_pre = table_count(sesh, history)
-    sesh.execute(
-        delete(primary)
-        .where(
-            *(
-                getattr(primary, name) == delete_info["where"][name]
-                for name in delete_info["where"].keys()
+    def do_delete():
+        sesh.execute(
+            delete(primary_table).where(
+                *(
+                    getattr(primary_table, name) == delete_info["where"][name]
+                    for name in delete_info["where"].keys()
+                )
             )
         )
-    )
-    sesh.flush()
-    hx_count_post = table_count(sesh, history)
-    assert hx_count_post == hx_count_pre + 1
-    result = (
-        sesh.query(
-            *(getattr(history, name) for name in delete_info["where"].keys()), history.deleted
-        )
-        .select_from(history)
-        .order_by(hx_id.desc())
-        .first()
-    )
-    assert result.deleted
-    assert all(
-        getattr(result, name) == delete_info["where"][name] for name in delete_info["where"].keys()
-    )
-    pass
+
+    for what, op, info in (
+        ("insert", do_insert, insert_info),
+        ("update", do_update, update_info),
+        ("delete", do_delete, delete_info),
+    ):
+        hx_count_pre = table_count(sesh, history_table)
+        op()
+        sesh.flush()
+        # Check that a new history record was inserted
+        hx_count_post = table_count(sesh, history_table)
+        assert hx_count_post == hx_count_pre + 1
+        # Check that it contains what we expect
+        hx = sesh.scalars(select(history_table).order_by(hx_id.desc())).first()
+        for key, value in info["check"].items():
+            assert (
+                getattr(hx, key) == value
+            ), f"{what}: {key} == {getattr(hx, key)}, != {value}"

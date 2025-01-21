@@ -31,7 +31,7 @@ from pycds import (
 from pycds.database import check_migration_version, get_schema_item_names
 from tests.alembic_migrations.helpers import (
     check_history_table_initial_contents,
-    check_history_function,
+    check_history_tracking,
 )
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
@@ -49,34 +49,197 @@ schema_name = get_schema_name()
             "network_id",
             ("name", "long_name", "publish"),
             None,
-            {"name": "test network"},
-            {"where": {"name": "test network"}, "values": {"name": "test network 2"}},
-            {"where": {"name": "test network 2"}},
+            {
+                "values": {
+                    "name": "test network",
+                    "long_name": "test network description",
+                    "publish": True,
+                },
+                "check": {
+                    "name": "test network",
+                    "long_name": "test network description",
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {"name": "test network"},
+                "values": {"name": "test network 2", "long_name": "foo"},
+                "check": {
+                    "name": "test network 2",
+                    "long_name": "foo",
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {"name": "test network 2"},
+                "check": {
+                    "name": "test network 2",
+                    "long_name": "foo",
+                    "publish": True,
+                    "deleted": True,
+                },
+            },
         ),
-        # (
-        #     Station,
-        #     StationHistory,
-        #     "station_id",
-        #     ("native_id", "network_id", "publish"),
-        #     (Network,),
-        # ),
-        # (
-        #     History,
-        #     HistoryHistory,
-        #     "history_id",
-        #     ("station_id", "station_name", "lon", "lat", "elevation"),
-        #     (Station,),
-        # ),
-        # (
-        #     Variable,
-        #     VariableHistory,
-        #     "vars_id",
-        #     ("network_id", "name", "unit", "standard_name", "cell_method"),
-        #     (Network,),
-        # ),
+        (
+            Station,
+            StationHistory,
+            "station_id",
+            ("native_id", "network_id", "publish"),
+            (Network,),
+            {
+                "values": {
+                    "native_id": "WOWZA",
+                    "network_id": 1,
+                    "publish": True,
+                },
+                "check": {
+                    "native_id": "WOWZA",
+                    "network_id": 1,
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "native_id": "WOWZA",
+                },
+                "values": {
+                    "native_id": "WOWZA SECRET",
+                    "publish": False,
+                },
+                "check": {
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "native_id": "WOWZA SECRET",
+                },
+                "check": {
+                    "native_id": "WOWZA SECRET",
+                    "publish": False,
+                    "deleted": True,
+                },
+            },
+        ),
+        (
+            History,
+            HistoryHistory,
+            "history_id",
+            ("station_id", "station_name", "lon", "lat", "elevation"),
+            (Station,),
+            {
+                "values": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -123,
+                    "lat": 50,
+                    "elevation": 999,
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -123,
+                    "lat": 50,
+                    "elevation": 999,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "station_name": "MY GOODNESS",
+                },
+                "values": {
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "station_name": "MY GOODNESS",
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                    "deleted": True,
+                },
+            },
+        ),
+        (
+            Variable,
+            VariableHistory,
+            "vars_id",
+            ("network_id", "name", "unit", "standard_name", "cell_method"),
+            (Network,),
+            {
+                "values": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "mH",
+                    "standard_name": "inductance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "mH",
+                    "standard_name": "inductance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "name": "inductance",
+                },
+                "values": {
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "standard_name": "indooktance",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": True,
+                },
+            },
+        ),
     ],
 )
-def test_table_contents(
+def test_migration_results(
     primary,
     history,
     primary_id,
@@ -92,7 +255,8 @@ def test_table_contents(
     env_config,
 ):
     """
-    Test that contents of history tables are as expected.
+    Test that contents of history tables are as expected, and that history tracking is
+    working.
 
     The local conftest sets us up to revision 7ab87f8fbcf4 = a59d64cf16ca - 1.
     The database contains data loaded by `sesh_with_large_data` before we migrate to
@@ -108,14 +272,6 @@ def test_table_contents(
     command.upgrade(alembic_config_left, "+1")
     check_migration_version(sesh, version="a59d64cf16ca")
 
-    print("SEQUENCES")
-    result = sesh.execute(
-        text(f"SELECT * FROM pg_sequences WHERE schemaname = '{schema_name}'")
-    )
-    for row in result:
-        print(row)
-    print("END SEQUENCES")
-
     # Check the resulting tables
     check_history_table_initial_contents(
         sesh,
@@ -126,11 +282,10 @@ def test_table_contents(
         foreign_tables,
         schema_name,
     )
-    check_history_function(
+    check_history_tracking(
         sesh,
         primary,
         history,
-        primary_id,
         insert_info,
         update_info,
         delete_info,

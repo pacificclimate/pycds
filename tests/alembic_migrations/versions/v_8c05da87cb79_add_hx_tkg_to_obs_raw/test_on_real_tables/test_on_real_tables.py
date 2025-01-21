@@ -4,6 +4,7 @@ data, as we would find in a real migration. We do this by populating the tables
 with data, applying the migration, and then examining the resulting history
 tables.
 """
+import datetime
 import logging
 
 import pytest
@@ -16,14 +17,17 @@ from pycds import (
 )
 from pycds.database import check_migration_version, get_schema_item_names
 from pycds.orm.tables import ObsHistory
-from tests.alembic_migrations.helpers import check_history_table_initial_contents
+from tests.alembic_migrations.helpers import (
+    check_history_table_initial_contents,
+    check_history_tracking,
+)
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
-    "primary, history, primary_id, columns, foreign_tables",
+    "primary, history, primary_id, columns, foreign_tables, insert_info, update_info, delete_info",
     [
         (
             Obs,
@@ -31,6 +35,48 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
             "obs_raw_id",
             ("time", "datum", "vars_id", "history_id"),
             (History, Variable),
+            {
+                "values": {
+                    "time": datetime.datetime(2100, 1, 1),
+                    "vars_id": 517,
+                    "history_id": 13216,
+                    "datum": 999,
+                },
+                "check": {
+                    "time": datetime.datetime(2100, 1, 1),
+                    "vars_id": 517,
+                    "history_id": 13216,
+                    "datum": 999,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "time": datetime.datetime(2100, 1, 1),
+                },
+                "values": {
+                    "datum": 1000,
+                },
+                "check": {
+                    "time": datetime.datetime(2100, 1, 1),
+                    "vars_id": 517,
+                    "history_id": 13216,
+                    "datum": 1000,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "time": datetime.datetime(2100, 1, 1),
+                },
+                "check": {
+                    "time": datetime.datetime(2100, 1, 1),
+                    "vars_id": 517,
+                    "history_id": 13216,
+                    "datum": 1000,
+                    "deleted": True,
+                },
+            },
         ),
     ],
 )
@@ -40,6 +86,9 @@ def test_table_contents(
     primary_id,
     columns,
     foreign_tables,
+    insert_info,
+    update_info,
+    delete_info,
     prepared_schema_from_migrations_left,
     alembic_config_left,
     schema_name,
@@ -71,5 +120,14 @@ def test_table_contents(
         primary_id,
         columns,
         foreign_tables,
+        schema_name,
+    )
+    check_history_tracking(
+        sesh,
+        primary,
+        history,
+        insert_info,
+        update_info,
+        delete_info,
         schema_name,
     )
