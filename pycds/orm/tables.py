@@ -94,7 +94,7 @@ class Network(Base):
 
 
 class NetworkHistory(Base):
-    """This class maps to the history table for table Network. """
+    """This class maps to the history table for table Network."""
 
     __tablename__ = hx_table_name(Network.__tablename__, schema=None)
 
@@ -367,7 +367,7 @@ Index("obs_raw_id_idx", Obs.id)
 
 
 class ObsHistory(Base):
-    """This class maps to the history table for table Obs. """
+    """This class maps to the history table for table Obs."""
 
     __tablename__ = hx_table_name(Obs.__tablename__, schema=None)
 
@@ -469,7 +469,7 @@ Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class VariableHistory(Base):
-    """This class maps to the history table for table Variable. """
+    """This class maps to the history table for table Variable."""
 
     __tablename__ = hx_table_name(Variable.__tablename__, schema=None)
 

@@ -202,9 +202,9 @@ def describe_load__pcic__climate__baseline__values():
                             "Tn_Climatology",
                         ]:
                             values = [
-                                str(
-                                    int(10 * (100 * i + 2 * month + 0.5))
-                                ).encode("ascii")
+                                str(int(10 * (100 * i + 2 * month + 0.5))).encode(
+                                    "ascii"
+                                )
                                 for month in range(1, 13)
                             ]
                         else:
