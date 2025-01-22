@@ -35,26 +35,28 @@ def sql_array(a: Iterable[Any]) -> str:
     return f"{{{', '.join(a)}}}"
 
 
-def add_history_cols_to_primary(collection_name: str):
+def add_history_cols_to_primary(
+    collection_name: str,
+    columns: tuple[str] = (
+        "mod_time timestamp without time zone NOT NULL DEFAULT NOW()",
+        'mod_user character varying(64) COLLATE pg_catalog."default" '
+        "   NOT NULL DEFAULT CURRENT_USER",
+    ),
+):
     # op.add_column can add only one column at a time.
-    # Tables can be large, so for efficiency we add both columns in one command.
-    op.execute(
-        f"ALTER TABLE {pri_table_name(collection_name)} "
-        f"  ADD COLUMN mod_time timestamp without time zone NOT NULL DEFAULT NOW(), "
-        f'  ADD COLUMN mod_user character varying(64) COLLATE pg_catalog."default" '
-        f"      NOT NULL DEFAULT CURRENT_USER"
-    )
+    # Tables can be large, so for efficiency we add all columns in one command.
+    add_columns = ", ".join(f"ADD COLUMN {c}" for c in columns)
+    op.execute(f"ALTER TABLE {pri_table_name(collection_name)} {add_columns}")
 
 
-def drop_history_cols_from_primary(collection_name: str):
-    op.execute(
-        f"ALTER TABLE {pri_table_name(collection_name)} "
-        f"  DROP COLUMN mod_time, "
-        f"  DROP COLUMN mod_user"
-    )
+def drop_history_cols_from_primary(
+    collection_name: str, columns: tuple[str] = ("mod_time", "mod_user")
+):
+    drop_columns = ", ".join(f"DROP COLUMN {c}" for c in columns)
+    op.execute(f"ALTER TABLE {pri_table_name(collection_name)} {drop_columns}")
 
 
-def create_history_table(collection_name: str, foreign_keys: list[str, str]):
+def create_history_table(collection_name: str, foreign_keys: list[tuple[str, str]]):
     # Create the history table. We can't use Alembic create_table here because it doesn't
     # support the LIKE syntax we need.
     columns = ", ".join(

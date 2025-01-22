@@ -94,9 +94,7 @@ class Network(Base):
 
 
 class NetworkHistory(Base):
-    """
-    This class maps to the table containing the change history for Network/meta_network.
-    """
+    """This class maps to the history table for table Network."""
 
     __tablename__ = hx_table_name(Network.__tablename__, schema=None)
 
@@ -249,17 +247,8 @@ Index("meta_history_freq_idx", History.freq)
 
 
 class HistoryHistory(Base):
-    """This class maps to the table which represents a history record for
-    a weather station. Since a station can potentially (and do) move
-    small distances (e.g. from one end of the airport runway to
-    another) or change the frequency of its observations, this table
-    records the details of those changes.
-
-    WARNING: The GeoAlchemy2 `Geometry` column (attribute `the_geom`) forces
-    all reads on that column to be wrapped with Postgis function `ST_AsEWKB`.
-    This may or may not be desirable for all use cases, specifically views.
-    See the GeoAlchemy2 documentation for details.
-    """
+    """This class maps to the history table for table History.
+    Yes, the naming is a bit awkward."""
 
     __tablename__ = hx_table_name(History.__tablename__, schema=None)
 
@@ -334,9 +323,9 @@ class MetaSensor(Base):
 
 
 class Obs(Base):
-    """This class maps to the table which records the details of weather
-    observations. Each row is one single data point for one single
-    quantity.
+    """This class maps to the table which records (raw) weather observations.
+    Each row is a single observation for a specific time (`time`), place (`history_id`),
+    and variable (`vars_id`).
     """
 
     __tablename__ = "obs_raw"
@@ -375,6 +364,28 @@ Index("mod_time_idx", Obs.mod_time)
 Index("obs_raw_comp_idx", Obs.time, Obs.vars_id, Obs.history_id)
 Index("obs_raw_history_id_idx", Obs.history_id)
 Index("obs_raw_id_idx", Obs.id)
+
+
+class ObsHistory(Base):
+    """This class maps to the history table for table Obs."""
+
+    __tablename__ = hx_table_name(Obs.__tablename__, schema=None)
+
+    obs_raw_id = Column(BigInteger)
+    time = Column("obs_time", DateTime)
+    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    datum = Column(Float)
+    vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
+    history_id = Column(Integer, ForeignKey("meta_history.history_id"))
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    obs_raw_hx_id = Column(BigInteger, primary_key=True)
+    meta_history_hx_id = Column(
+        Integer, ForeignKey("meta_history_hx.meta_history_hx_id")
+    )
+    meta_vars_hx_id = Column(Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"))
 
 
 class TimeBound(Base):
@@ -458,9 +469,7 @@ Index("fki_meta_vars_network_id_fkey", Variable.network_id)
 
 
 class VariableHistory(Base):
-    """This class maps to the table which records the details of the
-    physical quantities which are recorded by the weather stations.
-    """
+    """This class maps to the history table for table Variable."""
 
     __tablename__ = hx_table_name(Variable.__tablename__, schema=None)
 

@@ -196,20 +196,20 @@ def describe_load__pcic__climate__baseline__values():
                     Last line is blank, to test blank line handling.
                     """
                     lines = []
-                    for station in stations:
+                    for i, station in enumerate(stations):
                         if request.param in [
                             "Tx_Climatology",
                             "Tn_Climatology",
                         ]:
                             values = [
-                                str(
-                                    int(10 * (100 * station.id + 2 * month + 0.5))
-                                ).encode("ascii")
+                                str(int(10 * (100 * i + 2 * month + 0.5))).encode(
+                                    "ascii"
+                                )
                                 for month in range(1, 13)
                             ]
                         else:
                             values = [
-                                str(100 * station.id + 2 * month).encode("ascii")
+                                str(100 * i + 2 * month).encode("ascii")
                                 for month in range(1, 13)
                             ]
                         values.append(b"99")
@@ -293,7 +293,7 @@ def describe_load__pcic__climate__baseline__values():
                         )
                         .first()
                     )
-                    for station in stations:
+                    for stn_idx, station in enumerate(stations):
                         station_values = (
                             derived_values.join(History)
                             .join(Station)
@@ -313,9 +313,9 @@ def describe_load__pcic__climate__baseline__values():
                                 2000, month, last_day, 23
                             )
                             if var_name in ["Tx_Climatology", "Tn_Climatology"]:
-                                assert value.datum == 100 * station.id + 2 * month + 0.5
+                                assert value.datum == 100 * stn_idx + 2 * month + 0.5
                             else:
-                                assert value.datum == 100 * station.id + 2 * month
+                                assert value.datum == 100 * stn_idx + 2 * month
                             assert value.history == latest_history
                             assert value.variable == expected_variable
 

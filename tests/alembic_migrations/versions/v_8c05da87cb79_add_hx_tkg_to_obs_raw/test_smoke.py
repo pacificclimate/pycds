@@ -17,35 +17,36 @@ from tests.alembic_migrations.helpers import (
 logger = logging.getLogger("tests")
 
 
-table_info = (
-    ("meta_network", "network_id", []),
-    ("meta_station", "station_id", [("meta_network", "network_id")]),
-    ("meta_history", "history_id", [("meta_station", "station_id")]),
-    ("meta_vars", "vars_id", [("meta_network", "network_id")]),
-)
+table_name = "obs_raw"
+primary_key_name = "obs_raw_id"
+foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_upgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
-    """Test the schema migration to a59d64cf16ca."""
+    """Test the schema migration to 8c05da87cb79."""
 
-    # Set up database to target version (a59d64cf16ca)
+    # Set up database to target version
     engine, script = prepared_schema_from_migrations_left
 
     # Check that tables have been altered or created as expected.
-    for table_name, pri_key_name, foreign_keys in table_info:
-        check_history_tracking_upgrade(
-            engine, table_name, pri_key_name, foreign_keys, schema_name
-        )
+    check_history_tracking_upgrade(
+        engine,
+        table_name,
+        primary_key_name,
+        foreign_keys,
+        schema_name,
+        pri_columns_added=(("mod_user", VARCHAR),),
+    )
 
 
 @pytest.mark.usefixtures("new_db_left")
 def test_downgrade(
     prepared_schema_from_migrations_left, alembic_config_left, schema_name
 ):
-    """Test the schema migration from a59d64cf16ca to previous rev."""
+    """Test the schema migration from 8c05da87cb79 to previous rev."""
 
     # Set up database to current version
     engine, script = prepared_schema_from_migrations_left
@@ -54,5 +55,6 @@ def test_downgrade(
     command.downgrade(alembic_config_left, "-1")
 
     # Check that tables have been altered or dropped as expected.
-    for table_name, _, _ in table_info:
-        check_history_tracking_downgrade(engine, table_name, schema_name)
+    check_history_tracking_downgrade(
+        engine, table_name, schema_name, pri_columns_dropped=("mod_user",)
+    )

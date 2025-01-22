@@ -1,13 +1,13 @@
 import re
 
-from sqlalchemy import inspect
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm import sessionmaker
+
 from pycds.context import get_schema_name
 
 
 def check_migration_version(
-    executor, schema_name=get_schema_name(), version="a59d64cf16ca"
+    executor, schema_name=get_schema_name(), version="8c05da87cb79"
 ):
     """Check that the migration version of the database schema is compatible
     with the current version of this package.

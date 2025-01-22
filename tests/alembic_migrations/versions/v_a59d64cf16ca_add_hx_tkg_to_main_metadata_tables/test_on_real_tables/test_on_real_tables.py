@@ -3,14 +3,19 @@ These tests simulate applying history tracking to metadata tables containing
 data, as we would find in a real migration. We do this by populating the tables
 with data, applying the migration, and then examining the resulting history
 tables.
+
+The behaviour of the history-tracking features proper (trigger functions, etc.)
+is tested in detail in the migration that installs them.
+
+These tests test that this migration correctly modifies the base tables and creates
+the history tables, and attaches the trigger functions to them. Then we do some cursory
+tests to verify they are actually being called and recording history records.
 """
 import logging
 
 import pytest
 from alembic import command
-from sqlalchemy import select, func, and_, MetaData, Table
-from sqlalchemy.sql.operators import isnot_distinct_from
-from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy import text
 
 from pycds import (
     Network,
@@ -21,24 +26,103 @@ from pycds import (
     HistoryHistory,
     Variable,
     VariableHistory,
+    get_schema_name,
 )
-from pycds.alembic.change_history_utils import hx_id_name
 from pycds.database import check_migration_version, get_schema_item_names
+from tests.alembic_migrations.helpers import (
+    check_history_table_initial_contents,
+    check_history_tracking,
+)
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
+
+schema_name = get_schema_name()
 
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
-    "primary, history, primary_id, columns, foreign_tables",
+    "primary, history, primary_id, columns, foreign_tables, insert_info, update_info, delete_info",
     [
-        (Network, NetworkHistory, "network_id", ("name", "long_name", "publish"), None),
+        (
+            Network,
+            NetworkHistory,
+            "network_id",
+            ("name", "long_name", "publish"),
+            None,
+            {
+                "values": {
+                    "name": "test network",
+                    "long_name": "test network description",
+                    "publish": True,
+                },
+                "check": {
+                    "name": "test network",
+                    "long_name": "test network description",
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {"name": "test network"},
+                "values": {"name": "test network 2", "long_name": "foo"},
+                "check": {
+                    "name": "test network 2",
+                    "long_name": "foo",
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {"name": "test network 2"},
+                "check": {
+                    "name": "test network 2",
+                    "long_name": "foo",
+                    "publish": True,
+                    "deleted": True,
+                },
+            },
+        ),
         (
             Station,
             StationHistory,
             "station_id",
             ("native_id", "network_id", "publish"),
             (Network,),
+            {
+                "values": {
+                    "native_id": "WOWZA",
+                    "network_id": 1,
+                    "publish": True,
+                },
+                "check": {
+                    "native_id": "WOWZA",
+                    "network_id": 1,
+                    "publish": True,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "native_id": "WOWZA",
+                },
+                "values": {
+                    "native_id": "WOWZA SECRET",
+                    "publish": False,
+                },
+                "check": {
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "native_id": "WOWZA SECRET",
+                },
+                "check": {
+                    "native_id": "WOWZA SECRET",
+                    "publish": False,
+                    "deleted": True,
+                },
+            },
         ),
         (
             History,
@@ -46,6 +130,54 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
             "history_id",
             ("station_id", "station_name", "lon", "lat", "elevation"),
             (Station,),
+            {
+                "values": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -123,
+                    "lat": 50,
+                    "elevation": 999,
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -123,
+                    "lat": 50,
+                    "elevation": 999,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "station_name": "MY GOODNESS",
+                },
+                "values": {
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "station_name": "MY GOODNESS",
+                },
+                "check": {
+                    "station_id": 4137,
+                    "station_name": "MY GOODNESS",
+                    "lon": -122,
+                    "lat": 51,
+                    "elevation": 998,
+                    "deleted": True,
+                },
+            },
         ),
         (
             Variable,
@@ -53,15 +185,69 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
             "vars_id",
             ("network_id", "name", "unit", "standard_name", "cell_method"),
             (Network,),
+            {
+                "values": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "mH",
+                    "standard_name": "inductance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "mH",
+                    "standard_name": "inductance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "name": "inductance",
+                },
+                "values": {
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": False,
+                },
+            },
+            {
+                "where": {
+                    "standard_name": "indooktance",
+                },
+                "check": {
+                    "network_id": 1,
+                    "name": "inductance",
+                    "unit": "milliHenries",
+                    "standard_name": "indooktance",
+                    "cell_method": "boo",
+                    "display_name": "Tendency to oppose change in current flow",
+                    "deleted": True,
+                },
+            },
         ),
     ],
 )
-def test_table_contents(
+def test_migration_results(
     primary,
     history,
     primary_id,
     columns,
     foreign_tables,
+    insert_info,
+    update_info,
+    delete_info,
     prepared_schema_from_migrations_left,
     alembic_config_left,
     schema_name,
@@ -69,7 +255,8 @@ def test_table_contents(
     env_config,
 ):
     """
-    Test that contents of history tables are as expected.
+    Test that contents of history tables are as expected, and that history tracking is
+    working.
 
     The local conftest sets us up to revision 7ab87f8fbcf4 = a59d64cf16ca - 1.
     The database contains data loaded by `sesh_with_large_data` before we migrate to
@@ -78,83 +265,29 @@ def test_table_contents(
     """
     sesh = sesh_with_large_data
 
-    def table_count(table):
-        return sesh.execute(select(func.count("*")).select_from(table)).scalar()
-
     check_migration_version(sesh, version="7ab87f8fbcf4")
     # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
-
-    for item_type in ["tables", "routines"]:
-        names = set(get_schema_item_names(sesh, item_type, schema_name=schema_name))
-        print(f"### {item_type} in {schema_name}:", sorted(names))
 
     # Now upgrade to a59d64cf16ca
     command.upgrade(alembic_config_left, "+1")
     check_migration_version(sesh, version="a59d64cf16ca")
 
     # Check the resulting tables
-
-    # Introspect tables and show what we got
-    # engine, script = prepared_schema_from_migrations_left
-    # metadata = MetaData(schema=schema_name, bind=engine)
-    # for table_name in (primary.__tablename__, history.__tablename__):
-    #     print()
-    #     print("Table", table_name)
-    #     table = Table(table_name, metadata, autoload_with=engine)
-    #     for column in table.columns:
-    #         print("  Column", column)
-    #     for index in table.indexes:
-    #         print("  Index", index)
-
-    # Count
-    pri_count = table_count(primary)
-    hx_count = table_count(history)
-    assert pri_count == hx_count
-
-    # Contents: check that every specified column matches between the two tables.
-    stmt = (
-        select(
-            func.every(
-                and_(
-                    isnot_distinct_from(getattr(primary, col), getattr(history, col))
-                    for col in columns
-                )
-            )
-        )
-        .select_from(primary)
-        .join(history, primary.id == getattr(history, primary_id))
+    check_history_table_initial_contents(
+        sesh,
+        primary,
+        history,
+        primary_id,
+        columns,
+        foreign_tables,
+        schema_name,
     )
-    result = sesh.execute(stmt).scalar()
-    assert result
-
-    # Order: Check that history table order by history key is the same as the order
-    # by primary id.
-    def hx_table_pids(order_by: str):
-        return (
-            sesh.query(
-                func.array_agg(
-                    aggregate_order_by(
-                        getattr(history, primary_id), getattr(history, order_by)
-                    )
-                ).label("pids")
-            )
-            .select_from(history)
-            .subquery()
-        )
-
-    t1 = hx_table_pids(primary_id)
-    t2 = hx_table_pids(hx_id_name(primary.__tablename__))
-    result = sesh.query(t1.c.pids == t2.c.pids).scalar()
-    assert result
-
-    # Foreign keys: Check that foreign keys are non-null (value correctness is
-    # checked elsewhere).
-    if foreign_tables:
-        assert sesh.query(
-            func.every(
-                and_(
-                    getattr(history, hx_id_name(ft.__tablename__)).is_not(None)
-                    for ft in foreign_tables
-                )
-            )
-        ).scalar()
+    check_history_tracking(
+        sesh,
+        primary,
+        history,
+        insert_info,
+        update_info,
+        delete_info,
+        schema_name,
+    )
