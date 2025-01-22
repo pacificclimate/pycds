@@ -28,8 +28,7 @@ def other_climatology_variables(other_network):
 
 @fixture
 def stations():
-    stns = [Station(native_id=native_id) for native_id in "100 200".split()]
-    return stns
+    return [Station(native_id=native_id) for native_id in "100 200".split()]
 
 
 @fixture

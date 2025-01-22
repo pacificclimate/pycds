@@ -294,7 +294,6 @@ def describe_load__pcic__climate__baseline__values():
                         .first()
                     )
                     for stn_idx, station in enumerate(stations):
-                        print("### station", station.id)
                         station_values = (
                             derived_values.join(History)
                             .join(Station)
@@ -312,10 +311,6 @@ def describe_load__pcic__climate__baseline__values():
                             last_day = monthrange(2000, month)[1]
                             assert value.time == datetime.datetime(
                                 2000, month, last_day, 23
-                            )
-                            print(
-                                f"### var_name={var_name}, datum={value.datum}, "
-                                f"expected={100 * stn_idx + 2 * month + (0.5 if var_name in ["Tx_Climatology", "Tn_Climatology"] else 0)}"
                             )
                             if var_name in ["Tx_Climatology", "Tn_Climatology"]:
                                 assert value.datum == 100 * stn_idx + 2 * month + 0.5
@@ -535,9 +530,6 @@ def describe_verify__baseline__values():
                         1, 13, h + 1
                     )  # a bit tricky: for history[1], leave out every other month
                 ]
-                print(f"### derived_values")
-                for d in derived_values:
-                    print(f"### {str(d.time)}  {d.datum}  {d.variable.name}  {d.history.station_name}")
                 for s in add_then_delete_objs(sesh, derived_values):
                     yield s
 
