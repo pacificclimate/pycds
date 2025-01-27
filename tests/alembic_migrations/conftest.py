@@ -52,6 +52,16 @@ def db_setup(schema_name):
         engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
         engine.execute("CREATE EXTENSION IF NOT EXISTS hstore")
 
+        # We need this function available, and it does not come pre-installed.
+        engine.execute(
+            "CREATE OR REPLACE FUNCTION public.moddatetime() "
+            "RETURNS trigger "
+            "LANGUAGE 'c' "
+            "COST 1 "
+            "VOLATILE NOT LEAKPROOF "
+            "AS '$libdir/moddatetime', 'moddatetime' "
+        )
+
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
