@@ -19,6 +19,7 @@ from pycds.alembic.change_history_utils import (
     create_history_table_triggers,
     create_primary_table_triggers,
     create_history_table_indexes,
+    hx_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -55,13 +56,24 @@ def upgrade():
     # History table
     create_history_table(table_name, foreign_keys)
     create_history_table_indexes(table_name, primary_key_name, foreign_keys)
+
+    # Drop existing trigger on obs_raw; it is superseded by the hx tracking trigger.
+    op.execute(f"DROP TRIGGER IF EXISTS update_mod_time ON {hx_table_name(table_name)}")
     # History table triggers must be created before the table is populated.
     create_history_table_triggers(table_name, foreign_keys)
+
     populate_history_table(table_name, primary_key_name)
     grant_standard_table_privileges(table_name, schema=schema_name)
 
 
 def downgrade():
     drop_history_triggers(table_name)
+    op.execute(
+        f"CREATE TRIGGER update_mod_time"
+        f"  BEFORE UPDATE"
+        f"  ON {hx_table_name(table_name)}"
+        f"  FOR EACH ROW"
+        f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
+    )
     drop_history_table(table_name)
     drop_history_cols_from_primary(table_name, columns=("mod_user",))
