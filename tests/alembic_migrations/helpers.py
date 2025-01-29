@@ -285,6 +285,7 @@ def check_history_tracking(
         ("delete", do_delete, delete_info),
     ):
         hx_count_pre = table_count(sesh, history_table)
+        # Perform the test operation
         op()
         sesh.flush()
         # Check that a new history record was inserted
