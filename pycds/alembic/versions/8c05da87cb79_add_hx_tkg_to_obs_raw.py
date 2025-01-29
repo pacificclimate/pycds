@@ -20,6 +20,7 @@ from pycds.alembic.change_history_utils import (
     create_primary_table_triggers,
     create_history_table_indexes,
     hx_table_name,
+    update_obs_raw_history_FKs,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -56,12 +57,18 @@ def upgrade():
     # History table
     create_history_table(table_name, foreign_keys)
 
-    # Drop existing trigger on obs_raw; it is superseded by the hx tracking trigger.
+    # Existing trigger on obs_raw is superseded by the hx tracking trigger.
     op.execute(f"DROP TRIGGER IF EXISTS update_mod_time ON {hx_table_name(table_name)}")
-    # History table triggers must be created before the table is populated.
+
+    # Populate the history table, then update its history FKs in bulk.
+    # If we let the FK trigger do this work, fired row-by-row on ~1e9 records,
+    # it requires an unfeasible amount of time, so we do it in bulk.
+    populate_history_table(table_name, primary_key_name)
+    update_obs_raw_history_FKs()
+
+    # History table triggers must be created after the table is populated.
     create_history_table_triggers(table_name, foreign_keys)
 
-    populate_history_table(table_name, primary_key_name)
     create_history_table_indexes(table_name, primary_key_name, foreign_keys)
     grant_standard_table_privileges(table_name, schema=schema_name)
 
