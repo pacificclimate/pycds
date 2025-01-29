@@ -20,7 +20,8 @@ from pycds.alembic.change_history_utils import (
     create_primary_table_triggers,
     create_history_table_indexes,
     hx_table_name,
-    update_obs_raw_history_FKs, pri_table_name,
+    update_obs_raw_history_FKs,
+    pri_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -42,6 +43,8 @@ foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 def upgrade():
     # Set the search_path so that when the history table is populated, the trigger
     # functions fired can find the functions that they call.
+    # Note: This is no longer relied upon, but it may be again in future, so leave
+    # this here.
     op.get_bind().execute(f"SET search_path TO {schema_name}, public")
 
     # Primary table
@@ -55,7 +58,9 @@ def upgrade():
         ),
     )
     # Existing trigger on obs_raw is superseded by the hx tracking trigger.
-    op.execute(f"DROP TRIGGER update_mod_time ON {pri_table_name(table_name)}")
+    op.execute(
+        f"DROP TRIGGER IF EXISTS update_mod_time ON {pri_table_name(table_name)}"
+    )
     create_primary_table_triggers(table_name)
 
     # History table
