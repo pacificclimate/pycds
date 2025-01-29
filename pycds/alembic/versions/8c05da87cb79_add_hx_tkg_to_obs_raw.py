@@ -20,7 +20,7 @@ from pycds.alembic.change_history_utils import (
     create_primary_table_triggers,
     create_history_table_indexes,
     hx_table_name,
-    update_obs_raw_history_FKs,
+    update_obs_raw_history_FKs, pri_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -45,6 +45,8 @@ def upgrade():
     op.get_bind().execute(f"SET search_path TO {schema_name}, public")
 
     # Primary table
+    ####
+
     add_history_cols_to_primary(
         table_name,
         columns=(
@@ -52,13 +54,14 @@ def upgrade():
             "   NOT NULL DEFAULT CURRENT_USER",
         ),
     )
+    # Existing trigger on obs_raw is superseded by the hx tracking trigger.
+    op.execute(f"DROP TRIGGER update_mod_time ON {pri_table_name(table_name)}")
     create_primary_table_triggers(table_name)
 
     # History table
-    create_history_table(table_name, foreign_keys)
+    ####
 
-    # Existing trigger on obs_raw is superseded by the hx tracking trigger.
-    op.execute(f"DROP TRIGGER IF EXISTS update_mod_time ON {hx_table_name(table_name)}")
+    create_history_table(table_name, foreign_keys)
 
     # Populate the history table, then update its history FKs in bulk.
     # If we let the FK trigger do this work, fired row-by-row on ~1e9 records,
@@ -75,12 +78,12 @@ def upgrade():
 
 def downgrade():
     drop_history_triggers(table_name)
+    drop_history_table(table_name)
+    drop_history_cols_from_primary(table_name, columns=("mod_user",))
     op.execute(
         f"CREATE TRIGGER update_mod_time"
         f"  BEFORE UPDATE"
-        f"  ON {hx_table_name(table_name)}"
+        f"  ON {pri_table_name(table_name)}"
         f"  FOR EACH ROW"
         f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
     )
-    drop_history_table(table_name)
-    drop_history_cols_from_primary(table_name, columns=("mod_user",))
