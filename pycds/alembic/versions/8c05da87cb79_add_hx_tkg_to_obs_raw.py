@@ -55,7 +55,6 @@ def upgrade():
 
     # History table
     create_history_table(table_name, foreign_keys)
-    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
 
     # Drop existing trigger on obs_raw; it is superseded by the hx tracking trigger.
     op.execute(f"DROP TRIGGER IF EXISTS update_mod_time ON {hx_table_name(table_name)}")
@@ -63,6 +62,7 @@ def upgrade():
     create_history_table_triggers(table_name, foreign_keys)
 
     populate_history_table(table_name, primary_key_name)
+    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
     grant_standard_table_privileges(table_name, schema=schema_name)
 
 
