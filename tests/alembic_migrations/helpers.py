@@ -1,6 +1,18 @@
 import sqlalchemy.types
-from sqlalchemy import select, func, and_, MetaData, Table, insert, update, delete
+from sqlalchemy import (
+    select,
+    func,
+    and_,
+    MetaData,
+    Table,
+    insert,
+    update,
+    delete,
+    column,
+    inspect,
+)
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
@@ -228,10 +240,81 @@ def check_history_table_initial_contents(
             func.every(
                 and_(
                     getattr(history, hx_id_name(ft.__tablename__)).is_not(None)
-                    for ft in foreign_tables
+                    for ft, _ in foreign_tables
                 )
             )
         ).scalar()
+
+
+def check_history_table_FKs(
+    sesh,
+    main_base,
+    main_history,
+    foreign_base,
+    foreign_history,
+):
+    """
+    Check that the initial load of the history table contains correct history FKs.
+    We do this by checking that, for each main history table record, the record selected
+    from the foreign base table matches the one selected from the foreign history table.
+    "Matches" means that the values in the foreign base table are the same as those in
+    the foreign history table, for those columns common to them. This exploits the fact
+    that, by definition, the latest history record for a given base id is the same as
+    the one in the foreign base table.
+    """
+
+    fb_mapped_object = inspect(foreign_base)
+    fb_column_mappings = fb_mapped_object.columns.items()
+    fhx_mapped_object = inspect(foreign_history)
+    fhx_column_mappings = fhx_mapped_object.columns.items()
+    # For every foreign base table column, extract the ORM key of it in both the fb table
+    # and the fhx table. We use these to construct the "match" expression between the two
+    # tables.
+    fb_fhx_keys = [
+        (
+            fb_key,
+            # Find the ORM key that matches the actual table key, which is found in
+            # the mapped Column definitions. It shouldn't be so hard. Sigh.
+            [
+                fhx_key
+                for fhx_key, fhx_col in fhx_column_mappings
+                if fhx_col.key == fb_col.key
+            ][0],
+        )
+        for fb_key, fb_col in fb_column_mappings
+    ]
+
+    foreign_hx_id_name = hx_id_name(foreign_base.__tablename__)
+    query = (
+        select(
+            func.every(
+                and_(
+                    *(
+                        isnot_distinct_from(
+                            getattr(foreign_base, fb_key),
+                            getattr(foreign_history, fhx_key),
+                        )
+                        for fb_key, fhx_key in fb_fhx_keys
+                    )
+                )
+            )
+        )
+        .select_from(main_history)
+        .join(
+            foreign_base,
+            foreign_base.id
+            == getattr(main_history, fb_mapped_object.columns["id"].key),
+        )
+        .join(
+            foreign_history,
+            getattr(foreign_history, foreign_hx_id_name)
+            == getattr(main_history, foreign_hx_id_name),
+        )
+    )
+    # print("### query", query)
+    result = sesh.scalars(query).one()
+    # print("### result", result)
+    assert result
 
 
 def check_history_tracking(
@@ -246,6 +329,8 @@ def check_history_tracking(
     """Perform some very cursory tests that history tracking is indeed working.
     Detailed tests are performed in the tests for the migration that installs the
     history features."""
+
+    # Check that the 3 operations produce the expected records in the history table.
 
     hx_id = getattr(history_table, hx_id_name(primary_table.__tablename__))
 
