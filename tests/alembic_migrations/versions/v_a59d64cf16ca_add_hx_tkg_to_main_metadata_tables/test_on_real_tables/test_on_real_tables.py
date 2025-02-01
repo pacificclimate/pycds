@@ -87,7 +87,7 @@ schema_name = get_schema_name()
             StationHistory,
             "station_id",
             ("native_id", "network_id", "publish"),
-            (Network,),
+            ((Network, NetworkHistory),),
             {
                 "values": {
                     "native_id": "WOWZA",
@@ -129,7 +129,7 @@ schema_name = get_schema_name()
             HistoryHistory,
             "history_id",
             ("station_id", "station_name", "lon", "lat", "elevation"),
-            (Station,),
+            ((Station, StationHistory),),
             {
                 "values": {
                     "station_id": 4137,
@@ -184,7 +184,7 @@ schema_name = get_schema_name()
             VariableHistory,
             "vars_id",
             ("network_id", "name", "unit", "standard_name", "cell_method"),
-            (Network,),
+            ((Network, NetworkHistory),),
             {
                 "values": {
                     "network_id": 1,
