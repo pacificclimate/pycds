@@ -17,10 +17,11 @@ from pycds import (
 )
 from pycds.alembic.change_history_utils import hx_id_name
 from pycds.database import check_migration_version, get_schema_item_names
-from pycds.orm.tables import ObsHistory
+from pycds.orm.tables import ObsHistory, HistoryHistory, VariableHistory
 from tests.alembic_migrations.helpers import (
     check_history_table_initial_contents,
     check_history_tracking,
+    check_history_table_FKs,
 )
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
@@ -53,7 +54,7 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
             ObsHistory,
             "obs_raw_id",
             ("time", "datum", "vars_id", "history_id"),
-            (History, Variable),
+            ((History, HistoryHistory), (Variable, VariableHistory)),
             {
                 "values": {
                     "time": datetime.datetime(2100, 1, 1),
@@ -147,6 +148,10 @@ def test_table_contents(
         foreign_tables,
         schema_name,
     )
+
+    for foreign_base, foreign_history in foreign_tables:
+        check_history_table_FKs(sesh, primary, history, foreign_base, foreign_history)
+
     check_history_tracking(
         sesh,
         primary,
