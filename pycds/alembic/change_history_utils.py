@@ -124,7 +124,7 @@ def populate_history_table(collection_name: str, pri_id_name: str, limit: int = 
     )
 
 
-def update_obs_raw_history_FKs():
+def update_obs_raw_history_FKs(suspend_synchronous_commit: bool = False):
     """
     Update the history FKs in obs_raw, in bulk.
 
@@ -132,6 +132,14 @@ def update_obs_raw_history_FKs():
     collections, but at the time of writing, only obs_raw needs bulk FK updates, and we
     already have the query in hand.
     """
+
+    synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
+    print("## synchronous_commit", synchronous_commit)
+    if suspend_synchronous_commit:
+        synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
+        print("## synchronous_commit", synchronous_commit)
+        op.execute("SET synchronous_commit = off")
+
     # TODO: Rewrite as SA query?
     op.execute(
         """
@@ -152,6 +160,9 @@ def update_obs_raw_history_FKs():
         AND o.history_id = h.history_id        
         """
     )
+
+    if suspend_synchronous_commit:
+        op.execute(f"SET synchronous_commit = {synchronous_commit}")
 
 
 def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
