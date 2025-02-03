@@ -71,7 +71,7 @@ def upgrade():
     # Populate the history table, then update its history FKs in bulk.
     # If we let the FK trigger do this work, fired row-by-row on ~1e9 records,
     # it requires an unfeasible amount of time, so we do it in bulk.
-    populate_history_table(table_name, primary_key_name)
+    populate_history_table(table_name, primary_key_name, limit=int(1e6))
     update_obs_raw_history_FKs()
 
     # History table triggers must be created after the table is populated.

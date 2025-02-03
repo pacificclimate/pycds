@@ -111,7 +111,7 @@ def create_history_table_indexes(
         )
 
 
-def populate_history_table(collection_name: str, pri_id_name: str):
+def populate_history_table(collection_name: str, pri_id_name: str, limit: int = None):
     # Populate the history table with data from the primary table, in order of primary id.
     # That ordering guarantees that the newly generated history id's will be in the
     # same order, which is required for it to be a valid history table.
@@ -119,7 +119,8 @@ def populate_history_table(collection_name: str, pri_id_name: str):
         f"INSERT INTO {hx_table_name(collection_name)} "
         f"SELECT * "
         f"FROM {pri_table_name(collection_name)} "
-        f"ORDER BY {pri_table_name(collection_name)}.{pri_id_name}"
+        f"ORDER BY {pri_table_name(collection_name)}.{pri_id_name} "
+        f"LIMIT {limit}"
     )
 
 
