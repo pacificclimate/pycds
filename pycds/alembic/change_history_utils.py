@@ -120,7 +120,7 @@ def populate_history_table(collection_name: str, pri_id_name: str, limit: int = 
         f"SELECT * "
         f"FROM {pri_table_name(collection_name)} "
         f"ORDER BY {pri_table_name(collection_name)}.{pri_id_name} "
-        f"LIMIT {limit}"
+        f"LIMIT {limit or 'NULL'}"
     )
 
 
