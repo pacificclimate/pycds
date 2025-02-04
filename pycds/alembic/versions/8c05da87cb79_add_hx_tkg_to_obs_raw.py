@@ -1,4 +1,4 @@
-"""Add history tracking to obs_raw
+"""Add history tracking to obs_raw, part 1 (create hx table)
 
 Revision ID: 8c05da87cb79
 Revises: a59d64cf16ca
@@ -49,7 +49,6 @@ def upgrade():
 
     # Primary table
     ####
-
     add_history_cols_to_primary(
         table_name,
         columns=(
@@ -65,24 +64,14 @@ def upgrade():
 
     # History table
     ####
-
     create_history_table(table_name, foreign_keys)
-
-    # Populate the history table, then update its history FKs in bulk.
-    # If we let the FK trigger do this work, fired row-by-row on ~1e9 records,
-    # it requires an unfeasible amount of time, so we do it in bulk.
+    grant_standard_table_privileges(hx_table_name(table_name), schema=schema_name)
     populate_history_table(table_name, primary_key_name)
-    update_obs_raw_history_FKs()
+    # History table hx foreign keys are updated in bulk in next migration.
 
-    # History table triggers must be created after the table is populated.
-    create_history_table_triggers(table_name, foreign_keys)
-
-    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
-    grant_standard_table_privileges(table_name, schema=schema_name)
 
 
 def downgrade():
-    drop_history_triggers(table_name)
     drop_history_table(table_name)
     drop_history_cols_from_primary(table_name, columns=("mod_user",))
     op.execute(
