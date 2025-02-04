@@ -111,7 +111,7 @@ def create_history_table_indexes(
         )
 
 
-def populate_history_table(collection_name: str, pri_id_name: str):
+def populate_history_table(collection_name: str, pri_id_name: str, limit: int = None):
     # Populate the history table with data from the primary table, in order of primary id.
     # That ordering guarantees that the newly generated history id's will be in the
     # same order, which is required for it to be a valid history table.
@@ -119,11 +119,12 @@ def populate_history_table(collection_name: str, pri_id_name: str):
         f"INSERT INTO {hx_table_name(collection_name)} "
         f"SELECT * "
         f"FROM {pri_table_name(collection_name)} "
-        f"ORDER BY {pri_table_name(collection_name)}.{pri_id_name}"
+        f"ORDER BY {pri_table_name(collection_name)}.{pri_id_name} "
+        f"LIMIT {limit or 'NULL'}"
     )
 
 
-def update_obs_raw_history_FKs():
+def update_obs_raw_history_FKs(suspend_synchronous_commit: bool = False):
     """
     Update the history FKs in obs_raw, in bulk.
 
@@ -131,6 +132,14 @@ def update_obs_raw_history_FKs():
     collections, but at the time of writing, only obs_raw needs bulk FK updates, and we
     already have the query in hand.
     """
+
+    synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
+    print("## synchronous_commit", synchronous_commit)
+    if suspend_synchronous_commit:
+        synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
+        print("## synchronous_commit", synchronous_commit)
+        op.execute("SET synchronous_commit = off")
+
     # TODO: Rewrite as SA query?
     op.execute(
         """
@@ -151,6 +160,9 @@ def update_obs_raw_history_FKs():
         AND o.history_id = h.history_id        
         """
     )
+
+    if suspend_synchronous_commit:
+        op.execute(f"SET synchronous_commit = {synchronous_commit}")
 
 
 def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
