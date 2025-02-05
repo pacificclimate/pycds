@@ -29,12 +29,13 @@ foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 def upgrade():
+    # Create indexes before updating, so that scans are faster.
+    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
     # If we let the FK trigger update FKs, fired row-by-row on ~1e9 records,
     # it requires an unfeasible amount of time, so we do it in bulk.
     update_obs_raw_history_FKs()
     # History table triggers must be created after the table is populated.
     create_history_table_triggers(table_name, foreign_keys)
-    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
 
 
 def downgrade():
