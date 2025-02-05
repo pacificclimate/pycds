@@ -92,8 +92,10 @@ def create_history_table_indexes(
     """
 
     for columns in (
-        # Index on primary table primary key, mod_time, mod_user
+        # Index on main table primary key, mod_time, mod_user
         ([pri_id_name], ["mod_time"], ["mod_user"])
+        # Index on all main foreign keys
+        + tuple([fk_pk_name] for _, fk_pk_name in (foreign_keys or tuple()))
         # Index on all history foreign keys
         + tuple(
             [hx_id_name(fk_table_name)]
