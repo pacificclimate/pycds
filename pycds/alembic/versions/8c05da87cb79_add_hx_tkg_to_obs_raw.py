@@ -65,12 +65,11 @@ def upgrade():
     # History table
     ####
     create_history_table(table_name, foreign_keys)
-    # Minor hack here: don't use schema arg because hx_table_name already introduces
-    #  schema name. This isn't very elegant.
-    grant_standard_table_privileges(hx_table_name(table_name))
+    grant_standard_table_privileges(
+        hx_table_name(table_name, schema_name=None), schema=schema_name
+    )
     populate_history_table(table_name, primary_key_name)
     # History table hx foreign keys are updated in bulk in next migration.
-
 
 
 def downgrade():
