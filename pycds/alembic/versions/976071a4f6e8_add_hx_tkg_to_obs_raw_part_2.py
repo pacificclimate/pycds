@@ -9,8 +9,12 @@ from alembic import op
 import sqlalchemy as sa
 
 from pycds import get_schema_name
-from pycds.alembic.change_history_utils import update_obs_raw_history_FKs, create_history_table_triggers, \
-    create_history_table_indexes, drop_history_triggers
+from pycds.alembic.change_history_utils import (
+    update_obs_raw_history_FKs,
+    create_history_table_triggers,
+    create_history_table_indexes,
+    drop_history_triggers,
+)
 
 # revision identifiers, used by Alembic.
 revision = "976071a4f6e8"
@@ -29,11 +33,21 @@ foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 def upgrade():
-    # Create indexes before updating, so that scans are faster.
-    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
-    # If we let the FK trigger update FKs, fired row-by-row on ~1e9 records,
-    # it requires an unfeasible amount of time, so we do it in bulk.
+    # If we let the FK trigger do its work, fired row-by-row on ~1e9 records,
+    # it requires an unfeasible amount of time. Instead we update FKs it in bulk,
+    # before we create the FK trigger (which handles all subsequent updates).
+    # After all is done, we add the trigger(s).
+
+    # Create non-history indexes before updating FKs, so that scans are faster.
+    # But don't create the history indexes yet, as those slow down the update.
+    create_history_table_indexes(
+        table_name, primary_key_name, foreign_keys, which="main"
+    )
     update_obs_raw_history_FKs()
+    # Now we can create the history indexes.
+    create_history_table_indexes(
+        table_name, primary_key_name, foreign_keys, which="history"
+    )
     # History table triggers must be created after the table is populated.
     create_history_table_triggers(table_name, foreign_keys)
 

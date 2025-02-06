@@ -84,27 +84,33 @@ def create_history_table_indexes(
     collection_name: str,
     pri_id_name: str,
     foreign_keys: list[tuple[str, str]],
-    extras=None,
+    which="all",  # "main" | "history" | "all"
 ):
     """
     Create indexes on the history table. For analysis on what indexes are needed,
     see https://github.com/pacificclimate/pycds/issues/228
     """
 
-    for columns in (
+    # Indexing can be done by parts, main FKs vs. history FKs.
+    # This variable sets up the index column sets to be added.
+    index_columns = tuple()
+
+    if which in ("main", "all"):
         # Index on main table primary key, mod_time, mod_user
-        ([pri_id_name], ["mod_time"], ["mod_user"])
-        # Index on all main foreign keys
-        + tuple([fk_pk_name] for _, fk_pk_name in (foreign_keys or tuple()))
-        # Index on all history foreign keys
-        + tuple(
+        index_columns += ([pri_id_name], ["mod_time"], ["mod_user"])
+        # Index on all main foreign table keys
+        index_columns += tuple(
+            [fk_pk_name] for _, fk_pk_name in (foreign_keys or tuple())
+        )
+
+    if which in ("history", "all"):
+        # Index on all foreign history table keys
+        index_columns += tuple(
             [hx_id_name(fk_table_name)]
             for fk_table_name, _ in (foreign_keys or tuple())
         )
-        + (extras or tuple())
-    ):
-        # How much do we care about index naming? SQLAlchemy uses a different pattern than
-        # appears typical in CRMP.
+
+    for columns in index_columns:
         op.create_index(
             None,  # Use default SQLAlchemy index name.
             hx_table_name(collection_name, schema=None),
