@@ -67,16 +67,14 @@ def upgrade():
     ####
 
     create_history_table(table_name, foreign_keys)
-
-    # Populate the history table, then update its history FKs in bulk.
-    # If we let the FK trigger do this work, fired row-by-row on ~1e9 records,
-    # it requires an unfeasible amount of time, so we do it in bulk.
-    populate_history_table(table_name, primary_key_name)
-    update_obs_raw_history_FKs()
-
+    # Populate the history table. History FKs are included in the initial table
+    # population. It must be done this way: Doing it after population, in bulk, causes
+    # memory overflows (UPDATEs use a lot of memory). Doing it piecemeal, via the
+    # triggers, on 1e9 records is completely time infeasible.
+    populate_history_table(table_name, primary_key_name, foreign_keys)
     # History table triggers must be created after the table is populated.
     create_history_table_triggers(table_name, foreign_keys)
-
+    # Indexes are better created after table is populated than before.
     create_history_table_indexes(table_name, primary_key_name, foreign_keys)
     grant_standard_table_privileges(table_name, schema=schema_name)
 

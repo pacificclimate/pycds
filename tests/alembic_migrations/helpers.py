@@ -96,6 +96,8 @@ def check_history_tracking_upgrade(
         ("mod_time",),
         ("mod_user",),
     } | {
+        (ft_pk_name,) for _, ft_pk_name in (foreign_keys or tuple())
+    } | {
         (hx_id_name(fk_table_name),) for fk_table_name, _ in (foreign_keys or tuple())
     } == {tuple(c.name for c in index.columns) for index in hx_table.indexes}
 
