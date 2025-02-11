@@ -57,7 +57,7 @@ def check_history_tracking_upgrade(
     engine,
     table_name: str,
     pri_key_name: str,
-    foreign_keys: list[tuple[str, str]],
+    foreign_tables: list[tuple[str, str]],
     schema_name: str,
     pri_columns_added: tuple[tuple[str, sqlalchemy.types]] = (
         ("mod_time", TIMESTAMP),
@@ -85,9 +85,9 @@ def check_history_tracking_upgrade(
         check_column(hx_table, col.name, col.type.__class__)
     check_column(hx_table, "deleted", BOOLEAN)
     check_column(hx_table, hx_id_name(table_name), INTEGER)
-    for fk_table_name, fk_key_name in foreign_keys:
-        check_column(hx_table, fk_key_name, INTEGER)
-        check_column(hx_table, hx_id_name(fk_table_name), INTEGER)
+    for ft_table_name, ft_key_name in foreign_tables:
+        check_column(hx_table, ft_key_name, INTEGER)
+        check_column(hx_table, hx_id_name(ft_table_name), INTEGER)
 
     # History table indexes. This test does not check index type, but it
     # does check what columns are in each index.
@@ -95,11 +95,11 @@ def check_history_tracking_upgrade(
         (pri_key_name,),
         ("mod_time",),
         ("mod_user",),
-    } | {
-        (ft_pk_name,) for _, ft_pk_name in (foreign_keys or tuple())
-    } | {
-        (hx_id_name(fk_table_name),) for fk_table_name, _ in (foreign_keys or tuple())
-    } == {tuple(c.name for c in index.columns) for index in hx_table.indexes}
+    } | {(ft_pk_name,) for _, ft_pk_name in (foreign_tables or tuple())} | {
+        (hx_id_name(ft_table_name),) for ft_table_name, _ in (foreign_tables or tuple())
+    } == {
+        tuple(c.name for c in index.columns) for index in hx_table.indexes
+    }
 
     # Triggers
     check_triggers(
