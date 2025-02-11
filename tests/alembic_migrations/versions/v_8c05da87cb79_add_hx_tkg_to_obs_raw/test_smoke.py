@@ -19,7 +19,7 @@ logger = logging.getLogger("tests")
 
 table_name = "obs_raw"
 primary_key_name = "obs_raw_id"
-foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
+foreign_tables = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -36,7 +36,7 @@ def test_upgrade(
         engine,
         table_name,
         primary_key_name,
-        foreign_keys,
+        foreign_tables,
         schema_name,
         pri_columns_added=(("mod_user", VARCHAR),),
     )
