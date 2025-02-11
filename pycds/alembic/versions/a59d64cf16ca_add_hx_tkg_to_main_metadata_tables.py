@@ -52,12 +52,12 @@ def upgrade():
 
         # History table
         create_history_table(table_name, foreign_keys)
+        populate_history_table(table_name, primary_key_name, foreign_keys)
+        # History table triggers must be created after the table is populated.
+        create_history_table_triggers(table_name, foreign_keys)
         create_history_table_indexes(
             table_name, primary_key_name, foreign_keys, extra_indexes
         )
-        # History table triggers must be created before the table is populated.
-        create_history_table_triggers(table_name, foreign_keys)
-        populate_history_table(table_name, primary_key_name)
         grant_standard_table_privileges(table_name, schema=schema_name)
 
 
