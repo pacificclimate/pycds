@@ -151,7 +151,7 @@ def populate_history_table(
     ft_cte_defns = tuple(
         f"""
         {cte_name} AS (
-            SELECT {ft_pk_name}, max({hx_id_name(ft_table_name)}) value 
+            SELECT {ft_pk_name}, max({hx_id_name(ft_table_name)}) val 
             FROM {hx_table_name(ft_table_name)} 
             GROUP BY {ft_pk_name}
         )        
@@ -160,7 +160,7 @@ def populate_history_table(
     )
     ft_cte_list = ", ".join(ft_cte_defns)
 
-    ft_cte_value_list = ", ".join(f"{cte_name}.value" for cte_name in ft_cte_names)
+    ft_cte_value_list = ", ".join(f"{cte_name}.val" for cte_name in ft_cte_names)
 
     ft_where_conditions = tuple(
         f"main.{ft_pk_name} = {cte_name}.{ft_pk_name}"
