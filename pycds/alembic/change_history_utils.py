@@ -135,16 +135,18 @@ def populate_history_table(
     """
 
     # Foreign tables are used in common table expressions (CTEs) that provide the latest
-    # foreign table history id's. There is a series of objects all generated from the
+    # foreign table history id's. A series of related objects are generated from the
     # foreign table definitions: the CTE names, the CTE definitions, and their usages
-    # within the query that populates the target history table. All these objects must be
-    # robust within definition and usage to the case when there are no foreign tables.
+    # within the query that populates the target history table.
+
+    foreign_tables = foreign_tables or tuple()
+
+    conditional_comma = "," if len(foreign_tables) > 0 else ""
 
     ft_cte_names = tuple(
-        f"{ft_table_name}_latest"
-        for ft_table_name, ft_pk_name in (foreign_tables or tuple())
+        f"{ft_table_name}_latest" for ft_table_name, ft_pk_name in foreign_tables
     )
-    ft_cte_name_list = f', {", ".join(ft_cte_names)}' if len(ft_cte_names) > 0 else ""
+    ft_cte_name_list = ", ".join(ft_cte_names)
 
     ft_cte_defns = tuple(
         f"""
@@ -154,23 +156,15 @@ def populate_history_table(
             GROUP BY {ft_pk_name}
         )        
         """
-        for cte_name, (ft_table_name, ft_pk_name) in zip(
-            ft_cte_names, foreign_tables or tuple()
-        )
+        for cte_name, (ft_table_name, ft_pk_name) in zip(ft_cte_names, foreign_tables)
     )
-    ft_cte_list = f"{', '.join(ft_cte_defns)}, " if len(ft_cte_defns) > 0 else ""
+    ft_cte_list = ", ".join(ft_cte_defns)
 
-    ft_cte_value_list = (
-        f', {", ".join(f"{cte_name}.value" for cte_name in ft_cte_names)}'
-        if len(ft_cte_names) > 0
-        else ""
-    )
+    ft_cte_value_list = ", ".join(f"{cte_name}.value" for cte_name in ft_cte_names)
 
     ft_where_conditions = tuple(
         f"main.{ft_pk_name} = {cte_name}.{ft_pk_name}"
-        for cte_name, (ft_table_name, ft_pk_name) in zip(
-            ft_cte_names, foreign_tables or tuple()
-        )
+        for cte_name, (ft_table_name, ft_pk_name) in zip(ft_cte_names, foreign_tables)
     )
     ft_where_clause = (
         f"WHERE {' AND '.join(ft_where_conditions)}"
@@ -179,20 +173,17 @@ def populate_history_table(
     )
 
     stmt = f"""
-        WITH
+        {"WITH" if len(foreign_tables) > 0 else ""}
         {ft_cte_list}
-        source AS (
-            SELECT main.*, false, 
-                nextval('{hx_id_seq_name(collection_name)}'::regclass) 
-                {ft_cte_value_list}
-            FROM {pri_table_name(collection_name)} main {ft_cte_name_list}
-            {ft_where_clause}
-            LIMIT {limit or 'NULL'}
-        )
         INSERT INTO {hx_table_name(collection_name)}
-        SELECT * FROM source
-        ORDER BY source.{pri_id_name}        
-        """
+        SELECT main.*, false, 
+            nextval('{hx_id_seq_name(collection_name)}'::regclass) 
+            {conditional_comma} {ft_cte_value_list}
+        FROM {pri_table_name(collection_name)} main  
+            {conditional_comma} {ft_cte_name_list}
+        {ft_where_clause}
+        ORDER BY main.{pri_id_name}        
+    """
     op.execute(stmt)
 
 
