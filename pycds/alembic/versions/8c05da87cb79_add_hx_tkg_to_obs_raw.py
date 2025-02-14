@@ -20,7 +20,6 @@ from pycds.alembic.change_history_utils import (
     create_primary_table_triggers,
     create_history_table_indexes,
     hx_table_name,
-    update_obs_raw_history_FKs,
     pri_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
