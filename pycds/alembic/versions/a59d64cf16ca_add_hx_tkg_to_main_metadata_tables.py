@@ -45,19 +45,19 @@ def upgrade():
     # the history table is populated can find the functions that they call.
     op.get_bind().execute(f"SET search_path TO {schema_name}, public")
 
-    for table_name, primary_key_name, foreign_keys, extra_indexes in table_info:
+    for table_name, primary_key_name, foreign_tables, extra_indexes in table_info:
         # Primary table
         add_history_cols_to_primary(table_name)
         create_primary_table_triggers(table_name)
 
         # History table
-        create_history_table(table_name, foreign_keys)
+        create_history_table(table_name, foreign_tables)
+        populate_history_table(table_name, primary_key_name, foreign_tables)
+        # History table triggers must be created after the table is populated.
+        create_history_table_triggers(table_name, foreign_tables)
         create_history_table_indexes(
-            table_name, primary_key_name, foreign_keys, extra_indexes
+            table_name, primary_key_name, foreign_tables, extra_indexes
         )
-        # History table triggers must be created before the table is populated.
-        create_history_table_triggers(table_name, foreign_keys)
-        populate_history_table(table_name, primary_key_name)
         grant_standard_table_privileges(table_name, schema=schema_name)
 
 

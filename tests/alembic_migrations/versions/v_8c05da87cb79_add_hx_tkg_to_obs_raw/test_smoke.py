@@ -7,7 +7,11 @@ from alembic import command
 from sqlalchemy import Table, MetaData, text
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
-from pycds.alembic.change_history_utils import pri_table_name, hx_table_name, hx_id_name
+from pycds.alembic.change_history_utils import (
+    main_table_name,
+    hx_table_name,
+    hx_id_name,
+)
 from pycds.database import get_schema_item_names
 from tests.alembic_migrations.helpers import (
     check_history_tracking_upgrade,
@@ -19,7 +23,7 @@ logger = logging.getLogger("tests")
 
 table_name = "obs_raw"
 primary_key_name = "obs_raw_id"
-foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
+foreign_tables = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 @pytest.mark.usefixtures("new_db_left")
@@ -36,7 +40,7 @@ def test_upgrade(
         engine,
         table_name,
         primary_key_name,
-        foreign_keys,
+        foreign_tables,
         schema_name,
         pri_columns_added=(("mod_user", VARCHAR),),
     )
