@@ -131,7 +131,7 @@ def populate_history_table(
     That ordering guarantees that the newly generated history id's will be in the
     same order, which is required for it to be a valid history table.
     We include the history FKs in the initial population, because to do it any other
-    way proves infeasible for large tables (obs_raw) in memory and/or time.
+    way proves infeasible for large tables (obs_raw) in memory and/or time usage.
     """
 
     # Foreign tables are used in common table expressions (CTEs) that provide the latest
@@ -185,47 +185,6 @@ def populate_history_table(
         ORDER BY main.{pri_id_name}        
     """
     op.execute(stmt)
-
-
-def update_obs_raw_history_FKs(suspend_synchronous_commit: bool = False):
-    """
-    Update the history FKs in obs_raw, in bulk.
-
-    This method would be easy to generalize to other tables with different FK
-    collections, but at the time of writing, only obs_raw needs bulk FK updates, and we
-    already have the query in hand.
-    """
-
-    synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
-    print("## synchronous_commit", synchronous_commit)
-    if suspend_synchronous_commit:
-        synchronous_commit = op.get_bind().execute("show synchronous_commit").scalar()
-        print("## synchronous_commit", synchronous_commit)
-        op.execute("SET synchronous_commit = off")
-
-    # TODO: Rewrite as SA query?
-    op.execute(
-        """
-        WITH v as (
-            SELECT vars_id, max(meta_vars_hx_id) latest
-            FROM meta_vars_hx
-            GROUP BY vars_id
-        ),
-        h as (
-            SELECT history_id, max(meta_history_hx_id) latest
-            FROM meta_history_hx
-            GROUP BY history_id
-        )
-        UPDATE obs_raw_hx o
-        SET meta_vars_hx_id = v.latest, meta_history_hx_id = h.latest
-        FROM v, h
-        WHERE o.vars_id = v.vars_id
-        AND o.history_id = h.history_id        
-        """
-    )
-
-    if suspend_synchronous_commit:
-        op.execute(f"SET synchronous_commit = {synchronous_commit}")
 
 
 def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
