@@ -20,7 +20,7 @@ from pycds.alembic.change_history_utils import (
     create_primary_table_triggers,
     create_history_table_indexes,
     hx_table_name,
-    pri_table_name,
+    main_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -36,7 +36,7 @@ schema_name = get_schema_name()
 
 table_name = "obs_raw"
 primary_key_name = "obs_raw_id"
-foreign_keys = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
+foreign_tables = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
 def upgrade():
@@ -58,23 +58,23 @@ def upgrade():
     )
     # Existing trigger on obs_raw is superseded by the hx tracking trigger.
     op.execute(
-        f"DROP TRIGGER IF EXISTS update_mod_time ON {pri_table_name(table_name)}"
+        f"DROP TRIGGER IF EXISTS update_mod_time ON {main_table_name(table_name)}"
     )
     create_primary_table_triggers(table_name)
 
     # History table
     ####
 
-    create_history_table(table_name, foreign_keys)
+    create_history_table(table_name, foreign_tables)
     # Populate the history table. History FKs are included in the initial table
     # population. It must be done this way: Doing it after population, in bulk, causes
     # memory overflows (UPDATEs use a lot of memory). Doing it piecemeal, via the
     # triggers, on 1e9 records is completely time infeasible.
-    populate_history_table(table_name, primary_key_name, foreign_keys)
+    populate_history_table(table_name, primary_key_name, foreign_tables)
     # History table triggers must be created after the table is populated.
-    create_history_table_triggers(table_name, foreign_keys)
+    create_history_table_triggers(table_name, foreign_tables)
     # Indexes are better created after table is populated than before.
-    create_history_table_indexes(table_name, primary_key_name, foreign_keys)
+    create_history_table_indexes(table_name, primary_key_name, foreign_tables)
     grant_standard_table_privileges(table_name, schema=schema_name)
 
 
@@ -85,7 +85,7 @@ def downgrade():
     op.execute(
         f"CREATE TRIGGER update_mod_time"
         f"  BEFORE UPDATE"
-        f"  ON {pri_table_name(table_name)}"
+        f"  ON {main_table_name(table_name)}"
         f"  FOR EACH ROW"
         f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
     )
