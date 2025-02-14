@@ -18,7 +18,7 @@ from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
 from pycds.alembic.change_history_utils import hx_id_name
-from pycds.alembic.change_history_utils import pri_table_name, hx_table_name
+from pycds.alembic.change_history_utils import main_table_name, hx_table_name
 from pycds.database import get_schema_item_names
 
 
@@ -70,18 +70,18 @@ def check_history_tracking_upgrade(
     names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
     metadata = MetaData(schema=schema_name, bind=engine)
 
-    # Primary table: columns added
-    pri_name = pri_table_name(table_name, schema=None)
-    assert pri_name in names
-    pri_table = Table(pri_name, metadata, autoload_with=engine)
+    # Main table: columns added
+    main_name = main_table_name(table_name, schema=None)
+    assert main_name in names
+    main_table = Table(main_name, metadata, autoload_with=engine)
     for col_name, col_type in pri_columns_added:
-        check_column(pri_table, col_name, col_type)
+        check_column(main_table, col_name, col_type)
 
     # History table columns: primary plus additional columns
     hx_name = hx_table_name(table_name, schema=None)
     assert hx_name in names
     hx_table = Table(hx_name, metadata, autoload_with=engine)
-    for col in pri_table.columns:
+    for col in main_table.columns:
         check_column(hx_table, col.name, col.type.__class__)
     check_column(hx_table, "deleted", BOOLEAN)
     check_column(hx_table, hx_id_name(table_name), INTEGER)
@@ -103,7 +103,7 @@ def check_history_tracking_upgrade(
 
     # Triggers
     check_triggers(
-        pri_table,
+        main_table,
         [
             (
                 f"{tg_prefix}primary_control_hx_cols",
@@ -144,9 +144,9 @@ def check_history_tracking_downgrade(
     metadata = MetaData(schema=schema_name, bind=engine)
 
     # Primary table: columns dropped
-    pri_name = pri_table_name(table_name, schema=None)
-    assert pri_name in names
-    pri_table = Table(pri_name, metadata, autoload_with=engine)
+    main_name = main_table_name(table_name, schema=None)
+    assert main_name in names
+    pri_table = Table(main_name, metadata, autoload_with=engine)
     for column in pri_columns_dropped:
         check_column(pri_table, column, present=False)
 
