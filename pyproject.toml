@@ -39,18 +39,19 @@ packages = [
 #include = ["data/crmp_subset_data.sql"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9,<3.14"
 alembic = ">=1.5.2,<1.6"
 SQLAlchemy = ">=1.4.15,<2.0"
 geoalchemy2 = "^0.13.3"
 psycopg2 = "^2.9.6"
 sqlalchemy-citext = "^1.8.0"
+black = "^25.1.0"
 
 [tool.poetry.group.dev.dependencies]
 alembic-verify = "0.1.4"  # loosen?
 # Always pin Black to a specific version to ease the disruptions when its default
 # behaviour changes.
-black = "23.3.0"
+black = ">=24.3.0"
 pytest = "^7.4.0"
 pytest-describe = "^2.1.0"
 pytest-mock = "^3.11.1"
