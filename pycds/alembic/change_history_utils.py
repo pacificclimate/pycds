@@ -4,6 +4,7 @@ These are Python functions, not database functions, and they are used in coding 
 migration. Naming functions do correspond to equivalent database functions used by
 the change history functionality.
 """
+
 from typing import Iterable, Any
 
 from alembic import op

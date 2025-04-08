@@ -9,6 +9,7 @@ their pre-existence on upgrade, and their non-existence on downgrade. The
 former is expected in some databases. It's hard to imagine why the latter
 would be true, but it's easy enough to provide for.
 """
+
 import logging
 from alembic import op
 from pycds import get_schema_name

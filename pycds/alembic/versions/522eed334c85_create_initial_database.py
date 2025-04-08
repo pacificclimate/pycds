@@ -1,10 +1,11 @@
 """Create initial database
 
 Revision ID: 522eed334c85
-Revises: 
+Revises:
 Create Date: 2020-01-21 17:25:40.000843
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 import geoalchemy2

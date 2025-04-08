@@ -5,6 +5,7 @@ Revises: 7ab87f8fbcf4
 Create Date: 2024-12-16 14:54:41.332001
 
 """
+
 from alembic import op
 
 from pycds import get_schema_name

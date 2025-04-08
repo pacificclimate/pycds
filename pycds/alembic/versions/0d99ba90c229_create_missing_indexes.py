@@ -7,6 +7,7 @@ Create Date: 2021-05-20 10:02:02.111616
 Create indexes that are defined on ORM classes but which were not created
 by earlier migrations.
 """
+
 import logging
 from alembic import op
 from pycds.context import get_schema_name
