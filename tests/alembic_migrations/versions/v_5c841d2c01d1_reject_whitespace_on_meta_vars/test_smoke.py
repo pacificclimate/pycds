@@ -1,5 +1,5 @@
 """Smoke tests:
-- Upgrade adds check constraint to meta_vars.net_var_name such that they are valid sql identifiers 
+- Upgrade adds check constraint to meta_vars.net_var_name such that they are valid sql identifiers
     (this boils down to values inserted into the column should not contain whitespace)
 - Check constraint can still enter valid data
 - Check constraint rejects bad data after migration

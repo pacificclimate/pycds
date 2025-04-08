@@ -5,6 +5,7 @@ Revises: bb2a222a1d4a
 Create Date: 2023-12-19 14:36:43.362862
 
 """
+
 import logging
 from alembic import op
 from pycds.alembic.util import create_view, create_matview, drop_matview, drop_view

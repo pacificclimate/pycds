@@ -11,6 +11,7 @@ These tests test that this migration correctly modifies the base tables and crea
 the history tables, and attaches the trigger functions to them. Then we do some cursory
 tests to verify they are actually being called and recording history records.
 """
+
 import logging
 
 import pytest

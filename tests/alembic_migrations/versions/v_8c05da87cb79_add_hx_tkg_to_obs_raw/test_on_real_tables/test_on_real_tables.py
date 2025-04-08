@@ -4,6 +4,7 @@ data, as we would find in a real migration. We do this by populating the tables
 with data, applying the migration, and then examining the resulting history
 tables.
 """
+
 import datetime
 import logging
 

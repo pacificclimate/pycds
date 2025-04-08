@@ -5,6 +5,7 @@ Revises: 6cb393f711c3
 Create Date: 2024-01-09 16:22:39.469951
 
 """
+
 from alembic import op
 
 from pycds.context import get_su_role_name

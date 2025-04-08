@@ -10,6 +10,7 @@ Idiosyncracies:
   test_monthly_views_common.py`
   for a more complete explanation of this technique.
 """
+
 import datetime
 
 from pytest import fixture, mark, approx

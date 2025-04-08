@@ -5,6 +5,7 @@ Revises: 0d99ba90c229
 Create Date: 2022-01-12 13:11:12.480424
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 import citext as ci

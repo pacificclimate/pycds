@@ -10,7 +10,7 @@ Native matviews for  weather anomaly application.
     during any one day in the month. It remains approximately correct if such
     days are rare, and remains valid for the purpose of distinguishing adequate
     coverage.
-    
+
 `DailyMaxTemperature`
 `DailyMinTemperature`
   - These views support views that deliver monthly average of daily max/min
@@ -33,13 +33,13 @@ Native matviews for  weather anomaly application.
 
 Notes:
   - Schema name: See note on this topic in pycds/__init__.py
-  
+
   - The variable with the network_variable_name cum_pcpn_amt is explicitly excluded
-    by name from the MonthlyTotalPrecipitation matview. This variable represents 
+    by name from the MonthlyTotalPrecipitation matview. This variable represents
     the amount of cumulative precipitation as recorded in a large open-ended cylinder
-    and is prone to errors due to physical considerations like evaportaion and snow caps 
+    and is prone to errors due to physical considerations like evaportaion and snow caps
     blocking the cylinder. It has been determined that while this variable can be useful
-    for spot-checking conditions "on the ground" it is not consistently accurate 
+    for spot-checking conditions "on the ground" it is not consistently accurate
     enough to be used as input to MonthlyTotalPrecipitation.
 """
 

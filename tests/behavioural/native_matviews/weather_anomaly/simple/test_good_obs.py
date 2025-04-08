@@ -1,4 +1,5 @@
 """Tests of the `good_obs` query"""
+
 import pytest
 from pycds import Obs
 from pycds.orm.native_matviews import good_obs
