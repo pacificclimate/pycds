@@ -14,9 +14,11 @@ from sqlalchemy import (
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.sql import sqltypes
 from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
+from pycds import get_schema_name
 from pycds.alembic.change_history_utils import hx_id_name
 from pycds.alembic.change_history_utils import main_table_name, hx_table_name
 from pycds.database import get_schema_item_names
@@ -51,6 +53,39 @@ group by trigger_name
             assert item in triggers
         else:
             assert item not in triggers
+
+
+def check_orm_actual_tables_match(engine, orm_table, schema_name=get_schema_name()):
+    """Check that table defined in ORM matches the actual table in the database.
+    This method is useful in smoke tests."""
+
+    # Check actual table existence
+    names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
+    assert orm_table.__tablename__ in names
+
+    # Reflect table
+    metadata = MetaData(schema=schema_name, bind=engine)
+    actual_table = Table(orm_table.__tablename__, metadata, autoload_with=engine)
+
+    # Check that table columns match
+    def type_match(class1, class2):
+        return (
+            # This is usually the case if they match
+            issubclass(class1, class2)
+            or issubclass(class2, class1)
+            # Ad-hocery around dialect vs non-dialect types
+            or all(issubclass(c, sqltypes._AbstractInterval) for c in (class1, class2))
+        )
+
+    # This checks column order as well as type.
+    for actual_col, orm_col in zip(actual_table.columns, orm_table.__table__.columns):
+        assert actual_col.name == orm_col.name
+        # print(
+        #     f"{actual_col.name}: actual {actual_col.type.__class__} orm:  {orm_col.type.__class__}"
+        # )
+        assert type_match(
+            actual_col.type.__class__, orm_col.type.__class__
+        ), f"{actual_col.name}: actual {actual_col.type.__class__} orm:  {orm_col.type.__class__}"
 
 
 def check_history_tracking_upgrade(
