@@ -223,7 +223,7 @@ def describe_load__pcic__climate__baseline__values():
                                 b" ",
                                 b"long",
                                 b"lat",
-                                *values
+                                *values,
                             )
                             .decode("ascii")
                             .replace("\0", " ")
@@ -347,7 +347,7 @@ def describe_load__pcic__climate__baseline__values():
                             b" ",
                             b"long",
                             b"lat",
-                            *values
+                            *values,
                         )
                         .decode("ascii")
                         .replace("\0", " ")
