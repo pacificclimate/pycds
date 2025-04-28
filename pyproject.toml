@@ -5,6 +5,8 @@ build-backend = "poetry.core.masonry.api"
 [project]
 name = "pycds"
 version = "4.5.1"
+requires-python = ">=3.9,<3.14"
+
 readme = "README.md"
 description = "An ORM representation of the PCDS and CRMP database"
 license = { text = "GPL-3.0-only" }
@@ -33,7 +35,6 @@ classifiers = [
 ]
 
 dependencies = [
-  "python>=3.9,<3.14",
   "alembic>=1.5.2,<1.6",
   "SQLAlchemy>=1.4.15,<2.0",
   "geoalchemy2>=0.13.3,<1.0.0",
