@@ -45,7 +45,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        poetry install
+        poetry install --with dev
 
     - name: Test with pytest (full)
       if: github.ref == 'refs/heads/master'
