@@ -46,13 +46,13 @@ def compile_query(statement, bind=None):
                 bindparam,
                 within_columns_clause=False,
                 literal_binds=False,
-                **kwargs
+                **kwargs,
             ):
                 return super(LiteralCompiler, self).render_literal_bindparam(
                     bindparam,
                     within_columns_clause=within_columns_clause,
                     literal_binds=literal_binds,
-                    **kwargs
+                    **kwargs,
                 )
 
     compiler = LiteralCompiler(dialect, statement)
