@@ -53,7 +53,9 @@ def db_setup(schema_name):
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"))
+        engine.execute(
+            text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
+        )
 
         privs = [
             f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"

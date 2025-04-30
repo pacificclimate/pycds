@@ -57,7 +57,9 @@ def set_up_db_cluster(db_uri, user="testuser"):
 
     for role, _ in get_standard_table_privileges():
         engine.execute(text(f"CREATE ROLE {role}"))
-    engine.execute(text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;"))
+    engine.execute(
+        text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
+    )
     engine.execute(text(f"CREATE USER {user};"))
 
     engine.dispose()
