@@ -2,6 +2,7 @@ import logging
 import os
 import pytest
 
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
@@ -43,23 +44,23 @@ def db_setup(schema_name):
 
         # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
-        engine.execute("CREATE EXTENSION postgis")
-        engine.execute("CREATE EXTENSION plpython3u")
-        engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
-        engine.execute("CREATE EXTENSION IF NOT EXISTS hstore")
+        engine.execute(text("CREATE EXTENSION postgis"))
+        engine.execute(text("CREATE EXTENSION plpython3u"))
+        engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
+        engine.execute(text("CREATE EXTENSION IF NOT EXISTS hstore"))
 
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
+        engine.execute(text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"))
 
         privs = [
             f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
             f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema_name} GRANT ALL PRIVILEGES ON TABLES TO {test_user};"
             for objects in ("TABLES", "SEQUENCES", "FUNCTIONS")
         ]
-        engine.execute("".join(privs))
+        engine.execute(text("".join(privs)))
 
         # One of the following *should* set the current user to `test_user`.
         # But it's hard to tell if it does, because `SELECT current_user`
@@ -69,7 +70,8 @@ def db_setup(schema_name):
         # so it's very hard to tell what is actually happening.
 
         # engine.execute(f"SET ROLE '{test_user}';")
-        engine.execute(f"SET SESSION AUTHORIZATION '{test_user}';")
+        auth = f"SET SESSION AUTHORIZATION '{test_user}';"
+        engine.execute(text(auth))
 
         # result = engine.execute(f"SELECT current_user").scalar()
         #   --> "postgres"

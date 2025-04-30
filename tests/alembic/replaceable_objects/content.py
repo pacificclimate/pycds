@@ -6,7 +6,7 @@ are given different ORM declarative bases.
 """
 
 from sqlalchemy import MetaData, Column, Integer, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import select, text, literal_column
 from sqlalchemy.sql import column
 
