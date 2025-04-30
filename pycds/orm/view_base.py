@@ -14,7 +14,7 @@ to DRY up the manufacture of independent bases.
 """
 
 from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from pycds.context import get_schema_name
 
 

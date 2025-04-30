@@ -1,7 +1,7 @@
 import logging, logging.config
 import sys
 
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema
 
@@ -34,7 +34,7 @@ def schema_func(schema_name):
 @fixture(scope="session")
 def set_search_path():
     def f(executor):
-        executor.execute(f"SET search_path TO public")
+        executor.execute(text(f"SET search_path TO public"))
 
     return f
 
@@ -56,9 +56,9 @@ def set_up_db_cluster(db_uri, user="testuser"):
     engine = create_engine(db_uri)
 
     for role, _ in get_standard_table_privileges():
-        engine.execute(f"CREATE ROLE {role}")
-    engine.execute(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
-    engine.execute(f"CREATE USER {user};")
+        engine.execute(text(f"CREATE ROLE {role}"))
+    engine.execute(text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;"))
+    engine.execute(text(f"CREATE USER {user};"))
 
     engine.dispose()
 
@@ -80,9 +80,9 @@ def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
     "Base" engine indicates that it has no ORM content created in it.
     """
     engine = create_engine(base_database_uri)
-    engine.execute("CREATE EXTENSION postgis")
-    engine.execute("CREATE EXTENSION plpython3u")
-    engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
+    engine.execute(text("CREATE EXTENSION postgis"))
+    engine.execute(text("CREATE EXTENSION plpython3u"))
+    engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
     engine.execute(CreateSchema(schema_name))
     set_search_path(engine)
     add_functions(engine)

@@ -1,6 +1,8 @@
 import pytest
 from pytest import param
 
+from sqlalchemy import text
+
 # Database operations, which are mixed and matched to construct different tests.
 
 a_ins_1 = """
@@ -51,7 +53,7 @@ c_ins_1 = """
 
 
 def print_table(sesh, name, id):
-    results = sesh.execute(f"SELECT * FROM {name} ORDER BY {id}").fetchall()
+    results = sesh.execute(text(f"SELECT * FROM {name} ORDER BY {id}")).fetchall()
     print()
     print(f"Table {name}")
     print("-----")
@@ -207,16 +209,18 @@ def test_mod_values_enforcement(sesh_with_test_tables):
     # Get expected values for mod_time, mod_user.
     # Note: now() returns the same value within a single transaction; a test session
     # apparently runs in a single transaction.
-    expected = sesh.execute("SELECT now()::timestamp, current_user").fetchone()
+    expected = sesh.execute(text("SELECT now()::timestamp, current_user")).fetchone()
 
     # Attempt to override mod_time, mod_user
     sesh.execute(
-        "INSERT INTO a(x, mod_time, mod_user) "
-        "VALUES (100, '2000-01-01 00:00'::timestamp, 'naughty')"
+        text(
+            "INSERT INTO a(x, mod_time, mod_user) "
+            "VALUES (100, '2000-01-01 00:00'::timestamp, 'naughty')"
+        )
     )
 
     # Check that values set in INSERT are overridden with correct values.
-    result = sesh.execute("SELECT mod_time, mod_user FROM a").first()
+    result = sesh.execute(text("SELECT mod_time, mod_user FROM a")).first()
     assert result == expected
-    result = sesh.execute("SELECT mod_time, mod_user FROM a_hx").first()
+    result = sesh.execute(text("SELECT mod_time, mod_user FROM a_hx")).first()
     assert result == expected

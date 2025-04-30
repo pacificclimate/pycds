@@ -31,8 +31,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.orm import relationship, synonym, declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
@@ -239,7 +238,7 @@ class History(Base):
     meta_station = synonym("station")  # Retain backwards compatibility
     observations = relationship("Obs", back_populates="history")
     obs_raw = synonym("observations")  # Retain backwards compatibility
-    derived_values = relationship("DerivedValue", back_populates="history")
+    derived_values = relationship("DerivedValue", back_populates="history", cascade_backrefs=False)
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
 
@@ -433,7 +432,7 @@ class Variable(Base):
     obs = relationship("Obs", back_populates="variable")
     observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
-    derived_values = relationship("DerivedValue", back_populates="variable")
+    derived_values = relationship("DerivedValue", back_populates="variable", cascade_backrefs=False)
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
     _newline_checked_columns_ = [
