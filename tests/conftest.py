@@ -31,14 +31,6 @@ def schema_func(schema_name):
     return getattr(func, schema_name)
 
 
-@fixture(scope="session")
-def set_search_path():
-    def f(executor):
-        executor.execute(text(f"SET search_path TO public"))
-
-    return f
-
-
 # TODO: Remove altogether after transfer of matviews to migration
 @fixture(scope="session")
 def add_functions():
@@ -55,12 +47,13 @@ def set_up_db_cluster(db_uri, user="testuser"):
     # TODO: See if more things, e.g., extensions, languages can be done here.
     engine = create_engine(db_uri)
 
-    for role, _ in get_standard_table_privileges():
-        engine.execute(text(f"CREATE ROLE {role}"))
-    engine.execute(
-        text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
-    )
-    engine.execute(text(f"CREATE USER {user};"))
+    with engine.begin() as conn:
+        for role, _ in get_standard_table_privileges():
+            conn.execute(text(f"CREATE ROLE {role}"))
+        conn.execute(
+            text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
+        )
+        conn.execute(text(f"CREATE USER {user};"))
 
     engine.dispose()
 
@@ -76,17 +69,18 @@ def base_database_uri():
 
 # TODO: Separate out add_functions
 @fixture(scope="session")
-def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
+def base_engine(base_database_uri, schema_name, add_functions):
     """
     Test-session scoped base database engine.
     "Base" engine indicates that it has no ORM content created in it.
     """
     engine = create_engine(base_database_uri)
-    engine.execute(text("CREATE EXTENSION postgis"))
-    engine.execute(text("CREATE EXTENSION plpython3u"))
-    engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
-    engine.execute(CreateSchema(schema_name))
-    set_search_path(engine)
+    with engine.begin() as conn:
+        conn.execute(text("CREATE EXTENSION postgis"))
+        conn.execute(text("CREATE EXTENSION plpython3u"))
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
+        conn.execute(CreateSchema(schema_name))
+        conn.execute(text(f"SET search_path TO public"))
     add_functions(engine)
     yield engine
 
@@ -99,12 +93,13 @@ def pycds_engine(base_engine):
 
 
 @fixture(scope="function")
-def pycds_sesh(pycds_engine, set_search_path):
+def pycds_sesh(pycds_engine):
     """Test-function scoped database session.
     All session actions are rolled back on teardown.
     """
     sesh = sessionmaker(bind=pycds_engine)()
-    set_search_path(sesh)
+    with pycds_engine.begin() as conn:
+        conn.execute(text(f"SET search_path TO public"))
     yield sesh
     sesh.rollback()
     sesh.close()

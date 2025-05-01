@@ -1,4 +1,5 @@
 from pytest import fixture
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from tests.helpers import add_then_delete_objs
 from tests.helpers import create_then_drop_views
@@ -25,9 +26,10 @@ def tst_orm_engine(base_engine):
 
 
 @fixture
-def tst_orm_sesh(tst_orm_engine, set_search_path):
+def tst_orm_sesh(tst_orm_engine):
     sesh = sessionmaker(bind=tst_orm_engine)()
-    set_search_path(sesh)
+    with tst_orm_engine.begin() as conn:
+        conn.execute(text(f"SET search_path TO public"))
     yield sesh
     sesh.rollback()
     sesh.close()
