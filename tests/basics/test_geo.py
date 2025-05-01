@@ -1,13 +1,15 @@
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from pycds import History
 
 
 def test_can_use_spatial_functions_sql(empty_sesh):
     res = empty_sesh.execute(
-        """
+        text(
+            """
         SELECT ST_AsText(ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))',4326))
     """
+        )
     ).scalar()
     assert res == "POLYGON((0 0,0 1,1 1,1 0,0 0))"
 
