@@ -30,13 +30,18 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    engine = op.get_bind().engine
-    inspector = sa.inspect(engine)
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
     logger.debug(f"tables: {inspector.get_table_names(schema=schema_name)}")
-    if db_supports_matviews(engine):
+    if db_supports_matviews(conn):
         logger.debug("This database supports native materialized views")
         op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
+        logger.debug(f"tables: {inspector.get_table_names(schema=schema_name)}")
+        import pdb
+        pdb.set_trace()
         create_matview(VarsPerHistory, schema=schema_name)
+
+
     else:
         logger.info(
             "This database does not support native materialized views: "
@@ -45,8 +50,8 @@ def upgrade():
 
 
 def downgrade():
-    engine = op.get_bind().engine
-    if db_supports_matviews(engine):
+    conn = op.get_bind()
+    if db_supports_matviews(conn):
         logger.debug("This database supports matviews")
         drop_matview(VarsPerHistory, schema=schema_name)
         # Note: This will create the table in the database even if it didn't

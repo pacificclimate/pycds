@@ -35,8 +35,8 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    engine = op.get_bind().engine
-    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
+    conn = op.get_bind()
+    if matview_exists(conn, ClimoObsCountMatview.__tablename__, schema=schema_name):
         logger.info(
             f"A native materialized view '{ClimoObsCountMatview.__tablename__}' "
             f"already exists in the database; skipping upgrade"

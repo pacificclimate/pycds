@@ -157,7 +157,8 @@ def run_migrations_online():
             alembic_config[key] = db_config[key]
 
     connectable = engine_from_config(
-        alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool
+        alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool,
+        future=True
     )
 
     with connectable.connect() as connection:

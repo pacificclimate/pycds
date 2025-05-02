@@ -36,10 +36,10 @@ indexes = (
 
 
 def upgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     for index_name, table_name, columns in indexes:
         existing_index_names = get_schema_item_names(
-            engine, "indexes", table_name=table_name, schema_name=schema_name
+            conn, "indexes", table_name=table_name, schema_name=schema_name
         )
         if index_name not in existing_index_names:
             logger.debug(f"Creating index {index_name}")
@@ -55,10 +55,10 @@ def upgrade():
 
 
 def downgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     for index_name, table_name, _ in indexes:
         existing_index_names = get_schema_item_names(
-            engine, "indexes", table_name=table_name, schema_name=schema_name
+            conn, "indexes", table_name=table_name, schema_name=schema_name
         )
         if index_name in existing_index_names:
             logger.debug(f"Dropping index {index_name}")
