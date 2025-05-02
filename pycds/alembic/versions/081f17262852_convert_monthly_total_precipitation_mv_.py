@@ -66,10 +66,10 @@ schema_name = get_schema_name()
 
 def upgrade():
     op.set_role(get_su_role_name())
-    engine = op.get_bind().engine
+    conn = op.get_bind()
 
     for native, managed in native_managed_matviews:
-        if matview_exists(engine, native.__tablename__, schema=schema_name):
+        if matview_exists(conn, native.__tablename__, schema=schema_name):
             logger.info(
                 f"A native materialized view '{native.__tablename__}' "
                 f"already exists in the database; skipping upgrade"

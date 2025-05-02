@@ -3,11 +3,24 @@
 
 import os
 import pytest
+import logging
 
+from sqlalchemy import text
+from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
 
 from ..alembicverify_util import prepare_schema_from_migrations
+
+
+def _compat_engine_execute(self, *args, **kwargs):
+    with self.begin() as conn:
+        return conn.execute(*args, **kwargs)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def patch_engine_execute(monkeypatch):
+    monkeypatch.setattr(Engine, "execute", _compat_engine_execute)
 
 
 # TODO: Repeated. Hoist.
@@ -45,35 +58,38 @@ def db_setup(schema_name):
     def f(engine):
         test_user = "testuser"
 
+        logging.basicConfig()
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
+        
         # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
-        engine.execute("CREATE EXTENSION postgis")
-        engine.execute("CREATE EXTENSION plpython3u")
-        engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
-        engine.execute("CREATE EXTENSION IF NOT EXISTS hstore")
+        engine.execute(text("CREATE EXTENSION postgis"))
+        engine.execute(text("CREATE EXTENSION plpython3u"))
+        engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
+        engine.execute(text("CREATE EXTENSION IF NOT EXISTS hstore"))
 
         # We need this function available, and it does not come pre-installed.
-        engine.execute(
+        engine.execute(text(
             "CREATE OR REPLACE FUNCTION public.moddatetime() "
             "RETURNS trigger "
             "LANGUAGE 'c' "
             "COST 1 "
             "VOLATILE NOT LEAKPROOF "
             "AS '$libdir/moddatetime', 'moddatetime' "
-        )
+        ))
 
         engine.execute(CreateSchema(schema_name))
         # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
         # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
+        engine.execute(text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"))
 
         privs = [
             f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
             f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema_name} GRANT ALL PRIVILEGES ON TABLES TO {test_user};"
             for objects in ("TABLES", "SEQUENCES", "FUNCTIONS")
         ]
-        engine.execute("".join(privs))
+        engine.execute(text("".join(privs)))
 
         # One of the following *should* set the current user to `test_user`.
         # But it's hard to tell if it does, because `SELECT current_user`
@@ -83,7 +99,7 @@ def db_setup(schema_name):
         # so it's very hard to tell what is actually happening.
 
         # engine.execute(f"SET ROLE '{test_user}';")
-        engine.execute(f"SET SESSION AUTHORIZATION '{test_user}';")
+        engine.execute(text(f"SET SESSION AUTHORIZATION '{test_user}';"))
 
         # result = engine.execute(f"SELECT current_user").scalar()
         #   --> "postgres"

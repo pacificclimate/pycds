@@ -46,9 +46,9 @@ def create_dependent_objects():
 
 
 def upgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     if matview_exists(
-        engine, CollapsedVariablesMatview.__tablename__, schema=schema_name
+        conn, CollapsedVariablesMatview.__tablename__, schema=schema_name
     ):
         logger.info(
             f"A native materialized view '{CollapsedVariablesMatview.__tablename__}' "
