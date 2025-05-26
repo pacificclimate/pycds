@@ -26,18 +26,14 @@ primary_key_name = "obs_raw_id"
 foreign_tables = [("meta_history", "history_id"), ("meta_vars", "vars_id")]
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to 8c05da87cb79."""
-
-    # Set up database to target version
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("8c05da87cb79")
 
     # Check that tables have been altered or created as expected.
     check_history_tracking_upgrade(
-        engine,
+        alembic_engine,
         table_name,
         primary_key_name,
         foreign_tables,
@@ -45,20 +41,14 @@ def test_upgrade(
         pri_columns_added=(("mod_user", VARCHAR),),
     )
 
-
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 8c05da87cb79 to previous rev."""
 
-    # Set up database to current version
-    engine, script = prepared_schema_from_migrations_left
-
-    # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_up_to("8c05da87cb79")
+    alembic_runner.migrate_down_one()
 
     # Check that tables have been altered or dropped as expected.
     check_history_tracking_downgrade(
-        engine, table_name, schema_name, pri_columns_dropped=("mod_user",)
+        alembic_engine, table_name, schema_name, pri_columns_dropped=("mod_user",)
     )

@@ -2,10 +2,15 @@
 # [`alembic-verify`](https://alembic-verify.readthedocs.io/en/latest/)
 
 import os
+import pycds
+from pycds.context import get_standard_table_privileges
 import pytest
 import logging
 
-from sqlalchemy import text
+import testing.postgresql
+import alembic.config
+
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
@@ -13,14 +18,14 @@ from sqlalchemydiff.util import get_temporary_uri
 from ..alembicverify_util import prepare_schema_from_migrations
 
 
-def _compat_engine_execute(self, *args, **kwargs):
-    with self.begin() as conn:
-        return conn.execute(*args, **kwargs)
+# def _compat_engine_execute(self, *args, **kwargs):
+#     with self.begin() as conn:
+#         return conn.execute(*args, **kwargs)
 
 
-@pytest.fixture(autouse=True, scope="function")
-def patch_engine_execute(monkeypatch):
-    monkeypatch.setattr(Engine, "execute", _compat_engine_execute)
+# @pytest.fixture(autouse=True, scope="function")
+# def patch_engine_execute(monkeypatch):
+#     monkeypatch.setattr(Engine, "execute", _compat_engine_execute)
 
 
 # TODO: Repeated. Hoist.
@@ -44,8 +49,23 @@ def uri_right(base_database_uri):
 # Fixtures specific to our tests
 
 
-@pytest.fixture(scope="module")
-def db_setup(schema_name):
+def set_up_db_cluster(engine, user="testuser"):
+    """Perform once-per-cluster database setup operations.
+
+    Because alembic was applied to a pre-existing database, we need to fill in a few gaps that aren't currently covered
+    by the migration scripts. This includes creating the schema and roles.
+    """
+
+    with engine.begin() as conn:
+        for role, _ in get_standard_table_privileges():
+            conn.execute(text(f"CREATE ROLE {role}"))
+        conn.execute(
+            text(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
+        )
+        conn.execute(text(f"CREATE USER {user} WITH SUPERUSER NOINHERIT;;"))
+
+
+def db_setup(engine, schema_name):
     """
     Database setup operations. These are operations that must executed prior
     to the creation of any (other) content in the database in order for the
@@ -55,59 +75,60 @@ def db_setup(schema_name):
     `alembicverify_util.prepare_schema_from_migrations`, which invokes it.
     """
 
-    def f(engine):
-        test_user = "testuser"
+    test_user = "testuser"
 
-        logging.basicConfig()
-        logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
-        
-        # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
+    logging.basicConfig()
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
 
-        engine.execute(text("CREATE EXTENSION postgis"))
-        engine.execute(text("CREATE EXTENSION plpython3u"))
-        engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
-        engine.execute(text("CREATE EXTENSION IF NOT EXISTS hstore"))
+    # print(f"### initial user {engine.execute('SELECT current_user').scalar()}")
 
-        # We need this function available, and it does not come pre-installed.
-        engine.execute(text(
+    engine.execute(text("CREATE EXTENSION postgis"))
+    engine.execute(text("CREATE EXTENSION plpython3u"))
+    engine.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
+    engine.execute(text("CREATE EXTENSION IF NOT EXISTS hstore"))
+
+    # We need this function available, and it does not come pre-installed.
+    engine.execute(
+        text(
             "CREATE OR REPLACE FUNCTION public.moddatetime() "
             "RETURNS trigger "
             "LANGUAGE 'c' "
             "COST 1 "
             "VOLATILE NOT LEAKPROOF "
             "AS '$libdir/moddatetime', 'moddatetime' "
-        ))
+        )
+    )
 
-        engine.execute(CreateSchema(schema_name))
-        # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
-        # print(f"### schemas: {[x[0] for x in schemas]}")
+    engine.execute(CreateSchema(schema_name))
+    # schemas = engine.execute("select schema_name from information_schema.schemata").fetchall()
+    # print(f"### schemas: {[x[0] for x in schemas]}")
 
-        engine.execute(text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};"))
+    engine.execute(
+        text(f"GRANT ALL PRIVILEGES ON SCHEMA {schema_name} TO {test_user};")
+    )
 
-        privs = [
-            f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
-            f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema_name} GRANT ALL PRIVILEGES ON TABLES TO {test_user};"
-            for objects in ("TABLES", "SEQUENCES", "FUNCTIONS")
-        ]
-        engine.execute(text("".join(privs)))
+    privs = [
+        f"GRANT ALL PRIVILEGES ON ALL {objects} IN SCHEMA {schema_name} TO {test_user};"
+        f"ALTER DEFAULT PRIVILEGES IN SCHEMA {schema_name} GRANT ALL PRIVILEGES ON TABLES TO {test_user};"
+        for objects in ("TABLES", "SEQUENCES", "FUNCTIONS")
+    ]
+    engine.execute(text("".join(privs)))
 
-        # One of the following *should* set the current user to `test_user`.
-        # But it's hard to tell if it does, because `SELECT current_user`
-        # *always* returns `postgres`, except when it is executed in the same
-        # `engine.execute` operation as the `SET ROLE/AUTH` statement.
-        # Subsequent `SELECT current_user` queries then return `postgres` again,
-        # so it's very hard to tell what is actually happening.
+    # One of the following *should* set the current user to `test_user`.
+    # But it's hard to tell if it does, because `SELECT current_user`
+    # *always* returns `postgres`, except when it is executed in the same
+    # `engine.execute` operation as the `SET ROLE/AUTH` statement.
+    # Subsequent `SELECT current_user` queries then return `postgres` again,
+    # so it's very hard to tell what is actually happening.
 
-        # engine.execute(f"SET ROLE '{test_user}';")
-        engine.execute(text(f"SET SESSION AUTHORIZATION '{test_user}';"))
+    # engine.execute(f"SET ROLE '{test_user}';")
+    engine.execute(text(f"SET SESSION AUTHORIZATION '{test_user}';"))
 
-        # result = engine.execute(f"SELECT current_user").scalar()
-        #   --> "postgres"
-        # result = engine.execute(f"SET SESSION AUTHORIZATION '{test_user}'; SELECT current_user").scalar()
-        #   --> "testuser"
-        # print(f'### final user {result}')
-
-    return f
+    # result = engine.execute(f"SELECT current_user").scalar()
+    #   --> "postgres"
+    # result = engine.execute(f"SET SESSION AUTHORIZATION '{test_user}'; SELECT current_user").scalar()
+    #   --> "testuser"
+    # print(f'### final user {result}')
 
 
 @pytest.fixture(scope="module")
@@ -163,3 +184,21 @@ def prepared_schema_from_migrations_left(
     yield engine, script
 
     engine.dispose()
+
+
+@pytest.fixture
+def alembic_engine(schema_name):
+    """Override this fixture to provide pytest-alembic powered tests with a database handle."""
+    with testing.postgresql.Postgresql() as pg:
+        uri = pg.url()
+        engine = create_engine(uri)
+        set_up_db_cluster(engine)
+        db_setup(engine, schema_name)
+        yield engine
+
+
+@pytest.fixture
+def alembic_config():
+    alembic_config = alembic.config.Config()
+    alembic_config.set_main_option("script_location", "pycds/alembic")
+    return alembic_config

@@ -50,19 +50,17 @@ def get_insert_statement(schema_name, insertion_value, vars_id=1):
     )
 
 
-@pytest.mark.usefixtures("new_db_left")
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", (down_revision,), indirect=True
-)
+
+@pytest.mark.update20
 def test_upgrade(
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
+    alembic_engine,
+    alembic_runner,
     schema_name,
 ):
     """test migration from fecff1a73d7e to 5c841d2c01d1."""
 
     # Set up database to version fecff1a73d7e (down migration)
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_before("5c841d2c01d1")
 
     # (insertion_id, insertion_value, expected_value)
     test_values = [
@@ -76,11 +74,11 @@ def test_upgrade(
         return get_insert_statement(schema_name, x[1], x[0])
 
     statement = "\n".join(list(map(inserter, test_values)))
-    engine.execute(statement)
+    alembic_engine.execute(statement)
 
-    command.upgrade(alembic_config_left, "+1")
+    alembic_runner.migrate_up_one()
 
-    result = engine.execute(
+    result = alembic_engine.execute(
         f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars ORDER BY vars_id"
     )
 
@@ -91,28 +89,26 @@ def test_upgrade(
         )
 
 
-@pytest.mark.usefixtures("new_db_left")
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", ((target_revision),), indirect=True
-)
+
+@pytest.mark.update20
 def test_downgrade(
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
+    alembic_engine,
+    alembic_runner,
     schema_name,
 ):
     """test migration from 5c841d2c01d1 to fecff1a73d7e."""
 
     # Set up database to version 5c841d2c01d1 (target migration)
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("5c841d2c01d1")
 
     statement = get_insert_statement(
         schema_name, "good value that does not contain newlines"
     )
-    engine.execute(statement)
+    alembic_engine.execute(statement)
 
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
-    result = engine.execute(
+    result = alembic_engine.execute(
         f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
     )
 
@@ -130,25 +126,23 @@ def test_downgrade(
     )
 
 
-@pytest.mark.usefixtures("new_db_left")
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", (target_revision,), indirect=True
-)
+
 # good test values should contain anything but newline characters, this can be a pretty broad sample
 @pytest.mark.parametrize(
     "test_value",
     ["allow_underscores", "allowfullwords", "allowCapitals", "allowNumbers123"],
 )
+@pytest.mark.update20
 def test_check_good_constraint_values(
-    prepared_schema_from_migrations_left, schema_name, test_value
+    alembic_engine, alembic_runner, schema_name, test_value
 ):
     # Set up database to version 5c841d2c01d1 (target migration)
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("5c841d2c01d1")
 
     statement = get_insert_statement(schema_name, test_value)
-    engine.execute(statement)
+    alembic_engine.execute(statement)
 
-    result = engine.execute(
+    result = alembic_engine.execute(
         f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
     )
 
@@ -160,24 +154,23 @@ def test_check_good_constraint_values(
     )
 
 
-@pytest.mark.usefixtures("new_db_left")
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", (target_revision,), indirect=True
-)
+
 # bad test values will cause the constraint check to error with one or more newline type characters.
 @pytest.mark.parametrize(
     "test_value",
     ["bad\rreturn", "bad\nfeed", "bad\r\nnewline", "bad\rmix\nof\r\nall"],
 )
+@pytest.mark.update20
 def test_check_bad_constraint_values(
-    prepared_schema_from_migrations_left, schema_name, test_value
+    alembic_engine, alembic_runner, schema_name, test_value
 ):
     # Set up database to version 5c841d2c01d1 (target migration)
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("5c841d2c01d1")
+    
     # This test passes bad data and expects an integrity error back from SQLAlchemy when executed
     with pytest.raises(IntegrityError) as excinfo:
         statement = get_insert_statement(schema_name, test_value)
-        engine.execute(statement)
+        alembic_engine.execute(statement)
 
     # The specific exception raised by psycopg2 is stored internally in SQLAlchemy's IntegrityError
     # By checking this inner exception we can know that it is specifically a Check Constraint violation

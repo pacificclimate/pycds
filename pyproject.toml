@@ -38,7 +38,8 @@ dependencies = [
   "geoalchemy2>=0.13.3,<1.0.0",
   "psycopg2>=2.9.6,<3.0.0",
   "sqlalchemy-citext>=1.8.0,<2.0.0",
-  "black>=25.1.0,<26.0.0"
+  "black>=25.1.0,<26.0.0",
+  "pytest-alembic (>=0.12.0,<0.13.0)"
 ]
 
 [project.optional-dependencies]
@@ -59,3 +60,12 @@ manage-views = "pycds.scripts.manage_views:main"
 [project.urls]
 homepage = "https://www.pacificclimate.org/"
 repository = "https://github.com/pacificclimate/pycds"
+
+[tool.pytest.ini_options]
+filterwarnings =  "ignore:datetime.datetime"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "thisone: no idea what this is",
+    "update20: marks tests that have been updated to 2.0 compatible"
+]
+pytest_alembic_include_experimental = "downgrade_leaves_no_trace"

@@ -7,7 +7,6 @@
 import logging
 import pytest
 from sqlalchemy import inspect, null
-from alembic import command
 
 
 logger = logging.getLogger("tests")
@@ -23,38 +22,38 @@ def check_if_column_exists(col_name, sch_cols):
     return null
 
 
-@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.update20
 def test_upgrade(
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
+    alembic_engine,
+    alembic_runner,
     schema_name,
 ):
     """Test the schema migration from 7b139906ac46 to 879f0efa125f."""
-
-    # Set up database to revision  879f0efa125f
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("879f0efa125f")
 
     # Check that column has been added to meta_station
-    meta_station_table = inspect(engine).get_columns(table_name, schema=schema_name)
+    meta_station_table = inspect(alembic_engine).get_columns(
+        table_name, schema=schema_name
+    )
     col = check_if_column_exists(column_name, meta_station_table)
 
     assert (col["nullable"] == False) and (col["name"] == column_name)
 
 
-@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.update20
 def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+    alembic_engine,
+    alembic_runner,
+      schema_name
 ):
     """Test the schema migration from 879f0efa125f to 7b139906ac46."""
-
-    # Set up database to revision 879f0efa125f
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("879f0efa125f")
 
     # Downgrade to revision 7b139906ac46
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
     # Check that cloumn has been removed from meta_station
-    meta_station_table = inspect(engine).get_columns(table_name, schema=schema_name)
+    meta_station_table = inspect(alembic_engine).get_columns(table_name, schema=schema_name)
     col = check_if_column_exists(column_name, meta_station_table)
 
     assert col == null
