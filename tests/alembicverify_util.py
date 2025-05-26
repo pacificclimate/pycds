@@ -30,9 +30,6 @@ def prepare_schema_from_migrations(uri, config, db_setup=None, revision="head"):
     """
     engine = create_engine(uri)
     if db_setup:
-        import pytest
-        #pytest.set_trace()
-        ## FIXME: This isn't working... we need to somehow return the engine rather than just a connection
         engine = db_setup(engine)
     script = ScriptDirectory.from_config(config)
     command.upgrade(config, revision)

@@ -62,15 +62,17 @@ def db_supports_statement(engine, statement):
     operation transaction was rolled back, not just the one supposedly enclosing
     this test execution.
     """
+
     Session = sessionmaker(bind=engine)
     session = Session()
+    savepoint = session.begin_nested()
     try:
         session.execute(text(statement))
         return True
     except ProgrammingError:
         return False
     finally:
-        session.rollback()
+        savepoint.rollback()
         session.close()
 
 

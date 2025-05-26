@@ -28,35 +28,28 @@ table_info = (
     ("meta_vars", "vars_id", [("meta_network", "network_id")]),
 )
 
-
-@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.update20
 def test_upgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+    alembic_engine, alembic_runner, schema_name
 ):
     """Test the schema migration to a59d64cf16ca."""
-
-    # Set up database to target version (a59d64cf16ca)
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("a59d64cf16ca")
 
     # Check that tables have been altered or created as expected.
     for table_name, pri_key_name, foreign_tables in table_info:
         check_history_tracking_upgrade(
-            engine, table_name, pri_key_name, foreign_tables, schema_name
+            alembic_engine, table_name, pri_key_name, foreign_tables, schema_name
         )
 
-
-@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.update20
 def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+    alembic_engine, alembic_runner, schema_name
 ):
     """Test the schema migration from a59d64cf16ca to previous rev."""
 
-    # Set up database to current version
-    engine, script = prepared_schema_from_migrations_left
-
-    # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_up_to("a59d64cf16ca")
+    alembic_runner.migrate_down_one()
 
     # Check that tables have been altered or dropped as expected.
     for table_name, _, _ in table_info:
-        check_history_tracking_downgrade(engine, table_name, schema_name)
+        check_history_tracking_downgrade(alembic_engine, table_name, schema_name)

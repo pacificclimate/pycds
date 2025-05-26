@@ -6,7 +6,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import pytest
-from alembic import command
 from pycds.database import get_schema_item_names
 
 
@@ -21,30 +20,23 @@ view_names = {
 }
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
-    """Test the schema migration from 4a2f1879293a to 84b7fc2596d5."""
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
+    # Migrate up to this migration
+    alembic_runner.migrate_up_to("84b7fc2596d5")
+    with alembic_engine.connect() as conn:
+        names = get_schema_item_names(conn, "views", schema_name=schema_name)
 
-    # Set up database to version 84b7fc2596d5
-    engine, script = prepared_schema_from_migrations_left
-
-    # Check that views have been added
-    names = get_schema_item_names(engine, "views", schema_name=schema_name)
     assert names >= view_names
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 84b7fc2596d5 to 4a2f1879293a."""
+    alembic_runner.migrate_up_to("84b7fc2596d5")
 
-    # Set up database to version 84b7fc2596d5
-    engine, script = prepared_schema_from_migrations_left
-
-    # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
     # Check that views have been removed
-    names = get_schema_item_names(engine, "views", schema_name=schema_name)
+    names = get_schema_item_names(alembic_engine, "views", schema_name=schema_name)
     assert names & view_names == set()

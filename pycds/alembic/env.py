@@ -148,18 +148,20 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    # Load db config on top of alembic config. This enables CLI spec of
-    # database to migrate.
-    alembic_config = config.get_section(config.config_ini_section)
-    if is_live_env:
-        db_config = config.get_section(db_name)
-        for key in db_config:
-            alembic_config[key] = db_config[key]
+    connectable = context.config.attributes.get("connection", None)
 
-    connectable = engine_from_config(
-        alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool,
-        future=True
-    )
+    if connectable is None:
+        # Load db config on top of alembic config. This enables CLI spec of
+        # database to migrate.
+        alembic_config = config.get_section(config.config_ini_section)
+        if is_live_env:
+            db_config = config.get_section(db_name)
+            for key in db_config:
+                alembic_config[key] = db_config[key]
+
+        connectable = engine_from_config(
+            alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool, future=True
+        )
 
     with connectable.connect() as connection:
         context.configure(

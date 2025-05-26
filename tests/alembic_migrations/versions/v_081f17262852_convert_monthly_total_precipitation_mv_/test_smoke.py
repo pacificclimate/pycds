@@ -35,29 +35,23 @@ matview_defns = {
     },
 }
 
-
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to version 081f17262852."""
-
-    # Set up database to version 3505750d3416
-    engine, script = prepared_schema_from_migrations_left
+    
+    alembic_runner.migrate_up_to("081f17262852")
 
     # confirm native matview exists
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=True)
 
-
-@pytest.mark.usefixtures("new_db_left")
+@pytest.mark.update20
 def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
+    alembic_engine, alembic_runner, schema_name
 ):
     """Test the schema migration from 081f17262852 to 3505750d3416."""
 
-    # Set up database to version efde19ea4f52
-    engine, script = prepared_schema_from_migrations_left
-
-    # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_up_to("081f17262852")
+    alembic_runner.migrate_down_one()
 
     # confirm matview has been removed
-    check_matviews(engine, matview_defns, schema_name, matviews_present=False)
+    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=False)

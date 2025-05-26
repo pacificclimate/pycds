@@ -64,7 +64,7 @@ unique_variable_tags_sq = (
     select(text("*"))
     .select_from(func.unnest(aggregated_vars.c.all_variable_tags))
     .distinct()
-).subquery()
+).scalar_subquery()
 
 # This query defines the matview.
 selectable = select(

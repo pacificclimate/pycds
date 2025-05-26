@@ -19,35 +19,26 @@ matview_defns = {
     "obs_count_per_month_history_mv": {"indexes": {"obs_count_per_month_history_idx"}}
 }
 
-
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", [True, False], indirect=True
-)
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the upgrade schema migration."""
 
-    # Set up database at latest revision
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database at bb2a222a1d4a (this migration)
+    alembic_runner.migrate_up_to("bb2a222a1d4a")
 
     # Matviews should be present, tables absent.
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=True)
 
 
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", [True, False], indirect=True
-)
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 7a3b247c577b to 84b7fc2596d5."""
 
-    # Set up database at latest revision
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database at bb2a222a1d4a (this migration)
+    alembic_runner.migrate_up_to("bb2a222a1d4a")
 
     # Run downgrade migration to prev revision
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
     # Matviews should absent after downgrade, tables present
-    check_matviews(engine, matview_defns, schema_name, matviews_present=False)
+    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=False)
