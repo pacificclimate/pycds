@@ -17,8 +17,8 @@ bb2a222a1d4a -> fecff1a73d7e, Add columns vars_ids and unique_variable_tags to m
 ~~3d50ec832e47 -> 7b139906ac46, add not null constraint on meta vars~~
 0d99ba90c229 -> 3d50ec832e47, add constraint on meta vars
 ~~2914c6c8a7f9 -> 0d99ba90c229, Create missing indexes~~
-e688e520d265 -> 2914c6c8a7f9, Drop meta_climo_attrs
-bdc28573df56 -> e688e520d265, Refactor flags association tables
+~~e688e520d265 -> 2914c6c8a7f9, Drop meta_climo_attrs~~
+~~bdc28573df56 -> e688e520d265, Refactor flags association tables~~
 ~~7a3b247c577b -> bdc28573df56, Add obs_raw indexes~~
 ~~8fd8f556c548 -> 7a3b247c577b, Add VarsPerHistory native matview~~
 ~~84b7fc2596d5 -> 8fd8f556c548, Add weather anomaly matviews~~

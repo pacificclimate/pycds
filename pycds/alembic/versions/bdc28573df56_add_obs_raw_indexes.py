@@ -37,6 +37,7 @@ indexes = (
 
 def upgrade():
     conn = op.get_bind()
+
     for index_name, table_name, columns in indexes:
         existing_index_names = get_schema_item_names(
             conn, "indexes", table_name=table_name, schema_name=schema_name

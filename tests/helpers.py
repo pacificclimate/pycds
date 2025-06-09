@@ -1,6 +1,6 @@
 """Helpers for tests."""
 
-from pkg_resources import resource_filename
+from importlib.resources import files
 from collections import namedtuple
 from datetime import datetime
 
@@ -85,9 +85,11 @@ def create_then_drop_views(sesh, views):
     """
     for view in views:
         sesh.execute(view.create())
+        sesh.flush()
     yield sesh
     for view in reversed(views):
         sesh.execute(view.drop())
+        sesh.flush()
 
 
 # Data insertion helpers
@@ -287,8 +289,7 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
 
     def action(sesh):
-        fname = resource_filename("pycds", "data/crmp_subset_data.sql")
-        with open(fname, "r") as f:
+        with files("pycds").joinpath("data/crmp_subset_data.sql").open('r') as f:
             data = f.read()
         sesh.execute(text(data))
 

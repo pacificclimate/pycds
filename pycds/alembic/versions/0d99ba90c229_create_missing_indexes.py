@@ -35,7 +35,7 @@ from pycds import (
     StationObservationStats,
 )
 from pycds.orm.native_matviews.version_96729d6db8b3 import ClimoObsCount
-
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = "0d99ba90c229"
@@ -56,7 +56,6 @@ classes = (
     StationObservationStats,
 )
 
-
 def upgrade():
     for ORMClass in classes:
         logger.debug(
@@ -64,12 +63,13 @@ def upgrade():
         )
         for index in ORMClass.__table__.indexes:
             logger.debug(f"Creating index '{index.name} on table {index.table.name}'")
-            op.create_index_if_not_exists(
+            op.create_index(
                 index_name=index.name,
                 table_name=index.table.name,
                 columns=[col.name for col in index.columns],
                 unique=index.unique,
                 schema=schema_name,
+                if_not_exists=True,
             )
 
 
@@ -77,8 +77,15 @@ def downgrade():
     for ORMClass in classes:
         for index in ORMClass.__table__.indexes:
             logger.debug(f"Dropping index '{index.name} on table {index.table.name}'")
+            
+            # Check if the index exists before attempting to drop it
+            # This is necessary because the index may not have been created
+            # in the first place, or it may have been dropped in a previous migration.
+        
+            # Only drop the index if it exists
             op.drop_index(
                 index_name=index.name,
                 table_name=index.table.name,
                 schema=schema_name,
+                if_exists=True,
             )

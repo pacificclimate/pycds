@@ -16,7 +16,6 @@ from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     MonthlyAverageOfDailyMinTemperature,
     MonthlyTotalPrecipitation,
 )
-import pycds.alembic.extensions.operation_plugins
 
 
 # revision identifiers, used by Alembic.

@@ -30,13 +30,14 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 84b7fc2596d5 to 7a3b247c577b."""
     alembic_runner.migrate_up_to("7a3b247c577b")
 
-    # Matviews present if and only if supported by database.
-    check_matviews(
-        alembic_engine,
-        matview_defns,
-        schema_name,
-        pycds.database.db_supports_matviews(alembic_engine),
-    )
+    with alembic_engine.begin() as conn:
+        # Matviews present if and only if supported by database.
+        check_matviews(
+            conn,
+            matview_defns,
+            schema_name,
+            pycds.database.db_supports_matviews(alembic_engine),
+        )
 
 
 @pytest.mark.update20
@@ -46,5 +47,6 @@ def test_downgrade(alembic_engine, alembic_runner, schema_name):
     alembic_runner.migrate_up_to("7a3b247c577b")
     alembic_runner.migrate_down_one()
 
-    # Matviews are always absent after downgrade
-    check_matviews(alembic_engine, matview_defns, schema_name, False)
+    with alembic_engine.begin() as conn:
+        # Matviews are always absent after downgrade
+        check_matviews(conn, matview_defns, schema_name, False)

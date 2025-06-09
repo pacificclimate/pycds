@@ -15,9 +15,11 @@ from pycds.orm.native_matviews.version_22819129a609 import (
 from pycds.orm.native_matviews.version_fecff1a73d7e import (
     CollapsedVariables as NewCollapsedVariables,
 )
+from pycds.orm.views.version_84b7fc2596d5 import (
+    CrmpNetworkGeoserver as CrmpNetworkGeoserver,
+)
 from pycds import (
-    get_schema_name,
-    CrmpNetworkGeoserver,
+    get_schema_name
 )
 
 # revision identifiers, used by Alembic.
@@ -33,7 +35,6 @@ schema_name = get_schema_name()
 
 def drop_dependent_objects():
     drop_view(CrmpNetworkGeoserver, schema=schema_name)
-
 
 def create_dependent_objects():
     create_view(CrmpNetworkGeoserver, schema=schema_name)

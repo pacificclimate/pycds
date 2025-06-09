@@ -32,17 +32,19 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 7a3b247c577b to bdc28573df56."""
     alembic_runner.migrate_up_before("bdc28573df56")
 
-    # Check that indexes have been added
-    before_upgrade_index_names = get_schema_item_names(
-        alembic_engine, "indexes", table_name="obs_raw", schema_name=schema_name
-    )
+    with alembic_engine.begin() as conn:
+        # Check that indexes have been added
+        before_upgrade_index_names = get_schema_item_names(
+            conn, "indexes", table_name="obs_raw", schema_name=schema_name
+        )
     assert not (index_names <= set() | before_upgrade_index_names)
 
     alembic_runner.migrate_up_one()
 
-    after_upgrade_index_names = get_schema_item_names(
-        alembic_engine, "indexes", table_name="obs_raw", schema_name=schema_name
-    )
+    with alembic_engine.begin() as conn:
+        after_upgrade_index_names = get_schema_item_names(
+            conn, "indexes", table_name="obs_raw", schema_name=schema_name
+        )
 
     assert index_names <= before_upgrade_index_names | after_upgrade_index_names
 
@@ -59,24 +61,27 @@ def test_downgrade(
 
     alembic_runner.migrate_up_before("bdc28573df56")
 
-    before_upgrade_index_names = get_schema_item_names(
-        alembic_engine, "indexes", table_name="obs_raw", schema_name=schema_name
-    )
+    with alembic_engine.begin() as conn:
+        before_upgrade_index_names = get_schema_item_names(
+            conn, "indexes", table_name="obs_raw", schema_name=schema_name
+        )
 
     assert not (index_names <= before_upgrade_index_names)
 
     alembic_runner.migrate_up_one()  # Upgrade to bdc28573df56, indexes added
 
-    after_upgrade_index_names = get_schema_item_names(
-        alembic_engine, "indexes", table_name="obs_raw", schema_name=schema_name
-    )
+    with alembic_engine.begin() as conn:
+        after_upgrade_index_names = get_schema_item_names(
+            conn, "indexes", table_name="obs_raw", schema_name=schema_name
+        )
 
     assert index_names <= after_upgrade_index_names
 
     alembic_runner.migrate_down_one()
 
-    after_downgrade_index_names = get_schema_item_names(
-        alembic_engine, "indexes", table_name="obs_raw", schema_name=schema_name
-    )
+    with alembic_engine.begin() as conn:
+        after_downgrade_index_names = get_schema_item_names(
+            conn, "indexes", table_name="obs_raw", schema_name=schema_name
+        )
 
     assert before_upgrade_index_names == after_downgrade_index_names

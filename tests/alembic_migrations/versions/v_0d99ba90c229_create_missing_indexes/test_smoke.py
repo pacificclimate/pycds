@@ -39,10 +39,11 @@ def test_upgrade(
     """Test the schema migration from 2914c6c8a7f9 to 0d99ba90c229."""
     alembic_runner.migrate_up_before("0d99ba90c229")
 
-    # Pre-create some indexes to exercise "if not exists"
-    for ORMClass in pre_create:
-        for index in ORMClass.__table__.indexes:
-            alembic_engine.execute(CreateIndex(index))
+    with alembic_engine.begin() as conn:
+        # Pre-create some indexes to exercise "if not exists"
+        for ORMClass in pre_create:
+            for index in ORMClass.__table__.indexes:
+                conn.execute(CreateIndex(index))
 
     # Upgrade to 0d99ba90c229
     alembic_runner.migrate_up_one()

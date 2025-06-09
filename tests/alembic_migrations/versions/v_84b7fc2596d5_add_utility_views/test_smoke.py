@@ -22,8 +22,9 @@ view_names = {
 
 @pytest.mark.update20
 def test_upgrade(alembic_engine, alembic_runner, schema_name):
-    # Migrate up to this migration
+    """Test the schema up migration from 4a2f1879293a to 84b7fc2596d5."""
     alembic_runner.migrate_up_to("84b7fc2596d5")
+
     with alembic_engine.connect() as conn:
         names = get_schema_item_names(conn, "views", schema_name=schema_name)
 
@@ -32,11 +33,12 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
 
 @pytest.mark.update20
 def test_downgrade(alembic_engine, alembic_runner, schema_name):
-    """Test the schema migration from 84b7fc2596d5 to 4a2f1879293a."""
+    """Test the schema down migration from 84b7fc2596d5 to 4a2f1879293a."""
     alembic_runner.migrate_up_to("84b7fc2596d5")
 
     alembic_runner.migrate_down_one()
 
-    # Check that views have been removed
-    names = get_schema_item_names(alembic_engine, "views", schema_name=schema_name)
-    assert names & view_names == set()
+    with alembic_engine.connect() as conn:
+        # Check that views have been removed
+        names = get_schema_item_names(conn, "views", schema_name=schema_name)
+        assert names & view_names == set()

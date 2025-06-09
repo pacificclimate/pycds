@@ -17,21 +17,19 @@ function_name = "variable_tags"
 
 
 @pytest.mark.update20
-def test_upgrade(
-    alembic_engine, alembic_runner, schema_name
-):
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to 83896ee79b06."""
     # Set up database to target version (83896ee79b06)
     alembic_runner.migrate_up_to("83896ee79b06")
 
-    # Check that function has been added
-    names = get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that function has been added
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert function_name in names
 
+
 @pytest.mark.update20
-def test_downgrade(
-    alembic_engine, alembic_runner,schema_name
-):
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 83896ee79b06 to 879f0efa125f."""
 
     alembic_runner.migrate_up_before("879f0efa125f")
@@ -39,6 +37,7 @@ def test_downgrade(
     # Run downgrade migration
     alembic_runner.migrate_down_one()
 
-    # Check that functions have been removed
-    names = get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that functions have been removed
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert function_name not in names
