@@ -40,7 +40,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 
 schema_name = get_schema_name()
 
-
 @pytest.mark.parametrize(
     "primary, history, primary_id, columns, foreign_tables, insert_info, update_info, delete_info",
     [

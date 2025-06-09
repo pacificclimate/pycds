@@ -17,7 +17,6 @@ from .content import (
     ThingCountManualMatview,
 )
 
-
 @fixture
 def tst_orm_engine(base_engine):
     """Database engine with test content created in it."""

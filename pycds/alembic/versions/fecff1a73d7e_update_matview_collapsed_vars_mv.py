@@ -34,7 +34,6 @@ schema_name = get_schema_name()
 def drop_dependent_objects():
     drop_view(CrmpNetworkGeoserver, schema=schema_name)
 
-
 def create_dependent_objects():
     create_view(CrmpNetworkGeoserver, schema=schema_name)
 
