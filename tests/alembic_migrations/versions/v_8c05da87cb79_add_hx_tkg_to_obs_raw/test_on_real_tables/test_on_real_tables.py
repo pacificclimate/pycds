@@ -9,7 +9,7 @@ import datetime
 import logging
 
 import pytest
-from alembic import command
+from sqlalchemy.orm import Session
 
 from pycds import (
     History,
@@ -24,6 +24,7 @@ from tests.alembic_migrations.helpers import (
     check_history_tracking,
     check_history_table_FKs,
 )
+from .....helpers import insert_crmp_data
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 
@@ -46,7 +47,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.CRITICAL)
 # to do it better would take more time than we presently have available.
 #
 # TODO: Load data before migration.
-@pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize(
     "primary, history, primary_id, columns, foreign_tables, insert_info, update_info, delete_info",
     [
@@ -116,11 +116,9 @@ def test_table_contents(
     insert_info,
     update_info,
     delete_info,
-    prepared_schema_from_migrations_left,
-    alembic_config_left,
     schema_name,
-    sesh_with_large_data,
-    env_config,
+    alembic_engine,
+    alembic_runner
 ):
     """
     Test that contents of history tables are as expected.
@@ -130,35 +128,44 @@ def test_table_contents(
     8c05da87cb79. Then we migrate and check the results by comparing a specified
     subset of the columns shared by the two tables.
     """
-    sesh = sesh_with_large_data
 
-    check_migration_version(sesh, version="a59d64cf16ca")
-    # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
+    alembic_runner.migrate_up_to("a59d64cf16ca")
+
+    with alembic_engine.begin() as conn:
+        check_migration_version(conn, version="a59d64cf16ca")
+        # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
+
+        insert_crmp_data(conn)
 
     # Now upgrade to a59d64cf16ca
-    command.upgrade(alembic_config_left, "+1")
-    check_migration_version(sesh, version="8c05da87cb79")
+    alembic_runner.migrate_up_one()
 
-    # Check the resulting tables
-    check_history_table_initial_contents(
-        sesh,
-        primary,
-        history,
-        primary_id,
-        columns,
-        foreign_tables,
-        schema_name,
-    )
+    with alembic_engine.begin() as conn:
+        check_migration_version(conn, version="8c05da87cb79")
 
-    for foreign_base, foreign_history in foreign_tables:
-        check_history_table_FKs(sesh, primary, history, foreign_base, foreign_history)
+        with Session(conn) as session:
 
-    check_history_tracking(
-        sesh,
-        primary,
-        history,
-        insert_info,
-        update_info,
-        delete_info,
-        schema_name,
-    )
+
+            # Check the resulting tables
+            check_history_table_initial_contents(
+                session,
+                primary,
+                history,
+                primary_id,
+                columns,
+                foreign_tables,
+                schema_name,
+            )
+
+            for foreign_base, foreign_history in foreign_tables:
+                check_history_table_FKs(session, primary, history, foreign_base, foreign_history)
+
+            check_history_tracking(
+                session,
+                primary,
+                history,
+                insert_info,
+                update_info,
+                delete_info,
+                schema_name,
+            )

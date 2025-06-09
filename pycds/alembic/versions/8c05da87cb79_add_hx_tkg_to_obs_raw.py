@@ -8,6 +8,7 @@ Create Date: 2025-01-07 13:04:10.515777
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 from pycds import get_schema_name
 from pycds.alembic.change_history_utils import (
@@ -45,7 +46,7 @@ def upgrade():
     # functions fired can find the functions that they call.
     # Note: This is no longer relied upon, but it may be again in future, so leave
     # this here.
-    op.get_bind().execute(f"SET search_path TO {schema_name}, public")
+    op.get_bind().execute(text(f"SET search_path TO {schema_name}, public"))
 
     # Primary table
     ####
@@ -58,9 +59,9 @@ def upgrade():
         ),
     )
     # Existing trigger on obs_raw is superseded by the hx tracking trigger.
-    op.execute(
+    op.execute(text(
         f"DROP TRIGGER IF EXISTS update_mod_time ON {main_table_name(table_name)}"
-    )
+    ))
     create_primary_table_triggers(table_name)
 
     # History table
@@ -83,10 +84,10 @@ def downgrade():
     drop_history_triggers(table_name)
     drop_history_table(table_name)
     drop_history_cols_from_primary(table_name, columns=("mod_user",))
-    op.execute(
+    op.execute(text(
         f"CREATE TRIGGER update_mod_time"
         f"  BEFORE UPDATE"
         f"  ON {main_table_name(table_name)}"
         f"  FOR EACH ROW"
         f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
-    )
+    ))

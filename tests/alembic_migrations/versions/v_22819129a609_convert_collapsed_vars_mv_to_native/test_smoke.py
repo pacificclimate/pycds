@@ -17,6 +17,7 @@ logger = logging.getLogger("tests")
 
 matview_defns = {"collapsed_vars_mv": {"indexes": {"collapsed_vars_idx"}}}
 
+
 @pytest.mark.update20
 def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the upgrade schema migration."""
@@ -24,14 +25,12 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     # Set up database at 22819129a609 (this migration)
     alembic_runner.migrate_up_to("22819129a609")
 
-    # Matviews should be present, tables absent.
-    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.connect() as conn:
+        # Matviews should be present, tables absent.
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)
 
 
-
-def test_downgrade(
-    alembic_engine, alembic_runner, schema_name
-):
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema down migration from 22819129a609 to bf366199f463."""
 
     # Set up database at this migration ready for downgrade
@@ -40,5 +39,6 @@ def test_downgrade(
     # Run downgrade migration to prev revision
     alembic_runner.migrate_down_one()
 
-    # Matviews should absent after downgrade, tables present
-    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=False)
+    with alembic_engine.connect() as conn:
+        # Matviews should absent after downgrade, tables present
+        check_matviews(conn, matview_defns, schema_name, matviews_present=False)

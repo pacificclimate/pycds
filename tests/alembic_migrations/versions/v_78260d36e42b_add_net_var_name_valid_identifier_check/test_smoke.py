@@ -9,7 +9,7 @@
 import logging
 import pytest
 from alembic import command
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import CheckViolation
 
@@ -53,16 +53,21 @@ def test_upgrade(
         return get_insert_statement(schema_name, x[1], x[0])
 
     statement = "\n".join(list(map(inserter, test_values)))
-    alembic_engine.execute(statement)
+    with alembic_engine.begin() as conn:
+        conn.execute(text(statement))
 
     alembic_runner.migrate_up_one()
 
-    result = alembic_engine.execute(
-        f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars ORDER BY vars_id"
-    )
+    with alembic_engine.begin() as conn:
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars ORDER BY vars_id"
+            )
+        )
 
     for row, test_sample in zip(result, test_values):
         assert row == (test_sample[0], test_sample[2])
+
 
 @pytest.mark.update20
 def test_downgrade(
@@ -76,17 +81,20 @@ def test_downgrade(
     alembic_runner.migrate_up_to("78260d36e42b")
 
     statement = get_insert_statement(schema_name, "good_var_name_with_underscores")
-    alembic_engine.execute(statement)
+    with alembic_engine.begin() as conn:
+        conn.execute(text(statement))
 
     alembic_runner.migrate_down_one()
 
-    result = alembic_engine.execute(
-        f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars"
-    )
+    with alembic_engine.begin() as conn:
+        result = conn.execute(
+            text(f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars")
+        )
 
     row = next(result)
 
-    # After migration is run, bad strings should have whitespace replaced with underscores
+    # After migration is downgrade, existing data that has been updated to conform to the new constraint
+    # should still be valid and retrievable.
     assert row == (1, "good_var_name_with_underscores")
 
 
@@ -104,15 +112,16 @@ def test_check_good_constraint_values(
     alembic_runner.migrate_up_to("78260d36e42b")
 
     statement = get_insert_statement(schema_name, test_value)
-    alembic_engine.execute(statement)
-
-    result = alembic_engine.execute(
-        f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars"
-    )
+    with alembic_engine.begin() as conn:
+        conn.execute(text(statement))
+        result = conn.execute(
+            text(f"SELECT vars_id, net_var_name FROM {schema_name}.meta_vars")
+        )
 
     row = next(result)
 
     assert row == (1, test_value)
+
 
 # Correct values should conform to https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
 # Notably numbers and $ are allowed, but not as the first character
@@ -138,7 +147,8 @@ def test_check_bad_constraint_values(
     # This test passes bad data and expects an integrity error back from SQLAlchemy when executed
     with pytest.raises(IntegrityError) as excinfo:
         statement = get_insert_statement(schema_name, test_value)
-        alembic_engine.execute(statement)
+        with alembic_engine.begin() as conn:
+            conn.execute(text(statement))
 
     # The specific exception raised by psycopg2 is stored internally in SQLAlchemy's IntegrityError
     # By checking this inner exception we can know that it is specifically a Check Constraint violation

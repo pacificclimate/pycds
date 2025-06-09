@@ -9,7 +9,7 @@
 import logging
 import pytest
 from alembic import command
-from sqlalchemy import inspect
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import CheckViolation
 
@@ -50,7 +50,6 @@ def get_insert_statement(schema_name, insertion_value, vars_id=1):
     )
 
 
-
 @pytest.mark.update20
 def test_upgrade(
     alembic_engine,
@@ -74,20 +73,24 @@ def test_upgrade(
         return get_insert_statement(schema_name, x[1], x[0])
 
     statement = "\n".join(list(map(inserter, test_values)))
-    alembic_engine.execute(statement)
+
+    with alembic_engine.begin() as conn:
+        conn.execute(text(statement))
 
     alembic_runner.migrate_up_one()
 
-    result = alembic_engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars ORDER BY vars_id"
-    )
+    with alembic_engine.begin() as conn:
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars ORDER BY vars_id"
+            )
+        )
 
     for row, test_sample in zip(result, test_values):
         assert row == (
             test_sample[0],
             *list(map(column_value(test_sample[2], quoted=False), columns_to_test)),
         )
-
 
 
 @pytest.mark.update20
@@ -101,16 +104,20 @@ def test_downgrade(
     # Set up database to version 5c841d2c01d1 (target migration)
     alembic_runner.migrate_up_to("5c841d2c01d1")
 
-    statement = get_insert_statement(
-        schema_name, "good value that does not contain newlines"
-    )
-    alembic_engine.execute(statement)
+    with alembic_engine.begin() as conn:
+        statement = get_insert_statement(
+            schema_name, "good value that does not contain newlines"
+        )
+        conn.execute(text(statement))
 
     alembic_runner.migrate_down_one()
 
-    result = alembic_engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
-    )
+    with alembic_engine.begin() as conn:
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
+            )
+        )
 
     row = next(result)
 
@@ -126,7 +133,6 @@ def test_downgrade(
     )
 
 
-
 # good test values should contain anything but newline characters, this can be a pretty broad sample
 @pytest.mark.parametrize(
     "test_value",
@@ -139,12 +145,14 @@ def test_check_good_constraint_values(
     # Set up database to version 5c841d2c01d1 (target migration)
     alembic_runner.migrate_up_to("5c841d2c01d1")
 
-    statement = get_insert_statement(schema_name, test_value)
-    alembic_engine.execute(statement)
+    with alembic_engine.begin() as conn:
+        conn.execute(text(get_insert_statement(schema_name, test_value)))
 
-    result = alembic_engine.execute(
-        f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
-    )
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, {', '.join(columns_to_test)} FROM {schema_name}.meta_vars"
+            )
+        )
 
     row = next(result)
 
@@ -152,7 +160,6 @@ def test_check_good_constraint_values(
         1,
         *list(map(column_value(test_value, quoted=False), columns_to_test)),
     )
-
 
 
 # bad test values will cause the constraint check to error with one or more newline type characters.
@@ -166,11 +173,12 @@ def test_check_bad_constraint_values(
 ):
     # Set up database to version 5c841d2c01d1 (target migration)
     alembic_runner.migrate_up_to("5c841d2c01d1")
-    
+
     # This test passes bad data and expects an integrity error back from SQLAlchemy when executed
     with pytest.raises(IntegrityError) as excinfo:
         statement = get_insert_statement(schema_name, test_value)
-        alembic_engine.execute(statement)
+        with alembic_engine.connect() as conn:
+            conn.execute(text(statement))
 
     # The specific exception raised by psycopg2 is stored internally in SQLAlchemy's IntegrityError
     # By checking this inner exception we can know that it is specifically a Check Constraint violation

@@ -6,7 +6,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import pytest
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 
 logger = logging.getLogger("tests")
@@ -30,7 +30,8 @@ def test_upgrade(
 
     # Exercise both cases of "if not exists"
     if not table_exists:
-        alembic_engine.execute(f"DROP TABLE {schema_name}.{table_name}")
+        with alembic_engine.begin() as conn:
+            conn.execute(text(f"DROP TABLE {schema_name}.{table_name}"))
 
     # Upgrade to 0d99ba90c229
     alembic_runner.migrate_up_one()

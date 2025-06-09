@@ -6,13 +6,15 @@ from pycds.database import (
 )
 
 
-def test_get_postgres_version(base_engine):
-    version = get_postgresql_version(base_engine)
+@pytest.mark.update20
+def test_get_postgres_version(alembic_engine):
+    version = get_postgresql_version(alembic_engine)
     assert type(version) == tuple
     assert all(type(n) == int for n in version)
     assert version >= (10, 0)  # Just for laughs
 
 
+@pytest.mark.update20
 @pytest.mark.parametrize(
     "statement, expected",
     [
@@ -21,9 +23,10 @@ def test_get_postgres_version(base_engine):
         ("CREATE MATERIALIZED VIEW test AS SELECT 1", True),
     ],
 )
-def test_db_supports_statement(base_engine, statement, expected):
-    assert db_supports_statement(base_engine, statement) is expected
+def test_db_supports_statement(alembic_engine, statement, expected):
+    assert db_supports_statement(alembic_engine, statement) is expected
 
 
-def test_db_supports_matviews(base_engine):
-    assert db_supports_matviews(base_engine) is True
+@pytest.mark.update20
+def test_db_supports_matviews(alembic_engine):
+    assert db_supports_matviews(alembic_engine) is True

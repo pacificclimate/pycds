@@ -53,40 +53,50 @@ def test_upgrade(
     # Prep the database according to test conditions
     if not unique_exists:
         logger.debug(f"Dropping {unique_constraint_name}")
-        alembic_engine.execute(text(
-            f"ALTER TABLE {schema_name}.{table_name} "
-            f"DROP CONSTRAINT {unique_constraint_name}"
-        ))
+
+        with alembic_engine.begin() as conn:
+            conn.execute(
+                text(
+                    f"ALTER TABLE {schema_name}.{table_name} "
+                    f"DROP CONSTRAINT {unique_constraint_name}"
+                )
+            )
 
     if primary_key_exists:
         logger.debug(f"Adding {primary_key_name}")
-        alembic_engine.execute(text(
-            f"ALTER TABLE {schema_name}.{table_name} "
-            f"ADD CONSTRAINT {primary_key_name} "
-            f"PRIMARY KEY ({', '.join(pkey_columns)})"
-        ))
+        with alembic_engine.begin() as conn:
+            conn.execute(
+                text(
+                    f"ALTER TABLE {schema_name}.{table_name} "
+                    f"ADD CONSTRAINT {primary_key_name} "
+                    f"PRIMARY KEY ({', '.join(pkey_columns)})"
+                )
+            )
 
     # Upgrade to revision e688e520d265
     alembic_runner.migrate_up_one()
 
-    # Check that unique constraint does not exist
-    unique_constraint_names = get_schema_item_names(
-        alembic_engine,
-        "constraints",
-        table_name=table_name,
-        constraint_type="unique",
-        schema_name=schema_name,
-    )
+    with alembic_engine.begin() as conn:
+        # Check that unique constraint does not exist
+        unique_constraint_names = get_schema_item_names(
+            conn,
+            "constraints",
+            table_name=table_name,
+            constraint_type="unique",
+            schema_name=schema_name,
+        )
+
     assert unique_constraint_name not in unique_constraint_names
 
-    # Check that primary key exists
-    pkey_constraint_names = get_schema_item_names(
-        alembic_engine,
-        "constraints",
-        table_name=table_name,
-        constraint_type="primary",
-        schema_name=schema_name,
-    )
+    with alembic_engine.begin() as conn:
+        # Check that primary key exists
+        pkey_constraint_names = get_schema_item_names(
+            conn,
+            "constraints",
+            table_name=table_name,
+            constraint_type="primary",
+            schema_name=schema_name,
+        )
     assert primary_key_name in pkey_constraint_names
 
 
@@ -110,22 +120,24 @@ def test_downgrade(
     # Downgrade to revision bdc28573df56
     alembic_runner.migrate_down_one()
 
-    # Check that the primary key does not exist
-    pkey_constraint_names = get_schema_item_names(
-        alembic_engine,
-        "constraints",
-        table_name=table_name,
-        constraint_type="primary",
-        schema_name=schema_name,
-    )
+    with alembic_engine.begin() as conn:
+        # Check that the primary key does not exist
+        pkey_constraint_names = get_schema_item_names(
+            conn,
+            "constraints",
+            table_name=table_name,
+            constraint_type="primary",
+            schema_name=schema_name,
+        )
     assert primary_key_name not in pkey_constraint_names
 
-    # Check that the unique constraint exists
-    unique_constraint_names = get_schema_item_names(
-        alembic_engine,
-        "constraints",
-        table_name=table_name,
-        constraint_type="unique",
-        schema_name=schema_name,
-    )
+    with alembic_engine.begin() as conn:
+        # Check that the unique constraint exists
+        unique_constraint_names = get_schema_item_names(
+            conn,
+            "constraints",
+            table_name=table_name,
+            constraint_type="unique",
+            schema_name=schema_name,
+        )
     assert unique_constraint_name in unique_constraint_names

@@ -19,6 +19,7 @@ matview_defns = {
     "obs_count_per_month_history_mv": {"indexes": {"obs_count_per_month_history_idx"}}
 }
 
+
 @pytest.mark.update20
 def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the upgrade schema migration."""
@@ -26,8 +27,9 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     # Set up database at bb2a222a1d4a (this migration)
     alembic_runner.migrate_up_to("bb2a222a1d4a")
 
-    # Matviews should be present, tables absent.
-    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.connect() as conn:
+        # Matviews should be present, tables absent.
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)
 
 
 @pytest.mark.update20
@@ -40,5 +42,6 @@ def test_downgrade(alembic_engine, alembic_runner, schema_name):
     # Run downgrade migration to prev revision
     alembic_runner.migrate_down_one()
 
-    # Matviews should absent after downgrade, tables present
-    check_matviews(alembic_engine, matview_defns, schema_name, matviews_present=False)
+    with alembic_engine.connect() as conn:
+        # Matviews should absent after downgrade, tables present
+        check_matviews(conn, matview_defns, schema_name, matviews_present=False)

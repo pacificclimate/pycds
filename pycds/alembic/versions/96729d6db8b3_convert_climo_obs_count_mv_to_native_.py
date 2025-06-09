@@ -21,6 +21,10 @@ from pycds.database import matview_exists
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
     ClimoObsCount as ClimoObsCountMatview,
 )
+from pycds.orm.views.version_522eed334c85 import (
+    ClimoObsCount as OldClimoObsCountView,
+)
+# Import the view that will be replaced by the native matview
 from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountView
 
 # revision identifiers, used by Alembic.
@@ -60,4 +64,4 @@ def downgrade():
         schema=schema_name,
     )
     grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
-    create_view(ClimoObsCountView, schema=schema_name)
+    create_view(OldClimoObsCountView, schema=schema_name)

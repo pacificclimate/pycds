@@ -35,6 +35,7 @@ from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
 
+# TODO: CIText is built in as part of sqlalchemy 2.0 and doesn't need the extra library
 from citext import CIText
 
 from pycds.alembic.change_history_utils import hx_table_name

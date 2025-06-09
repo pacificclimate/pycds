@@ -101,8 +101,7 @@ def env_config(schema_name):
 
 
 @pytest.fixture(scope="function")
-def prepared_schema_from_migrations_left(
-    uri_left, alembic_config_left, db_setup, target_revision, request
+def prepared_schema_from_migrations_left(alembic_engine, alembic_runner, target_revision=None
 ):
     """
     Generic prepared_schema_from_migrations_left fixture. It prepares the
@@ -119,33 +118,16 @@ def prepared_schema_from_migrations_left(
 
     """
     logging.getLogger("alembic").setLevel(logging.CRITICAL)
-    engine, script = prepare_schema_from_migrations(
-        uri_left,
-        alembic_config_left,
-        db_setup=db_setup,
-        revision=getattr(request, "param", target_revision),
-    )
+    migration_target = ("head" if target_revision is None else target_revision)
+    alembic_runner.migrate_up_to(migration_target)
 
-    yield engine, script
-
-    engine.dispose()
+    yield alembic_engine 
 
 
 @pytest.fixture(scope="function")
 def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
     engine, script = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()
-
-    yield sesh
-
-    sesh.close()
-
-
-@pytest.fixture(scope="function")
-def sesh_with_large_data(prepared_schema_from_migrations_left):
-    engine, script = prepared_schema_from_migrations_left
-    sesh = sessionmaker(bind=engine)()
-    insert_crmp_data(sesh)
 
     yield sesh
 

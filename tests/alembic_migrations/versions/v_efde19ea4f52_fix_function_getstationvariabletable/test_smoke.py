@@ -20,8 +20,9 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     # Set up database to version efde19ea4f52
     alembic_runner.migrate_up_to("efde19ea4f52")
 
-    # Check that function is there (new version)
-    names = get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that function is there (new version)
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert "getstationvariabletable" in names
 
 
@@ -35,6 +36,7 @@ def test_downgrade(alembic_engine, alembic_runner, schema_name):
     # Run downgrade migration
     alembic_runner.migrate_down_one()
 
-    # Check that function is still there (old version)
-    names = get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that function is still there (old version)
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert "getstationvariabletable" in names

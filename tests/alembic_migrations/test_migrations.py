@@ -10,8 +10,6 @@ from sqlalchemydiff import compare
 from .sqlalchemydiff_util import prepare_schema_from_models
 
 from ..alembicverify_util import (
-    get_current_revision,
-    get_head_revision,
     prepare_schema_from_migrations,
 )
 
@@ -21,27 +19,23 @@ from pycds import Base
 logger = logging.getLogger("tests")
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade_and_downgrade(uri_left, alembic_config_left, db_setup, env_config):
+def test_upgrade_and_downgrade(alembic_runner):
     """Test all migrations up and down.
 
     Tests that we can apply all migrations from a brand new empty
     database, and also that we can remove them all.
     """
-    engine, script = prepare_schema_from_migrations(
-        uri_left, alembic_config_left, db_setup=db_setup
-    )
+    alembic_runner.migrate_up_to("head")
 
-    head = get_head_revision(alembic_config_left, engine, script)
-    current = get_current_revision(
-        alembic_config_left, engine, script, env_config=env_config
-    )
+    assert len(alembic_runner.heads) == 1
+    head = alembic_runner.heads[0]
+    current = alembic_runner.current
 
     assert head == current
 
     while current is not None:
-        command.downgrade(alembic_config_left, "-1")
-        current = get_current_revision(alembic_config_left, engine, script)
+        alembic_runner.migrate_down_one()
+        current = alembic_runner.current
 
 
 @pytest.mark.skip(reason="utility; not really a test")

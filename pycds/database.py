@@ -1,6 +1,8 @@
 import re
 
+from alembic import op
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import sessionmaker
 
@@ -45,9 +47,10 @@ def get_postgresql_version(engine):
     if engine.dialect.name.lower() != "postgresql":
         raise ValueError(f"We are not running on PostgreSQL.")
 
-    version = engine.execute(text("SELECT version()")).first()[0]
-    match = re.match(r"PostgreSQL (\d+)\.(\d+)", version)
-    return tuple(map(int, match.groups()))
+    with engine.begin() as conn:
+        version = conn.execute(text("SELECT version()")).first()[0]
+        match = re.match(r"PostgreSQL (\d+)\.(\d+)", version)
+        return tuple(map(int, match.groups()))
 
 
 def db_supports_statement(engine, statement):
@@ -85,7 +88,7 @@ def db_supports_matviews(engine):
 # Note: Prefer `Inspector` methods to this function wherever possible.
 # It's easy: e.g., `inspect(engine).get_table_names(schema=...)`
 def get_schema_item_names(
-    executor,
+    executor: Connection,
     item_type,
     table_name=None,
     constraint_type=None,
