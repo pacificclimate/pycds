@@ -28,11 +28,9 @@ function_names = {
 def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to 7ab87f8fbcf4."""
     alembic_runner.migrate_up_to("7ab87f8fbcf4")
-
-    # Check that function has been added
-    names = set(
-        get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
-    )
+    with alembic_engine.connect() as conn:
+        # Check that function has been added
+        names = set(get_schema_item_names(conn, "routines", schema_name=schema_name))
     assert function_names <= names
 
 
@@ -41,6 +39,7 @@ def test_downgrade(alembic_engine, alembic_runner, schema_name):
     alembic_runner.migrate_up_to("7ab87f8fbcf4")
     alembic_runner.migrate_down_one()
 
-    # Check that functions have been removed
-    names = get_schema_item_names(alembic_engine, "routines", schema_name=schema_name)
-    assert function_names & names == set()
+    with alembic_engine.connect() as conn:
+        # Check that functions have been removed
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
+        assert function_names & names == set()

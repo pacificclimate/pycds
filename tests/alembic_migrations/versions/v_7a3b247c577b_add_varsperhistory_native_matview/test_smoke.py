@@ -42,10 +42,11 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
 
 @pytest.mark.update20
 def test_downgrade(alembic_engine, alembic_runner, schema_name):
-    """Test the schema migration from 7a3b247c577b to 84b7fc2596d5."""
+    """Test the schema migration from 7a3b247c577b to 8fd8f556c548."""
 
     alembic_runner.migrate_up_to("7a3b247c577b")
     alembic_runner.migrate_down_one()
+    assert alembic_runner.current == "8fd8f556c548"
 
     with alembic_engine.begin() as conn:
         # Matviews are always absent after downgrade

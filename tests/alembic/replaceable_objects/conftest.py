@@ -17,11 +17,13 @@ from .content import (
     ThingCountManualMatview,
 )
 
+
 @fixture
 def tst_orm_engine(base_engine):
     """Database engine with test content created in it."""
     ContentBase.metadata.create_all(bind=base_engine)
     yield base_engine
+
 
 @fixture
 def tst_orm_sesh(tst_orm_engine):

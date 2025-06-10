@@ -1,4 +1,5 @@
 from pytest import mark
+from sqlalchemy.sql import text
 
 from pycds.alembic.change_history_utils import hx_table_name, hx_id_name
 
@@ -17,7 +18,8 @@ def test_function(
 ):
     # Test db function
     result = sesh_in_prepared_schema_left.execute(
-        f"SELECT {schema_name}.{db_fn_name}(:argument) AS value", {"argument": argument}
+        text(f"SELECT {schema_name}.{db_fn_name}(:argument) AS value"),
+        {"argument": argument},
     ).scalar()
     assert result == expected
 

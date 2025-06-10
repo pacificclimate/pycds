@@ -118,7 +118,7 @@ def test_table_contents(
     delete_info,
     schema_name,
     alembic_engine,
-    alembic_runner
+    alembic_runner,
 ):
     """
     Test that contents of history tables are as expected.
@@ -145,7 +145,6 @@ def test_table_contents(
 
         with Session(conn) as session:
 
-
             # Check the resulting tables
             check_history_table_initial_contents(
                 session,
@@ -158,7 +157,9 @@ def test_table_contents(
             )
 
             for foreign_base, foreign_history in foreign_tables:
-                check_history_table_FKs(session, primary, history, foreign_base, foreign_history)
+                check_history_table_FKs(
+                    session, primary, history, foreign_base, foreign_history
+                )
 
             check_history_tracking(
                 session,

@@ -4,6 +4,7 @@ import logging
 import pytest
 
 from alembic import command
+from sqlalchemy import text
 
 from sqlalchemydiff import compare
 
@@ -33,7 +34,7 @@ def test_upgrade_and_downgrade(alembic_runner):
 
     assert head == current
 
-    while current is not None:
+    while current is not "base":
         alembic_runner.migrate_down_one()
         current = alembic_runner.current
 
@@ -45,12 +46,14 @@ def test_indexes(alembic_engine, alembic_runner):
 
     with alembic_engine.connect() as conn:
         indexes = conn.execute(
-            """
+            text(
+                """
             select indexname, indexdef 
             from pg_indexes 
             where schemaname ='crmp' 
             order by indexname
             """
+            )
         )
         print(f"### indexes")
         for index in indexes:

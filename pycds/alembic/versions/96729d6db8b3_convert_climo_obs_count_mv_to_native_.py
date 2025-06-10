@@ -24,6 +24,7 @@ from pycds.orm.native_matviews.version_96729d6db8b3 import (
 from pycds.orm.views.version_522eed334c85 import (
     ClimoObsCount as OldClimoObsCountView,
 )
+
 # Import the view that will be replaced by the native matview
 from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountView
 

@@ -1,6 +1,7 @@
 import datetime
 import pytest
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 from pycds import (
     Network,
     Station,
@@ -15,7 +16,7 @@ from pycds import (
 def prepared_sesh_left(prepared_schema_from_migrations_left, schema_name):
     engine = prepared_schema_from_migrations_left
     sesh = sessionmaker(bind=engine)()
-    sesh.execute(f"SET search_path TO {schema_name}, public")
+    sesh.execute(text(f"SET search_path TO {schema_name}, public"))
 
     yield sesh
 

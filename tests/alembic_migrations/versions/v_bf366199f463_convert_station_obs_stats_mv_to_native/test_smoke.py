@@ -25,7 +25,6 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     # Set up database at bf366199f463 (this migration)
     alembic_runner.migrate_up_to("bf366199f463")
 
-
     with alembic_engine.begin() as conn:
         # Matviews should be present, tables absent.
         check_matviews(conn, matview_defns, schema_name, matviews_present=True)

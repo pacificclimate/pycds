@@ -99,10 +99,10 @@ def db_setup(engine, schema_name, user="testuser"):
         #   --> "testuser"
         # print(f'### final user {result}')
 
+
 def set_search_path(engine):
     with engine.begin() as conn:
         conn.execute(text(f"SET search_path TO public"))
-
 
 
 @fixture
@@ -124,7 +124,7 @@ def base_engine(base_database_uri, schema_name):
     set_search_path(engine)
     db_setup(engine, schema_name)
     yield engine
-    
+
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -142,6 +142,7 @@ def schema_name():
 @fixture
 def schema_func(schema_name):
     return getattr(func, schema_name)
+
 
 # Fixtures required by
 # [`alembic-verify`](https://alembic-verify.readthedocs.io/en/latest/)
@@ -162,8 +163,6 @@ def uri_left(base_database_uri):
 @pytest.fixture(scope="function")
 def uri_right(base_database_uri):
     yield get_temporary_uri(base_database_uri)
-
-
 
 
 @pytest.fixture(scope="module")
@@ -217,11 +216,13 @@ def target_revision():
     """
     return pycds.alembic.info.get_current_head()
 
+
 @fixture(scope="function")
 def pycds_engine(base_engine):
     """Test-session scoped database engine, with pycds ORM created in it."""
     pycds.Base.metadata.create_all(bind=base_engine)
     yield base_engine
+
 
 @fixture(scope="function")
 def pycds_sesh(pycds_engine):
@@ -237,8 +238,7 @@ def pycds_sesh(pycds_engine):
 
 @fixture(scope="function")
 def db_with_large_data(alembic_engine, alembic_runner, target_revision, schema_name):
-    """ Sets up a datatabase with a large data set for testing.
-    """
+    """Sets up a datatabase with a large data set for testing."""
     alembic_runner.migrate_up_to(target_revision if target_revision else "head")
     with alembic_engine.begin() as conn:
         conn.execute(text(f"SET search_path TO {schema_name}, public"))
@@ -247,9 +247,8 @@ def db_with_large_data(alembic_engine, alembic_runner, target_revision, schema_n
         logger.setLevel(logging.CRITICAL)
         insert_crmp_data(conn)
         logger.setLevel(save_level)
-    
-    return alembic_engine
 
+    return alembic_engine
 
 
 @pytest.fixture(scope="function")

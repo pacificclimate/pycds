@@ -101,7 +101,8 @@ def env_config(schema_name):
 
 
 @pytest.fixture(scope="function")
-def prepared_schema_from_migrations_left(alembic_engine, alembic_runner, target_revision=None
+def prepared_schema_from_migrations_left(
+    alembic_engine, alembic_runner, target_revision=None
 ):
     """
     Generic prepared_schema_from_migrations_left fixture. It prepares the
@@ -120,10 +121,10 @@ def prepared_schema_from_migrations_left(alembic_engine, alembic_runner, target_
     # We don't really need to spam the logs with all the migration details, especially
     # as this runs for each test that this fixture is used in
     logging.getLogger("alembic").setLevel(logging.CRITICAL)
-    migration_target = ("head" if target_revision is None else target_revision)
+    migration_target = "head" if target_revision is None else target_revision
     alembic_runner.migrate_up_to(migration_target)
 
-    yield alembic_engine 
+    yield alembic_engine
 
 
 @pytest.fixture(scope="function")
