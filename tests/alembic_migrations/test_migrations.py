@@ -8,11 +8,9 @@ from sqlalchemy import text
 
 from sqlalchemydiff import compare
 
-from .sqlalchemydiff_util import prepare_schema_from_models
+from tests.conftest import db_setup
 
-from ..alembicverify_util import (
-    prepare_schema_from_migrations,
-)
+from .sqlalchemydiff_util import prepare_schema_from_models
 
 from pycds import Base
 
@@ -34,7 +32,7 @@ def test_upgrade_and_downgrade(alembic_runner):
 
     assert head == current
 
-    while current is not "base":
+    while current != "base":
         alembic_runner.migrate_down_one()
         current = alembic_runner.current
 
@@ -60,19 +58,18 @@ def test_indexes(alembic_engine, alembic_runner):
             print(index[0], index[1])
 
 
-@pytest.mark.usefixtures("new_db_left")
 @pytest.mark.usefixtures("new_db_right")
 def test_model_and_migration_schemas_are_the_same(
-    uri_left, uri_right, alembic_config_left, db_setup
+    uri_right, alembic_engine, alembic_runner, schema_name
 ):
     """Compare two databases.
 
     Compares the database obtained with all migrations against the
     one we get out of the models.
     """
-    prepare_schema_from_migrations(uri_left, alembic_config_left, db_setup=db_setup)
-    prepare_schema_from_models(uri_right, Base, db_setup=db_setup)
+    alembic_runner.migrate_up_to("head")
+    prepare_schema_from_models(uri_right, Base, schema_name, db_setup=db_setup)
 
-    result = compare(uri_left, uri_right)
+    result = compare(alembic_engine.url, uri_right)
 
     assert result.is_match
