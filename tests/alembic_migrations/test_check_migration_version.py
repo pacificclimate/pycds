@@ -21,13 +21,15 @@ def test_check_migration_version(alembic_engine, alembic_runner):
     """
     alembic_runner.migrate_up_to(get_current_head())
 
-    # Test against the most up to date migration in the database;
-    # this should pass, i.e., not raise an exception.
-    check_migration_version(alembic_engine)
+    with alembic_engine.begin() as conn:
+        # Test against the most up to date migration in the database;
+        # this should pass, i.e., not raise an exception.
+        check_migration_version(conn)
 
     # Back off to the previous migration.
     alembic_runner.migrate_down_one()
 
     # Now the checker should raise an exception.
     with pytest.raises(ValueError):
-        check_migration_version(alembic_engine)
+        with alembic_engine.begin() as conn:
+            check_migration_version(conn)

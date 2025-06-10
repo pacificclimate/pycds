@@ -3,7 +3,7 @@ import os
 import pytest
 
 from sqlalchemy import text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
 
@@ -18,17 +18,17 @@ def alembic_root():
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def uri_left(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def uri_right(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def db_setup(schema_name):
     """
     Database setup operations. These are operations that must executed prior
@@ -84,7 +84,7 @@ def db_setup(schema_name):
     return f
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def env_config(schema_name):
     """
     Additional Alembic migration environment configuration values. These
@@ -117,6 +117,8 @@ def prepared_schema_from_migrations_left(alembic_engine, alembic_runner, target_
         )
 
     """
+    # We don't really need to spam the logs with all the migration details, especially
+    # as this runs for each test that this fixture is used in
     logging.getLogger("alembic").setLevel(logging.CRITICAL)
     migration_target = ("head" if target_revision is None else target_revision)
     alembic_runner.migrate_up_to(migration_target)
@@ -126,8 +128,8 @@ def prepared_schema_from_migrations_left(alembic_engine, alembic_runner, target_
 
 @pytest.fixture(scope="function")
 def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
-    engine, script = prepared_schema_from_migrations_left
-    sesh = sessionmaker(bind=engine)()
+    engine = prepared_schema_from_migrations_left
+    sesh = Session(engine)
 
     yield sesh
 

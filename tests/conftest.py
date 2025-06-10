@@ -10,7 +10,7 @@ import alembic.config
 
 
 from sqlalchemy import create_engine, func, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.schema import CreateSchema
 
 from pytest import fixture
@@ -21,6 +21,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateSchema
 from sqlalchemydiff.util import get_temporary_uri
+
+from tests.helpers import insert_crmp_data
 
 
 def db_setup(engine, schema_name, user="testuser"):
@@ -99,7 +101,7 @@ def db_setup(engine, schema_name, user="testuser"):
 
 def set_search_path(engine):
     with engine.begin() as conn:
-        conn.execute(f"SET search_path TO public")
+        conn.execute(text(f"SET search_path TO public"))
 
 
 
@@ -152,12 +154,12 @@ def alembic_root():
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def uri_left(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def uri_right(base_database_uri):
     yield get_temporary_uri(base_database_uri)
 
@@ -214,3 +216,49 @@ def target_revision():
     migration in tests/alembic_migrations). See the overrides there.
     """
     return pycds.alembic.info.get_current_head()
+
+@fixture(scope="function")
+def pycds_engine(base_engine):
+    """Test-session scoped database engine, with pycds ORM created in it."""
+    pycds.Base.metadata.create_all(bind=base_engine)
+    yield base_engine
+
+@fixture(scope="function")
+def pycds_sesh(pycds_engine):
+    """Test-function scoped database session.
+    All session actions are rolled back on teardown.
+    """
+    sesh = Session(pycds_engine)
+    set_search_path(pycds_engine)
+    yield sesh
+    sesh.rollback()
+    sesh.close()
+
+
+@fixture(scope="function")
+def db_with_large_data(alembic_engine, alembic_runner, target_revision, schema_name):
+    """ Sets up a datatabase with a large data set for testing.
+    """
+    alembic_runner.migrate_up_to(target_revision if target_revision else "head")
+    with alembic_engine.begin() as conn:
+        conn.execute(text(f"SET search_path TO {schema_name}, public"))
+        logger = logging.getLogger("sqlalchemy.engine")
+        save_level = logger.level
+        logger.setLevel(logging.CRITICAL)
+        insert_crmp_data(conn)
+        logger.setLevel(save_level)
+    
+    return alembic_engine
+
+
+
+@pytest.fixture(scope="function")
+def sesh_with_large_data(db_with_large_data):
+    """Extends the db_with_large_data fixture to provide a session
+    with the large data set already inserted.
+    """
+    sesh = Session(db_with_large_data)
+    set_search_path(db_with_large_data)
+    yield sesh
+    sesh.rollback()
+    sesh.close()
