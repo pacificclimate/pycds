@@ -79,7 +79,7 @@ def test_matview_content(sesh_with_large_data):
 @pytest.mark.usefixtures("new_db_left")
 def test_index(schema_name, prepared_schema_from_migrations_left):
     """Test that CollapsedVariables has the expected index."""
-    engine, script = prepared_schema_from_migrations_left
+    engine = prepared_schema_from_migrations_left
     inspector = sqlalchemy.inspect(engine)
     indexes = inspector.get_indexes(
         table_name=(CollapsedVariables.base_name()), schema=schema_name

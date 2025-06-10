@@ -23,7 +23,6 @@ def tst_orm_engine(base_engine):
     ContentBase.metadata.create_all(bind=base_engine)
     yield base_engine
 
-
 @fixture
 def tst_orm_sesh(tst_orm_engine):
     with Session(tst_orm_engine) as session:

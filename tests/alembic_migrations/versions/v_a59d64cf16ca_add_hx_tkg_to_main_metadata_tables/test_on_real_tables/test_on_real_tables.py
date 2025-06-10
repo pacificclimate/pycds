@@ -239,6 +239,8 @@ schema_name = get_schema_name()
         ),
     ],
 )
+
+@pytest.mark.usefixtures("db_with_large_data")
 def test_migration_results(
     alembic_engine,
     alembic_runner,
@@ -251,7 +253,6 @@ def test_migration_results(
     update_info,
     delete_info,
     schema_name,
-    sesh_with_large_data,
 ):
     """
     Test that contents of history tables are as expected, and that history tracking is
