@@ -62,7 +62,7 @@ def test_run_query(station_id, climo, sesh_with_large_data, print_details=False)
         print(query)
 
     # Execute the query, obtaining the station variable table.
-    station_variable_table = sesh.execute(query)
+    station_variable_table = sesh.execute(text(query))
     all_column_names = station_variable_table.keys()
     station_variable_table = list(station_variable_table)
 

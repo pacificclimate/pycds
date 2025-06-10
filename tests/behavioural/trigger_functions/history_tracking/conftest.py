@@ -1,10 +1,11 @@
 import pytest
+from sqlalchemy.sql import text
 
 
 @pytest.fixture()
 def sesh_with_basics(schema_name, sesh_in_prepared_schema_left):
     sesh = sesh_in_prepared_schema_left
-    sesh.execute(f"SET search_path TO {schema_name}, public")
+    sesh.execute(text(f"SET search_path TO {schema_name}, public"))
     yield sesh_in_prepared_schema_left
 
 
@@ -12,7 +13,8 @@ def sesh_with_basics(schema_name, sesh_in_prepared_schema_left):
 def sesh_with_test_tables(sesh_with_basics):
     sesh = sesh_with_basics
     sesh.execute(
-        """
+        text(
+            """
 CREATE TABLE a (
     -- Main attributes
     a_id SERIAL PRIMARY KEY,
@@ -134,5 +136,6 @@ CREATE TRIGGER t100_add_foreign_hx_keys
 EXECUTE FUNCTION hxtk_add_foreign_hx_keys('{{a, a_id}, {b, b_id}}');
                
         """
+        )
     )
     yield sesh

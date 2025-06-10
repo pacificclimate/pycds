@@ -1,12 +1,4 @@
-
-
-from sqlalchemy import (
-    func,
-    Column,
-    Integer,
-    BigInteger,
-    ForeignKey
-)
+from sqlalchemy import func, Column, Integer, BigInteger, ForeignKey
 from sqlalchemy.orm import Query
 from pycds.orm.tables import Obs, Variable
 from sqlalchemy.dialects.postgresql import TEXT
@@ -22,10 +14,9 @@ class ClimoObsCount(Base, ReplaceableView):
     """
     This class maps to a view that is required by the original view that was present
     when the database was brought under management. To prevent unnecessary code
-    
+
     It's definition was pulled from https://redmine51.pcic.uvic.ca:4433/issues/1921
     to help with the downgrade done as part of the migration to native matviews (96729d6db8b3)
-    
     """
 
     __tablename__ = "climo_obs_count_v"

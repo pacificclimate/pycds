@@ -189,13 +189,13 @@ def test_history(operations, query, expected, sesh_with_test_tables):
     This is actually a very generic test: do ops, query, check results.
     """
     sesh = sesh_with_test_tables
-    sesh.execute(operations)
+    sesh.execute(text(operations))
     # Listings of these tables are useful for figuring out the expected
     # results for complex tests, such as those for c_hx.
     print_table(sesh, "a_hx", "a_hx_id")
     print_table(sesh, "b_hx", "b_hx_id")
     print_table(sesh, "c_hx", "c_hx_id")
-    result = sesh.execute(query).fetchall()
+    result = sesh.execute(text(query)).fetchall()
     assert tuple(result) == expected
 
 

@@ -46,4 +46,4 @@ def test_day_of_observation(
         {"obs_time": obs_time, "extremum": extremum, "freq": freq},
     ).fetchall()
     assert len(result) == 1
-    assert result[0]["eday"] == expected_day[extremum][freq][obs_time]
+    assert result[0]._mapping["eday"] == expected_day[extremum][freq][obs_time]

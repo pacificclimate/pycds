@@ -35,7 +35,7 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     alembic_runner.migrate_up_to("a59d64cf16ca")
 
     with alembic_engine.connect() as conn:
-    # Check that tables have been altered or created as expected.
+        # Check that tables have been altered or created as expected.
         for table_name, pri_key_name, foreign_tables in table_info:
             check_history_tracking_upgrade(
                 conn, table_name, pri_key_name, foreign_tables, schema_name

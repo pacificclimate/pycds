@@ -289,7 +289,7 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
 
     def action(sesh):
-        with files("pycds").joinpath("data/crmp_subset_data.sql").open('r') as f:
+        with files("pycds").joinpath("data/crmp_subset_data.sql").open("r") as f:
             data = f.read()
         sesh.execute(text(data))
 

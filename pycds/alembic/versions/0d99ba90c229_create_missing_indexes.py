@@ -56,6 +56,7 @@ classes = (
     StationObservationStats,
 )
 
+
 def upgrade():
     for ORMClass in classes:
         logger.debug(
@@ -77,11 +78,11 @@ def downgrade():
     for ORMClass in classes:
         for index in ORMClass.__table__.indexes:
             logger.debug(f"Dropping index '{index.name} on table {index.table.name}'")
-            
+
             # Check if the index exists before attempting to drop it
             # This is necessary because the index may not have been created
             # in the first place, or it may have been dropped in a previous migration.
-        
+
             # Only drop the index if it exists
             op.drop_index(
                 index_name=index.name,

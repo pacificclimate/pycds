@@ -59,9 +59,9 @@ def upgrade():
         ),
     )
     # Existing trigger on obs_raw is superseded by the hx tracking trigger.
-    op.execute(text(
-        f"DROP TRIGGER IF EXISTS update_mod_time ON {main_table_name(table_name)}"
-    ))
+    op.execute(
+        text(f"DROP TRIGGER IF EXISTS update_mod_time ON {main_table_name(table_name)}")
+    )
     create_primary_table_triggers(table_name)
 
     # History table
@@ -84,10 +84,12 @@ def downgrade():
     drop_history_triggers(table_name)
     drop_history_table(table_name)
     drop_history_cols_from_primary(table_name, columns=("mod_user",))
-    op.execute(text(
-        f"CREATE TRIGGER update_mod_time"
-        f"  BEFORE UPDATE"
-        f"  ON {main_table_name(table_name)}"
-        f"  FOR EACH ROW"
-        f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
-    ))
+    op.execute(
+        text(
+            f"CREATE TRIGGER update_mod_time"
+            f"  BEFORE UPDATE"
+            f"  ON {main_table_name(table_name)}"
+            f"  FOR EACH ROW"
+            f"  EXECUTE FUNCTION public.moddatetime('mod_time')"
+        )
+    )
