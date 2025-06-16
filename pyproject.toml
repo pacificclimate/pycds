@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "pycds"
-version = "4.5.1"
+version = "5.0.0rc1"
 requires-python = ">=3.9,<3.14"
 readme = "README.md"
 description = "An ORM representation of the PCDS and CRMP database"
