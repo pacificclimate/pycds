@@ -80,6 +80,7 @@ def db_setup(schema_name):
 
     return f
 
+
 @pytest.fixture
 def prepared_schema_from_migrations_left(
     alembic_engine, alembic_runner, target_revision=None
@@ -105,6 +106,7 @@ def prepared_schema_from_migrations_left(
     alembic_runner.migrate_up_to(migration_target)
 
     yield alembic_engine
+
 
 @pytest.fixture(scope="session")
 def prepared_schema_from_migrations_left_s(
@@ -141,6 +143,7 @@ def sesh_in_prepared_schema_left(prepared_schema_from_migrations_left):
     yield sesh
 
     sesh.close()
+
 
 @pytest.fixture(scope="session")
 def sesh_in_prepared_schema_left_s(prepared_schema_from_migrations_left):
