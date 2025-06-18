@@ -5,7 +5,9 @@ Revises: 7ab87f8fbcf4
 Create Date: 2024-12-16 14:54:41.332001
 
 """
+
 from alembic import op
+from sqlalchemy import text
 
 from pycds import get_schema_name
 from pycds.alembic.change_history_utils import (
@@ -43,7 +45,7 @@ table_info = (
 def upgrade():
     # We have to set the search_path so that the trigger functions fired when
     # the history table is populated can find the functions that they call.
-    op.get_bind().execute(f"SET search_path TO {schema_name}, public")
+    op.get_bind().execute(text(f"SET search_path TO {schema_name}, public"))
 
     for table_name, primary_key_name, foreign_tables, extra_indexes in table_info:
         # Primary table

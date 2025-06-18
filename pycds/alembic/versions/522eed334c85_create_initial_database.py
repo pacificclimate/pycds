@@ -1,14 +1,20 @@
 """Create initial database
 
 Revision ID: 522eed334c85
-Revises: 
+Revises:
 Create Date: 2020-01-21 17:25:40.000843
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
 from pycds import get_schema_name
+from pycds.alembic.util import create_view, drop_view
+from pycds.orm.views.version_22819129a609 import CollapsedVariables
+from pycds.orm.views.version_522eed334c85 import ClimoObsCount
+from pycds.orm.views.version_bb2a222a1d4a import ObsCountPerMonthHistory
+from pycds.orm.views.version_bf366199f463 import StationObservationStats
 
 
 # revision identifiers, used by Alembic.
@@ -231,6 +237,9 @@ def upgrade():
         ),
         schema=schema_name,
     )
+    create_view(ObsCountPerMonthHistory, schema=schema_name)
+    create_view(StationObservationStats, schema=schema_name)
+    create_view(ClimoObsCount, schema=schema_name)
     op.create_table(
         "station_obs_stats_mv",
         sa.Column("station_id", sa.Integer(), nullable=False),
@@ -257,6 +266,7 @@ def upgrade():
         sa.PrimaryKeyConstraint("history_id", "vars_id"),
         schema=schema_name,
     )
+    create_view(CollapsedVariables, schema=schema_name)
     op.create_table(
         "obs_raw_native_flags",
         sa.Column("obs_raw_id", sa.BigInteger(), nullable=True),
@@ -311,8 +321,12 @@ def downgrade():
         batch_op.drop_index("flag_index")
 
     op.drop_table("obs_raw_native_flags", schema=schema_name)
+    drop_view(CollapsedVariables, schema=schema_name)
     op.drop_table("vars_per_history_mv", schema=schema_name)
     op.drop_table("station_obs_stats_mv", schema=schema_name)
+    drop_view(ObsCountPerMonthHistory, schema=schema_name)
+    drop_view(StationObservationStats, schema=schema_name)
+    drop_view(ClimoObsCount, schema=schema_name)
     op.drop_table("obs_raw", schema=schema_name)
     op.drop_table("obs_derived_values", schema=schema_name)
     op.drop_table("obs_count_per_month_history_mv", schema=schema_name)

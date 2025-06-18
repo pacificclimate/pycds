@@ -17,6 +17,7 @@ to specialize the operations for each different kind of replaceable object
 (`create_replaceable_object`, `drop_replaceable_object`, `replace_replaceable_object`)
 to cover all types of replaceable object.
 """
+
 from alembic.operations import Operations
 from pycds.alembic.extensions.operation_plugins.reversible_operation import (
     ReversibleOperation,

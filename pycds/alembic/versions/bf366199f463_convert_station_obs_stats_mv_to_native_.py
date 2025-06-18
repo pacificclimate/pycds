@@ -5,6 +5,7 @@ Revises: 96729d6db8b3
 Create Date: 2023-08-18 15:55:38.242505
 
 """
+
 import logging
 from alembic import op
 import sqlalchemy as sa
@@ -43,9 +44,9 @@ def create_dependent_objects():
 
 
 def upgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     if matview_exists(
-        engine, StationObservationStatsMatview.__tablename__, schema=schema_name
+        conn, StationObservationStatsMatview.__tablename__, schema=schema_name
     ):
         logger.info(
             f"A native materialized view '{StationObservationStatsMatview.__tablename__}' "

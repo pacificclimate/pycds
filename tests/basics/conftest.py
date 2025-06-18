@@ -4,12 +4,11 @@ from pycds import Contact, Network, Station, History, Variable
 
 
 @fixture
-def empty_sesh(base_engine, set_search_path):
+def empty_sesh(base_engine):
     """Test-function scoped database session, with no schema or content.
     All session actions are rolled back on teardown.
     """
     sesh = sessionmaker(bind=base_engine)()
-    set_search_path(sesh)
     yield sesh
     sesh.rollback()
     sesh.close()

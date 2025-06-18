@@ -36,28 +36,24 @@ matview_defns = {
 }
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to version 081f17262852."""
 
-    # Set up database to version 3505750d3416
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("081f17262852")
 
-    # confirm native matview exists
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.connect() as conn:
+        # confirm native matview exists
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 081f17262852 to 3505750d3416."""
 
-    # Set up database to version efde19ea4f52
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("081f17262852")
+    alembic_runner.migrate_down_one()
 
-    # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
-
-    # confirm matview has been removed
-    check_matviews(engine, matview_defns, schema_name, matviews_present=False)
+    with alembic_engine.connect() as conn:
+        # confirm matview has been removed
+        check_matviews(conn, matview_defns, schema_name, matviews_present=False)

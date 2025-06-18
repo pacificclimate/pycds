@@ -4,15 +4,15 @@ from pycds.orm.native_matviews import ClimoObsCount
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data_rw):
     """Test that ClimoObsCount definition is correct."""
 
     # No content before matview is refreshed
-    q = sesh_with_large_data.query(ClimoObsCount)
+    q = sesh_with_large_data_rw.query(ClimoObsCount)
     assert q.count() == 0
 
     # Refresh
-    sesh_with_large_data.execute(ClimoObsCount.refresh())
+    sesh_with_large_data_rw.execute(ClimoObsCount.refresh())
 
     # Et voila
     assert q.count() > 0
@@ -42,7 +42,7 @@ def test_matview_content(sesh_with_large_data):
 @pytest.mark.usefixtures("new_db_left")
 def test_index(schema_name, prepared_schema_from_migrations_left):
     """Test that ClimoObsCount has the expected index."""
-    engine, script = prepared_schema_from_migrations_left
+    engine = prepared_schema_from_migrations_left
     inspector = sqlalchemy.inspect(engine)
     indexes = inspector.get_indexes(
         table_name=(ClimoObsCount.base_name()), schema=schema_name

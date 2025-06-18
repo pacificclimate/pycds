@@ -9,6 +9,7 @@ ORM class via `ORMClass.__table__.indexes`. The latter is very convenient, so
 we make sure always to declare indexes outside of classes. See code below for
 many examples.
 
+TODO: This behaviour is different in 2.0 and should be reviewed during that upgrade
 2. We prefer to declare relationships using `back_populates=`, *not* using
 `backref=`. Using `back_populates` is slightly redundant, but the redundancy
 ensures that each class explicitly names all its relationship attributes.
@@ -30,13 +31,12 @@ from sqlalchemy import (
     Index,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.orm import relationship, synonym, declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
 
-from citext import CIText
+from sqlalchemy.dialects.postgresql import CITEXT as CIText
 
 from pycds.alembic.change_history_utils import hx_table_name
 from pycds.context import get_schema_name
@@ -78,14 +78,24 @@ class Network(Base):
     )
 
     # Relationships
-    stations = relationship("Station", order_by="Station.id", back_populates="network")
+    stations = relationship(
+        "Station",
+        order_by="Station.id",
+        back_populates="network",
+        cascade_backrefs=False,
+    )
     meta_station = synonym("stations")
-    variables = relationship("Variable", back_populates="network")
+    variables = relationship(
+        "Variable", back_populates="network", cascade_backrefs=False
+    )
     meta_vars = synonym("variables")
-    contact = relationship("Contact", back_populates="networks")
+    contact = relationship("Contact", back_populates="networks", cascade_backrefs=False)
     meta_contact = synonym("contact")  # Retain backwards compatibility
     native_flags = relationship(
-        "NativeFlag", order_by="NativeFlag.id", back_populates="network"
+        "NativeFlag",
+        order_by="NativeFlag.id",
+        back_populates="network",
+        cascade_backrefs=False,
     )
     meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
 
@@ -131,7 +141,12 @@ class Contact(Base):
     email = Column("email", String)
     phone = Column("phone", String)
 
-    networks = relationship("Network", order_by="Network.id", back_populates="contact")
+    networks = relationship(
+        "Network",
+        order_by="Network.id",
+        back_populates="contact",
+        cascade_backrefs=False,
+    )
 
 
 class Station(Base):
@@ -156,9 +171,14 @@ class Station(Base):
     )
 
     # Relationships
-    network = relationship("Network", back_populates="stations")
+    network = relationship("Network", back_populates="stations", cascade_backrefs=False)
     meta_network = synonym("network")
-    histories = relationship("History", order_by="History.id", back_populates="station")
+    histories = relationship(
+        "History",
+        order_by="History.id",
+        back_populates="station",
+        cascade_backrefs=False,
+    )
     meta_history = synonym("histories")  # Retain backwards compatibility
 
     def __str__(self):
@@ -234,11 +254,15 @@ class History(Base):
 
     # Relationships
     sensor = relationship("MetaSensor")
-    station = relationship("Station", back_populates="histories")
+    station = relationship(
+        "Station", back_populates="histories", cascade_backrefs=False
+    )
     meta_station = synonym("station")  # Retain backwards compatibility
-    observations = relationship("Obs", back_populates="history")
+    observations = relationship("Obs", back_populates="history", cascade_backrefs=False)
     obs_raw = synonym("observations")  # Retain backwards compatibility
-    derived_values = relationship("DerivedValue", back_populates="history")
+    derived_values = relationship(
+        "DerivedValue", back_populates="history", cascade_backrefs=False
+    )
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
 
@@ -337,16 +361,24 @@ class Obs(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship("History", back_populates="observations")
+    history = relationship(
+        "History", back_populates="observations", cascade_backrefs=False
+    )
     meta_history = synonym("history")  # Retain backwards compatibility
-    variable = relationship("Variable", back_populates="obs")
+    variable = relationship("Variable", back_populates="obs", cascade_backrefs=False)
     meta_vars = synonym("variable")  # To keep backwards compatibility
     native_flags = relationship(
-        "NativeFlag", secondary=ObsRawNativeFlags, back_populates="flagged_obs"
+        "NativeFlag",
+        secondary=ObsRawNativeFlags,
+        back_populates="flagged_obs",
+        cascade_backrefs=False,
     )
     flags = synonym("native_flags")  # Retain backwards compatibility
     pcic_flags = relationship(
-        "PCICFlag", secondary=ObsRawPCICFlags, back_populates="flagged_obs"
+        "PCICFlag",
+        secondary=ObsRawPCICFlags,
+        back_populates="flagged_obs",
+        cascade_backrefs=False,
     )
 
     # Constraints
@@ -427,12 +459,16 @@ class Variable(Base):
     )
 
     # Relationships
-    network = relationship("Network", back_populates="variables")
+    network = relationship(
+        "Network", back_populates="variables", cascade_backrefs=False
+    )
     meta_network = synonym("network")
-    obs = relationship("Obs", back_populates="variable")
+    obs = relationship("Obs", back_populates="variable", cascade_backrefs=False)
     observations = synonym("obs")  # Better name
     obs_raw = synonym("obs")  # To keep backwards compatibility
-    derived_values = relationship("DerivedValue", back_populates="variable")
+    derived_values = relationship(
+        "DerivedValue", back_populates="variable", cascade_backrefs=False
+    )
     obs_derived_values = synonym("derived_values")  # Backwards compatibility
 
     _newline_checked_columns_ = [
@@ -512,7 +548,10 @@ class NativeFlag(Base):
 
     network = relationship("Network", back_populates="native_flags")
     flagged_obs = relationship(
-        "Obs", secondary=ObsRawNativeFlags, back_populates="native_flags"
+        "Obs",
+        secondary=ObsRawNativeFlags,
+        back_populates="native_flags",
+        cascade_backrefs=False,
     )
 
     # Constraints
@@ -535,7 +574,10 @@ class PCICFlag(Base):
     discard = Column(Boolean)
 
     flagged_obs = relationship(
-        "Obs", secondary=ObsRawPCICFlags, back_populates="pcic_flags"
+        "Obs",
+        secondary=ObsRawPCICFlags,
+        back_populates="pcic_flags",
+        cascade_backrefs=False,
     )
 
 
@@ -549,8 +591,12 @@ class DerivedValue(Base):
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
 
     # Relationships
-    history = relationship("History", back_populates="derived_values")
-    variable = relationship("Variable", back_populates="derived_values")
+    history = relationship(
+        "History", back_populates="derived_values", cascade_backrefs=False
+    )
+    variable = relationship(
+        "Variable", back_populates="derived_values", cascade_backrefs=False
+    )
 
     # Constraints
     __table_args__ = (

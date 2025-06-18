@@ -9,6 +9,7 @@ their pre-existence on upgrade, and their non-existence on downgrade. The
 former is expected in some databases. It's hard to imagine why the latter
 would be true, but it's easy enough to provide for.
 """
+
 import logging
 from alembic import op
 from pycds import get_schema_name
@@ -35,10 +36,11 @@ indexes = (
 
 
 def upgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
+
     for index_name, table_name, columns in indexes:
         existing_index_names = get_schema_item_names(
-            engine, "indexes", table_name=table_name, schema_name=schema_name
+            conn, "indexes", table_name=table_name, schema_name=schema_name
         )
         if index_name not in existing_index_names:
             logger.debug(f"Creating index {index_name}")
@@ -54,10 +56,10 @@ def upgrade():
 
 
 def downgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     for index_name, table_name, _ in indexes:
         existing_index_names = get_schema_item_names(
-            engine, "indexes", table_name=table_name, schema_name=schema_name
+            conn, "indexes", table_name=table_name, schema_name=schema_name
         )
         if index_name in existing_index_names:
             logger.debug(f"Dropping index {index_name}")

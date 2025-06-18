@@ -7,6 +7,7 @@ The definition pattern is:
 - Define a subclass of `DDLElement` that represents the command.
 - Define a compilation (implementation) of the command.
 """
+
 from ..ddl_extensions.function import CreateFunction, DropFunction
 from ..ddl_extensions.grant import GrantTablePrivileges
 from ..ddl_extensions.materialized_view import (

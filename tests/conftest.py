@@ -1,16 +1,33 @@
-import logging, logging.config
+import logging
 import sys
-
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.schema import CreateSchema
+import logging
 
 from pytest import fixture
-import testing.postgresql
 
-import pycds
-import pycds.alembic.info
-from pycds.context import get_standard_table_privileges
+# import fixtures from subdirectories
+from .db_helpers.pytest_alembic import (
+    alembic_config,
+    alembic_config_s,
+    alembic_engine,
+    alembic_engine_s,
+    alembic_runner_s,
+)
+from .db_helpers.data_dbs import (
+    db_with_large_data,
+    db_with_large_data_s,
+    sesh_with_large_data_rw,
+    sesh_with_large_data,
+)
+from .db_helpers.alembic_verify import alembic_root, uri_left, uri_right
+from .db_helpers.db import (
+    base_database_uri,
+    base_engine,
+    pycds_engine,
+    pycds_sesh,
+    schema_name,
+    schema_func,
+    target_revision,
+)
 
 
 def pytest_runtest_setup():
@@ -19,101 +36,3 @@ def pytest_runtest_setup():
     logging.getLogger("alembic").setLevel(logging.DEBUG)
     # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     # logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
-
-
-@fixture(scope="session")
-def schema_name():
-    return pycds.get_schema_name()
-
-
-@fixture(scope="session")
-def schema_func(schema_name):
-    return getattr(func, schema_name)
-
-
-@fixture(scope="session")
-def set_search_path():
-    def f(executor):
-        executor.execute(f"SET search_path TO public")
-
-    return f
-
-
-# TODO: Remove altogether after transfer of matviews to migration
-@fixture(scope="session")
-def add_functions():
-    def f(executor):
-        # executor.execute(daysinmonth())
-        # executor.execute(effective_day())
-        pass
-
-    return f
-
-
-def set_up_db_cluster(db_uri, user="testuser"):
-    """Perform once-per-cluster database setup operations."""
-    # TODO: See if more things, e.g., extensions, languages can be done here.
-    engine = create_engine(db_uri)
-
-    for role, _ in get_standard_table_privileges():
-        engine.execute(f"CREATE ROLE {role}")
-    engine.execute(f"CREATE ROLE {pycds.get_su_role_name()} WITH SUPERUSER NOINHERIT;")
-    engine.execute(f"CREATE USER {user};")
-
-    engine.dispose()
-
-
-@fixture(scope="session")
-def base_database_uri():
-    """Test-session scoped base database."""
-    with testing.postgresql.Postgresql() as pg:
-        uri = pg.url()
-        set_up_db_cluster(uri)
-        yield uri
-
-
-# TODO: Separate out add_functions
-@fixture(scope="session")
-def base_engine(base_database_uri, schema_name, set_search_path, add_functions):
-    """
-    Test-session scoped base database engine.
-    "Base" engine indicates that it has no ORM content created in it.
-    """
-    engine = create_engine(base_database_uri)
-    engine.execute("CREATE EXTENSION postgis")
-    engine.execute("CREATE EXTENSION plpython3u")
-    engine.execute("CREATE EXTENSION IF NOT EXISTS citext")
-    engine.execute(CreateSchema(schema_name))
-    set_search_path(engine)
-    add_functions(engine)
-    yield engine
-
-
-@fixture(scope="session")
-def pycds_engine(base_engine):
-    """Test-session scoped database engine, with pycds ORM created in it."""
-    pycds.Base.metadata.create_all(bind=base_engine)
-    yield base_engine
-
-
-@fixture(scope="function")
-def pycds_sesh(pycds_engine, set_search_path):
-    """Test-function scoped database session.
-    All session actions are rolled back on teardown.
-    """
-    sesh = sessionmaker(bind=pycds_engine)()
-    set_search_path(sesh)
-    yield sesh
-    sesh.rollback()
-    sesh.close()
-
-
-@fixture(scope="module")
-def target_revision():
-    """
-    Define the target revision for tests. Typically, the target revision is the head
-    revision in the migration sequence, and this is the default set here. This fixture
-    can be overridden for tests not at the head revision (e.g., tests of each individual
-    migration in tests/alembic_migrations). See the overrides there.
-    """
-    return pycds.alembic.info.get_current_head()

@@ -17,7 +17,7 @@ from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine
 
 
-def prepare_schema_from_migrations(uri, config, db_setup=None, revision="head"):
+def prepare_schema_from_migrations(uri, config, revision="head"):
     """Applies migrations to a database.
 
     :param string uri: The URI for the database.
@@ -29,8 +29,6 @@ def prepare_schema_from_migrations(uri, config, db_setup=None, revision="head"):
         ``command.upgrade`` call. Normally it's either "head" or "+1".
     """
     engine = create_engine(uri)
-    if db_setup:
-        db_setup(engine)
     script = ScriptDirectory.from_config(config)
     command.upgrade(config, revision)
     return engine, script

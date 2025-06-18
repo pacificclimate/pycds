@@ -4,13 +4,10 @@ import pytest
 from ..alembicverify_util import prepare_schema_from_migrations
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_warnings(uri_left, alembic_config_left, db_setup):
+def test_warnings(alembic_runner):
     with warnings.catch_warnings(record=True) as ws:
         warnings.simplefilter("always")
-        engine, script = prepare_schema_from_migrations(
-            uri_left, alembic_config_left, db_setup=db_setup
-        )
+        alembic_runner.migrate_up_to("head")
         # When warnings are present and being addressed, these print statements
         # are useful.
         # print(f"{len(ws)} warnings:")

@@ -1,5 +1,8 @@
 import re
 
+from alembic import op
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import sessionmaker
 
@@ -16,10 +19,12 @@ def check_migration_version(
     correct version number.
     """
     current = executor.execute(
-        f"""
+        text(
+            f"""
         SELECT version_num 
         FROM {schema_name}.alembic_version
     """
+        )
     ).scalar()
     if current != version:
         raise ValueError(
@@ -42,9 +47,10 @@ def get_postgresql_version(engine):
     if engine.dialect.name.lower() != "postgresql":
         raise ValueError(f"We are not running on PostgreSQL.")
 
-    version = engine.execute("SELECT version()").first()[0]
-    match = re.match(r"PostgreSQL (\d+)\.(\d+)", version)
-    return tuple(map(int, match.groups()))
+    with engine.begin() as conn:
+        version = conn.execute(text("SELECT version()")).first()[0]
+        match = re.match(r"PostgreSQL (\d+)\.(\d+)", version)
+        return tuple(map(int, match.groups()))
 
 
 def db_supports_statement(engine, statement):
@@ -59,15 +65,17 @@ def db_supports_statement(engine, statement):
     operation transaction was rolled back, not just the one supposedly enclosing
     this test execution.
     """
+
     Session = sessionmaker(bind=engine)
     session = Session()
+    savepoint = session.begin_nested()
     try:
-        session.execute(statement)
+        session.execute(text(statement))
         return True
     except ProgrammingError:
         return False
     finally:
-        session.rollback()
+        savepoint.rollback()
         session.close()
 
 
@@ -80,7 +88,7 @@ def db_supports_matviews(engine):
 # Note: Prefer `Inspector` methods to this function wherever possible.
 # It's easy: e.g., `inspect(engine).get_table_names(schema=...)`
 def get_schema_item_names(
-    executor,
+    executor: Connection,
     item_type,
     table_name=None,
     constraint_type=None,
@@ -88,44 +96,54 @@ def get_schema_item_names(
 ):
     if item_type == "routines":
         r = executor.execute(
-            f"""
+            text(
+                f"""
             SELECT routine_name 
             FROM information_schema.routines 
             WHERE specific_schema = '{schema_name}'
         """
+            )
         )
     elif item_type == "tables":
         r = executor.execute(
-            f"""
+            text(
+                f"""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = '{schema_name}';
         """
+            )
         )
     elif item_type == "views":
         r = executor.execute(
-            f"""
+            text(
+                f"""
             SELECT table_name 
             FROM information_schema.views 
             WHERE table_schema = '{schema_name}';
         """
+            )
         )
     elif item_type == "matviews":
         r = executor.execute(
-            f"""
+            text(
+                f"""
             SELECT matviewname 
             FROM pg_matviews
             WHERE schemaname = '{schema_name}';
         """
+            )
         )
     elif item_type == "indexes":
         r = executor.execute(
-            f"""
+            text(
+                f"""
             SELECT indexname 
             FROM pg_indexes
             WHERE schemaname = '{schema_name}'
             AND tablename = '{table_name}';
         """
+            )
         )
     elif item_type == "constraints":
         contype = constraint_type[0]
@@ -140,7 +158,7 @@ def get_schema_item_names(
             AND rel.relname = '{table_name}'
             AND con.contype = '{contype}';
         """
-        r = executor.execute(sql)
+        r = executor.execute(text(sql))
     else:
         raise ValueError("invalid item type")
     return {x[0] for x in r.fetchall()}

@@ -6,7 +6,7 @@ are given different ORM declarative bases.
 """
 
 from sqlalchemy import MetaData, Column, Integer, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import select, text, literal_column
 from sqlalchemy.sql import column
 
@@ -65,7 +65,7 @@ content = [
 
 # Selectables for defining views and matviews
 
-simple_thing_sqla_selectable = select([Thing]).where(Thing.id <= literal_column("3"))
+simple_thing_sqla_selectable = select(Thing).where(Thing.id <= literal_column("3"))
 
 # less delightful but applicable to cases where we use text queries for
 # selectable:

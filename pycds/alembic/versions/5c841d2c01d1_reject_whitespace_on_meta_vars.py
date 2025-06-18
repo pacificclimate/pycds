@@ -5,6 +5,7 @@ Revises: 78260d36e42b
 Create Date: 2024-01-10 00:06:47.471826
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name

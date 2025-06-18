@@ -5,9 +5,10 @@ Revises: 0d99ba90c229
 Create Date: 2022-01-12 13:11:12.480424
 
 """
+
 from alembic import op
 import sqlalchemy as sa
-import citext as ci
+from sqlalchemy.dialects.postgresql import CITEXT
 from pycds.orm.views.version_84b7fc2596d5 import ObsWithFlags
 from pycds import get_schema_name, get_su_role_name
 
@@ -29,7 +30,7 @@ def upgrade():
     op.alter_column(
         "meta_vars",
         "net_var_name",
-        type_=ci.CIText(),
+        type_=CITEXT(),
         schema=schema_name,
     )
     op.create_unique_constraint(

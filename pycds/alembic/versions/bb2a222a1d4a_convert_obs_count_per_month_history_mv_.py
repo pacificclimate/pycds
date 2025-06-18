@@ -5,6 +5,7 @@ Revises: 22819129a609
 Create Date: 2023-08-24 12:48:18.851655
 
 """
+
 import logging
 from alembic import op
 import sqlalchemy as sa
@@ -36,9 +37,9 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    engine = op.get_bind().engine
+    conn = op.get_bind()
     if matview_exists(
-        engine, ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
+        conn, ObsCountPerMonthHistoryMatview.__tablename__, schema=schema_name
     ):
         logger.info(
             f"A native materialized view '{ObsCountPerMonthHistoryMatview.__tablename__}' "

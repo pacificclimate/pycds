@@ -5,6 +5,7 @@ Revises: 879f0efa125f
 Create Date: 2023-06-28 10:12:38.733792
 
 """
+
 from alembic import op
 from pycds.orm.functions.version_83896ee79b06 import variable_tags
 

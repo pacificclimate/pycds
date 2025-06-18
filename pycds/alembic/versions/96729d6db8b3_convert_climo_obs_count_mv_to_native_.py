@@ -5,6 +5,7 @@ Revises: 5c841d2c01d1
 Create Date: 2023-07-14 15:35:03.045034
 
 """
+
 import logging
 from alembic import op
 import sqlalchemy as sa
@@ -20,6 +21,11 @@ from pycds.database import matview_exists
 from pycds.orm.native_matviews.version_96729d6db8b3 import (
     ClimoObsCount as ClimoObsCountMatview,
 )
+from pycds.orm.views.version_522eed334c85 import (
+    ClimoObsCount as OldClimoObsCountView,
+)
+
+# Import the view that will be replaced by the native matview
 from pycds.orm.views.version_96729d6db8b3 import ClimoObsCount as ClimoObsCountView
 
 # revision identifiers, used by Alembic.
@@ -34,8 +40,8 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    engine = op.get_bind().engine
-    if matview_exists(engine, ClimoObsCountMatview.__tablename__, schema=schema_name):
+    conn = op.get_bind()
+    if matview_exists(conn, ClimoObsCountMatview.__tablename__, schema=schema_name):
         logger.info(
             f"A native materialized view '{ClimoObsCountMatview.__tablename__}' "
             f"already exists in the database; skipping upgrade"
@@ -59,4 +65,4 @@ def downgrade():
         schema=schema_name,
     )
     grant_standard_table_privileges("climo_obs_count_mv", schema=schema_name)
-    create_view(ClimoObsCountView, schema=schema_name)
+    create_view(OldClimoObsCountView, schema=schema_name)

@@ -5,6 +5,7 @@ Revises: 84b7fc2596d5
 Create Date: 2020-02-04 16:53:58.084405
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from pycds import get_schema_name
@@ -15,7 +16,6 @@ from pycds.orm.manual_matviews.version_8fd8f556c548 import (
     MonthlyAverageOfDailyMinTemperature,
     MonthlyTotalPrecipitation,
 )
-import pycds.alembic.extensions.operation_plugins
 
 
 # revision identifiers, used by Alembic.

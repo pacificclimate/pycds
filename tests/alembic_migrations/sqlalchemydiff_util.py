@@ -5,6 +5,7 @@ the following capabilities:
   in `prepare_schema_from_models`. This tightens up setup code in tests.
 
 """
+
 from sqlalchemy import create_engine
 
 

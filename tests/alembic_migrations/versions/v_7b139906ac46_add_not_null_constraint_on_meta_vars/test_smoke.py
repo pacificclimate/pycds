@@ -6,38 +6,36 @@
 # -*- coding: utf-8 -*-
 import logging
 import pytest
-from alembic import command
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 logger = logging.getLogger("tests")
 
 
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", ("3d50ec832e47",), indirect=True
-)
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """test migration from 3d50ec832e47 to 7b139906ac46."""
+    alembic_runner.migrate_up_before("7b139906ac46")
 
-    # Set up database to version 7b139906ac46
-    engine, script = prepared_schema_from_migrations_left
+    with alembic_engine.begin() as conn:
+        conn.execute(
+            text(f"INSERT INTO {schema_name}.meta_vars(vars_id)" f"VALUES (1)")
+        )
 
-    engine.execute(f"INSERT INTO {schema_name}.meta_vars(vars_id)" f"VALUES (1)")
+    alembic_runner.migrate_up_one()
 
-    command.upgrade(alembic_config_left, "+1")
-
-    # Check that data has been modified to remove nulls
-    result = engine.execute(
-        f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
-    )
+    with alembic_engine.begin() as conn:
+        # Check that data has been modified to remove nulls
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
+            )
+        )
 
     row = next(result)
     assert row == (1, "foo: bar", "foo_bar", "foo bar")
 
     # Check that not null constraints have been added
-    table = inspect(engine).get_columns("meta_vars", schema=schema_name)
+    table = inspect(alembic_engine).get_columns("meta_vars", schema=schema_name)
 
     for col in table:
         if (
@@ -48,34 +46,37 @@ def test_upgrade(
             assert col["nullable"] == False
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from 7b139906ac46 to 3d50ec832e47."""
-
+    alembic_runner.migrate_up_to("7b139906ac46")
     # Set up database to version 7b139906ac46
-    engine, script = prepared_schema_from_migrations_left
 
-    engine.execute(
-        f"INSERT INTO {schema_name}.meta_vars(vars_id, cell_method, standard_name, display_name)"
-        f"VALUES (10000, 'foo: bar', 'foo_bar', 'foo bar')"
-    )
+    with alembic_engine.begin() as conn:
+        conn.execute(
+            text(
+                f"INSERT INTO {schema_name}.meta_vars(vars_id, cell_method, standard_name, display_name)"
+                f"VALUES (10000, 'foo: bar', 'foo_bar', 'foo bar')"
+            )
+        )
 
     # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
     # Check that data has been modified to insert nulls back in
 
-    result = engine.execute(
-        f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
-    )
+    with alembic_engine.begin() as conn:
+        result = conn.execute(
+            text(
+                f"SELECT vars_id, cell_method, standard_name, display_name FROM {schema_name}.meta_vars"
+            )
+        )
 
     row = next(result)
     assert row == (10000, None, None, None)
 
     # Check that not null constraints have been removed
-    table = inspect(engine).get_columns("meta_vars", schema=schema_name)
+    table = inspect(alembic_engine).get_columns("meta_vars", schema=schema_name)
 
     for col in table:
         if (

@@ -1,5 +1,4 @@
-"""Tools for loading climate baseline data into database from flat files.
-"""
+"""Tools for loading climate baseline data into database from flat files."""
 
 import logging
 import struct

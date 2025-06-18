@@ -11,6 +11,7 @@ an object from one revision to be replaced by its version from another revision.
 Access to different versions of an object is provided by method
 `_get_object_from_version`.
 """
+
 from alembic.operations import MigrateOperation
 
 

@@ -1,5 +1,6 @@
 from pytest import fixture
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker, Session
 from tests.helpers import add_then_delete_objs
 from tests.helpers import create_then_drop_views
 from .content import (
@@ -17,7 +18,7 @@ from .content import (
 )
 
 
-@fixture(scope="session")
+@fixture
 def tst_orm_engine(base_engine):
     """Database engine with test content created in it."""
     ContentBase.metadata.create_all(bind=base_engine)
@@ -25,12 +26,14 @@ def tst_orm_engine(base_engine):
 
 
 @fixture
-def tst_orm_sesh(tst_orm_engine, set_search_path):
-    sesh = sessionmaker(bind=tst_orm_engine)()
-    set_search_path(sesh)
-    yield sesh
-    sesh.rollback()
-    sesh.close()
+def tst_orm_sesh(tst_orm_engine):
+    with Session(tst_orm_engine) as session:
+        # Set the search path to public schema for the session
+        # This is necessary to ensure that views and matviews are created in the correct schema
+        session.execute(text(f"SET search_path TO public"))
+        yield session
+        session.rollback()
+        session.close()
 
 
 @fixture

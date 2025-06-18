@@ -5,6 +5,7 @@ A plugin has 2 parts:
 - an operation that is registered with Alembic; a subclass of MigrateOperation
 - an implementation of the operation; a method that executes a SQL command
 """
+
 import logging
 from sqlalchemy.schema import CreateIndex
 from alembic import util

@@ -13,30 +13,30 @@ from pycds.database import get_schema_item_names
 logger = logging.getLogger("tests")
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to version efde19ea4f52."""
 
-    # Set up database to version 4a2f1879293a
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database to version efde19ea4f52
+    alembic_runner.migrate_up_to("efde19ea4f52")
 
-    # Check that function is there (new version)
-    names = get_schema_item_names(engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that function is there (new version)
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert "getstationvariabletable" in names
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
-    """Test the schema migration from 4a2f1879293a to 522eed334c85."""
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
+    """Test the schema migration from efde19ea4f52 to 6cb393f711c3."""
 
-    # Set up database to version efde19ea4f52
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database to version 4a2f1879293a
+    alembic_runner.migrate_up_to("efde19ea4f52")
 
     # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
-    # Check that function is still there (old version)
-    names = get_schema_item_names(engine, "routines", schema_name=schema_name)
+    with alembic_engine.begin() as conn:
+        # Check that function is still there (old version)
+        names = get_schema_item_names(conn, "routines", schema_name=schema_name)
     assert "getstationvariabletable" in names

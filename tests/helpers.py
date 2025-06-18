@@ -1,8 +1,10 @@
 """Helpers for tests."""
 
-from pkg_resources import resource_filename
+from importlib.resources import files
 from collections import namedtuple
 from datetime import datetime
+
+from sqlalchemy import text
 
 from pycds import get_schema_name, Contact, Network, Station, History, Variable
 
@@ -83,9 +85,11 @@ def create_then_drop_views(sesh, views):
     """
     for view in views:
         sesh.execute(view.create())
+        sesh.flush()
     yield sesh
     for view in reversed(views):
         sesh.execute(view.drop())
+        sesh.flush()
 
 
 # Data insertion helpers
@@ -95,10 +99,10 @@ def with_schema_name(sesh, schema_name, action):
     """Execute an action with the search path set to a specified schema name.
     Restore existing search path after action.
     """
-    old_search_path = sesh.execute("SHOW search_path").scalar()
-    sesh.execute(f"SET search_path TO {schema_name}, public")
+    old_search_path = sesh.execute(text("SHOW search_path")).scalar()
+    sesh.execute(text(f"SET search_path TO {schema_name}, public"))
     action(sesh)
-    sesh.execute(f"SET search_path TO {old_search_path}")
+    sesh.execute(text(f"SET search_path TO {old_search_path}"))
 
 
 # Shorthand for defining various database objects
@@ -285,9 +289,8 @@ def insert_crmp_data(sesh, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
 
     def action(sesh):
-        fname = resource_filename("pycds", "data/crmp_subset_data.sql")
-        with open(fname, "r") as f:
+        with files("pycds").joinpath("data/crmp_subset_data.sql").open("r") as f:
             data = f.read()
-        sesh.execute(data)
+        sesh.execute(text(data))
 
     with_schema_name(sesh, schema_name, action)

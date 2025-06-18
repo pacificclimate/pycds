@@ -12,6 +12,7 @@ from sqlalchemy import (
     inspect,
 )
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.sql.operators import isnot_distinct_from
@@ -31,9 +32,9 @@ def check_column(table, col_name, col_type=None, present=True):
         assert col_name not in table.columns
 
 
-def check_triggers(table, expected, present=True):
+def check_triggers(connection, table, expected, present=True):
     """Check that expected triggers are present on a table."""
-    triggers = table.bind.execute(
+    triggers = connection.execute(
         text(
             f"""
 select trigger_name, array_agg(event_manipulation order by event_manipulation asc)
@@ -54,7 +55,7 @@ group by trigger_name
 
 
 def check_history_tracking_upgrade(
-    engine,
+    connection: Connection,
     table_name: str,
     pri_key_name: str,
     foreign_tables: list[tuple[str, str]],
@@ -67,20 +68,20 @@ def check_history_tracking_upgrade(
 ):
     """Check that the results of a history tracking upgrade are as expected"""
 
-    names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
-    metadata = MetaData(schema=schema_name, bind=engine)
+    names = set(get_schema_item_names(connection, "tables", schema_name=schema_name))
+    metadata = MetaData(schema=schema_name)
 
     # Main table: columns added
     main_name = main_table_name(table_name, schema=None)
     assert main_name in names
-    main_table = Table(main_name, metadata, autoload_with=engine)
+    main_table = Table(main_name, metadata, autoload_with=connection)
     for col_name, col_type in pri_columns_added:
         check_column(main_table, col_name, col_type)
 
     # History table columns: primary plus additional columns
     hx_name = hx_table_name(table_name, schema=None)
     assert hx_name in names
-    hx_table = Table(hx_name, metadata, autoload_with=engine)
+    hx_table = Table(hx_name, metadata, autoload_with=connection)
     for col in main_table.columns:
         check_column(hx_table, col.name, col.type.__class__)
     check_column(hx_table, "deleted", BOOLEAN)
@@ -103,6 +104,7 @@ def check_history_tracking_upgrade(
 
     # Triggers
     check_triggers(
+        connection,
         main_table,
         [
             (
@@ -117,6 +119,7 @@ def check_history_tracking_upgrade(
     )
 
     check_triggers(
+        connection,
         hx_table,
         [
             (
@@ -132,7 +135,7 @@ def table_count(sesh, table):
 
 
 def check_history_tracking_downgrade(
-    engine,
+    connection: Connection,
     table_name: str,
     schema_name: str,
     pri_columns_dropped: tuple[str] = ("mod_time", "mod_user"),
@@ -140,13 +143,13 @@ def check_history_tracking_downgrade(
 ):
     """Check that the results of a history tracking downgrade are as expected"""
 
-    names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
-    metadata = MetaData(schema=schema_name, bind=engine)
+    names = set(get_schema_item_names(connection, "tables", schema_name=schema_name))
+    metadata = MetaData(schema=schema_name)
 
     # Primary table: columns dropped
     main_name = main_table_name(table_name, schema=None)
     assert main_name in names
-    pri_table = Table(main_name, metadata, autoload_with=engine)
+    pri_table = Table(main_name, metadata, autoload_with=connection)
     for column in pri_columns_dropped:
         check_column(pri_table, column, present=False)
 
@@ -156,6 +159,7 @@ def check_history_tracking_downgrade(
 
     # Triggers (primary): dropped
     check_triggers(
+        connection,
         pri_table,
         [
             (
@@ -227,12 +231,12 @@ def check_history_table_initial_contents(
                 ).label("pids")
             )
             .select_from(history)
-            .subquery()
+            .scalar()
         )
 
     t1 = hx_table_pids(primary_id)
     t2 = hx_table_pids(hx_id_name(primary.__tablename__))
-    result = sesh.query(t1.c.pids == t2.c.pids).scalar()
+    result = t1 == t2
     assert result
 
     # Foreign keys: Check that foreign keys are non-null (value correctness is

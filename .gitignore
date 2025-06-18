@@ -6,3 +6,4 @@ venv
 # ignore ide specific folders
 .idea
 .vscode
+.pgpass

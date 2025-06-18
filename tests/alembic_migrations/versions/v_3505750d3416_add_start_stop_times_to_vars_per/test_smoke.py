@@ -18,32 +18,32 @@ from .. import check_matviews
 matview_defns = {"vars_per_history_mv": {"indexes": {"var_hist_idx"}}}
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to version 3505750d3416."""
 
     # Set up database to version 3505750d3416
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("3505750d3416")
 
-    # this check only confirms that the matview and its index exist;
-    # it's hard to directly check the columns via sqlalchemy.
-    # Behavioural tests address this elsewhere.
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.begin() as conn:
+        # this check only confirms that the matview and its index exist;
+        # it's hard to directly check the columns via sqlalchemy.
+        # Behavioural tests address this elsewhere.
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)
 
 
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
-    """Test the schema migration from 3505750d3416 to efde19ea4f52."""
+@pytest.mark.update20
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
+    """Test the schema migration from 3505750d3416 down one"""
 
     # Set up database to version efde19ea4f52
-    engine, script = prepared_schema_from_migrations_left
+    alembic_runner.migrate_up_to("3505750d3416")
 
     # Run downgrade migration
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
-    # this check only confirms that the matview and its index exist;
-    # it's hard to directly check the columns via sqlalchemy.
-    # Behavioural tests address this elsewhere.
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.begin() as conn:
+        # this check only confirms that the matview and its index exist;
+        # it's hard to directly check the columns via sqlalchemy.
+        # Behavioural tests address this elsewhere.
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)

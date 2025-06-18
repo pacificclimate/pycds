@@ -18,34 +18,27 @@ logger = logging.getLogger("tests")
 matview_defns = {"collapsed_vars_mv": {"indexes": {"collapsed_vars_idx"}}}
 
 
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", [True, False], indirect=True
-)
-@pytest.mark.usefixtures("new_db_left")
-def test_upgrade(prepared_schema_from_migrations_left, schema_name):
+@pytest.mark.update20
+def test_upgrade(alembic_engine, alembic_runner, schema_name):
     """Test the upgrade schema migration."""
 
-    # Set up database at latest revision
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database at 22819129a609 (this migration)
+    alembic_runner.migrate_up_to("22819129a609")
 
-    # Matviews should be present, tables absent.
-    check_matviews(engine, matview_defns, schema_name, matviews_present=True)
+    with alembic_engine.connect() as conn:
+        # Matviews should be present, tables absent.
+        check_matviews(conn, matview_defns, schema_name, matviews_present=True)
 
 
-@pytest.mark.parametrize(
-    "prepared_schema_from_migrations_left", [True, False], indirect=True
-)
-@pytest.mark.usefixtures("new_db_left")
-def test_downgrade(
-    prepared_schema_from_migrations_left, alembic_config_left, schema_name
-):
-    """Test the schema migration from 7a3b247c577b to 84b7fc2596d5."""
+def test_downgrade(alembic_engine, alembic_runner, schema_name):
+    """Test the schema down migration from 22819129a609 to bf366199f463."""
 
-    # Set up database at latest revision
-    engine, script = prepared_schema_from_migrations_left
+    # Set up database at this migration ready for downgrade
+    alembic_runner.migrate_up_to("22819129a609")
 
     # Run downgrade migration to prev revision
-    command.downgrade(alembic_config_left, "-1")
+    alembic_runner.migrate_down_one()
 
-    # Matviews should absent after downgrade, tables present
-    check_matviews(engine, matview_defns, schema_name, matviews_present=False)
+    with alembic_engine.connect() as conn:
+        # Matviews should absent after downgrade, tables present
+        check_matviews(conn, matview_defns, schema_name, matviews_present=False)
