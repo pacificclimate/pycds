@@ -1,5 +1,16 @@
 # News / Release Notes
 
+## 5.0.0
+
+*Release Date: 2025-Jun-18*
+
+[This release updates base software](https://github.com/pacificclimate/pycds/pull/240)
+
+- Update supported python versions to 3.9-3.13
+- Update SQLAlchemy to >2.0
+- Migrate pyproject.toml to PEP518 compliance
+
+
 ## 4.5.1
 
 *Release Date: 2024-Jul-31*
