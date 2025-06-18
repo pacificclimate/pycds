@@ -6,16 +6,16 @@ from pycds.orm.native_matviews import StationObservationStats
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data_rw):
     """Test that StationObservationStats definition is correct."""
 
-    q = sesh_with_large_data.query(StationObservationStats)
+    q = sesh_with_large_data_rw.query(StationObservationStats)
 
     # No content before matview is refreshed
     assert q.count() == 0
 
     # Refresh
-    sesh_with_large_data.execute(StationObservationStats.refresh())
+    sesh_with_large_data_rw.execute(StationObservationStats.refresh())
 
     # Et voila
     assert q.count() > 0

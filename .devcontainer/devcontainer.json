@@ -8,7 +8,7 @@
 		// Update 'VARIANT' to pick a Python version: 3, 3.10, 3.9, 3.8, 3.7, 3.6
 		// Append -bullseye or -buster to pin to an OS version.
 		// Use -bullseye variants on local on arm64/Apple Silicon.
-		"VARIANT": "ubuntu-22.04"
+		"VARIANT": "ubuntu-24.04"
 	  }
 	},
   
@@ -47,10 +47,10 @@
 	  "ghcr.io/devcontainers/features/git:1": "latest",
 	  // add python to container
 	  "ghcr.io/devcontainers/features/python:1": {
-		"version": "3.11"
+		"version": "3.13"
 	  },
 	  // add poetry to container
-	  "ghcr.io/devcontainers-contrib/features/poetry:2": {
+	  "ghcr.io/devcontainers-extra/features/poetry:2": {
 		"version": "2.1.3"
 	  }
 	},
