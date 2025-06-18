@@ -5,10 +5,10 @@ from pytest import fixture
 from sqlalchemy import create_engine, text, func
 from tests.db_helpers.postgres_factory import Pycds_postgres, Base_postgres
 
+
 def set_search_path(engine):
     with engine.begin() as conn:
         conn.execute(text(f"SET search_path TO public"))
-
 
 
 @fixture(scope="session")
@@ -19,7 +19,6 @@ def schema_name():
 @fixture
 def schema_func(schema_name):
     return getattr(func, schema_name)
-
 
 
 @fixture(scope="function")
@@ -41,7 +40,6 @@ def pycds_sesh(pycds_engine):
     sesh.close()
 
 
-
 @fixture(scope="session")
 def base_database_uri():
     """Test-session scoped base database."""
@@ -60,6 +58,7 @@ def base_engine(base_database_uri, schema_name):
     engine = create_engine(base_database_uri)
     set_search_path(engine)
     yield engine
+
 
 @fixture(scope="session")
 def target_revision():

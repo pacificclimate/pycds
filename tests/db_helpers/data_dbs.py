@@ -20,8 +20,11 @@ def db_with_large_data(alembic_engine, alembic_runner, target_revision, schema_n
 
     return alembic_engine
 
+
 @fixture(scope="session")
-def db_with_large_data_s(alembic_engine_s, alembic_runner_s, target_revision, schema_name):
+def db_with_large_data_s(
+    alembic_engine_s, alembic_runner_s, target_revision, schema_name
+):
     """Sets up a datatabase with a large data set for testing."""
     alembic_runner_s.migrate_up_to(target_revision if target_revision else "head")
     with alembic_engine_s.begin() as conn:
@@ -33,6 +36,7 @@ def db_with_large_data_s(alembic_engine_s, alembic_runner_s, target_revision, sc
         logger.setLevel(save_level)
 
     return alembic_engine_s
+
 
 @fixture
 def sesh_with_large_data_rw(db_with_large_data):
@@ -54,6 +58,7 @@ def set_read_only(sesh):
     sesh.execute(text("SET TRANSACTION READ ONLY"))
     sesh.execute(text("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY"))
 
+
 @fixture(scope="session")
 def sesh_with_large_data(db_with_large_data_s):
     """Extends the db_with_large_data_s fixture to provide a session
@@ -65,5 +70,3 @@ def sesh_with_large_data(db_with_large_data_s):
     yield sesh
     sesh.rollback()
     sesh.close()
-
-    

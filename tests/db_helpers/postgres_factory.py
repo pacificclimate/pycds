@@ -7,6 +7,7 @@ from sqlalchemy.schema import CreateSchema
 from sqlalchemy import create_engine
 from pycds.context import get_standard_table_privileges
 
+
 def init_db(postgresql):
     """
     Because alembic was applied to a pre-existing database, we need to fill in a few gaps that aren't currently covered
@@ -17,7 +18,8 @@ def init_db(postgresql):
     """
     engine = create_engine(postgresql.url())
     db_setup(engine)
-    
+
+
 def db_setup(engine):
     schema_name = pycds.get_schema_name()
     test_user = "testuser"
@@ -82,6 +84,7 @@ def db_setup(engine):
         #   --> "testuser"
         # print(f'### final user {result}')
 
+
 def short_init_db(postgresql):
     """
     Initialize the database with a minimal setup for tests that do not require pre-initialization.
@@ -94,7 +97,12 @@ def short_init_db(postgresql):
         conn.execute(CreateSchema(pycds.get_schema_name()))
         # No roles or privileges are set up in this minimal initialization.
 
+
 # Two factories, one for our use of the database in strict pycds tests which we pre-init
-# The other is an empty database for use in tests that do not require any pre-initialization. 
-Pycds_postgres = testing.postgresql.PostgresqlFactory(cache_initialized_db=True, on_initialized=init_db)
-Base_postgres = testing.postgresql.PostgresqlFactory(cache_initialized_db=True, on_initialized=short_init_db)
+# The other is an empty database for use in tests that do not require any pre-initialization.
+Pycds_postgres = testing.postgresql.PostgresqlFactory(
+    cache_initialized_db=True, on_initialized=init_db
+)
+Base_postgres = testing.postgresql.PostgresqlFactory(
+    cache_initialized_db=True, on_initialized=short_init_db
+)

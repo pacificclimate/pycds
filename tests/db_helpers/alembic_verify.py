@@ -9,6 +9,7 @@ from sqlalchemydiff.util import (
 # Fixtures required by
 # [`alembic-verify`](https://alembic-verify.readthedocs.io/en/latest/)
 
+
 @pytest.fixture
 def alembic_root():
     return os.path.normpath(

@@ -1,5 +1,3 @@
-
-
 from contextlib import contextmanager
 import alembic.config
 from pytest_alembic.config import Config
@@ -9,6 +7,7 @@ import pytest_alembic
 from sqlalchemy import create_engine
 from .postgres_factory import Pycds_postgres
 
+
 def alembic_config_impl():
     """
     In a test config, none of the existing environments are appropriate, we want to
@@ -17,6 +16,7 @@ def alembic_config_impl():
     alembic_config = alembic.config.Config()
     alembic_config.set_main_option("script_location", "pycds/alembic")
     return alembic_config
+
 
 def alembic_engine_impl():
     """
@@ -34,18 +34,22 @@ def alembic_engine_impl():
 def alembic_config():
     return alembic_config_impl()
 
+
 @fixture(scope="session")
 def alembic_config_s():
     return alembic_config_impl()
+
 
 @fixture
 def alembic_engine():
     yield from alembic_engine_impl()
 
+
 @fixture(scope="session")
 def alembic_engine_s():
     yield from alembic_engine_impl()
-    
+
+
 @fixture(scope="session")
 def alembic_runner_s(alembic_config_s, alembic_engine_s):
     """
