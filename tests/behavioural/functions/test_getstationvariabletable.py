@@ -42,10 +42,10 @@ def test_query_string(sesh_with_large_data):
     [4137, 1213, 2313, 1313, 5136, 5634],
 )
 @pytest.mark.parametrize("climo", [False, True])
-def test_run_query(station_id, climo, sesh_with_large_data, print_details=False):
+def test_run_query(station_id, climo, sesh_with_large_data_rw, print_details=False):
     """Test the results of getstationvariabletable against direct queries for the
     table values. Arg `print_details` is for debugging and general curiosity."""
-    sesh = sesh_with_large_data
+    sesh = sesh_with_large_data_rw
 
     sesh.execute(text(f"SET search_path TO {get_schema_name()}, public"))
 

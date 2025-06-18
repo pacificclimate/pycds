@@ -8,9 +8,9 @@ from pycds.orm.views import CrmpNetworkGeoserver
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_basic_content(sesh_with_large_data):
-    sesh_with_large_data.execute(StationObservationStats.refresh())
-    q = sesh_with_large_data.query(CrmpNetworkGeoserver.network_name)
+def test_basic_content(sesh_with_large_data_rw):
+    sesh_with_large_data_rw.execute(StationObservationStats.refresh())
+    q = sesh_with_large_data_rw.query(CrmpNetworkGeoserver.network_name)
     rv = q.all()
 
     # Test that the number of rows is not zero
@@ -38,22 +38,22 @@ def test_basic_content(sesh_with_large_data):
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_collapsed_vars_content(sesh_with_large_data):
+def test_collapsed_vars_content(sesh_with_large_data_rw):
     """Test that data from CollapsedVariables is present in CrmpNetworkGeoserver"""
 
     # Refresh contributing matviews
-    sesh_with_large_data.execute(VarsPerHistory.refresh())
-    sesh_with_large_data.execute(CollapsedVariables.refresh())
-    sesh_with_large_data.execute(StationObservationStats.refresh())
+    sesh_with_large_data_rw.execute(VarsPerHistory.refresh())
+    sesh_with_large_data_rw.execute(CollapsedVariables.refresh())
+    sesh_with_large_data_rw.execute(StationObservationStats.refresh())
 
-    num_cng_rows = sesh_with_large_data.query(CrmpNetworkGeoserver).count()
+    num_cng_rows = sesh_with_large_data_rw.query(CrmpNetworkGeoserver).count()
     assert num_cng_rows > 0
-    num_cv_rows = sesh_with_large_data.query(CollapsedVariables).count()
+    num_cv_rows = sesh_with_large_data_rw.query(CollapsedVariables).count()
     assert num_cv_rows > 0
     assert num_cng_rows == num_cng_rows
 
     q = (
-        sesh_with_large_data.query(CrmpNetworkGeoserver, CollapsedVariables)
+        sesh_with_large_data_rw.query(CrmpNetworkGeoserver, CollapsedVariables)
         .select_from(CrmpNetworkGeoserver)
         .join(
             CollapsedVariables,

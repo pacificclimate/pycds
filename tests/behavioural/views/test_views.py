@@ -6,11 +6,11 @@ from pycds.orm.views import HistoryStationNetwork, ObsCountPerDayHistory, ObsWit
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_history_station_network(sesh_with_large_data):
-    hsn_q = sesh_with_large_data.query(HistoryStationNetwork).order_by(
+def test_history_station_network(sesh_with_large_data_rw):
+    hsn_q = sesh_with_large_data_rw.query(HistoryStationNetwork).order_by(
         HistoryStationNetwork.history_id
     )
-    hx_q = sesh_with_large_data.query(History).order_by(History.id)
+    hx_q = sesh_with_large_data_rw.query(History).order_by(History.id)
 
     assert hsn_q.count() == hx_q.count()
 
@@ -21,9 +21,9 @@ def test_history_station_network(sesh_with_large_data):
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_obs_count_per_day_history(sesh_with_large_data):
+def test_obs_count_per_day_history(sesh_with_large_data_rw):
     ocdh_count_over_hx_q = (
-        sesh_with_large_data.query(
+        sesh_with_large_data_rw.query(
             ObsCountPerDayHistory.history_id.label("history_id"),
             func.sum(ObsCountPerDayHistory.count).label("count"),
         )
@@ -33,7 +33,7 @@ def test_obs_count_per_day_history(sesh_with_large_data):
     )
 
     obs_count_over_hx_q = (
-        sesh_with_large_data.query(
+        sesh_with_large_data_rw.query(
             Obs.history_id.label("history_id"),
             func.count(Obs.id).label("count"),
         )
@@ -52,11 +52,11 @@ def test_obs_count_per_day_history(sesh_with_large_data):
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_obs_with_flags(sesh_with_large_data):
-    obs_with_flags_q = sesh_with_large_data.query(ObsWithFlags).order_by(
+def test_obs_with_flags(sesh_with_large_data_rw):
+    obs_with_flags_q = sesh_with_large_data_rw.query(ObsWithFlags).order_by(
         ObsWithFlags.obs_raw_id
     )
-    obs_q = sesh_with_large_data.query(Obs).order_by(Obs.id)
+    obs_q = sesh_with_large_data_rw.query(Obs).order_by(Obs.id)
 
     assert obs_with_flags_q.count() == obs_q.count()
 

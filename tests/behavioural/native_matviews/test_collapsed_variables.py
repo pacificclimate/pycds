@@ -7,17 +7,17 @@ from pycds.util import variable_tags
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data_rw):
     """Test that CollapsedVariables definition is correct."""
 
-    q = sesh_with_large_data.query(CollapsedVariables)
+    q = sesh_with_large_data_rw.query(CollapsedVariables)
 
     # No content before matview is refreshed
     assert q.count() == 0
 
     # Refresh contributing matview and this one
-    sesh_with_large_data.execute(VarsPerHistory.refresh())
-    sesh_with_large_data.execute(CollapsedVariables.refresh())
+    sesh_with_large_data_rw.execute(VarsPerHistory.refresh())
+    sesh_with_large_data_rw.execute(CollapsedVariables.refresh())
 
     # Et voila
     assert q.count() > 0
@@ -30,7 +30,7 @@ def test_matview_content(sesh_with_large_data):
         # We'll compare the content of the matview to the results of a query for the
         # relevant Variables without using VarsPerHistory as an intermediary.
         relevant_variables = (
-            sesh_with_large_data.query(
+            sesh_with_large_data_rw.query(
                 Variable, variable_tags(Variable).label("var_tags")
             )
             .join(Obs, Obs.vars_id == Variable.id)

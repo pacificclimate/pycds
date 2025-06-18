@@ -6,15 +6,15 @@ from pycds.orm.native_matviews import VarsPerHistory
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data_rw):
     """Test that VarsPerHistory definition is correct."""
 
     # No content before matview is refreshed
-    q = sesh_with_large_data.query(VarsPerHistory)
+    q = sesh_with_large_data_rw.query(VarsPerHistory)
     assert q.count() == 0
 
     # Refresh
-    sesh_with_large_data.execute(VarsPerHistory.refresh())
+    sesh_with_large_data_rw.execute(VarsPerHistory.refresh())
 
     # Et voila
     assert q.count() > 0
@@ -40,11 +40,11 @@ def test_matview_content(sesh_with_large_data):
 
 # test start and stop times on newest revision
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_dates(sesh_with_large_data):
-    q = sesh_with_large_data.query(VarsPerHistory)
+def test_matview_dates(sesh_with_large_data_rw):
+    q = sesh_with_large_data_rw.query(VarsPerHistory)
     assert q.count() == 0
 
-    sesh_with_large_data.execute(VarsPerHistory.refresh())
+    sesh_with_large_data_rw.execute(VarsPerHistory.refresh())
     assert q.count() > 0
 
     expected_timestamps = {

@@ -4,15 +4,15 @@ from pycds.orm.native_matviews import ClimoObsCount
 
 
 @pytest.mark.usefixtures("new_db_left")
-def test_matview_content(sesh_with_large_data):
+def test_matview_content(sesh_with_large_data_rw):
     """Test that ClimoObsCount definition is correct."""
 
     # No content before matview is refreshed
-    q = sesh_with_large_data.query(ClimoObsCount)
+    q = sesh_with_large_data_rw.query(ClimoObsCount)
     assert q.count() == 0
 
     # Refresh
-    sesh_with_large_data.execute(ClimoObsCount.refresh())
+    sesh_with_large_data_rw.execute(ClimoObsCount.refresh())
 
     # Et voila
     assert q.count() > 0

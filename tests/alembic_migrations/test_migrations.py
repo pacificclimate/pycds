@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from sqlalchemydiff import compare
 
-from tests.conftest import db_setup
+from tests.db_helpers.postgres_factory import db_setup
 
 from .sqlalchemydiff_util import prepare_schema_from_models
 
@@ -68,7 +68,7 @@ def test_model_and_migration_schemas_are_the_same(
     one we get out of the models.
     """
     alembic_runner.migrate_up_to("head")
-    prepare_schema_from_models(uri_right, Base, schema_name, db_setup=db_setup)
+    prepare_schema_from_models(uri_right, Base, db_setup=db_setup)
 
     result = compare(alembic_engine.url, uri_right)
 
