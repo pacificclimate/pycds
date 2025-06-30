@@ -19,7 +19,8 @@ from pycds.alembic.change_history_utils import (
     drop_history_cols_from_primary,
     create_history_table_triggers,
     create_primary_table_triggers,
-    create_history_table_indexes, hx_table_name,
+    create_history_table_indexes,
+    hx_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
