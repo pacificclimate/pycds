@@ -1,3 +1,5 @@
+from typing import List, Tuple, Union
+
 import sqlalchemy.types
 from sqlalchemy import (
     select,
@@ -15,11 +17,13 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.sql.ddl import DDLElement
 from sqlalchemy.sql.operators import isnot_distinct_from
 from sqlalchemy.types import TIMESTAMP, VARCHAR, BOOLEAN, INTEGER
 
 from pycds.alembic.change_history_utils import hx_id_name
 from pycds.alembic.change_history_utils import main_table_name, hx_table_name
+from pycds.context import get_standard_table_privileges
 from pycds.database import get_schema_item_names
 
 
@@ -89,6 +93,9 @@ def check_history_tracking_upgrade(
     for ft_table_name, ft_key_name in foreign_tables:
         check_column(hx_table, ft_key_name, INTEGER)
         check_column(hx_table, hx_id_name(ft_table_name), INTEGER)
+
+    # History table: privileges
+    check_standard_table_privileges(connection, hx_table, schema_name=schema_name)
 
     # History table indexes. This test does not check index type, but it
     # does check what columns are in each index.
@@ -173,6 +180,55 @@ def check_history_tracking_downgrade(
         ],
         present=False,
     )
+
+
+def canonical_table_privs(privs):
+    """Return canonical privileges for table, which is to say, expand 'ALL'."""
+    all_table_privs = {
+        "TRUNCATE",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "SELECT",
+        "TRIGGER",
+        "REFERENCES",
+    }
+    if "ALL" in privs:
+        return all_table_privs
+    return privs
+
+
+def check_standard_table_privileges(
+    connection: Connection,
+    obj: DDLElement,
+    role_privileges: List[Tuple[str, Tuple[str]]] = get_standard_table_privileges(),
+    schema_name: str = None,
+) -> None:
+    # Convert role_privileges to more usable form
+    req_role_privs = {role: set(privileges) for role, privileges in role_privileges}
+
+    # Query and convert actual privs on table
+    result = connection.execute(
+        text(
+            """
+            SELECT grantee, array_agg(privilege_type) AS privs
+            FROM information_schema.role_table_grants 
+            WHERE table_schema = :table_schema
+                AND table_name = :table_name
+            GROUP BY grantee
+            """
+        ),
+        dict(table_schema=schema_name, table_name=obj.name),
+    ).fetchall()
+    table_role_privs = {
+        row.grantee: set(row.privs[1:-1].split(sep=",")) for row in result
+    }
+
+    # Check that table has required privs.
+    for role, privs in req_role_privs.items():
+        assert role in table_role_privs and table_role_privs[
+            role
+        ] == canonical_table_privs(privs), f"failed on {role}, {privs}"
 
 
 def check_history_table_initial_contents(
