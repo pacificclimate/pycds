@@ -51,6 +51,7 @@ def upgrade():
     # Primary table
     ####
 
+    # Add missing history col
     add_history_cols_to_primary(
         table_name,
         columns=(
@@ -67,7 +68,9 @@ def upgrade():
     # History table
     ####
 
+    # Create history table and give it the required privs
     create_history_table(table_name, foreign_tables)
+    grant_standard_table_privileges(hx_table_name(table_name, schema=schema_name))
     # Populate the history table. History FKs are included in the initial table
     # population. It must be done this way: Doing it after population, in bulk, causes
     # memory overflows (UPDATEs use a lot of memory). Doing it piecemeal, via the
@@ -77,13 +80,13 @@ def upgrade():
     create_history_table_triggers(table_name, foreign_tables)
     # Indexes are better created after table is populated than before.
     create_history_table_indexes(table_name, primary_key_name, foreign_tables)
-    grant_standard_table_privileges(table_name, schema=schema_name)
 
 
 def downgrade():
     drop_history_triggers(table_name)
     drop_history_table(table_name)
     drop_history_cols_from_primary(table_name, columns=("mod_user",))
+    # Restore original mod_time trigger
     op.execute(
         text(
             f"CREATE TRIGGER update_mod_time"

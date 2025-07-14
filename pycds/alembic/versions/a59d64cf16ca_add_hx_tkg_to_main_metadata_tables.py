@@ -20,6 +20,7 @@ from pycds.alembic.change_history_utils import (
     create_history_table_triggers,
     create_primary_table_triggers,
     create_history_table_indexes,
+    hx_table_name,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -54,13 +55,13 @@ def upgrade():
 
         # History table
         create_history_table(table_name, foreign_tables)
+        grant_standard_table_privileges(hx_table_name(table_name, schema=schema_name))
         populate_history_table(table_name, primary_key_name, foreign_tables)
         # History table triggers must be created after the table is populated.
         create_history_table_triggers(table_name, foreign_tables)
         create_history_table_indexes(
             table_name, primary_key_name, foreign_tables, extra_indexes
         )
-        grant_standard_table_privileges(table_name, schema=schema_name)
 
 
 def downgrade():
