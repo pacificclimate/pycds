@@ -1,0 +1,3 @@
+SELECT DISTINCT crmp.meta_station.station_id AS crmp_meta_station_station_id, crmp.meta_station.native_id AS crmp_meta_station_native_id, crmp.meta_station.network_id AS crmp_meta_station_network_id, crmp.meta_station.min_obs_time AS crmp_meta_station_min_obs_time, crmp.meta_station.max_obs_time AS crmp_meta_station_max_obs_time, crmp.meta_station.publish AS crmp_meta_station_publish
+FROM crmp.meta_station JOIN crmp.meta_history ON crmp.meta_history.station_id = crmp.meta_station.station_id JOIN crmp.meta_network ON crmp.meta_station.network_id = crmp.meta_network.network_id
+WHERE crmp.meta_network.publish = true AND crmp.meta_history.province IN ('BC') ORDER BY crmp.meta_station.station_id ASC;

@@ -1,0 +1,4 @@
+SELECT crmp.meta_network.network_id AS crmp_meta_network_network_id, crmp.meta_network.network_name AS crmp_meta_network_network_name, crmp.meta_network.description AS crmp_meta_network_description, crmp.meta_network.col_hex AS crmp_meta_network_col_hex, crmp.meta_network.virtual AS crmp_meta_network_virtual, crmp.meta_network.publish AS crmp_meta_network_publish, crmp.meta_network.contact_id AS crmp_meta_network_contact_id, count(DISTINCT crmp.meta_station.station_id) AS station_count
+FROM crmp.meta_network JOIN crmp.meta_station ON crmp.meta_station.network_id = crmp.meta_network.network_id
+         JOIN crmp.meta_history ON crmp.meta_history.station_id = crmp.meta_station.station_id
+WHERE crmp.meta_network.publish = true AND crmp.meta_history.province IN ('BC') GROUP BY crmp.meta_network.network_id ORDER BY crmp.meta_network.network_name ASC;
