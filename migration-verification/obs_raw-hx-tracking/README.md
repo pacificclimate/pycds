@@ -20,18 +20,26 @@ migration is executed.
 ## Verify `obs_raw_hx` ordering
 
 Table `obs_raw_hx` must be in the same order as `obs_raw`. This script checks that. 
-The result of the query should be `true`.
 
 **After** migration:
 1. Run `history-ordering.sh`
+2. The result of the query should be `true`.
 
 ## Verify equality of `obs_raw` and `obs_raw_hx` contents
 
 Table `obs_raw_hx` must have the same contents as `obs_raw`. This script checks that.
-The result of the query should be `true`.
 
 **After** migration:
 1. Run `history-equality.sh`
+2. The result of the query should be `true`.
+
+## Verify history behaviour
+
+This script checks whether history tracking is actually working.
+
+**After** migration:
+1. Run `history-behaviour.sh`
+2. Query results should all be affirmative.
 
 ## Performance testing
 
