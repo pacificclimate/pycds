@@ -10,12 +10,13 @@ subject of this document. Unless explicitly stated otherwise in this document,
 History tracking is, in broad terms, any way of recording changes to records 
 in a database, in such a way that that history can be examined at a later point. History 
 tracking can serve a variety of purposes. Those purposes depend on the needs of the user 
-base and the database managers, including security auditing and "time travel". Other 
-considerations, such as searchability and memory use may also come into play.
+base and the database managers, and may include security auditing and "time travel". 
+Other considerations, such as searchability and memory use may also come into play.
 Depending on the purpose and other considerations, different implementations are suitable.
 
 In our case, history tracking is part of a slightly larger endeavour labelled "version 
-control", in which updates to records in the database are expected from time to time. 
+control", in which updates to records in the database are expected from time to time, 
+and we need to track such updates. 
 
 The canonical use case is as follows: A researcher downloads data from our database,
 performs an analysis using it, and publishes their conclusions. Time passes,
@@ -189,15 +190,19 @@ Therefore, for the purposes of forming and maintaining a history table from a ma
 we need two pieces of information: the main table name and the main table's primary 
 key name. 
 
-For history tables, we form all (new) names completely consistently. Let `main` 
-be the main table name. Then we form the following history names:
-- History table name: `main_hx`
-- History table PK name: `main_hx_id` (note: the full main table name is used in this 
-  name, not a derivative of the main table PK)
+For history tables, we form all (new) names completely consistently. Let `xxx` 
+be the name of the main table. Then we form the following history names:
+
+- History table name: `xxx_hx`
+- History table PK name: `xxx_hx_id` (note: the full main table name is used in this 
+  name, not a derivative of the main table PK name)
 - Foreign key name in a history table: Must be identical to the name of the PK in the 
   referenced table.
+- Names of history columns: must always be `mod_time`, `mod_user`, `deleted`, and the 
+  PK and FK names noted above.
 
-This is a pretty small matter, but it does simplify things.
+The trigger functions (see below) also need the name of the main table FK, and this is 
+supplied as an argument to them.
 
 ### Dynamic history tracking: trigger functions
 
