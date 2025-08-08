@@ -17,6 +17,7 @@ With this package, one can recreate the database schema in a [PostgreSQL](http:/
 - [Installation](docs/installation.md)
 - [Scripts](docs/scripts.md)
 - [ORM contents and usage](docs/orm.md)
+- [History tracking](docs/history-tracking.md)
 - Database operations with Alembic
   - [Introduction](docs/database-operations/introduction.md)
   - [Applying a migration: Upgrade](docs/database-operations/migrate-upgrade.md)
