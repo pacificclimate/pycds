@@ -1,5 +1,10 @@
 # History tracking, a.k.a. change history
 
+PyCDS now includes history tracking functionality, which means that all changes 
+-- inserts, updates, deletes -- to a key set of tables are retained in the 
+database as a permanent history that can 
+be queried to reconstruct past states of those tables. For details, see below.
+
 **_Note_**: The term "history" is somewhat overloaded here: it refers both to 
 _CRMP station history_ (existing table `meta_history`) and to _history tracking_, the
 subject of this document. Unless explicitly stated otherwise in this document,
@@ -18,12 +23,12 @@ In our case, history tracking is part of a slightly larger endeavour labelled "v
 control", in which updates to records in the database are expected from time to time, 
 and we need to track such updates. 
 
-The canonical use case is as follows: A researcher downloads data from our database,
+The canonical use case is as follows: A researcher downloads data from the CRMP database,
 performs an analysis using it, and publishes their conclusions. Time passes,
 during which some of the data downloaded by the researcher is updated. Later, a
 reanalysis of the same data is required. In order to do this, it is necessary to be
 able to reconstruct the state of the database at the time of the download. The current
-state of the database is no longer the same.
+state of the database is no longer the same and is not suitable for a true reanalysis.
 
 Expected updates to the CRMP database come in least three distinct flavours:
 
@@ -31,11 +36,13 @@ Expected updates to the CRMP database come in least three distinct flavours:
 2. Updates to existing record sets due to QA processes performed by CRMP program 
   participants (more or less, "networks"). A typical scenario is: "Raw" observations 
   are published in near real-time. QA'd observations, which are updates to the raw 
-  observations, and may include deletions, arrive after a significant (multi-month) time 
+  observations, arrive after a significant (multi-month) time 
   lag. The QA'd dataset nominally replaces the raw dataset, but we must retain the raw 
   dataset for future reference. 
 3. PCIC scientists review and update observations or metadata or both. As with the QA 
    updates above, these updates must be distinguishable from the unmodified records.
+4. Note: Deletions are rare but not, we believe, impossible, and history tracking 
+   covers deletion too.
 
 Form (1) is of course already happening. Forms (2) and (3) have been agreed to as part 
 of our workplan for the last several years.
