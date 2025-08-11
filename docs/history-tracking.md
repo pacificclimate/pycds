@@ -113,6 +113,17 @@ record associated with it, and its current state is presented in the main table.
 **(Collection) Item Id**: A value that identifies a unique _item_ within a _collection_.
 Typically an integer, drawn from a sequence. The item id is typically the primary key of the main table.
 
+### Visual overview
+
+This section contains a visual overview of how history tracking is implemented. 
+Details of this implementation are provided in the later sections. 
+
+![image](history-tracking-overview.png)
+
+**_Note_**: This diagram is created using Excalidraw (via Obsidian); the source file is 
+[history-tracking-overview.excalidraw](history-tracking-overview.excalidraw). If the 
+source file is later dated than the image, re-export the image.
+
 ### Main tables and history (tracking) tables
 
 Main tables are tables that already exist(ed) in CRMP, prior to the 
@@ -163,7 +174,7 @@ In outline, a history table is structured as follows:
 
 | Main table (`xxx`)       | History table (`xxx_hx`)  | Comments                                                                                                                  |
 |--------------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| _main table columns ..._ | _main table columns ..._  | Includes main table PK (which is not the PK of this table), `mod_time`, `mod_user`.                                       |
+| _main table columns ..._ | _main table columns ..._  | Includes main table PK (which is not the PK of this table) as an ordinary column, `mod_time`, `mod_user`.                 |
 |                          | `deleted: boolean`        | True when record is deleted from main table.                                                                              |
 |                          | `xxx_hx_id: integer` (PK) | Primary key of _history table_.                                                                                           |
 |                          | `yyy_hx_id: integer` (FK) | For each FK in the main table to another table `yyy`, there is a parallel FK to the history table `yyy_hx` for that table |
