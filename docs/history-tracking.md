@@ -2,11 +2,15 @@
 
 PyCDS now includes history tracking functionality, which means that all changes 
 -- inserts, updates, deletes -- to a key set of tables are retained in the 
-database as a permanent history that can 
-be queried to reconstruct past states of those tables. For details, see below.
+database as a permanent history. The history can 
+be queried to reconstruct past states of those tables. The remainder of this
+document describes how history tracking is implemented and used.
+
+**_Note_**: Database naming (CRMP, PCDS, Metnorth, etc.) can be a bit confusing. 
+For a basic explanation, see the main [README](../README.md).
 
 **_Note_**: The term "history" is somewhat overloaded here: it refers both to 
-_CRMP station history_ (existing table `meta_history`) and to _history tracking_, the
+_station history_ (existing table `meta_history`) and to _history tracking_, the
 subject of this document. Unless explicitly stated otherwise in this document,
 "history" refers to history tracking, not to table `meta_history`.
 
@@ -23,11 +27,13 @@ In our case, history tracking is part of a slightly larger endeavour labelled "v
 control", in which updates to records in the database are expected from time to time, 
 and we need to track such updates. 
 
-The canonical use case is as follows: A researcher downloads data from the CRMP database,
+The canonical use case is as follows: A researcher downloads data from a PyCDS 
+database (e.g., CRMP or Metnorth; see note above),
 performs an analysis using it, and publishes their conclusions. Time passes,
 during which some of the data downloaded by the researcher is updated. Later, a
-reanalysis of the same data is required. In order to do this, it is necessary to be
-able to reconstruct the state of the database at the time of the download. The current
+reanalysis of the same data is required. In order to do this, it is necessary to 
+retrieve the unmodified data, that is, to reconstruct the state of the database at 
+the time of the original download. The later
 state of the database is no longer the same and is not suitable for a true reanalysis.
 
 Expected updates to the CRMP database come in least three distinct flavours:
@@ -78,7 +84,6 @@ expand with future changes.
 
 Because of the purposes PCIC has for history tracking, we have chosen an 
 implementation with the following characteristics:
-
 - History is kept within the database (not in external files or databases). This 
   enables fast, simple queries to the history.
 - History enables easy reconstruction of past states.
@@ -89,28 +94,28 @@ implementation with the following characteristics:
 
 These terms are used constantly in discussions about history tracking.
 
-**Original table**: A table in CRMP prior to history tracking being applied to it.
+- **Original table**: A table in CRMP prior to history tracking being applied to it.
 
-**Main table**: An original table after history tracking has been applied to it. Its name 
+- **Main table**: An original table after history tracking has been applied to it. Its name 
 and all existing uses of it are unchanged.
 
-**History table**: A new table that tracks changes to the main table. A history table 
+- **History table**: A new table that tracks changes to the main table. A history table 
 is append-only.
 
 #### Additional terms
 
 These terms are used for more elaborate discussions about history tracking.
 
-**Collection**: A collection of _(collection) items_. This term refers to both the
+- **Collection**: A collection of _(collection) items_. This term refers to both the
 table that exposes the latest version of each item and the history
 table that contains the history of all items in the collection.
 
-**(Collection) Item** : A datum that contains (meta)data, identified by a stable 
+- **(Collection) Item** : A datum that contains (meta)data, identified by a stable 
 _item id_. An item is mutable, that is, its existence and content can be changed
 (created, updated, deleted) as well as read. An item may have more than one history
 record associated with it, and its current state is presented in the main table.
 
-**(Collection) Item Id**: A value that identifies a unique _item_ within a _collection_.
+- **(Collection) Item Id**: A value that identifies a unique _item_ within a _collection_.
 Typically an integer, drawn from a sequence. The item id is typically the primary key of the main table.
 
 ### Visual overview
@@ -140,8 +145,6 @@ are named consistently by suffixing the corresponding main table name with `_hx`
 | `meta_history` | `meta_history_hx` |
 | `meta_vars`    | `meta_vars_hx`    |
 | `obs_raw`      | `obs_raw_hx`      |
-
-
 #### Main tables
 
 Each main table holds the current version of the records. A main table is, after 
