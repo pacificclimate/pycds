@@ -617,7 +617,7 @@ class BookmarkLabel(Base):
     tuples.
 
     Every bookmark label belongs to a network. Together with the uniqueness constraint
-    on (name, network_id), this enables likely common bookmark names to be reused across
+    on (label, network_id), this enables likely common bookmark names to be reused across
     networks but not collide with each other. We will want to insist that name is unique,
     and partitioning by network seems like an easy sanity-maintaining measure.
     TODO: Review this decision.
@@ -630,57 +630,80 @@ class BookmarkLabel(Base):
     label = Column(String, nullable=False)
     comment = Column(String)
 
-    # NB: These values enforced by trigger functions
+    # NB: The following values are enforced (overridden) by trigger functions.
+    # Defaults provided here are more documentation than anything.
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
 
-    UniqueConstraint("network_id", "name"),
+    UniqueConstraint("network_id", "label"),
 
 
 class BookmarkAssociationRole(Enum):
     """The SQL enumeration type for the `role` attribute of `BookmarkAssociation`.
+    For more on the meanings and use of association roles, see README documentation.
+
     Note that only the names of the class elements are persisted, not the values,
     which are arbitrary. We've chosen here to use the same element names as values.
-
-    See
+    SQLAlchemy doc on enum:
     https://docs.sqlalchemy.org/en/13/core/type_basics.html#sqlalchemy.types.Enum
-    for more info."""
+    See also this SO post for usage with Alembic:
+    https://stackoverflow.com/a/73922844
+    """
 
-    single = 'single'
-    bracket_begin = 'bracket_begin'
-    bracket_end = 'bracket_end'
+    single = "single"
+    bracket_begin = "bracket_begin"
+    bracket_end = "bracket_end"
 
 
 class BookmarkAssociation(Base):
     """
     A bookmark association associates a bookmark label to a tuple of history id's.
     When we say "bookmark this point in history", we mean: create such an association
-    with a specified bookmark label.
+    using a given bookmark label.
 
-    An association includes a bookmark label, the role of the label in the association,
-    and the group (better name needed) of the association
+    An association includes a bookmark label and the role of the label in the association.
+    For more on the meanings and use of association roles, see README documentation.
     """
 
     __tablename__ = "bookmark_associations"
 
     bookmark_association_id = Column(Integer, primary_key=True)
-    bookmark_label_id = Column(Integer, ForeignKey("bookmark_labels.bookmark_label_id"), nullable=False)
+    bookmark_label_id = Column(
+        Integer, ForeignKey("bookmark_labels.bookmark_label_id"), nullable=False
+    )
     role = Column(EnumType(BookmarkAssociationRole), nullable=False)
+    # bracket_begin_id matches a bracket-end to a bracket-begin. It must be non-null
+    # if and only if role == bracket_end, and in that case it must be the id of a
+    # bracket_begin association that is not already matched. This condition is enforced
+    # by a trigger function, which also provides a value in the case that there is
+    # exactly one open bracket and a value is not explicitly specified.
+    bracket_begin_id = Column(
+        Integer, ForeignKey("bookmark_associations.bookmark_association_id")
+    )
     comment = Column(String)
 
-    # History tuple
-    obs_raw_hx_id = Column(Integer, ForeignKey("obs_raw_hx.obs_raw_hx_id"), nullable=False)
-    meta_network_hx_id = Column(Integer, ForeignKey("meta_network_hx.meta_network_hx_id"), nullable=False)
-    meta_station_hx_id = Column(Integer, ForeignKey("meta_station_hx.meta_station_hx_id"), nullable=False)
-    meta_history_hx_id = Column(Integer, ForeignKey("meta_history_hx.meta_history_hx_id"), nullable=False)
-    meta_vars_hx_id = Column(Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"), nullable=False)
+    # History tuple. Every history table must be included here.
+    obs_raw_hx_id = Column(
+        Integer, ForeignKey("obs_raw_hx.obs_raw_hx_id"), nullable=False
+    )
+    meta_network_hx_id = Column(
+        Integer, ForeignKey("meta_network_hx.meta_network_hx_id"), nullable=False
+    )
+    meta_station_hx_id = Column(
+        Integer, ForeignKey("meta_station_hx.meta_station_hx_id"), nullable=False
+    )
+    meta_history_hx_id = Column(
+        Integer, ForeignKey("meta_history_hx.meta_history_hx_id"), nullable=False
+    )
+    meta_vars_hx_id = Column(
+        Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"), nullable=False
+    )
 
-    # NB: These values enforced by trigger functions
+    # NB: The following values are enforced (overridden) by trigger functions.
+    # Defaults provided here are more documentation than anything.
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
-
-
