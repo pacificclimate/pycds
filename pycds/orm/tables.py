@@ -29,12 +29,14 @@ from sqlalchemy import (
     String,
     Date,
     Index,
+    Enum as EnumType,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.orm import relationship, synonym, declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
+from enum import Enum
 
 from sqlalchemy.dialects.postgresql import CITEXT as CIText
 
@@ -607,3 +609,78 @@ class DerivedValue(Base):
             name="obs_derived_value_time_place_variable_unique",
         ),
     )
+
+
+class BookmarkLabel(Base):
+    """
+    A bookmark label is a named object that can be associated to one or more history
+    tuples.
+
+    Every bookmark label belongs to a network. Together with the uniqueness constraint
+    on (name, network_id), this enables likely common bookmark names to be reused across
+    networks but not collide with each other. We will want to insist that name is unique,
+    and partitioning by network seems like an easy sanity-maintaining measure.
+    TODO: Review this decision.
+    """
+
+    __tablename__ = "bookmark_labels"
+
+    bookmark_label_id = Column(Integer, primary_key=True)
+    network_id = Column(Integer, ForeignKey("meta_network.network_id"), nullable=False)
+    label = Column(String, nullable=False)
+    comment = Column(String)
+
+    # NB: These values enforced by trigger functions
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+
+    UniqueConstraint("network_id", "name"),
+
+
+class BookmarkAssociationRole(Enum):
+    """The SQL enumeration type for the `role` attribute of `BookmarkAssociation`.
+    Note that only the names of the class elements are persisted, not the values,
+    which are arbitrary. We've chosen here to use the same element names as values.
+
+    See
+    https://docs.sqlalchemy.org/en/13/core/type_basics.html#sqlalchemy.types.Enum
+    for more info."""
+
+    single = 'single'
+    bracket_begin = 'bracket_begin'
+    bracket_end = 'bracket_end'
+
+
+class BookmarkAssociation(Base):
+    """
+    A bookmark association associates a bookmark label to a tuple of history id's.
+    When we say "bookmark this point in history", we mean: create such an association
+    with a specified bookmark label.
+
+    An association includes a bookmark label, the role of the label in the association,
+    and the group (better name needed) of the association
+    """
+
+    __tablename__ = "bookmark_associations"
+
+    bookmark_association_id = Column(Integer, primary_key=True)
+    bookmark_label_id = Column(Integer, ForeignKey("bookmark_labels.bookmark_label_id"), nullable=False)
+    role = Column(EnumType(BookmarkAssociationRole), nullable=False)
+    comment = Column(String)
+
+    # History tuple
+    obs_raw_hx_id = Column(Integer, ForeignKey("obs_raw_hx.obs_raw_hx_id"), nullable=False)
+    meta_network_hx_id = Column(Integer, ForeignKey("meta_network_hx.meta_network_hx_id"), nullable=False)
+    meta_station_hx_id = Column(Integer, ForeignKey("meta_station_hx.meta_station_hx_id"), nullable=False)
+    meta_history_hx_id = Column(Integer, ForeignKey("meta_history_hx.meta_history_hx_id"), nullable=False)
+    meta_vars_hx_id = Column(Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"), nullable=False)
+
+    # NB: These values enforced by trigger functions
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+
+
