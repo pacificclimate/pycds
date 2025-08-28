@@ -4,25 +4,27 @@
 
   - [Terminology](#terminology)
   - [Facts and assumptions](#facts-and-assumptions)
-  - [Basic bookmark operations](#basic-bookmark-operations)
-    - [Create a bookmark](#create-a-bookmark)
-    - [Bookmark the database state (create a bookmark association)](#bookmark-the-database-state-create-a-bookmark-association)
+  - [History operations](#history-operations)
+    - [Validate a history tuple](#validate-a-history-tuple)
+    - [Given a set of history records, get the latest undeleted (LU) records](#given-a-set-of-history-records-get-the-latest-undeleted-lu-records)
+  - [Bookmark operations](#bookmark-operations)
+    - [Create a bookmark label](#create-a-bookmark-label)
+    - [Bookmark a point in history (create a bookmark association)](#bookmark-a-point-in-history-create-a-bookmark-association)
     - [Bracket (or group) a set of updates](#bracket-or-group-a-set-of-updates)
   - [Applications](#applications)
-    - [Database state reconstruction or Rollback](#database-state-reconstruction-or-rollback)
-      - [Outline](#outline)
-      - [Implementation considerations](#implementation-considerations)
     - [Efficient grouping of data versions](#efficient-grouping-of-data-versions)
       - [An unsatisfactory approach](#an-unsatisfactory-approach)
       - [Bracketing](#bracketing)
-        - [Bracketing for large datasets (QA releases, other updates)](#bracketing-for-large-datasets-qa-releases-other-updates)
-        - [Bracketing for regular ingestion (`crmprtd`)](#bracketing-for-regular-ingestion-crmprtd)
-        - [Considerations](#considerations)
+    - [Historical reconstruction or Rollback](#historical-reconstruction-or-rollback)
+      - [Outline](#outline)
+      - [Implementation considerations](#implementation-considerations)
+    - [Extraction of specific subsets](#extraction-of-specific-subsets)
+      - [Example 1: Records inserted or updated within a single bracketing](#example-1-records-inserted-or-updated-within-a-single-bracketing)
+      - [Example 2: Records inserted or updated in a specific time period](#example-2-records-inserted-or-updated-in-a-specific-time-period)
   - [Implementation notes](#implementation-notes)
     - [Tables](#tables)
     - [Functions, stored procedures](#functions-stored-procedures)
     - [Triggers](#triggers)
-  - [History tuples, database subset, and validity](#history-tuples-database-subset-and-validity)
   - [Metadata support set](#metadata-support-set)
     - [Definitions](#definitions)
       - [Historical support, $Sh(X)$](#historical-support-shx)
@@ -35,16 +37,31 @@ _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 
 - **Bookmark**: A named object that designates a *point in history*. This is an imprecise usage of the term "bookmark", which is actually two related things, a *bookmark label* and a *bookmark association*:
 
-- **Bookmark label**: A data object bearing a label used for bookmarking. Several different points in history can be tagged with the same label.
+- **Bookmark label**: A data object bearing a label used for bookmarking. Several different points in history can be tagged with the same label. This allows a common label to be used to group multiple items.
 
-- **Bookmark association**: A data object that associates a *bookmark label* to a specific point in history.
+- **Bookmark association**: A data object that associates a *bookmark label* to a specific point in history. This is the fundamental operation of bookmarking.
 
 - **Point in history**: The current values of all items in history-tracked tables. It excludes non-history tracked tables, except as adjuncts to the current state. (Note that we cannot be sure what the non-history tracked tables might have contained in the past. Only the present is knowable with such tables.)
 	- **Current point in history**: The state of the history-tracked collections at the current point in time, in whatever sense "current" can be understood.
 	- **Past point in history**: An actual previous state of history-tracked collections. Such a state was  the current point in history in the database at some moment, however briefly.
 	
-- **History tuple**: A tuple of history id's, one for each history table, in some specified order of those tables. There are many possible tuples of history id's, but only some of them represent actual points in history. Those that do represent actual points in history are called (valid) history tuples. The rest are invalid and represent nothing useful. See [[#History tuples, historical subsets, and their validity]] for how to check tuple validity.
+- **History tuple**: A tuple of history id's, one for each history table, in some specified order of those tables. There are many possible tuples of history id's, but only some of them represent actual points in history. Those that do represent actual points in history are called (valid) history tuples. The rest are invalid and represent nothing useful. See also *validity*, below.
 
+- **Historical subset**: A history tuple defines a subset of the history, namely all those history records in each history table that occur at or before the corresponding history id in the tuple. Under the assumption (see above) that the temporal order of history records is the same as the history id order, "at or before"  means that history id is less than or equal to the history id in the tuple. See also *validity*, below.
+
+- **Validity** (of historical subset, of history tuple): 
+	- A historical subset is valid if and only if it exhibits referential integrity. That is, all references by a history record in that subset to another history record must also be found in the subset. Otherwise (i.e., when there is a violation of referential integrity within the subset) the historical subset is not valid.
+	- A history tuple is valid if and only if it implies a valid database historical subset.
+
+- **Latest undeleted (LU) records**: Given a set $H$ of history records drawn from a single history table:
+	- Informally:  The undeleted (LU) records are the latest (most recent) history records in that set, one for each item (distinguished by item id) not marked as deleted within the set.
+	- Formally: Define $LU(H) \subseteq H$ such that:
+		- For each item id $i$ present in $H$ (recall that item id's are not unique in history records):
+			- there is at most one history record in $h_i \in LU(H)$ with item id $i$;
+			- $h_i$ has the largest history id of all history records in $H$ with item id $i$;
+			- that item has not been deleted ($h_i$ does not have the deleted flag set).
+	- If $H$ contains all records in a history table prior to some point, the LU set represents what that ollection looked like at that point in time.
+	- Given a *valid historical subset*, then the collections of LU records from each history table in the subset give us the state of the history-tracked collections at the point in time represented by the historical subset.
 ## Facts and assumptions
 
 **Facts**
@@ -68,27 +85,6 @@ _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 	- However, that is not true if we allow bookmarking of non-latest states, which is probably going to be needed. We already have history, and we won't always anticipate future needs. Hmmm.
 	- Alternative ordering for bookmarks: In the order they occur according to the history table id, that is in history table temporal order. These should be consistent across all history tables; verify this thinking.
 
-## History tuples, historical subsets, and their validity
-
-Our goal here is to check whether a given tuple of history id's is valid, i.e., does it represent a real point in time of the history collections. This will be useful when attempting to define a bookmark association after the fact.
-
-**Historical subset**: A history tuple defines a subset of the history, namely all those history records in each history table that occur at or before the corresponding history id in the tuple. Under the assumption (see above) that the temporal order of history records is the same as the history id order, "at or before"  means that history id is less than or equal to the history id in the tuple.
-
-**Validity**: A historical subset is valid if and only if it exhibits referential integrity. That is, all references by a history record in that subset to another history record must also be found in the subset. Otherwise (i.e., when there is a violation of referential integrity within the subset) the historical subset is not valid.
-
-A history tuple is valid if and only if it implies a valid database historical subset.
-
-**Algorithms for checking tuple validity**: Given this definition, algorithms for checking tuple validity are straightforward:
-
-1. The naive algorithm checks every reference in any given subset for presence in the referenced collection historical subset. But this is a huge number of records in most cases.
-2. A less naive and much faster algorithm relies on the assumption that every actually occurring historical state of the database was valid (quite a reasonable assumption!), and therefore that history tables reflect that. This assumption allows us to check only that reference history id's are less than or equal to the corresponding collection history id in the tuple.
-
-**Uses**: 
-
-1. Creating a (valid) bookmark association post hoc.
-2. It is possible that a history tuple may be presented for checkout (see below) that is not known to be valid. 
-3. It is also possible that a single point of a single collection may be presented and we wish to construct a valid database historical state from it. Validity criteria tell us to do this.
-
 ## History operations
 
 We'll need a small handful of operations related directly to history records. These form the foundation for bookmark operations.
@@ -97,25 +93,10 @@ We'll need a small handful of operations related directly to history records. Th
 
 $Validate(S)$: Given a history tuple $S$, check that it is valid. Raise an error if it is not.
 
+1. The naive algorithm checks every reference in any given subset for presence in the referenced collection historical subset. But this is a huge number of records in most cases.
+2. A less naive and much faster algorithm relies on the assumption that every actually occurring historical state of the database was valid (quite a reasonable assumption!), and therefore that history tables reflect that. This assumption allows us to check only that reference history id's are less than or equal to the corresponding collection history id in the tuple.
+
 ### Given a set of history records, get the latest undeleted (LU) records 
-
-Suppose we have a set of history records (from a single collection). This set might be the entire history of the collection, or it might be a subset of those records, perhaps those occurring before a given history id or a given modification time. 
-
-Given such a set, we want to extract the *latest undeleted* (LU) history records, one for each item id present in the set, and subject to the condition that there is no history record that represents a deletion of that item in the set. 
-
-The LU set represents what the collection looked like at the point in time represented by the set. Essentially, we ignore all the earlier history, and all the records that have been deleted up to that point, retaining only the latest undeleted ones.
-
-Let $H$ be such a set of history records. Then $LU(H)$ is a subset of $H$ such that:
-- For each item id $i$ present in $H$ (recall that item id's are not unique in history records):
-	- there is at most one history record in $h_i \in LU(H)$ with item id $i$;
-	- $h_i$ has the largest history id of all history records in $H$ with item id $i$;
-	- that item has not been deleted ($h_i$ does not have the deleted flag set).
-
-##### Relation to historical subsets
-
- When we have a historical subset (defined above), then the collections of LU records from each history table in the subset give us the state of the history-tracked collections at the point in time represented by the historical subset. The main table at the point in time represented by the history subset is given by $LU(H$) for each corresponding history table $H$.
-
-##### Implementation
 
 It's straightforward to construct a query that yields the history id's of the LU items in a given collection. These history id's can then be used to extract part or all of the LU records from the history table. 
 
@@ -142,7 +123,7 @@ The `<condition>` could look like one of the following:
 - etc.
 
 Again looking a little forward in this document, a common case will be where the condition is related to one or more bookmarks. 
-##### Other notes
+##### Notes
 
 - Fidelity to actual history would require that there are no gaps in the set of history records, i.e., that we haven't arbitrarily dropped some from the middle. However, that is not strictly necessary for these operations to be performed.)
 ## Bookmark operations
@@ -216,19 +197,11 @@ QA releases and other updates are expected to arrive in large batches. If it is 
 
 ##### Bracketing for regular ingestion (`crmprtd`)
 
-Regular ingestion (via `crmprtd` and related scripts) occurs piecemeal. Typically, dozens to thousands of observations are ingested at a time (hourly, daily, weekly, or monthly, depending on the network). We can use bracketing for each such group of observations ingested. This is still much smaller than a typical QA release, and does scale linearly in total observations, but it is nonetheless better than bookmarking one observation at a time.
+Regular ingestion (via `crmprtd` and related scripts) occurs piecemeal. Typically, dozens to thousands of observations are ingested at a time (hourly, daily, weekly, or monthly, depending on the network). We can use bracketing for each such group of observations ingested. This is still much smaller than a typical QA release, and it does scale linearly in total observations, but it is nonetheless much better than bookmarking one observation at a time.
 
 ##### Considerations
 
-It will be useful for the bookmarks used to bracket each ingestion to bear a clear and easily queried relationship to each other. This would enable an entire raw dataset to be extracted with simpler and more error-resistant queries. This could be done with disciplined naming in plain text, but that can be error prone and hard to debug.
-
-- This is where extending a bookmark association record with one or more adjunct columns would be useful. 
-- A fully normalized representation for such extensions includes:
-	- A single bookmark label can be associated multiple times to (groups of) observations.
-	- One attribute of the bookmark association distinguishes bracket-start and bracket-end.
-	- Another attribute of the association distinguishes the group. Time of ingestion is a natural discriminator for this, but it may be too restricted for more general cases of "many groups labelled by a single bookmark". Possibly this should be one or more of group index (non-null, integer), aux_info (nullable, text, which can encode a date or any other relevant information).
-	- Regarding grouping, I've rethought this and it seems as if it is redundant to other information available (namely, observation time, ingestion mod time/history id, bookmarking mod time/history id) and also potentially very confusing.
-- For more details, see [[#Implementation notes]] notes below.
+Bookmarks used to bracket each ingestion should bear a clear and easily queried relationship to each other. This enables an entire dataset (e.g., raw, QA'd) to be extracted with simple, error-resistant queries. The design of bookmark associations, specifically columns `role` and `bracket_begin_id`, support this directly.
 
 ### Historical reconstruction or Rollback
 
@@ -236,7 +209,7 @@ It will be useful for the bookmarks used to bracket each ingestion to bear a cle
 
 The design of history tracking makes it easy (although not necessarily *fast*) to reconstruct a point in history from a bookmark (or more precisely a bookmark association). In other terms, to produce the historical subset given a history tuple.
 
-We already have the required tools in the definition of LU (latest updated) records. Rollback is just the operation of generating these records and storing them somewhere.
+The definition of LU (latest updated) records provides the necessary tool. Rollback is just the operation of generating LU records and storing them somewhere.
 
 #### Implementation considerations
 
@@ -290,23 +263,7 @@ Let `b_begin` and `b_end` represent tuples either externally provided history tu
 
 The bracketed set of updates may include multiple updates to a single item in a given collection. After the fact, we are only interested in the final outcome, which is the *latest* value for each collection item in the bracket. We must do a little extra work to obtain the latest indexes, which means taking the latest (equivalently, greatest) history id within the subset for each item id.
 
-Here is the specific query for `meta_network_hx`. We can generalize to any history table from this example. 
-
-```
-SELECT  
-    obs_raw_id,  
-    max(obs_raw_hx_id) AS max_obs_raw_hx_id  
-FROM  
-    obs_raw_hx  
-WHERE b_begin.obs_raw_hx_id < obs_raw_hx.obs_raw_hx_id
-	AND obs_raw_hx.obs_raw_hx_id <= b_end.obs_raw_hx_id  
-GROUP BY  
-    obs_raw_hx.obs_raw_id  
-HAVING  
-    NOT bool_or(obs_raw_hx.deleted)  
-```
-
-These history id's, `max_obs_raw_hx_id`, select the latest records in the bracketed set.  
+See [[#Given a set of history records, get the latest undeleted (LU) records]].
 
 ##### Caution! Bracketed sets vs valid historical subsets
 
@@ -337,20 +294,7 @@ We can also form a subset based on time constraints. This is not fundamentally d
 
 Let `t_begin` and `t_end` be timestamps defining the time period of interest. We want to extract the subset of records that were inserted or updated in this period.
 
-Here is the specific query for `obs_raw_hx`, which is the most likely target for this kind of query. We can generalize to any history table from this example. 
-
-```
-SELECT  
-    obs_raw_id,  
-    max(obs_raw_hx_id) AS max_obs_raw_hx_id  
-FROM  
-    obs_raw_hx  
-WHERE t_begin < mod_time AND mod_time <= t_end  
-GROUP BY  
-    obs_raw_id  
-HAVING  
-    NOT bool_or(deleted)  
-```
+See [[#Given a set of history records, get the latest undeleted (LU) records]].
 
 All three considerations described above about what records are germane in the subset are important here:
 
@@ -394,69 +338,38 @@ A: To support multiple uses of the same bookmark.
 - Brackets share the same bookmark info, but are associated as bracket-begin, bracket-end. 
 - We likely want to bracket multiple groups of observations -- e.g., those ingested by `crmprtd` at any one time -- using the same bookmark.
 
-| Column                    | Type                                                                                                              | Remarks                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bookmark_association_id` | `int`                                                                                                             | PK                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `bookmark_id`             | `int`                                                                                                             | FK `bookmarks`                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `role`                    | ?`enumeration`; ?`int` (FK to role value table); ?`text`. Values: `'single'`, `'bracket-begin'`, `'bracket-end'`. | Enumeration type is probably best.                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `bracket_id`              | `int`                                                                                                             | See discussion below.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ~~? `group`~~             | ~~?`int`; ?`timestamp`;  ?`text`~~                                                                                | ~~DEPRECATED For distinguishing multiple associations of the same bookmark. <br/>Specific usages: `crmprtd` ingestion; possibly for regular QA releases. <br/>Will require discipline on the part of the user in order not to make a mess, particularly if the discriminator is textual. Currently I favour type `int` paired with optional `aux_info`. <br/>May need better name; will depend in part on type (`timestamp` vs. more general `int` or `text`).~~ |
-| `comment`                 | `text`                                                                                                            | Nullable. <br/>Auxiliary information about the association.                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `obs_raw_hx_id`           | `int`                                                                                                             | PK `obs_raw_hx`                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `meta_network_hx_id`      | `int`                                                                                                             | PK `meta_network_hx`                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `meta_station_hx_id`      | `int`                                                                                                             | PK `meta_station_hx`                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `meta_history_hx_id`      | `int`                                                                                                             | PK `meta_history_hx`                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `meta_vars_hx_id`         | `int`                                                                                                             | PK `meta_vars_hx`                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `mod_user`                | `text`                                                                                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `mod_time`                | `timestamp`                                                                                                       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-TODO: Finish off rethinking below and adjust all documentation as necessary.
-
+| Column                    | Type                                                                                                                 | Remarks                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `bookmark_association_id` | `int`                                                                                                                | PK                                                          |
+| `bookmark_id`             | `int`                                                                                                                | FK `bookmarks`                                              |
+| `role`                    | ?`enumeration`; ?`int` (FK to role value table); ?`text`. Values: `'singleton'`, `'bracket-begin'`, `'bracket-end'`. | Enumeration type is probably best.                          |
+| `bracket_begin_id`        | `int`                                                                                                                | FK `bookmark_associations`. See discussion below.           |
+| `comment`                 | `text`                                                                                                               | Nullable. <br/>Auxiliary information about the association. |
+| `obs_raw_hx_id`           | `int`                                                                                                                | PK `obs_raw_hx`                                             |
+| `meta_network_hx_id`      | `int`                                                                                                                | PK `meta_network_hx`                                        |
+| `meta_station_hx_id`      | `int`                                                                                                                | PK `meta_station_hx`                                        |
+| `meta_history_hx_id`      | `int`                                                                                                                | PK `meta_history_hx`                                        |
+| `meta_vars_hx_id`         | `int`                                                                                                                | PK `meta_vars_hx`                                           |
+| `mod_user`                | `text`                                                                                                               |                                                             |
+| `mod_time`                | `timestamp`                                                                                                          |                                                             |
 Constraints:
 
-- ~~unique (`bookmark_id`, `role`, `group`)~~ (see below)
+- Tuple validity.
+- Trigger function enforces constraint on `bracket_begin_id`. See discussion below.
 
 Questions:
 
 1. Apply history tracking to this table? Reason, utility?
 
 Constraints on bookmark associations and role:
-- We are planning to enforce uniqueness of  (`bookmark_id`, `role`, `group`). This may not be sufficient to ensure sanity.
-- What we really need to do is to enforce the ordering of uses of `role`. This really needs to require strict, ordered pairing of bracket-begin and bracket-end, with single only allowed outside pairs. Grammar for this would be `(single* (bracket_begin bracket_end)*)*` 
-- But, under what ordering of associations? We need to accommodate post-hoc associations. Duh ... under order of history id ... or equivalently mod_time. 
-- With that decided, it will be interesting to formulate a query that can evaluate the condition. The condition can be restated as:
-	- `single` can be followed by `single` or `bracket_begin`
-	- `bracket_begin` can be followed by `bracket_end`
-	- `bracket_end` can be followed by `single` or `bracket_begin`
-- If a bookmark association is proposed to be added at history id `hx_id` , then find the most recent (largest history id) bookmark association with this label prior to hx_id and apply the above rules. This will have to be evaluated for all tables.
 
-Rethinking this:
-- Does `group` have any utility at all? We have observation time, ingestion mod time/history id (in each history table associated to), bookmarking mod time/history id.
-- So what if bookmarks overlap? What if we want it that way? Caveat user? 
-- We don't really have much knowledge at this about desirable or undesirable uses of bookmarks, and yet here we are trying to constrain their use. 
-- Leaving this unconstrained, and eliminating the likely useless and confusing  `group` seems like the best way to go at the moment.
-
-But ...
-- If you want to allow overlapping bookmarks (but nested still can be handled automatically, see below), then you need some way to pair bracket-begin and bracket-end. This is the role of some notion such as group. There is no other use for such an attribute. Therefore it should be named something like "bracket-id", and suitable constraints established on it (fingers crossed it's not very complex).
-- Constraints: 
-	- Bracket id is not relevant and therefore should be null, or should have a fixed value, say 0, for role single.
-	- There can be no more than one pair of bracket-begin bracket-end with the same bracket id. (We could write this `[id updates id]`, e.g., `[2 updates 2]` for short.)
-	- Bracket-begin with id $n$ is permitted if and only
-		- there is no other bracket-begin with id $n$
-	- Bracket-end with id $n$ is permitted if and only if there is
-		- a bracket-begin with id $n$
-		- no bracket-end with id $n$
-	- We could provide a default, auto-incremented value for bracket id when the user does not set it, but: 
-		- That invites some problems if the user is not aware of the attribute or doesn't grok how to use it. But see OTOH below for a way to minimize these problems. Essentially bracket-id is an auto-generated handle that the user should carry around.
-		- If there are several unpaired bracket-begins, then what bracket id to apply to the next unspecified bracket-end is ambiguous. 
-		- Probably should make bracket-id not nullable for brackets.
-		- OTOH, could 
-			- Return an auto-generated bracket-id from the create-association operation with bracket-begin and no bracket id specified.
-			- Auto-generate bracket-end id when there is only one unpaired bracket-begin (that one's bracket id). This seems a likely scenario. However, it is surpus to requirements if we assume/require the user to carry the auto-generated bracket-begin id.
-			- Raise an error if more than one open bracket.
-- Note that the need for bracket id falls away if we require strict nesting of brackets. Then the nesting rules tell you exactly how the bracket pairs match up. That excludes non-nested overlap, which it is conceivable may be wanted (for what??). We don't have enough info to exclude it absolutely.
-- Also, while the nesting rule is easy enough to formulate (as a CFG, for example), it is more complex to enforce in code, which would require a small parser and have to allow for open brackets. So perhaps bracket id is, in addition to being more flexible, also simpler.
-- Any automatic value generation for bracket id will have to be done by a trigger function. Generated columns are not permitted to reference any other row than the one being modified.
-- Jesus, this whole thing can be simplified down to bracket id = bookmark association id, and whenever that is specified, it must be for a bracket-end matching to a bracket-begin. All other cases must be null.
+- Singleton bookmarks are permitted in any pattern, no constraints except tuple validity.
+- We allow any pattern of bracket bookmark associations: disjoint, nested, overlapping. This is because we have no current knowledge of what patterns will be useful in future, and no logical reasons to exclude any. 
+- The only constraints on brackets are:
+	- bracket-begin and bracket-end must occur in matching pairs (open brackets, i.e., unmatched bracket-begins, are permitted).
+	- a bracket-end must specify an open (not yet paired) bracket-begin that occurs before (in order of ascending `bookmark_association_id`) the bracket-begin.
+- We could: 
+	- Auto-generate `bracket_begin_id` for a bracket-end id when there is only one unpaired bracket-begin (that one's bracket id). This seems a likely scenario. However, it is surpus to requirements if we assume/require the user to carry the auto-generated bracket-begin id.
 
 ### Functions, stored procedures
 
@@ -474,7 +387,7 @@ Since bookmarking is a non-trivial activity, it will be useful to encapsulate it
 
 ### Triggers
 
-1. Enforce values of `mod_time`, `mod_user` in `bookmarks` and `bookmark_associations`. (As for history tracking; reuse tf.)
+1. Enforce values of `mod_time`, `mod_user` in `bookmark_labels` and `bookmark_associations`. (As for history tracking; reuse tf.)
 
 ## Metadata support set
 
@@ -522,42 +435,3 @@ A slightly less self-evident case of support
 - Tag `T` can tag *any* metadata history record in an item's history set. Therefore the elements of `St(X,T)` may occur *before* the historical support items for $X$. This may or may not make sense in any given context.
 
 It is possible to define other support sets with different criteria for what metadata history records are included, but defining the criteria so that they are consistent and make sense is harder. We do not offer any other definitions here.
-
-## Points in history
-
-***This discussion now appears irrelevant***
-
-### Ordering of updates
-
-***Caution***: It is tempting -- and sometimes useful -- to think of a point in history in terms of the state of a single item in a collection. It must be borne in mind, however, that there are many items in any given collection and so a point in history is actually a large set, not just one item.
-
-History advances one change at a time. Updates to records are essentially serial. *Is that true in all contexts, e.g., in the context of a transaction?*
-
-Let's consider a simplified situation: An observations collection O and a metadata collection M to which observations are linked.
-
-A given point P in history comprises
-- The states of items in O.
-- The states of items in M.
-
-At point P in history, a read query is made to the main tables (which is the only case we are considering here; main tables are the primary interface).
-
-Only the states of items in O and items in M determine the result of the query at point P. How they got to those states -- their past histories -- are irrelevant to the result, except in cases where modification time is part of the query. Let's set that case aside for the moment.
-
-Consider a single item o in O and the item m in M that it links to. The value (state) of o and of m could have been reached by two different histories, i.e., two different orderings between the most recent two updates to o and h:
-
-1. Update o, then update m.
-2. Update m, then update o.
-
-This extends to all items in O and all items in M: their joint states can be the product of many different orderings of updates.
-
-Upshot: Any given point in history can be reached by many different sequences of updates.
-
-### Subsequent points in history
-
-OK, so what?
-
-Let $P$, $Q$, and $R$ be a time-ordered sequence of points in history. That is, $P$ precedes $Q$ precedes $R$ in temporal order. Let the updates from $P \to Q$ be denoted $U_Q$, and the updates from $Q \to R$ be denoted $U_R$.
-
-Then at point $R$, any interleaving of updates in $U_Q$ and $U_R$ are equivalent (neglecting mod time), so long as the ordering of updates to any single item is preserved. In short, it doesn't matter how we got to $R$, so long as we don't reorder updates to the same item.
-
-This is relevant when considering what points to bookmark, and what bookmarks to choose as a rollback point.

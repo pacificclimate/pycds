@@ -652,7 +652,7 @@ class BookmarkAssociationRole(Enum):
     https://stackoverflow.com/a/73922844
     """
 
-    single = "single"
+    singleton = "singleton"
     bracket_begin = "bracket_begin"
     bracket_end = "bracket_end"
 
