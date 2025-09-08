@@ -96,7 +96,7 @@ $Validate(S)$: Given a history tuple $S$, check that it is valid. Raise an error
 1. The naive algorithm checks every reference in any given subset for presence in the referenced collection historical subset. But this is a huge number of records in most cases.
 2. A less naive and much faster algorithm relies on the assumption that every actually occurring historical state of the database was valid (quite a reasonable assumption!), and therefore that history tables reflect that. This assumption allows us to check only that reference history id's are less than or equal to the corresponding collection history id in the tuple.
 
-### Given a set of history records, get the latest undeleted (LU) records 
+### Get the latest undeleted (LU) records, given a subset of history records
 
 It's straightforward to construct a query that yields the history id's of the LU items in a given collection. These history id's can then be used to extract part or all of the LU records from the history table. 
 
@@ -161,6 +161,9 @@ History records between $L_1$ (exclusive) and $L_2$ (inclusive) are exactly and 
 
 - their isolation in the transaction (so no other update operations are interleaved); 
 - the fact that change records are appended to the history tables in temporal order of change operations.
+
+**Notes**:
+- The above definition is abstract. It's not 
 
 **For further discussion and analysis**:
 
@@ -369,7 +372,7 @@ Constraints on bookmark associations and role:
 	- bracket-begin and bracket-end must occur in matching pairs (open brackets, i.e., unmatched bracket-begins, are permitted).
 	- a bracket-end must specify an open (not yet paired) bracket-begin that occurs before (in order of ascending `bookmark_association_id`) the bracket-begin.
 - We could: 
-	- Auto-generate `bracket_begin_id` for a bracket-end id when there is only one unpaired bracket-begin (that one's bracket id). This seems a likely scenario. However, it is surpus to requirements if we assume/require the user to carry the auto-generated bracket-begin id.
+	- Auto-generate `bracket_begin_id` for a bracket-end id when there is only one unpaired bracket-begin (that one's bracket id). This seems a likely scenario. However, it is surplus to requirements if we assume/require the user to carry the auto-generated bracket-begin id.
 
 ### Functions, stored procedures
 
