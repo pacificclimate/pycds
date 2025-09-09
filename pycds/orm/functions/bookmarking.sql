@@ -347,6 +347,7 @@ $BODY$
     -- CREATE TRIGGER t100_validate_history_tuple
     --      BEFORE INSERT OR UPDATE
     --      ON bookmark_associations
+    --      FOR EACH ROW
     -- EXECUTE PROCEDURE hxtk_validate_history_tuple()
 DECLARE
 BEGIN
@@ -372,6 +373,7 @@ $BODY$
     -- CREATE TRIGGER t200_check_bracket_end
     --      BEFORE INSERT OR UPDATE
     --      ON bookmark_associations
+    --      FOR EACH ROW
     -- EXECUTE PROCEDURE hxtk_check_bm_bracket_end()
 DECLARE
     bracket_begin_q text :=

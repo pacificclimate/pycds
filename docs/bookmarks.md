@@ -33,6 +33,29 @@
 
 _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 
+## Facts and assumptions
+
+**Facts**
+
+- History tables are append-only. 
+- Each history table records the changes made to the entire collection *in temporal order of the changes*. 
+- Each successive update to a collection is recorded by appending a record to its history table; therefore temporal order is also the order by ascending history id. 
+
+**Assumptions**
+
+- No existing record in a history table is ever modified.
+
+**Therefore**
+
+- If a bookmark is associated to a record in a history table, it represents the history of that collection up to that point in time. A bookmark association can be thought of by analogy with a Git tag, in the sense that both are pointers to a specific state of the relevant items.
+- Two such bookmark associations, say $B_1$ and $B_2$, bracket a set of changes recorded in the history table. The delta between them is exactly those changes recorded in the history table, in history id order, between $B_1$ (exclusive) and $B_2$ (inclusive).
+
+**For further consideration**
+
+- Bookmark associations can be, and most naturally are, stored in order of the association operations, that is, temporally. Therefore we can read out a series of successive changesets simply by examining the bookmark associations in the order they are made. 
+	- However, that is not true if we allow bookmarking of non-latest states, which is probably going to be needed. We already have history, and we won't always anticipate future needs. Hmmm.
+	- Alternative ordering for bookmarks: In the order they occur according to the history table id, that is in history table temporal order. These should be consistent across all history tables; verify this thinking.
+
 ## Terminology
 
 - **Bookmark**: A named object that designates a *point in history*. This is an imprecise usage of the term "bookmark", which is actually two related things, a *bookmark label* and a *bookmark association*:
@@ -62,29 +85,6 @@ _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 			- that item has not been deleted ($h_i$ does not have the deleted flag set).
 	- If $H$ contains all records in a history table prior to some point, the LU set represents what that ollection looked like at that point in time.
 	- Given a *valid historical subset*, then the collections of LU records from each history table in the subset give us the state of the history-tracked collections at the point in time represented by the historical subset.
-## Facts and assumptions
-
-**Facts**
-
-- History tables are append-only. 
-- Each history table records the changes made to the entire collection *in temporal order of the changes*. 
-- Each successive update to a collection is recorded by appending a record to its history table; therefore temporal order is also the order by ascending history id. 
-
-**Assumptions**
-
-- No existing record in a history table is ever modified.
-
-**Therefore**
-
-- If a bookmark is associated to a record in a history table, it represents the history of that collection up to that point in time. A bookmark association can be thought of by analogy with a Git tag, in the sense that both are pointers to a specific state of the relevant items.
-- Two such bookmark associations, say $B_1$ and $B_2$, bracket a set of changes recorded in the history table. The delta between them is exactly those changes recorded in the history table, in history id order, between $B_1$ (exclusive) and $B_2$ (inclusive).
-
-**For further consideration**
-
-- Bookmark associations can be, and most naturally are, stored in order of the association operations, that is, temporally. Therefore we can read out a series of successive changesets simply by examining the bookmark associations in the order they are made. 
-	- However, that is not true if we allow bookmarking of non-latest states, which is probably going to be needed. We already have history, and we won't always anticipate future needs. Hmmm.
-	- Alternative ordering for bookmarks: In the order they occur according to the history table id, that is in history table temporal order. These should be consistent across all history tables; verify this thinking.
-
 ## History operations
 
 We'll need a small handful of operations related directly to history records. These form the foundation for bookmark operations.
