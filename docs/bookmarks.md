@@ -2,16 +2,16 @@
 
 ## Table of contents
 
-  - [Terminology](#terminology)
   - [Facts and assumptions](#facts-and-assumptions)
-  - [History operations](#history-operations)
+  - [Terminology](#terminology)
+  - [Basic operations](#basic-operations)
+    - [Note on history tuple vs `mod_time` for bookmarking](#note-on-history-tuple-vs-mod_time-for-bookmarking)
     - [Validate a history tuple](#validate-a-history-tuple)
-    - [Given a set of history records, get the latest undeleted (LU) records](#given-a-set-of-history-records-get-the-latest-undeleted-lu-records)
-  - [Bookmark operations](#bookmark-operations)
+    - [Get the latest undeleted (LU) records, given a subset of history records](#get-the-latest-undeleted-lu-records-given-a-subset-of-history-records)
     - [Create a bookmark label](#create-a-bookmark-label)
     - [Bookmark a point in history (create a bookmark association)](#bookmark-a-point-in-history-create-a-bookmark-association)
     - [Bracket (or group) a set of updates](#bracket-or-group-a-set-of-updates)
-  - [Applications](#applications)
+  - [Applications of bookmarking](#applications-of-bookmarking)
     - [Efficient grouping of data versions](#efficient-grouping-of-data-versions)
       - [An unsatisfactory approach](#an-unsatisfactory-approach)
       - [Bracketing](#bracketing)
@@ -23,13 +23,9 @@
       - [Example 2: Records inserted or updated in a specific time period](#example-2-records-inserted-or-updated-in-a-specific-time-period)
   - [Implementation notes](#implementation-notes)
     - [Tables](#tables)
-    - [Functions, stored procedures](#functions-stored-procedures)
-    - [Triggers](#triggers)
-  - [Metadata support set](#metadata-support-set)
-    - [Definitions](#definitions)
-      - [Historical support, $Sh(X)$](#historical-support-shx)
-      - [Current (or latest) support, $Sc(X)$](#current-or-latest-support-scx)
-      - [Support at tag, `St(X,T)`](#support-at-tag-stxt)
+  - [Other discussions](#other-discussions)
+    - [Updates to existing records: what supporting metadata?](#updates-to-existing-records-what-supporting-metadata)
+    - [Metadata support](#metadata-support)
 
 _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 
@@ -85,9 +81,21 @@ _TOC courtesy of [Lucio Paiva](https://luciopaiva.com/markdown-toc/)._
 			- that item has not been deleted ($h_i$ does not have the deleted flag set).
 	- If $H$ contains all records in a history table prior to some point, the LU set represents what that ollection looked like at that point in time.
 	- Given a *valid historical subset*, then the collections of LU records from each history table in the subset give us the state of the history-tracked collections at the point in time represented by the historical subset.
-## History operations
+## Basic operations
 
-We'll need a small handful of operations related directly to history records. These form the foundation for bookmark operations.
+### Note on history tuple vs `mod_time` for bookmarking
+
+We could, in principle, use `mod_time` to define a point in history. A history subset would then be just all history records occurring at or before a given `mod_time`.  This would have some advantages:
+
+- A single value rather than a tuple denotes a point in history.
+- Validity (referential integrity) of a historical subset is trivially guaranteed so long as all history records satisfying the `mod_time` condition are included in the subset. There's no need to validate such a time value as there is for a tuple.
+
+However, we cannot always trust times in the database. Rather than fretting over time synchrony, we use the more reliable marker of position that is the history id. In that case, we have to store the history id's for each history table; hence a history tuple, not a single time value.
+
+***Note***: If all history tables shared the same history id sequence, then a single history id would in fact point unambiguously at a point in history, in the same way as `mod_time` but without the doubts about time. This might be worth considering. Notes:
+
+- You'd have to obtain from the shared history id sequence (for current point in history) or the history tables (for past points) the largest history id corresponding to your desired point in history.
+- You'd need to migrate all the existing tables. For `obs_raw_hx`, this would be a pretty big operation, again, but nothing like as big an operation as the original history table population.
 
 ### Validate a history tuple
 
@@ -126,7 +134,6 @@ Again looking a little forward in this document, a common case will be where the
 ##### Notes
 
 - Fidelity to actual history would require that there are no gaps in the set of history records, i.e., that we haven't arbitrarily dropped some from the middle. However, that is not strictly necessary for these operations to be performed.)
-## Bookmark operations
 
 ### Create a bookmark label
 
@@ -152,7 +159,7 @@ Again looking a little forward in this document, a common case will be where the
 
 **Operation**: Let $L_1$ and $L_2$ be two bookmarks. Let $U$ be a set of updates. Then the operation  $Bracket(L_1, U, L_2)$ is defined as:
 
-- *Within a transaction (i.e., atomically)*: 
+- *Within a transaction (i.e., in isolation from other operations)*: 
 	- Perform $Bookmark(L_1)$.
 	- Perform updates $U$.
 	- Perform $Bookmark(L_2)$.
@@ -162,14 +169,21 @@ History records between $L_1$ (exclusive) and $L_2$ (inclusive) are exactly and 
 - their isolation in the transaction (so no other update operations are interleaved); 
 - the fact that change records are appended to the history tables in temporal order of change operations.
 
-**Notes**:
-- The above definition is abstract. It's not 
-
-**For further discussion and analysis**:
+**Other notes**:
 
 - Since the bookmarks for bracketing are directly related, we would probably do better to use a single bookmark label $L$, and allow the system to construct bookmarks $L_1$ and $L_2$ from $L$. In fact, we use the same label, and the bookmark association carries the distinction between  $L_1$ and $L_2$.  We can then define  $Bracket(L, U) = Bracket(L_1, U, L_2)$, where $L_1$ and $L_2$ are the constructed bookmarks. See use of auxiliary columns in bookmark association table in [[#Implementation notes]] below.
 
-## Applications
+**Transactions, concurrency, and transaction isolation level**
+
+Bracketing is useful only if operations occurring outside the transaction in which bracketing is performed cannot be interleaved with the operations occurring inside it. This is called transaction isolation.
+
+The Postgres documentation for [Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html) states:
+
+> The SQL standard defines four levels of transaction isolation. The most strict is Serializable, which is defined by the standard in a paragraph which says that any concurrent execution of a set of Serializable transactions is guaranteed to produce the same effect as running them one at a time in some order. The other three levels are defined in terms of phenomena, resulting from interaction between concurrent transactions, which must not occur at each level. The standard notes that due to the definition of Serializable, none of these phenomena are possible at that level. (This is hardly surprising -- if the effect of the transactions must be consistent with having been run one at a time, how could you see any phenomena caused by interactions?)
+
+Therefore not only must we run bracketing within a transaction, the transaction must be run at Serializable isolation level. This is done with the [`SET TRANSACTION`](https://www.postgresql.org/docs/current/sql-set-transaction.html) command within the transaction in question.
+
+## Applications of bookmarking
 
 ### Efficient grouping of data versions
 
@@ -308,24 +322,11 @@ All three considerations described above about what records are germane in the s
 
 ## Implementation notes
 
-We begin to see the outlines of an implementation, as follows.
+A provisional implementation is on branch [i-239-version-tagging](https://github.com/pacificclimate/pycds/tree/i-239-version-tagging). It includes types, tables, functions, trigger functions. In this section we just summarize and make some remarks and questions. 
 
 ### Tables 
 
-**Table `bookmarks`**
-
-| Column         | Type        | Remarks                                                                   |
-| -------------- | ----------- | ------------------------------------------------------------------------- |
-| `bookmark_id`  | `int`       | PK                                                                        |
-| `name`         | `text`      |                                                                           |
-| `comment`      | `text`      | Elaboration of meaning or use of the bookmark. Example: "QA release 2021" |
-| ? `network_id` | `int`       | FK `meta_network`.                                                        |
-| `mod_user`     | `text`      |                                                                           |
-| `mod_time`     | `timestamp` |                                                                           |
-
-Constraints
-
-- unique (`name`, `network_id`)
+**Table `bookmark_labels`**
 
 Questions:
 
@@ -336,29 +337,10 @@ Questions:
 
 **Table `bookmark_associations`**
 
-Q: Why separate association from bookmark proper? 
+Q (rhetorical): Why separate association from bookmark proper? 
 A: To support multiple uses of the same bookmark.
 - Brackets share the same bookmark info, but are associated as bracket-begin, bracket-end. 
 - We likely want to bracket multiple groups of observations -- e.g., those ingested by `crmprtd` at any one time -- using the same bookmark.
-
-| Column                    | Type                                                                                                                 | Remarks                                                     |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `bookmark_association_id` | `int`                                                                                                                | PK                                                          |
-| `bookmark_id`             | `int`                                                                                                                | FK `bookmarks`                                              |
-| `role`                    | ?`enumeration`; ?`int` (FK to role value table); ?`text`. Values: `'singleton'`, `'bracket-begin'`, `'bracket-end'`. | Enumeration type is probably best.                          |
-| `bracket_begin_id`        | `int`                                                                                                                | FK `bookmark_associations`. See discussion below.           |
-| `comment`                 | `text`                                                                                                               | Nullable. <br/>Auxiliary information about the association. |
-| `obs_raw_hx_id`           | `int`                                                                                                                | PK `obs_raw_hx`                                             |
-| `meta_network_hx_id`      | `int`                                                                                                                | PK `meta_network_hx`                                        |
-| `meta_station_hx_id`      | `int`                                                                                                                | PK `meta_station_hx`                                        |
-| `meta_history_hx_id`      | `int`                                                                                                                | PK `meta_history_hx`                                        |
-| `meta_vars_hx_id`         | `int`                                                                                                                | PK `meta_vars_hx`                                           |
-| `mod_user`                | `text`                                                                                                               |                                                             |
-| `mod_time`                | `timestamp`                                                                                                          |                                                             |
-Constraints:
-
-- Tuple validity.
-- Trigger function enforces constraint on `bracket_begin_id`. See discussion below.
 
 Questions:
 
@@ -371,70 +353,52 @@ Constraints on bookmark associations and role:
 - The only constraints on brackets are:
 	- bracket-begin and bracket-end must occur in matching pairs (open brackets, i.e., unmatched bracket-begins, are permitted).
 	- a bracket-end must specify an open (not yet paired) bracket-begin that occurs before (in order of ascending `bookmark_association_id`) the bracket-begin.
-- We could: 
+- We can (see trigger function): 
 	- Auto-generate `bracket_begin_id` for a bracket-end id when there is only one unpaired bracket-begin (that one's bracket id). This seems a likely scenario. However, it is surplus to requirements if we assume/require the user to carry the auto-generated bracket-begin id.
 
-### Functions, stored procedures
 
-Since bookmarking is a non-trivial activity, it will be useful to encapsulate its operations in code. There is some question of whether some or all of this should be Python code in the PyCDS repo proper vs. SP's within the database, but we mix 'em all up here in one list.
+## Other discussions
 
-1. Create a bookmark association at current time (current state of database).
-2. Check tuple validity.
-3. Create a bookmark association from a past state (history tuple). Check validity of tuple.
-4. Determine support (see [[#Metadata support set]]) of an observation. Result is a valid history tuple. Can then create bookmark association to it. 
-5. Perform bracketing operation.
-	1. Create bookmark(s).
-	2. Create bracket-begin association.
-	3. Apply updates.
-	4. Create bracket-end association.
+### Updates to existing records: what supporting metadata?
 
-### Triggers
+This isn't necessarily a question about bookmarking, or isn't exclusively so.
 
-1. Enforce values of `mod_time`, `mod_user` in `bookmark_labels` and `bookmark_associations`. (As for history tracking; reuse tf.)
+Let's use `obs_raw` as the example, as it is covers all other cases. 
 
-## Metadata support set
+When we update an existing `obs_raw` record, we can ask what are the relevant metadata history items to link with it in history. 
 
-***Note/TODO***: This section may not be very useful any more ... but I include it for consideration. It may also be overcomplicated ... the support of a set of observations may be more general than is really useful. 
+This question is interesting because now that we have history tracking we also have a new phenomenon, which is that updates to metadata and updates to observations are not interchangeable. Order now matters.
 
-The idea of the "metadata support" may prove useful in talking clearly about bookmarking. In particular, it may prove useful in discussing bookmarking or bracketing a set of observations post hoc. From here on, we may abbreviate "metadata support" to "support".
+For any given `obs_raw` record, possible answers are:
 
-Support enables us to talk in a well-defined, compact way about the metadata relevant to an observation (or set of observations), when the observations are the only handle you have at the outset. More accurately, we should say observation histories, since observations are mutable and not the target of bookmarking.
+1. The current (latest) metadata history record for the metadata item linked to by the `obs_raw` record.
+    - The simplest answer, and the one that matches what happened before the advent of history tracking. It is also what happens automatically via the history foreign key maintenance trigger whenever a record is created or updated. 
+2. The metadata history record linked to the existing (un-updated) `obs_raw_hx` history record for that item (this may be the same as the current one, but it equally well may be quite a lot older).
+    - It is possible to imagine wanting to update a "frozen" state of the database, i.e., to update `obs_raw` based on an earlier state of the database that could be obtained from a history rollback, which would imply using the links to the older states of the relevant metadata items.
+3. Some intermediate metadata history record between those for (1) and (2), if any exist.
+    - This just seems like asking for trouble. 
 
-The support of an observation history record $X$ is the set of metadata (history) records directly relevant to $X$, which is to say directly associated to $X$ by one or more FK links away from the observation. This in fact applies to any history record $X$, but observation histories are the most important and are the most general or complex case.
+There is no *a priori* answer to this question; any answer could be correct. To multiply questions and confusion, this choice applies transitively to all metadata items linked indirectly to the obs_raw record (i.e., station and network).
 
-### Definitions
+### Metadata support
 
-We define 2 particular cases of support that are especially relevant:
+This a closely related topic, and maybe can precede the discussion above, but ...
 
-#### Historical support, $Sh(X)$
+The *historical metadata support* of an observation history record $H$ is the set of metadata (history) records directly relevant to $H$, which is to say directly associated to $H$ by one or more FK links away from the observation. 
+We denote this by $S(H)$. Notes:
 
-- The *historical (metadata) support* of observation history record $X$, denoted $Sh(X)$, is the tuple of metadata history records linked to it via history table foreign keys followed directly from one history record to another. 
-- There is always exactly one of each metadata history record type (Network, Station, Station History, Variable) in this tuple.
-- This tuple is the precise metadata state at the time of creation of $X$. 
-- This tuple *does not change* when updates to the corresponding metadata items are made.
+- This in fact applies to any history record $H$, but observation histories are the most important and are the most general or complex case.
+- We have only unidirectional links to consider at the moment, but if we include many:many relationships in history tracking, then this definition will possibly become a little more complicated.
 
-We can easily generalize this to a set $S$ of history records:
+The historical metadata support of a set of observation history records $K$ is the union of the support of each record $H \in K$. We write $S(K) = \bigcup_{H \in S} S(H)$.
 
-- $Sh(S) = \bigcup_{X \in S} Sh(X)$
+When we select a set of observations to be bookmarked after the fact, that is after the database has experienced more changes, we need to also include the metadata support of that set. This will make bookmarking after the fact somewhat trickier.
 
-#### Current (or latest) support, $Sc(X)$
+As we note above, we can think about the *current metadata support* for history records, which would be those records linked via item id, not by history id.
 
-- The *latest (metadata) support* of observation history record $X$, denoted $Sc(X)$, is the set of metadata history records defined as: For each record in $Sh(X)$, use the current latest record for that metadata item; equivalently, use the metadata *item* foreign key to retrieve that record from the primary table. 
-- There is always exactly one of each metadata history record type (Network, Station, Station History, Variable) in this set.
-- This set provides the *current state* of metadata relevant to $X$, with all updates to those items. This set *changes* when the corresponding metadata items are updated, and is not fixed over time.
+This is really just a restatement of the considerations above.
 
-We can easily generalize this to a set $S$ of history records:
 
-- $Sc(S) = \bigcup_{X \in S} Sc(X)$
 
-#### Support at tag, `St(X,T)`
 
-Is this still relevant? It seems that if we define bookmarking as an association to a tuple of history records, then this whole thing is redundant.
 
-A slightly less self-evident case of support
-
-- The support set of observation history record $X$ at tag `T`, denoted `St(X,T)`, is the set of metadata history records defined by: For each record in $Sh(X)$, use the metadata history record tagged by `T` for that metadata item. 
-- There may be no such metadata history record for some or all of the elements of $Sc(X)$. Therefore `St(X,T)` may not contain one item for every metadata record type.
-- Tag `T` can tag *any* metadata history record in an item's history set. Therefore the elements of `St(X,T)` may occur *before* the historical support items for $X$. This may or may not make sense in any given context.
-
-It is possible to define other support sets with different criteria for what metadata history records are included, but defining the criteria so that they are consistent and make sense is harder. We do not offer any other definitions here.
