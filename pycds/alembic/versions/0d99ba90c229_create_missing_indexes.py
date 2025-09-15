@@ -56,6 +56,7 @@ classes = (
     StationObservationStats,
 )
 
+
 def upgrade():
     for ORMClass in classes:
         logger.debug(

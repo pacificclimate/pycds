@@ -35,19 +35,6 @@ logger = logging.getLogger("alembic")
 
 schema_name = get_schema_name()
 
-def drop_dependent_objects():
-    """
-    Drop dependent objects that may exist in the database.
-    This is necessary to ensure that the upgrade can proceed without conflicts.
-    """
-    op.drop_table_if_exists("collapsed_vars_mv", schema=schema_name)
-
-def create_dependent_objects():
-    """
-    Create dependent objects that are required for the upgrade.
-    This is necessary to ensure that the upgrade can proceed without conflicts.
-    """
-    create_matview(CollapsedVariables, schema=schema_name)
 
 
 def drop_dependent_objects():
@@ -57,7 +44,7 @@ def drop_dependent_objects():
     """
     drop_view(CrmpNetworkGeoserver, schema=schema_name)
     drop_view(CollapsedVariablesView, schema=schema_name)
-    op.drop_table_if_exists(CollapsedVariables.__tablename__, schema=schema_name)
+    op.drop_table(CollapsedVariables.__tablename__, schema=schema_name, if_exists=True)
 
 
 def create_dependent_objects():
@@ -89,7 +76,7 @@ def upgrade():
     if db_supports_matviews(conn):
         logger.debug("This database supports native materialized views")
         drop_dependent_objects()
-        op.drop_table_if_exists("vars_per_history_mv", schema=schema_name)
+        op.drop_table("vars_per_history_mv", schema=schema_name, if_exists=True)
         logger.debug(f"tables: {inspector.get_table_names(schema=schema_name)}")
         create_matview(VarsPerHistory, schema=schema_name)
         create_dependent_objects()

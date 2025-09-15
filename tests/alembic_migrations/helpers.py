@@ -56,17 +56,18 @@ group by trigger_name
             assert item not in triggers
 
 
-def check_orm_actual_tables_match(engine, orm_table, schema_name=get_schema_name()):
+def check_orm_actual_tables_match(conn, orm_table, schema_name=get_schema_name()):
     """Check that table defined in ORM matches the actual table in the database.
     This method is useful in smoke tests."""
 
     # Check actual table existence
-    names = set(get_schema_item_names(engine, "tables", schema_name=schema_name))
+    names = set(get_schema_item_names(conn, "tables", schema_name=schema_name))
     assert orm_table.__tablename__ in names
 
     # Reflect table
-    metadata = MetaData(schema=schema_name, bind=engine)
-    actual_table = Table(orm_table.__tablename__, metadata, autoload_with=engine)
+    metadata = MetaData(schema=schema_name)
+    metadata.reflect(bind=conn)
+    actual_table = Table(orm_table.__tablename__, metadata, autoload_with=conn)
 
     # Check that table columns match
     def type_match(class1, class2):
@@ -79,6 +80,7 @@ def check_orm_actual_tables_match(engine, orm_table, schema_name=get_schema_name
         )
 
     # This checks column order as well as type.
+    # It is sensitive to order as we're zipping the two lists together.
     for actual_col, orm_col in zip(actual_table.columns, orm_table.__table__.columns):
         assert actual_col.name == orm_col.name
         # print(

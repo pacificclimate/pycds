@@ -57,7 +57,7 @@ def add_history_cols_to_primary(
 
 
 def drop_history_cols_from_primary(
-    collection_name: str, columns: tuple[str] = ("mod_time", "mod_user")
+    collection_name: str, columns: tuple[str, str] = ("mod_time", "mod_user")
 ):
     drop_columns = ", ".join(f"DROP COLUMN {c}" for c in columns)
     op.execute(f"ALTER TABLE {main_table_name(collection_name)} {drop_columns}")
@@ -124,7 +124,7 @@ def populate_history_table(
     collection_name: str,
     pri_id_name: str,
     foreign_tables: list[tuple[str, str]],
-    limit: int = None,
+    limit: int | None = None,
 ):
     """
     Populate the history table with data from the main table, in order of item id (main

@@ -29,10 +29,11 @@ from sqlalchemy import (
     String,
     Date,
     Index,
+    Enum
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import relationship, synonym, declarative_base
+from sqlalchemy.orm import relationship, synonym, declarative_base, mapped_column
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
@@ -610,6 +611,13 @@ class DerivedValue(Base):
     )
 
 
+class ClimatologicalPeriod(Base):
+    __tablename__ = "climatological_period"
+    climatological_period_id = Column(Integer, primary_key=True)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+
+
 class ClimatologicalStation(Base):
     # TODO: Columns in this table parallel those in meta_station and meta_history.
     # They differ in the following ways, which may be questioned:
@@ -619,25 +627,19 @@ class ClimatologicalStation(Base):
     #   prevent entry of erroneous values that just happen to be very long?)
     #
     # - None are nullable. In contrast, most in the model tables are.
-    __tablename__ = "meta_climatological_station"
-
+    __tablename__ = "climatological_station"
     climatological_station_id = Column(Integer, primary_key=True)
-    station_type = Column(String, nullable=False)  # TODO: Use Enumeration type?
-    basin_id = Column(Integer, nullable=False)  # TODO: Same as basin id in SCIP?
-    station_name = Column(String, nullable=False)
-    province = Column(String, nullable=False)
-    country = Column(String, nullable=False)
-    tz_offset = Column(Interval, nullable=False)
+    type = Column(Enum("long-record", "composite", "prism", name="climatological_station_type_enum"), nullable=False)
+    basin_id = Column(Integer, nullable=True)
     comments = Column(String, nullable=False)
-    location = Column(Geometry("GEOMETRY", 4326))
     pass
 
 
 class ClimatologicalStationXHistory(Base):
-    __tablename__ = "meta_climatological_station_x_meta_history"
+    __tablename__ = "climatological_station_x_meta_history"
     climatological_station_id = Column(
         Integer,
-        ForeignKey("meta_climatological_station.climatological_station_id"),
+        ForeignKey("climatological_station.climatological_station_id"),
         primary_key=True,
     )
     history_id = Column(
@@ -645,6 +647,7 @@ class ClimatologicalStationXHistory(Base):
         ForeignKey("meta_history.history_id"),
         primary_key=True,
     )
+    role = Column(Enum("base", "joint", name="climatological_station_role_enum"), nullable=False)
 
 
 class ClimatologicalVariable(Base):
@@ -656,36 +659,29 @@ class ClimatologicalVariable(Base):
     #   prevent entry of erroneous values that just happen to be very long?)
     #
     # - None are nullable. In contrast, most in the model tables are.
-    __tablename__ = "meta_climatological_variable"
-    
+    __tablename__ = "climatological_variable"
+
     climatological_variable_id = Column(Integer, primary_key=True)
-    # TODO: Duration can be computed from climatology_bounds. Do this with a provided
-    #  function or store in separate column (this one)?
-    #  In either case, represent value as an enumeration type?
-    duration = Column(String, nullable=False)  # Use enumeration type?
-    # climatology_bounds corresponds to the attribute of the same name defined in
-    # CF Metadata Standards, 7.4 Climatological Statistics
-    climatology_bounds = Column(ARRAY(String, dimensions=2), nullable=False)
-    num_years = Column(Integer, nullable=False)
+    duration = mapped_column(Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"), nullable=False)
     unit = Column(String, nullable=False)
-    precision = Column(String, nullable=False)  # Type? Utility???
     standard_name = Column(String, nullable=False)
     display_name = Column(String, nullable=False)
     short_name = Column(String, nullable=False)
     cell_methods = Column(String, nullable=False)
-    net_var_name = Column(CIText(), nullable=False)
+    net_var_name = Column(CIText(), nullable=True)
 
 
 class ClimatologicalValue(Base):
-    # TODO: Columns in this table parallel those in obs_raw.
-    # They differ in the following ways, which may be questioned:
-    #
-    # - None are nullable. In contrast, most in the model tables are.
     __tablename__ = "climatological_value"
 
     climatological_value_id = Column(Integer, primary_key=True)
-    mod_time = Column(DateTime, nullable=False)
-    datum_time = Column(DateTime, nullable=False)
-    datum = Column(Float, nullable=False)
+    value_time = Column(DateTime, nullable=False)
+    value = Column(Float, nullable=False)
     num_contributing_years = Column(Integer, nullable=False)
-    climatological_variable_id = Column(Integer, ForeignKey("meta_climatological_value.climatological_value_id"))
+    climatological_variable_id = Column(
+        Integer, ForeignKey("climatological_variable.climatological_variable_id")
+    )
+    climatological_station_id = Column(
+        Integer, ForeignKey("climatological_station.climatological_station_id")
+    )
+    mod_time = Column(DateTime, nullable=False)

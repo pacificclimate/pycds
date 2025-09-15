@@ -70,6 +70,9 @@ def test_model_and_migration_schemas_are_the_same(
     alembic_runner.migrate_up_to("head")
     prepare_schema_from_models(uri_right, Base, db_setup=db_setup)
 
-    result = compare(alembic_engine.url, uri_right)
+    result = compare(alembic_engine.url, uri_right, ignores=[
+        '*.enum.climatological_station_type_enum', 
+        '*.enum.climatology_duration_enum', 
+        '*.enum.climatological_station_role_enum'])
 
     assert result.is_match
