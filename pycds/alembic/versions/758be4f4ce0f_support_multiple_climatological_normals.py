@@ -19,7 +19,7 @@ from sqlalchemy import (
     DateTime,
     Float,
 )
-from sqlalchemy.dialects.postgresql import CITEXT
+from sqlalchemy.dialects.postgresql import CITEXT, ENUM as PG_ENUM
 
 from pycds import get_schema_name
 
@@ -39,13 +39,6 @@ schema_name = get_schema_name()
 # added to the database. That could be done in this migration or in a separate subsequent
 # migration.
 
-def climatological_station_type():
-    return Enum(
-        "long-record", "composite", "prism",
-        name="climatological_station_type_enum",
-        schema=schema_name,
-    )
-
 def upgrade():
 
     op.create_table(
@@ -57,6 +50,8 @@ def upgrade():
         Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
+
+    Enum("long-record", "composite", "prism", name="climatological_station_type_enum").create(op.get_bind())
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_station and meta_history.
@@ -70,7 +65,7 @@ def upgrade():
         "climatological_station",  # TODO: Revise name?
         Column("climatological_station_id", Integer, primary_key=True),
         Column(
-            "type", Enum("long-record", "composite", "prism", name="climatological_station_type_enum"), nullable=False
+            "type", PG_ENUM("long-record", "composite", "prism", name="climatological_station_type_enum", create_type=False), nullable=False
         ),
         Column("basin_id", Integer, nullable=True),
         Column("comments", String, nullable=False),
@@ -86,6 +81,8 @@ def upgrade():
         Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
+
+    Enum("base", "joint", name="climatological_station_role_enum").create(op.get_bind())
 
     op.create_table(
         "climatological_station_x_meta_history",
@@ -103,11 +100,13 @@ def upgrade():
             ForeignKey(f"{schema_name}.meta_history.history_id"),
             primary_key=True,
         ),
-        Column("role", Enum("base", "joint", name="climatological_station_role_enum"), nullable=False),
+        Column("role", PG_ENUM("base", "joint", name="climatological_station_role_enum", create_type=False), nullable=False),
         Column("mod_time", DateTime, nullable=False),
         Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
+
+    Enum("annual", "seasonal", "monthly", name="climatology_duration_enum").create(op.get_bind())
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_vars.
@@ -121,7 +120,7 @@ def upgrade():
         "climatological_variable",
         Column("climatological_variable_id", Integer, primary_key=True),
         Column(
-            "duration", Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"), nullable=False
+            "duration", PG_ENUM("annual", "seasonal", "monthly", name="climatology_duration_enum", create_type=False), nullable=False
         ),
         Column("unit", String, nullable=False),
         Column("standard_name", String, nullable=False),
@@ -163,6 +162,9 @@ def upgrade():
 def downgrade():
     op.drop_table("climatological_value", schema=schema_name)
     op.drop_table("climatological_variable", schema=schema_name)
+    Enum("annual", "seasonal", "monthly", name="climatology_duration_enum").drop(op.get_bind())
     op.drop_table("climatological_station_x_meta_history", schema=schema_name)
+    Enum("base", "joint", name="climatological_station_role_enum").drop(op.get_bind())
     op.drop_table("climatological_station", schema=schema_name)
+    Enum("long-record", "composite", "prism", name="climatological_station_type_enum").drop(op.get_bind())
     op.drop_table("climatological_period", schema=schema_name)

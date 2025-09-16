@@ -38,6 +38,7 @@ For example, to use `alembic -x db=test upgrade ...`::
 # Now to test if it works when crmp contains an upgraded schema and other
 # does not. This works.
 
+import alembic_postgresql_enum
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
