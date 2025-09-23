@@ -384,13 +384,12 @@ There is no *a priori* answer to this question; any answer could be correct. To 
 
 This a closely related topic, and maybe can precede the discussion above, but ...
 
-The *historical metadata support* of an observation history record $H$ is the set of metadata (history) records directly relevant to $H$, which is to say directly associated to $H$ by one or more FK links away from the observation. 
-We denote this by $S(H)$. Notes:
+The *historical metadata support* of an observation history record $H$ is the set of metadata (history) records directly relevant to $H$, which is to say directly associated to $H$ by one or more FK links away from the observation. We denote this by $S(H)$. Notes:
 
 - This in fact applies to any history record $H$, but observation histories are the most important and are the most general or complex case.
 - We have only unidirectional links to consider at the moment, but if we include many:many relationships in history tracking, then this definition will possibly become a little more complicated.
 
-The historical metadata support of a set of observation history records $K$ is the union of the support of each record $H \in K$. We write $S(K) = \bigcup_{H \in S} S(H)$.
+The historical metadata support of a set of observation history records $K$ is the union of the support of each record $H \in K$. We write $S(K) = \bigcup_{H \in K} S(H)$.
 
 When we select a set of observations to be bookmarked after the fact, that is after the database has experienced more changes, we need to also include the metadata support of that set. This will make bookmarking after the fact somewhat trickier.
 
