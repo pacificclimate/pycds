@@ -29,12 +29,14 @@ from sqlalchemy import (
     String,
     Date,
     Index,
+    Enum as EnumType,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.orm import relationship, synonym, declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.schema import CheckConstraint
 from geoalchemy2 import Geometry
+from enum import Enum
 
 from sqlalchemy.dialects.postgresql import CITEXT as CIText
 
@@ -606,4 +608,102 @@ class DerivedValue(Base):
             "vars_id",
             name="obs_derived_value_time_place_variable_unique",
         ),
+    )
+
+
+class BookmarkLabel(Base):
+    """
+    A bookmark label is a named object that can be associated to one or more history
+    tuples.
+
+    Every bookmark label belongs to a network. Together with the uniqueness constraint
+    on (label, network_id), this enables likely common bookmark names to be reused across
+    networks but not collide with each other. We will want to insist that name is unique,
+    and partitioning by network seems like an easy sanity-maintaining measure.
+    TODO: Review this decision.
+    """
+
+    __tablename__ = "bookmark_labels"
+
+    bookmark_label_id = Column(Integer, primary_key=True)
+    network_id = Column(Integer, ForeignKey("meta_network.network_id"), nullable=False)
+    label = Column(String, nullable=False)
+    comment = Column(String)
+
+    # NB: The following values are enforced (overridden) by trigger functions.
+    # Defaults provided here are more documentation than anything.
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+
+    UniqueConstraint("network_id", "label"),
+
+
+class BookmarkAssociationRole(Enum):
+    """The SQL enumeration type for the `role` attribute of `BookmarkAssociation`.
+    For more on the meanings and use of association roles, see README documentation.
+
+    Note that only the names of the class elements are persisted, not the values,
+    which are arbitrary. We've chosen here to use the same element names as values.
+    SQLAlchemy doc on enum:
+    https://docs.sqlalchemy.org/en/13/core/type_basics.html#sqlalchemy.types.Enum
+    See also this SO post for usage with Alembic:
+    https://stackoverflow.com/a/73922844
+    """
+
+    singleton = "singleton"
+    bracket_begin = "bracket_begin"
+    bracket_end = "bracket_end"
+
+
+class BookmarkAssociation(Base):
+    """
+    A bookmark association associates a bookmark label to a tuple of history id's.
+    When we say "bookmark this point in history", we mean: create such an association
+    using a given bookmark label.
+
+    An association includes a bookmark label and the role of the label in the association.
+    For more on the meanings and use of association roles, see README documentation.
+    """
+
+    __tablename__ = "bookmark_associations"
+
+    bookmark_association_id = Column(Integer, primary_key=True)
+    bookmark_label_id = Column(
+        Integer, ForeignKey("bookmark_labels.bookmark_label_id"), nullable=False
+    )
+    role = Column(EnumType(BookmarkAssociationRole), nullable=False)
+    # bracket_begin_id matches a bracket-end to a bracket-begin. It must be non-null
+    # if and only if role == bracket_end, and in that case it must be the id of a
+    # bracket_begin association that is not already matched. This condition is enforced
+    # by a trigger function, which also provides a value in the case that there is
+    # exactly one open bracket and a value is not explicitly specified.
+    bracket_begin_id = Column(
+        Integer, ForeignKey("bookmark_associations.bookmark_association_id")
+    )
+    comment = Column(String)
+
+    # History tuple. Every history table must be included here.
+    obs_raw_hx_id = Column(
+        Integer, ForeignKey("obs_raw_hx.obs_raw_hx_id"), nullable=False
+    )
+    meta_network_hx_id = Column(
+        Integer, ForeignKey("meta_network_hx.meta_network_hx_id"), nullable=False
+    )
+    meta_station_hx_id = Column(
+        Integer, ForeignKey("meta_station_hx.meta_station_hx_id"), nullable=False
+    )
+    meta_history_hx_id = Column(
+        Integer, ForeignKey("meta_history_hx.meta_history_hx_id"), nullable=False
+    )
+    meta_vars_hx_id = Column(
+        Integer, ForeignKey("meta_vars_hx.meta_vars_hx_id"), nullable=False
+    )
+
+    # NB: The following values are enforced (overridden) by trigger functions.
+    # Defaults provided here are more documentation than anything.
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
     )
