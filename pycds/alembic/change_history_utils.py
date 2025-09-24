@@ -42,7 +42,7 @@ def sql_array(a: Iterable[Any]) -> str:
     return f"{{{', '.join(a)}}}"
 
 
-def add_history_cols_to_primary(
+def add_history_cols_to_main(
     collection_name: str,
     columns: tuple[str] = (
         "mod_time timestamp without time zone NOT NULL DEFAULT NOW()",
@@ -56,7 +56,7 @@ def add_history_cols_to_primary(
     op.execute(f"ALTER TABLE {main_table_name(collection_name)} {add_columns}")
 
 
-def drop_history_cols_from_primary(
+def drop_history_cols_from_main(
     collection_name: str, columns: tuple[str] = ("mod_time", "mod_user")
 ):
     drop_columns = ", ".join(f"DROP COLUMN {c}" for c in columns)
@@ -99,7 +99,7 @@ def create_history_table_indexes(
     """
 
     for columns in (
-        # Index on primary table primary key, mod_time, mod_user
+        # Index on main table primary key, mod_time, mod_user
         ([pri_id_name], ["mod_time"], ["mod_user"])
         # Index on all foreign main table primary keys
         + tuple([ft_pk_name] for _, ft_pk_name in (foreign_tables or tuple()))
@@ -188,8 +188,8 @@ def populate_history_table(
     op.execute(stmt)
 
 
-def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
-    # Trigger: Enforce mod_time and mod_user values on primary table.
+def create_main_table_triggers(collection_name: str, prefix: str = "t100_"):
+    # Trigger: Enforce mod_time and mod_user values on main table.
     op.execute(
         f"CREATE TRIGGER {prefix}primary_control_hx_cols "
         f"    BEFORE INSERT OR DELETE OR UPDATE "
@@ -198,7 +198,7 @@ def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
         f"    EXECUTE FUNCTION {qualified_name('hxtk_primary_control_hx_cols')}()"
     )
 
-    # Trigger: Append history records to history table when primary updated.
+    # Trigger: Append history records to history table when main updated.
     op.execute(
         f"CREATE TRIGGER {prefix}primary_ops_to_hx "
         f"    AFTER INSERT OR DELETE OR UPDATE "
