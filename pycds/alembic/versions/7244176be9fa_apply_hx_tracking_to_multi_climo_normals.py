@@ -37,14 +37,35 @@ schema_name = get_schema_name()
 table_info = (
     # table_name, primary_key_name, foreign_keys, extra_indexes
     ("climo_period", "climo_period_id", None, None),
-    ("climo_station", "climo_station_id", [("climo_period", "climo_period_id"), ], None),
-    ("climo_stn_x_hist", ["climo_station_id", "history_id"], [("climo_station", "climo_station_id"), ("meta_history", "history_id")], None),
+    (
+        "climo_station",
+        "climo_station_id",
+        [
+            ("climo_period", "climo_period_id"),
+        ],
+        None,
+    ),
+    (
+        "climo_stn_x_hist",
+        ["climo_station_id", "history_id"],
+        [("climo_station", "climo_station_id"), ("meta_history", "history_id")],
+        None,
+    ),
     ("climo_variable", "climo_variable_id", None, None),
-    ("climo_value", "climo_value_id", [("climo_variable", "climo_variable_id"), ("climo_station", "climo_station_id")], None),
+    (
+        "climo_value",
+        "climo_value_id",
+        [
+            ("climo_variable", "climo_variable_id"),
+            ("climo_station", "climo_station_id"),
+        ],
+        None,
+    ),
 )
 
+
 def upgrade():
-    
+
     # We have to set the search_path so that the trigger functions fired when
     # the history table is populated can find the functions that they call.
     op.get_bind().execute(sa.text(f"SET search_path TO {schema_name}, public"))

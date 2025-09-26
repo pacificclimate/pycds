@@ -29,7 +29,7 @@ from sqlalchemy import (
     String,
     Date,
     Index,
-    Enum
+    Enum,
 )
 from sqlalchemy import DateTime, Boolean, ForeignKey, Numeric, Interval
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -622,7 +622,7 @@ class ClimatologicalPeriodHistory(Base):
     __tablename__ = hx_table_name(ClimatologicalPeriod.__tablename__, schema=None)
     climo_period_id = Column(Integer, nullable=False, index=True)
     start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False) 
+    end_date = Column(DateTime, nullable=False)
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
@@ -642,14 +642,21 @@ class ClimatologicalStation(Base):
     # - None are nullable. In contrast, most in the model tables are.
     __tablename__ = "climo_station"
     id = Column("climo_station_id", Integer, primary_key=True)
-    type = Column(Enum("long-record", "composite", "prism", name="climo_station_type_enum"), nullable=False)
+    type = Column(
+        Enum("long-record", "composite", "prism", name="climo_station_type_enum"),
+        nullable=False,
+    )
     basin_id = Column(Integer, nullable=True)
     comments = Column(String, nullable=False)
+
 
 class ClimatologicalStationHistory(Base):
     __tablename__ = hx_table_name(ClimatologicalStation.__tablename__, schema=None)
     climo_station_id = Column(Integer, nullable=False, index=True)
-    type = Column(Enum("long-record", "composite", "prism", name="climo_station_type_enum"), nullable=False)
+    type = Column(
+        Enum("long-record", "composite", "prism", name="climo_station_type_enum"),
+        nullable=False,
+    )
     basin_id = Column(Integer, nullable=True)
     comments = Column(String, nullable=False)
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
@@ -661,6 +668,7 @@ class ClimatologicalStationHistory(Base):
     climo_period_hx_id = Column(
         Integer, ForeignKey("climo_period_hx.climo_period_hx_id")
     )
+
 
 class ClimatologicalStationXHistory(Base):
     __tablename__ = "climo_stn_x_hist"
@@ -689,19 +697,26 @@ class ClimatologicalVariable(Base):
     __tablename__ = "climo_variable"
 
     id = Column("climo_variable_id", Integer, primary_key=True)
-    duration = mapped_column(Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"), nullable=False)
+    duration = mapped_column(
+        Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"),
+        nullable=False,
+    )
     unit = Column(String, nullable=False)
     standard_name = Column(String, nullable=False)
     display_name = Column(String, nullable=False)
     short_name = Column(String, nullable=False)
     cell_methods = Column(String, nullable=False)
     net_var_name = Column(CIText(), nullable=True)
-    
+
+
 class ClimatologicalVariableHistory(Base):
     __tablename__ = hx_table_name(ClimatologicalVariable.__tablename__, schema=None)
 
     climo_variable_id = Column(Integer, nullable=False, index=True)
-    duration = mapped_column(Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"), nullable=False)
+    duration = mapped_column(
+        Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"),
+        nullable=False,
+    )
     unit = Column(String, nullable=False)
     standard_name = Column(String, nullable=False)
     display_name = Column(String, nullable=False)
@@ -723,13 +738,10 @@ class ClimatologicalValue(Base):
     value_time = Column(DateTime, nullable=False)
     value = Column(Float, nullable=False)
     num_contributing_years = Column(Integer, nullable=False)
-    climo_variable_id = Column(
-        Integer, ForeignKey("climo_variable.climo_variable_id")
-    )
-    climo_station_id = Column(
-        Integer, ForeignKey("climo_station.climo_station_id")
-    )
+    climo_variable_id = Column(Integer, ForeignKey("climo_variable.climo_variable_id"))
+    climo_station_id = Column(Integer, ForeignKey("climo_station.climo_station_id"))
     mod_time = Column(DateTime, nullable=False)
+
 
 class ClimatologicalValueHistory(Base):
     __tablename__ = hx_table_name(ClimatologicalValue.__tablename__, schema=None)
@@ -738,12 +750,8 @@ class ClimatologicalValueHistory(Base):
     value_time = Column(DateTime, nullable=False)
     value = Column(Float, nullable=False)
     num_contributing_years = Column(Integer, nullable=False)
-    climo_variable_id = Column(
-        Integer, ForeignKey("climo_variable.climo_variable_id")
-    )
-    climo_station_id = Column(
-        Integer, ForeignKey("climo_station.climo_station_id")
-    )
+    climo_variable_id = Column(Integer, ForeignKey("climo_variable.climo_variable_id"))
+    climo_station_id = Column(Integer, ForeignKey("climo_station.climo_station_id"))
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")

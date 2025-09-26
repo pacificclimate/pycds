@@ -61,7 +61,10 @@ schema_name = get_schema_name()
             # update tests
             {
                 "where": {"start_date": "2000-01-01 00:00:00"},
-                "values": {"start_date": "2000-01-02 00:00:00", "end_date": "2012-12-31 00:00:00"},
+                "values": {
+                    "start_date": "2000-01-02 00:00:00",
+                    "end_date": "2012-12-31 00:00:00",
+                },
                 "check": {
                     "start_date": datetime.datetime(2000, 1, 2, 0, 0, 0),
                     "end_date": datetime.datetime(2012, 12, 31, 0, 0, 0),
@@ -82,7 +85,15 @@ schema_name = get_schema_name()
             ClimatologicalVariable,
             ClimatologicalVariableHistory,
             "climo_variable_id",
-            ("duration", "unit", "standard_name", "display_name", "short_name", "cell_methods", "net_var_name"),
+            (
+                "duration",
+                "unit",
+                "standard_name",
+                "display_name",
+                "short_name",
+                "cell_methods",
+                "net_var_name",
+            ),
             None,
             # insert tests
             {
@@ -143,8 +154,8 @@ schema_name = get_schema_name()
                     "deleted": True,
                 },
             },
-        )
-    ]
+        ),
+    ],
 )
 @pytest.mark.usefixtures("db_with_large_data")
 def test_migration_results(
@@ -177,7 +188,7 @@ def test_migration_results(
     alembic_runner.migrate_up_one()
 
     with Session(alembic_engine) as conn:
-        # as a result of some side effect in the migration the search path 
+        # as a result of some side effect in the migration the search path
         # is being erronously set to "$user", public. I don't see us doing this in our code,
         # and the side effect happened when modifying the db_with_large_data fixture,
         # so I'm being practical and just forcing it to the right value here.

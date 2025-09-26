@@ -24,11 +24,24 @@ logger = logging.getLogger("tests")
 table_info = (
     # table_name, primary_key_name, foreign_keys, extra_indexes
     ("climo_period", "climo_period_id", None),
-    ("climo_station", "climo_station_id", [("climo_period", "climo_period_id"), ]),
+    (
+        "climo_station",
+        "climo_station_id",
+        [
+            ("climo_period", "climo_period_id"),
+        ],
+    ),
     # TODO: weird one
     # ("climo_station_x_meta_history", [("climo_station_id", "history_id")], [("climo_station", "climo_period_id"), ("meta_history", "history_id")], None),
     ("climo_variable", "climo_variable_id", None),
-    ("climo_value", "climo_value_id", [("climo_variable", "climo_variable_id"), ("climo_station", "climo_station_id")]),
+    (
+        "climo_value",
+        "climo_value_id",
+        [
+            ("climo_variable", "climo_variable_id"),
+            ("climo_station", "climo_station_id"),
+        ],
+    ),
 )
 
 

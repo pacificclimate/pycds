@@ -36,7 +36,6 @@ logger = logging.getLogger("alembic")
 schema_name = get_schema_name()
 
 
-
 def drop_dependent_objects():
     """
     Drop dependent objects that may exist in the database.

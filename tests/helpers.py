@@ -284,6 +284,7 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
     with_schema_name(sesh, schema_name, action)
 
+
 def insert_crmp_data(sesh, alembic_runner, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
 
@@ -292,7 +293,7 @@ def insert_crmp_data(sesh, alembic_runner, schema_name=get_schema_name()):
             with files("pycds").joinpath(f"data/data_{revision}.sql").open("r") as f:
                 schema = f.read()
             sesh.execute(text(schema))
-        
+
         return internal
 
     # The alembic_runner's history property is an ordered set of revisions

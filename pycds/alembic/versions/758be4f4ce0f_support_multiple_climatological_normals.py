@@ -39,6 +39,7 @@ schema_name = get_schema_name()
 # added to the database. That could be done in this migration or in a separate subsequent
 # migration.
 
+
 def upgrade():
 
     op.create_table(
@@ -47,9 +48,11 @@ def upgrade():
         Column("start_date", DateTime, nullable=False),
         Column("end_date", DateTime, nullable=False),
         schema=schema_name,
-    ) 
+    )
 
-    Enum("long-record", "composite", "prism", name="climo_station_type_enum").create(op.get_bind())
+    Enum("long-record", "composite", "prism", name="climo_station_type_enum").create(
+        op.get_bind()
+    )
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_station and meta_history.
@@ -63,16 +66,22 @@ def upgrade():
         "climo_station",  # TODO: Revise name?
         Column("climo_station_id", Integer, primary_key=True),
         Column(
-            "type", PG_ENUM("long-record", "composite", "prism", name="climo_station_type_enum", create_type=False), nullable=False
+            "type",
+            PG_ENUM(
+                "long-record",
+                "composite",
+                "prism",
+                name="climo_station_type_enum",
+                create_type=False,
+            ),
+            nullable=False,
         ),
         Column("basin_id", Integer, nullable=True),
         Column("comments", String, nullable=False),
         Column(
             "climo_period_id",
             Integer,
-            ForeignKey(
-                f"{schema_name}.climo_period.climo_period_id"
-            ),
+            ForeignKey(f"{schema_name}.climo_period.climo_period_id"),
             nullable=False,
         ),
         schema=schema_name,
@@ -85,9 +94,7 @@ def upgrade():
         Column(
             "climo_station_id",
             Integer,
-            ForeignKey(
-                f"{schema_name}.climo_station.climo_station_id"
-            ),
+            ForeignKey(f"{schema_name}.climo_station.climo_station_id"),
             primary_key=True,
         ),
         Column(
@@ -96,11 +103,17 @@ def upgrade():
             ForeignKey(f"{schema_name}.meta_history.history_id"),
             primary_key=True,
         ),
-        Column("role", PG_ENUM("base", "joint", name="climo_station_role_enum", create_type=False), nullable=False),
+        Column(
+            "role",
+            PG_ENUM("base", "joint", name="climo_station_role_enum", create_type=False),
+            nullable=False,
+        ),
         schema=schema_name,
     )
 
-    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").create(op.get_bind())
+    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").create(
+        op.get_bind()
+    )
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_vars.
@@ -114,7 +127,15 @@ def upgrade():
         "climo_variable",
         Column("climo_variable_id", Integer, primary_key=True),
         Column(
-            "duration", PG_ENUM("annual", "seasonal", "monthly", name="climo_duration_enum", create_type=False), nullable=False
+            "duration",
+            PG_ENUM(
+                "annual",
+                "seasonal",
+                "monthly",
+                name="climo_duration_enum",
+                create_type=False,
+            ),
+            nullable=False,
         ),
         Column("unit", String, nullable=False),
         Column("standard_name", String, nullable=False),
@@ -134,16 +155,12 @@ def upgrade():
         Column(
             "climo_variable_id",
             Integer,
-            ForeignKey(
-                f"{schema_name}.climo_variable.climo_variable_id"
-            ),
+            ForeignKey(f"{schema_name}.climo_variable.climo_variable_id"),
         ),
         Column(
             "climo_station_id",
             Integer,
-            ForeignKey(
-                f"{schema_name}.climo_station.climo_station_id"
-            ),
+            ForeignKey(f"{schema_name}.climo_station.climo_station_id"),
         ),
         schema=schema_name,
     )
@@ -152,9 +169,13 @@ def upgrade():
 def downgrade():
     op.drop_table("climo_value", schema=schema_name)
     op.drop_table("climo_variable", schema=schema_name)
-    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").drop(op.get_bind())
+    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").drop(
+        op.get_bind()
+    )
     op.drop_table("climo_stn_x_hist", schema=schema_name)
     Enum("base", "joint", name="climo_station_role_enum").drop(op.get_bind())
     op.drop_table("climo_station", schema=schema_name)
-    Enum("long-record", "composite", "prism", name="climo_station_type_enum").drop(op.get_bind())
+    Enum("long-record", "composite", "prism", name="climo_station_type_enum").drop(
+        op.get_bind()
+    )
     op.drop_table("climo_period", schema=schema_name)

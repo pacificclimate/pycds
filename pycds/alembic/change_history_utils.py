@@ -63,7 +63,9 @@ def drop_history_cols_from_primary(
     op.execute(f"ALTER TABLE {main_table_name(collection_name)} {drop_columns}")
 
 
-def create_history_table(collection_name: str, foreign_tables: list[tuple[str, str]] | None):
+def create_history_table(
+    collection_name: str, foreign_tables: list[tuple[str, str]] | None
+):
     # Create the history table. We can't use Alembic create_table here because it doesn't
     # support the LIKE syntax we need.
     columns = ", ".join(
@@ -105,7 +107,8 @@ def create_history_table_indexes(
 
     for columns in (
         # Index on primary table primary key, mod_time, mod_user
-        tuple([x] for x in pri_id_name) + (["mod_time"], ["mod_user"])
+        tuple([x] for x in pri_id_name)
+        + (["mod_time"], ["mod_user"])
         # Index on all foreign main table primary keys
         + tuple([ft_pk_name] for _, ft_pk_name in (foreign_tables or tuple()))
         # Index on all foreign history table primary keys
@@ -183,8 +186,8 @@ def populate_history_table(
 
     if isinstance(pri_id_name, str):
         pri_id_name = [pri_id_name]
-    
-    pri_order_clause = ", ".join(f"main.{idn}" for idn in pri_id_name) 
+
+    pri_order_clause = ", ".join(f"main.{idn}" for idn in pri_id_name)
 
     stmt = f"""
         {"WITH" if len(foreign_tables) > 0 else ""}

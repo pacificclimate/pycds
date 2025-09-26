@@ -31,9 +31,7 @@ orm_tables = (
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize("orm_table", orm_tables)
-def test_upgrade(
-    orm_table, alembic_engine, alembic_runner, schema_name
-):
+def test_upgrade(orm_table, alembic_engine, alembic_runner, schema_name):
     """Test the schema migration to 758be4f4ce0f."""
 
     alembic_runner.migrate_up_to("758be4f4ce0f")
@@ -45,9 +43,7 @@ def test_upgrade(
 
 @pytest.mark.usefixtures("new_db_left")
 @pytest.mark.parametrize("table", orm_tables)
-def test_downgrade(
-    table, alembic_engine, alembic_runner, schema_name
-):
+def test_downgrade(table, alembic_engine, alembic_runner, schema_name):
     """Test the schema migration from a59d64cf16ca to previous rev."""
 
     # Set up database to current version, then back off one
