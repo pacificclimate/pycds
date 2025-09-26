@@ -272,8 +272,12 @@ def test_migration_results(
     alembic_runner.migrate_up_one()
 
     with Session(alembic_engine) as conn:
+        # as a result of some side effect in the migration the search path 
+        # is being erronously set to "$user", public. I don't see us doing this in our code,
+        # and the side effect happened when modifying the db_with_large_data fixture,
+        # so I'm being practical and just forcing it to the right value here.
+        conn.execute(text(f"SET search_path TO {schema_name}, public"))
         check_migration_version(conn, version="a59d64cf16ca")
-
         # Check the resulting tables
         check_history_table_initial_contents(
             conn,

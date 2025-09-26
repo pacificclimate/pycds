@@ -23,7 +23,7 @@ def test_can_create_test_db(pycds_sesh):
     assert len(q.all()) == 2
 
 
-def test_can_create_crmp_subset_db(pycds_sesh):
-    insert_crmp_data(pycds_sesh)
+def test_can_create_crmp_subset_db(alembic_runner, pycds_sesh):
+    insert_crmp_data(pycds_sesh, alembic_runner)
     q = pycds_sesh.query(History)
     assert q.count() > 0

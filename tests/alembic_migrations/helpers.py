@@ -95,7 +95,7 @@ def check_history_tracking_upgrade(
     connection: Connection,
     table_name: str,
     pri_key_name: str,
-    foreign_tables: list[tuple[str, str]],
+    foreign_tables: list[tuple[str, str]] | None,
     schema_name: str,
     pri_columns_added: tuple[tuple[str, sqlalchemy.types]] = (
         ("mod_time", TIMESTAMP),
@@ -123,9 +123,10 @@ def check_history_tracking_upgrade(
         check_column(hx_table, col.name, col.type.__class__)
     check_column(hx_table, "deleted", BOOLEAN)
     check_column(hx_table, hx_id_name(table_name), INTEGER)
-    for ft_table_name, ft_key_name in foreign_tables:
-        check_column(hx_table, ft_key_name, INTEGER)
-        check_column(hx_table, hx_id_name(ft_table_name), INTEGER)
+    if foreign_tables:
+        for ft_table_name, ft_key_name in foreign_tables:
+            check_column(hx_table, ft_key_name, INTEGER)
+            check_column(hx_table, hx_id_name(ft_table_name), INTEGER)
 
     # History table indexes. This test does not check index type, but it
     # does check what columns are in each index.

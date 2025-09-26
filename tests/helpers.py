@@ -284,13 +284,25 @@ def insert_test_data(sesh, schema_name=get_schema_name()):
 
     with_schema_name(sesh, schema_name, action)
 
-
-def insert_crmp_data(sesh, schema_name=get_schema_name()):
+def insert_crmp_data(sesh, alembic_runner, schema_name=get_schema_name()):
     """Insert data from CRMP database dump into into tables in named schema."""
 
-    def action(sesh):
-        with files("pycds").joinpath("data/crmp_subset_data.sql").open("r") as f:
-            data = f.read()
-        sesh.execute(text(data))
+    def action(revision):
+        def internal(sesh):
+            with files("pycds").joinpath(f"data/data_{revision}.sql").open("r") as f:
+                schema = f.read()
+            sesh.execute(text(schema))
+        
+        return internal
 
-    with_schema_name(sesh, schema_name, action)
+    # The alembic_runner's history property is an ordered set of revisions
+    # so we can rely on this to allow us to just run the data scripts that we
+    # need when generating the fixture
+
+    for revision in alembic_runner.history.revisions:
+
+        if files("pycds").joinpath(f"data/data_{revision}.sql").is_file():
+            with_schema_name(sesh, schema_name, action(revision))
+
+        if revision == alembic_runner.current:
+            break

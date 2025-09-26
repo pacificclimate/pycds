@@ -1,4 +1,4 @@
-"""Support multiple climatological normals
+"""Support multiple climo normals
 
 Revision ID: 758be4f4ce0f
 Revises: 7ab87f8fbcf4
@@ -42,16 +42,14 @@ schema_name = get_schema_name()
 def upgrade():
 
     op.create_table(
-        "climatological_period",
-        Column("climatological_period_id", Integer, primary_key=True),
+        "climo_period",
+        Column("climo_period_id", Integer, primary_key=True),
         Column("start_date", DateTime, nullable=False),
         Column("end_date", DateTime, nullable=False),
-        Column("mod_time", DateTime, nullable=False),
-        Column("mod_user", String, nullable=False),
         schema=schema_name,
-    )
+    ) 
 
-    Enum("long-record", "composite", "prism", name="climatological_station_type_enum").create(op.get_bind())
+    Enum("long-record", "composite", "prism", name="climo_station_type_enum").create(op.get_bind())
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_station and meta_history.
@@ -62,35 +60,33 @@ def upgrade():
         #   prevent entry of erroneous values that just happen to be very long?)
         #
         # - None are nullable. In contrast, most in the model tables are.
-        "climatological_station",  # TODO: Revise name?
-        Column("climatological_station_id", Integer, primary_key=True),
+        "climo_station",  # TODO: Revise name?
+        Column("climo_station_id", Integer, primary_key=True),
         Column(
-            "type", PG_ENUM("long-record", "composite", "prism", name="climatological_station_type_enum", create_type=False), nullable=False
+            "type", PG_ENUM("long-record", "composite", "prism", name="climo_station_type_enum", create_type=False), nullable=False
         ),
         Column("basin_id", Integer, nullable=True),
         Column("comments", String, nullable=False),
         Column(
-            "climatological_period_id",
+            "climo_period_id",
             Integer,
             ForeignKey(
-                f"{schema_name}.climatological_period.climatological_period_id"
+                f"{schema_name}.climo_period.climo_period_id"
             ),
             nullable=False,
         ),
-        Column("mod_time", DateTime, nullable=False),
-        Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
 
-    Enum("base", "joint", name="climatological_station_role_enum").create(op.get_bind())
+    Enum("base", "joint", name="climo_station_role_enum").create(op.get_bind())
 
     op.create_table(
-        "climatological_station_x_meta_history",
+        "climo_stn_x_hist",
         Column(
-            "climatological_station_id",
+            "climo_station_id",
             Integer,
             ForeignKey(
-                f"{schema_name}.climatological_station.climatological_station_id"
+                f"{schema_name}.climo_station.climo_station_id"
             ),
             primary_key=True,
         ),
@@ -100,13 +96,11 @@ def upgrade():
             ForeignKey(f"{schema_name}.meta_history.history_id"),
             primary_key=True,
         ),
-        Column("role", PG_ENUM("base", "joint", name="climatological_station_role_enum", create_type=False), nullable=False),
-        Column("mod_time", DateTime, nullable=False),
-        Column("mod_user", String, nullable=False),
+        Column("role", PG_ENUM("base", "joint", name="climo_station_role_enum", create_type=False), nullable=False),
         schema=schema_name,
     )
 
-    Enum("annual", "seasonal", "monthly", name="climatology_duration_enum").create(op.get_bind())
+    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").create(op.get_bind())
 
     op.create_table(
         # TODO: Columns in this table parallel those in meta_vars.
@@ -117,10 +111,10 @@ def upgrade():
         #   prevent entry of erroneous values that just happen to be very long?)
         #
         # - None are nullable. In contrast, most in the model tables are.
-        "climatological_variable",
-        Column("climatological_variable_id", Integer, primary_key=True),
+        "climo_variable",
+        Column("climo_variable_id", Integer, primary_key=True),
         Column(
-            "duration", PG_ENUM("annual", "seasonal", "monthly", name="climatology_duration_enum", create_type=False), nullable=False
+            "duration", PG_ENUM("annual", "seasonal", "monthly", name="climo_duration_enum", create_type=False), nullable=False
         ),
         Column("unit", String, nullable=False),
         Column("standard_name", String, nullable=False),
@@ -128,43 +122,39 @@ def upgrade():
         Column("short_name", String, nullable=False),
         Column("cell_methods", String, nullable=False),
         Column("net_var_name", CITEXT(), nullable=False),
-        Column("mod_time", DateTime, nullable=False),
-        Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
 
     op.create_table(
-        "climatological_value",
-        Column("climatological_value_id", Integer, primary_key=True),
+        "climo_value",
+        Column("climo_value_id", Integer, primary_key=True),
         Column("value_time", DateTime, nullable=False),
         Column("value", Float, nullable=False),
         Column("num_contributing_years", Integer, nullable=False),
         Column(
-            "climatological_variable_id",
+            "climo_variable_id",
             Integer,
             ForeignKey(
-                f"{schema_name}.climatological_variable.climatological_variable_id"
+                f"{schema_name}.climo_variable.climo_variable_id"
             ),
         ),
         Column(
-            "climatological_station_id",
+            "climo_station_id",
             Integer,
             ForeignKey(
-                f"{schema_name}.climatological_station.climatological_station_id"
+                f"{schema_name}.climo_station.climo_station_id"
             ),
         ),
-        Column("mod_time", DateTime, nullable=False),
-        Column("mod_user", String, nullable=False),
         schema=schema_name,
     )
 
 
 def downgrade():
-    op.drop_table("climatological_value", schema=schema_name)
-    op.drop_table("climatological_variable", schema=schema_name)
-    Enum("annual", "seasonal", "monthly", name="climatology_duration_enum").drop(op.get_bind())
-    op.drop_table("climatological_station_x_meta_history", schema=schema_name)
-    Enum("base", "joint", name="climatological_station_role_enum").drop(op.get_bind())
-    op.drop_table("climatological_station", schema=schema_name)
-    Enum("long-record", "composite", "prism", name="climatological_station_type_enum").drop(op.get_bind())
-    op.drop_table("climatological_period", schema=schema_name)
+    op.drop_table("climo_value", schema=schema_name)
+    op.drop_table("climo_variable", schema=schema_name)
+    Enum("annual", "seasonal", "monthly", name="climo_duration_enum").drop(op.get_bind())
+    op.drop_table("climo_stn_x_hist", schema=schema_name)
+    Enum("base", "joint", name="climo_station_role_enum").drop(op.get_bind())
+    op.drop_table("climo_station", schema=schema_name)
+    Enum("long-record", "composite", "prism", name="climo_station_type_enum").drop(op.get_bind())
+    op.drop_table("climo_period", schema=schema_name)

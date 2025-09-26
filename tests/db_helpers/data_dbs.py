@@ -15,7 +15,7 @@ def db_with_large_data(alembic_engine, alembic_runner, target_revision, schema_n
         logger = logging.getLogger("sqlalchemy.engine")
         save_level = logger.level
         logger.setLevel(logging.CRITICAL)
-        insert_crmp_data(conn)
+        insert_crmp_data(conn, alembic_runner)
         logger.setLevel(save_level)
 
     return alembic_engine
@@ -32,7 +32,7 @@ def db_with_large_data_s(
         logger = logging.getLogger("sqlalchemy.engine")
         save_level = logger.level
         logger.setLevel(logging.CRITICAL)
-        insert_crmp_data(conn)
+        insert_crmp_data(conn, alembic_runner_s)
         logger.setLevel(save_level)
 
     return alembic_engine_s

@@ -135,7 +135,7 @@ def test_table_contents(
         check_migration_version(conn, version="a59d64cf16ca")
         # assert table_count(pri_table) > 0  # This blocks upgrade that follows. Sigh
 
-        insert_crmp_data(conn)
+        insert_crmp_data(conn, alembic_runner)
 
     # Now upgrade to a59d64cf16ca
     alembic_runner.migrate_up_one()

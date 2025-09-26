@@ -70,10 +70,14 @@ __all__ = [
     "ObsCountPerDayHistory",
     "ObsWithFlags",
     "ClimatologicalPeriod",
+    "ClimatologicalPeriodHistory",
     "ClimatologicalStation",
+    "ClimatologicalStationHistory",
     "ClimatologicalStationXHistory",
     "ClimatologicalVariable",
+    "ClimatologicalVariableHistory",
     "ClimatologicalValue",
+    "ClimatologicalValueHistory",
 ]
 
 from pycds.context import get_schema_name, get_su_role_name
@@ -100,10 +104,14 @@ from .orm.tables import (
     PCICFlag,
     DerivedValue,
     ClimatologicalPeriod,
+    ClimatologicalPeriodHistory,
     ClimatologicalStation,
+    ClimatologicalStationHistory,
     ClimatologicalStationXHistory,
     ClimatologicalVariable,
+    ClimatologicalVariableHistory,
     ClimatologicalValue,
+    ClimatologicalValueHistory,
 )
 
 from .orm.views import (

@@ -8,7 +8,7 @@ from tests.db_helpers.postgres_factory import Pycds_postgres, Base_postgres
 
 def set_search_path(engine):
     with engine.begin() as conn:
-        conn.execute(text(f"SET search_path TO public"))
+        conn.execute(text(f"SET search_path TO crmp, public"))
 
 
 @fixture(scope="session")

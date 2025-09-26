@@ -63,7 +63,7 @@ def drop_history_cols_from_primary(
     op.execute(f"ALTER TABLE {main_table_name(collection_name)} {drop_columns}")
 
 
-def create_history_table(collection_name: str, foreign_tables: list[tuple[str, str]]):
+def create_history_table(collection_name: str, foreign_tables: list[tuple[str, str]] | None):
     # Create the history table. We can't use Alembic create_table here because it doesn't
     # support the LIKE syntax we need.
     columns = ", ".join(
@@ -89,8 +89,8 @@ def drop_history_table(collection_name: str):
 
 def create_history_table_indexes(
     collection_name: str,
-    pri_id_name: str,
-    foreign_tables: list[tuple[str, str]],
+    pri_id_name: list[str] | str,
+    foreign_tables: Iterable[tuple[str, str]] | None,
     extras=None,
 ):
     """
@@ -98,9 +98,14 @@ def create_history_table_indexes(
     see https://github.com/pacificclimate/pycds/issues/228
     """
 
+    if isinstance(pri_id_name, str):
+        pri_id_name = [pri_id_name]
+
+    seen = []
+
     for columns in (
         # Index on primary table primary key, mod_time, mod_user
-        ([pri_id_name], ["mod_time"], ["mod_user"])
+        tuple([x] for x in pri_id_name) + (["mod_time"], ["mod_user"])
         # Index on all foreign main table primary keys
         + tuple([ft_pk_name] for _, ft_pk_name in (foreign_tables or tuple()))
         # Index on all foreign history table primary keys
@@ -110,6 +115,9 @@ def create_history_table_indexes(
         )
         + (extras or tuple())
     ):
+        if columns in seen:
+            continue
+        seen.append(columns)
         # How much do we care about index naming? SQLAlchemy uses a different pattern than
         # appears typical in CRMP.
         op.create_index(
@@ -122,8 +130,8 @@ def create_history_table_indexes(
 
 def populate_history_table(
     collection_name: str,
-    pri_id_name: str,
-    foreign_tables: list[tuple[str, str]],
+    pri_id_name: list[str] | str,
+    foreign_tables: list[tuple[str, str]] | None,
     limit: int | None = None,
 ):
     """
@@ -140,7 +148,7 @@ def populate_history_table(
     # foreign table definitions: the CTE names, the CTE definitions, and their usages
     # within the query that populates the target history table.
 
-    foreign_tables = foreign_tables or tuple()
+    foreign_tables = foreign_tables or []
 
     conditional_comma = "," if len(foreign_tables) > 0 else ""
 
@@ -173,6 +181,11 @@ def populate_history_table(
         else ""
     )
 
+    if isinstance(pri_id_name, str):
+        pri_id_name = [pri_id_name]
+    
+    pri_order_clause = ", ".join(f"main.{idn}" for idn in pri_id_name) 
+
     stmt = f"""
         {"WITH" if len(foreign_tables) > 0 else ""}
         {ft_cte_list}
@@ -183,7 +196,7 @@ def populate_history_table(
         FROM {main_table_name(collection_name)} main  
             {conditional_comma} {ft_cte_name_list}
         {ft_where_clause}
-        ORDER BY main.{pri_id_name}        
+        ORDER BY {pri_order_clause}
     """
     op.execute(stmt)
 
@@ -209,7 +222,7 @@ def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
 
 
 def create_history_table_triggers(
-    collection_name: str, foreign_tables: list, prefix: str = "t100_"
+    collection_name: str, foreign_tables: list | None, prefix: str = "t100_"
 ):
     # Trigger: Add foreign key values to each record inserted into history table.
     ft_args = (

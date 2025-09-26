@@ -73,8 +73,8 @@ def test_model_and_migration_schemas_are_the_same(
     # Currently ignoring these ENUMs, despite directly creating them they don't seem 
     # to be seen as available in the migrations version of the database.
     result = compare(alembic_engine.url, uri_right, ignores=[
-        '*.enum.climatological_station_type_enum', 
+        '*.enum.climo_station_type_enum', 
         '*.enum.climatology_duration_enum', 
-        '*.enum.climatological_station_role_enum'])
+        '*.enum.climo_station_role_enum'])
 
     assert result.is_match
