@@ -5,7 +5,7 @@ migration. Naming functions do correspond to equivalent database functions used 
 the change history functionality.
 """
 
-from typing import Iterable, Any
+from typing import Iterable, Any, Optional
 
 from alembic import op
 
@@ -64,7 +64,7 @@ def drop_history_cols_from_primary(
 
 
 def create_history_table(
-    collection_name: str, foreign_tables: list[tuple[str, str]] | None
+    collection_name: str, foreign_tables: Optional[list[tuple[str, str]]]
 ):
     # Create the history table. We can't use Alembic create_table here because it doesn't
     # support the LIKE syntax we need.
@@ -92,7 +92,7 @@ def drop_history_table(collection_name: str):
 def create_history_table_indexes(
     collection_name: str,
     pri_id_name: list[str] | str,
-    foreign_tables: Iterable[tuple[str, str]] | None,
+    foreign_tables: Optional[Iterable[tuple[str, str]]],
     extras=None,
 ):
     """
@@ -134,8 +134,8 @@ def create_history_table_indexes(
 def populate_history_table(
     collection_name: str,
     pri_id_name: list[str] | str,
-    foreign_tables: list[tuple[str, str]] | None,
-    limit: int | None = None,
+    foreign_tables: Optional[list[tuple[str, str]]],
+    limit: Optional[int] = None,
 ):
     """
     Populate the history table with data from the main table, in order of item id (main
@@ -225,7 +225,7 @@ def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
 
 
 def create_history_table_triggers(
-    collection_name: str, foreign_tables: list | None, prefix: str = "t100_"
+    collection_name: str, foreign_tables: Optional[list], prefix: str = "t100_"
 ):
     # Trigger: Add foreign key values to each record inserted into history table.
     ft_args = (

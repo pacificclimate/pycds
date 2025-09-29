@@ -1,3 +1,4 @@
+from typing import Optional
 import sqlalchemy.types
 from sqlalchemy import (
     select,
@@ -95,7 +96,7 @@ def check_history_tracking_upgrade(
     connection: Connection,
     table_name: str,
     pri_key_name: str,
-    foreign_tables: list[tuple[str, str]] | None,
+    foreign_tables: Optional[list[tuple[str, str]]],
     schema_name: str,
     pri_columns_added: tuple[tuple[str, sqlalchemy.types]] = (
         ("mod_time", TIMESTAMP),
