@@ -77,7 +77,7 @@ def test_model_and_migration_schemas_are_the_same(
         uri_right,
         ignores=[
             "*.enum.climo_station_type_enum",
-            "*.enum.climatology_duration_enum",
+            "*.enum.climo_duration_enum",
             "*.enum.climo_station_role_enum",
         ],
     )

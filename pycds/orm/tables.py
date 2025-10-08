@@ -648,6 +648,9 @@ class ClimatologicalStation(Base):
     )
     basin_id = Column(Integer, nullable=True)
     comments = Column(String, nullable=False)
+    climo_period_id = Column(
+        Integer, ForeignKey("climo_period.climo_period_id"), nullable=False
+    )
 
 
 class ClimatologicalStationHistory(Base):
@@ -659,6 +662,9 @@ class ClimatologicalStationHistory(Base):
     )
     basin_id = Column(Integer, nullable=True)
     comments = Column(String, nullable=False)
+    climo_period_id = Column(
+        Integer, ForeignKey("climo_period.climo_period_id"), nullable=False
+    )
     mod_time = Column(DateTime, nullable=False, server_default=func.now())
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
@@ -685,6 +691,24 @@ class ClimatologicalStationXHistory(Base):
     role = Column(Enum("base", "joint", name="climo_station_role_enum"), nullable=False)
 
 
+class ClimatologicalStationXHistoryHistory(Base):
+    __tablename__ = hx_table_name(
+        ClimatologicalStationXHistory.__tablename__, schema=None
+    )
+    climo_station_id = Column(Integer, nullable=False, index=True)
+    history_id = Column(Integer, nullable=False, index=True)
+    role = Column(Enum("base", "joint", name="climo_station_role_enum"), nullable=False)
+    mod_time = Column(DateTime, nullable=False, server_default=func.now())
+    mod_user = Column(
+        String(64), nullable=False, server_default=literal_column("current_user")
+    )
+    deleted = Column(Boolean, default=False)
+    climo_station_hx_id = Column(Integer, primary_key=True)
+    climo_period_hx_id = Column(
+        Integer, ForeignKey("climo_period_hx.climo_period_hx_id")
+    )
+
+
 class ClimatologicalVariable(Base):
     # TODO: Columns in this table parallel those in meta_station and meta_history.
     # They differ in the following ways, which may be questioned:
@@ -698,7 +722,7 @@ class ClimatologicalVariable(Base):
 
     id = Column("climo_variable_id", Integer, primary_key=True)
     duration = mapped_column(
-        Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"),
+        Enum("annual", "seasonal", "monthly", name="climo_duration_enum"),
         nullable=False,
     )
     unit = Column(String, nullable=False)
@@ -714,7 +738,7 @@ class ClimatologicalVariableHistory(Base):
 
     climo_variable_id = Column(Integer, nullable=False, index=True)
     duration = mapped_column(
-        Enum("annual", "seasonal", "monthly", name="climatology_duration_enum"),
+        Enum("annual", "seasonal", "monthly", name="climo_duration_enum"),
         nullable=False,
     )
     unit = Column(String, nullable=False)

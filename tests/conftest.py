@@ -1,6 +1,5 @@
 import logging
 import sys
-import logging
 
 from pytest import fixture
 
@@ -32,7 +31,7 @@ from .db_helpers.db import (
 
 def pytest_runtest_setup():
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-    logging.getLogger("tests").setLevel(logging.DEBUG)
-    logging.getLogger("alembic").setLevel(logging.DEBUG)
+    # logging.getLogger("tests").setLevel(logging.DEBUG)
+    # logging.getLogger("alembic").setLevel(logging.DEBUG)
     # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     # logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)

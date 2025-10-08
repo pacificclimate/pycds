@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import alembic.config
 from pytest_alembic.config import Config
 
