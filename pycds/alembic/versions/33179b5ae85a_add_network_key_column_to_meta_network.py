@@ -5,7 +5,7 @@ Revises: 8c05da87cb79
 Create Date: 2026-01-07 20:25:34.314026
 
 Notes: This process was made more complicated by some assumptions made by the history tracking code.
-In particular it assumes that the primary and history table have the same column order with the 
+In particular it assumes that the primary and history table have the same column order with the
 exception that history tables have additional columns at the end. When adding a new column it is added
 at the end and therefore breaks the assumption. To work around this, we have to recreate the history table
 with the correct column order. This involves renaming the existing history table, creating a new one with
@@ -55,19 +55,17 @@ def upgrade():
             """
         )
     )
-    
+
     # Drop existing triggers before modifying table structure so that we don't accidentally track
     # the intermediate states
     drop_history_triggers("meta_network")
-    
+
     # Rename the existing history table to preserve existing history data
     # We'll copy data from this into the new table with the correct column order
     op.execute(
-        text(
-            f"ALTER TABLE {schema_name}.meta_network_hx RENAME TO meta_network_hx_old"
-        )
+        text(f"ALTER TABLE {schema_name}.meta_network_hx RENAME TO meta_network_hx_old")
     )
-    
+
     op.add_column(
         "meta_network",
         sa.Column(
@@ -77,7 +75,7 @@ def upgrade():
         ),
         schema=schema_name,
     )
-    
+
     op.execute(
         text(
             f"""
@@ -86,14 +84,14 @@ def upgrade():
             """
         )
     )
-    
+
     op.create_unique_constraint(
         "uq_meta_network_network_key",
         "meta_network",
         ["network_key"],
         schema=schema_name,
     )
-    
+
     # Create a trigger function to auto-populate network_key on INSERT. Must be a trigger as
     # Deault values can't call functions that access other columns.
     op.execute(
@@ -113,7 +111,7 @@ def upgrade():
             """
         )
     )
-    
+
     # Create trigger to run before INSERT
     op.execute(
         text(
@@ -125,11 +123,11 @@ def upgrade():
             """
         )
     )
-    
+
     # Recreate the history table with the new column structure
     create_history_table("meta_network", foreign_tables=None)
     grant_standard_table_privileges(f"{schema_name}.meta_network_hx")
-    
+
     # Copy existing history data from the old table to the new one
     op.execute(
         text(
@@ -148,7 +146,7 @@ def upgrade():
             """
         )
     )
-    
+
     # Reset the sequence to continue from the last ID
     op.execute(
         text(
@@ -160,10 +158,10 @@ def upgrade():
             """
         )
     )
-    
+
     # Update foreign key references in dependent tables to point to the new history table
     # meta_station_hx and meta_vars_hx have foreign keys to meta_network_hx
-    
+
     # Drop the foreign key constraints from dependent tables
     op.execute(
         text(
@@ -175,10 +173,10 @@ def upgrade():
             f"ALTER TABLE {schema_name}.meta_vars_hx DROP CONSTRAINT meta_vars_hx_meta_network_hx_id_fkey"
         )
     )
-    
+
     # Drop the old history table now that data has been copied and FKs removed
     op.execute(text(f"DROP TABLE {schema_name}.meta_network_hx_old"))
-    
+
     # Recreate the foreign key constraints pointing to the new history table
     op.execute(
         text(
@@ -200,13 +198,15 @@ def upgrade():
             """
         )
     )
-    
+
     # Recreate the history tracking triggers
     create_primary_table_triggers("meta_network")
     create_history_table_triggers("meta_network", foreign_tables=None)
-    
+
     # Create indexes on the history table
-    create_history_table_indexes("meta_network", "network_id", foreign_tables=None, extras=None)
+    create_history_table_indexes(
+        "meta_network", "network_id", foreign_tables=None, extras=None
+    )
 
 
 def downgrade():
@@ -216,10 +216,8 @@ def downgrade():
             f"DROP TRIGGER IF EXISTS set_network_key_default_trigger ON {schema_name}.meta_network"
         )
     )
-    op.execute(
-        text(f"DROP FUNCTION IF EXISTS {schema_name}.set_network_key_default()")
-    )
-    
+    op.execute(text(f"DROP FUNCTION IF EXISTS {schema_name}.set_network_key_default()"))
+
     # Drop the constraint and column from primary table
     op.drop_constraint(
         "uq_meta_network_network_key",
@@ -228,13 +226,13 @@ def downgrade():
         schema=schema_name,
     )
 
-    # When dropping we don't have the same issues with column order so we can safely just drop the 
+    # When dropping we don't have the same issues with column order so we can safely just drop the
     # column to return to the pre-migration state
     op.drop_column("meta_network", "network_key", schema=schema_name)
-    
+
     # Drop the column from history table
     op.drop_column("meta_network_hx", "network_key", schema=schema_name)
-    
+
     # Drop the key generation function
     op.execute(
         text(f"DROP FUNCTION IF EXISTS {schema_name}.gen_network_key_from_name(text)")

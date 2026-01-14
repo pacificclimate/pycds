@@ -22,7 +22,9 @@ matview_defns = {"vars_per_history_mv": {"indexes": {"var_hist_idx"}}}
 @pytest.mark.update20
 @pytest.mark.parametrize("supports_matviews", [True, False])
 def test_mock(mocker, supports_matviews):
-    mock_func = mocker.patch("pycds.database.db_supports_matviews", return_value=supports_matviews)
+    mock_func = mocker.patch(
+        "pycds.database.db_supports_matviews", return_value=supports_matviews
+    )
     # Call the mock directly since pycds module reference may be stale
     assert mock_func() is supports_matviews
 

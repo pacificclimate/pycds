@@ -23,7 +23,9 @@ index_names = {
 @pytest.mark.update20
 @pytest.mark.parametrize("item_names", [set(), {"alpha", "beta"}])
 def test_mock(mocker, item_names):
-    mock_func = mocker.patch("pycds.database.get_schema_item_names", return_value=item_names)
+    mock_func = mocker.patch(
+        "pycds.database.get_schema_item_names", return_value=item_names
+    )
     # Call the mock directly since pycds module reference may be stale
     assert mock_func() == item_names
 

@@ -38,7 +38,7 @@ def test_upgrade(
     )
     col = check_if_column_exists(column_name, meta_network_table)
     assert (col["nullable"] == True) and (col["name"] == column_name)
-    
+
     # Check that column has been added to meta_network_hx
     meta_network_hx_table = inspect(alembic_engine).get_columns(
         history_table_name, schema=schema_name
@@ -61,7 +61,7 @@ def test_downgrade(alembic_engine, alembic_runner, schema_name):
     )
     col = check_if_column_exists(column_name, meta_network_table)
     assert col == null
-    
+
     # Check that column has been removed from meta_network_hx
     meta_network_hx_table = inspect(alembic_engine).get_columns(
         history_table_name, schema=schema_name

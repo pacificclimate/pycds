@@ -46,7 +46,6 @@ Base = declarative_base(metadata=MetaData(schema=get_schema_name()))
 metadata = Base.metadata
 
 
-
 # string templating functions for check functions applied against multiple columns
 def no_newline_ck_name(column):
     return f"{column}_nolinebreak"

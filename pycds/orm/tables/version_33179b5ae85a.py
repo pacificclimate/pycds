@@ -120,5 +120,5 @@ class NetworkHistory(Base):
     def __str__(self):
         return f"<CRMP NetworkHistory {self.name}>"
 
-# import other tables from base
 
+# import other tables from base
