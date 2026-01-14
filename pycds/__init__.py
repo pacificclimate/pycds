@@ -74,6 +74,9 @@ __all__ = [
 from pycds.context import get_schema_name, get_su_role_name
 from pycds.util import schema_func, variable_tags
 
+# Import database module to make it accessible as pycds.database for mocking in tests
+from pycds import database as database
+
 from .orm.tables import (
     Base,
     Network,
