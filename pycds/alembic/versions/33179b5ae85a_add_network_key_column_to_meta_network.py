@@ -66,6 +66,13 @@ def upgrade():
         text(f"ALTER TABLE {schema_name}.meta_network_hx RENAME TO meta_network_hx_old")
     )
 
+    # Drop the identity property, which also drops the associated sequence
+    op.execute(
+        text(
+            f"ALTER TABLE {schema_name}.meta_network_hx_old ALTER COLUMN meta_network_hx_id DROP IDENTITY"
+        )
+    )
+
     op.add_column(
         "meta_network",
         sa.Column(
@@ -147,18 +154,6 @@ def upgrade():
         )
     )
 
-    # Reset the sequence to continue from the last ID
-    op.execute(
-        text(
-            f"""
-            SELECT setval(
-                '{schema_name}.meta_network_hx_meta_network_hx_id_seq',
-                (SELECT max(meta_network_hx_id) FROM {schema_name}.meta_network_hx)
-            )
-            """
-        )
-    )
-
     # Update foreign key references in dependent tables to point to the new history table
     # meta_station_hx and meta_vars_hx have foreign keys to meta_network_hx
 
@@ -176,6 +171,19 @@ def upgrade():
 
     # Drop the old history table now that data has been copied and FKs removed
     op.execute(text(f"DROP TABLE {schema_name}.meta_network_hx_old"))
+
+    # Set the sequence to continue from the next ID after the last copied record
+    op.execute(
+        text(
+            f"""
+            SELECT setval(
+                '{schema_name}.meta_network_hx_meta_network_hx_id_seq',
+                (SELECT COALESCE(MAX(meta_network_hx_id), 1) FROM {schema_name}.meta_network_hx),
+                true
+            )
+            """
+        )
+    )
 
     # Recreate the foreign key constraints pointing to the new history table
     op.execute(
