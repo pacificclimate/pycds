@@ -152,9 +152,7 @@ def describe_create__pcic__climate__baseline__variables():
     def it_creates_no_more_than_one_of_each(pycds_sesh):
         sesh = pycds_sesh
         get_or_create_pcic_climate_baseline_variables(sesh)
-        get_or_create_pcic_climate_baseline_variables(
-            sesh
-        )  # TODO: Should this be run twice?
+        get_or_create_pcic_climate_baseline_variables(sesh)
         results = sesh.query(Variable).filter(Variable.name.like("%_Climatology"))
         assert results.count() == 3
 
