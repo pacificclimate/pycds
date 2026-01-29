@@ -21,11 +21,11 @@ import sqlalchemy as sa
 from sqlalchemy import text
 from pycds.context import get_schema_name
 from pycds.alembic.change_history_utils import (
-    drop_history_triggers,
+    disable_primary_table_triggers,
     create_history_table,
-    create_primary_table_triggers,
     create_history_table_triggers,
     create_history_table_indexes,
+    enable_primary_table_triggers,
 )
 from pycds.alembic.util import grant_standard_table_privileges
 
@@ -56,9 +56,9 @@ def upgrade():
         )
     )
 
-    # Drop existing triggers before modifying table structure so that we don't accidentally track
+    # Disable existing triggers before modifying table structure so that we don't accidentally track
     # the intermediate states
-    drop_history_triggers("meta_network")
+    disable_primary_table_triggers("meta_network")
 
     # Rename the existing history table to preserve existing history data
     # We'll copy data from this into the new table with the correct column order
@@ -208,7 +208,7 @@ def upgrade():
     )
 
     # Recreate the history tracking triggers
-    create_primary_table_triggers("meta_network")
+    enable_primary_table_triggers("meta_network")
     create_history_table_triggers("meta_network", foreign_tables=None)
 
     # Create indexes on the history table
