@@ -21,14 +21,19 @@ if _requested_version is None:
 else:
     # Specific version requested - import from that version module
     import importlib
+    try:
+        _version_module = importlib.import_module(
+            f"pycds.orm.tables.version_{_requested_version}"
+        )
 
-    _version_module = importlib.import_module(
-        f"pycds.orm.tables.version_{_requested_version}"
-    )
+        # Import all public members from the version module
+        for _name in dir(_version_module):
+            if not _name.startswith("_"):
+                globals()[_name] = getattr(_version_module, _name)
 
-    # Import all public members from the version module
-    for _name in dir(_version_module):
-        if not _name.startswith("_"):
-            globals()[_name] = getattr(_version_module, _name)
-
-    del importlib, _version_module, _name
+        del importlib, _version_module, _name
+    except ModuleNotFoundError as e:
+        raise ImportError(
+            f"Table version module for revision '{_requested_version}' not found. Ensure that "
+            f"the migration revision exists and that the corresponding version module has been created."
+        ) from e
