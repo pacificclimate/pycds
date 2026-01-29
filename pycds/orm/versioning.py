@@ -35,7 +35,7 @@ class TableVersionManager:
             if self.revision is None:
                 # Import current/head version from head version module
                 self._module = importlib.import_module(
-                    "pycds.orm.tables.version_33179b5ae85a"
+                    "pycds.orm.tables"
                 )
             else:
                 # Import specific version
