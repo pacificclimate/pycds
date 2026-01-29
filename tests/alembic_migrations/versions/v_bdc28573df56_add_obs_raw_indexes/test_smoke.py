@@ -7,7 +7,7 @@
 import logging
 import pytest
 from pycds import database as pycds_database
-from pycds.database import get_schema_item_names
+import pycds.database
 
 
 logger = logging.getLogger("tests")
@@ -27,7 +27,7 @@ def test_mock(mocker, item_names):
         "pycds.database.get_schema_item_names", return_value=item_names
     )
     # Call the mock directly since pycds module reference may be stale
-    assert mock_func() == item_names
+    assert pycds.database.get_schema_item_names() == item_names
 
 
 @pytest.mark.update20
@@ -37,7 +37,7 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
 
     with alembic_engine.begin() as conn:
         # Check that indexes have been added
-        before_upgrade_index_names = get_schema_item_names(
+        before_upgrade_index_names = pycds.database.get_schema_item_names(
             conn, "indexes", table_name="obs_raw", schema_name=schema_name
         )
     assert not (index_names <= set() | before_upgrade_index_names)
@@ -45,7 +45,7 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
     alembic_runner.migrate_up_one()
 
     with alembic_engine.begin() as conn:
-        after_upgrade_index_names = get_schema_item_names(
+        after_upgrade_index_names = pycds.database.get_schema_item_names(
             conn, "indexes", table_name="obs_raw", schema_name=schema_name
         )
 
@@ -65,7 +65,7 @@ def test_downgrade(
     alembic_runner.migrate_up_before("bdc28573df56")
 
     with alembic_engine.begin() as conn:
-        before_upgrade_index_names = get_schema_item_names(
+        before_upgrade_index_names = pycds.database.get_schema_item_names(
             conn, "indexes", table_name="obs_raw", schema_name=schema_name
         )
 
@@ -74,7 +74,7 @@ def test_downgrade(
     alembic_runner.migrate_up_one()  # Upgrade to bdc28573df56, indexes added
 
     with alembic_engine.begin() as conn:
-        after_upgrade_index_names = get_schema_item_names(
+        after_upgrade_index_names = pycds.database.get_schema_item_names(
             conn, "indexes", table_name="obs_raw", schema_name=schema_name
         )
 
@@ -83,7 +83,7 @@ def test_downgrade(
     alembic_runner.migrate_down_one()
 
     with alembic_engine.begin() as conn:
-        after_downgrade_index_names = get_schema_item_names(
+        after_downgrade_index_names = pycds.database.get_schema_item_names(
             conn, "indexes", table_name="obs_raw", schema_name=schema_name
         )
 

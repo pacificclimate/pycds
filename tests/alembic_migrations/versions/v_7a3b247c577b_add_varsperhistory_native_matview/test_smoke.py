@@ -9,7 +9,7 @@ import pytest
 from alembic import command
 
 from pycds import database as pycds_database
-from pycds.database import db_supports_matviews
+import pycds.database
 from .. import check_matviews
 
 
@@ -25,8 +25,7 @@ def test_mock(mocker, supports_matviews):
     mock_func = mocker.patch(
         "pycds.database.db_supports_matviews", return_value=supports_matviews
     )
-    # Call the mock directly since pycds module reference may be stale
-    assert mock_func() is supports_matviews
+    assert pycds.database.db_supports_matviews(None) is supports_matviews
 
 
 @pytest.mark.update20
@@ -40,7 +39,7 @@ def test_upgrade(alembic_engine, alembic_runner, schema_name):
             conn,
             matview_defns,
             schema_name,
-            db_supports_matviews(alembic_engine),
+            pycds.database.db_supports_matviews(alembic_engine),
         )
 
 
