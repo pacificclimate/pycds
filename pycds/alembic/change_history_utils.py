@@ -207,6 +207,7 @@ def create_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
         f"    EXECUTE FUNCTION {qualified_name('hxtk_primary_ops_to_hx')}()"
     )
 
+
 def toggle_primary_table_triggers(
     collection_name: str, enable: bool, prefix: str = "t100_"
 ):
@@ -220,8 +221,10 @@ def toggle_primary_table_triggers(
         f"{action} TRIGGER {prefix}primary_ops_to_hx"
     )
 
+
 def disable_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
     toggle_primary_table_triggers(collection_name, enable=False, prefix=prefix)
+
 
 def enable_primary_table_triggers(collection_name: str, prefix: str = "t100_"):
     toggle_primary_table_triggers(collection_name, enable=True, prefix=prefix)
