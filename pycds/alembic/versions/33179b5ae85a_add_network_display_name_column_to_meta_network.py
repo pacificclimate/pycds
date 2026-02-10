@@ -1,4 +1,4 @@
-"""add network_key column to meta_network
+"""add network_display_name column to meta_network
 
 Revision ID: 33179b5ae85a
 Revises: 8c05da87cb79
@@ -40,22 +40,6 @@ schema_name = get_schema_name()
 
 
 def upgrade():
-    # Create a function to generate network key from network name
-    # Replicates the behavior of Network.gen_key_from_name() in orm Tables.py
-    op.execute(
-        text(
-            f"""
-            CREATE OR REPLACE FUNCTION {schema_name}.gen_network_key_from_name(name text)
-            RETURNS text
-            LANGUAGE sql
-            IMMUTABLE
-            AS $$
-                SELECT lower(replace(replace(trim(name), ' ', '_'), '-', '_'))
-            $$
-            """
-        )
-    )
-
     # Disable existing triggers before modifying table structure so that we don't accidentally track
     # the intermediate states
     disable_primary_table_triggers("meta_network")
@@ -76,41 +60,42 @@ def upgrade():
     op.add_column(
         "meta_network",
         sa.Column(
-            "network_key",
+            "network_display_name",
             sa.String(),
             nullable=True,
         ),
         schema=schema_name,
     )
 
+    # Copy existing network names into the new display name column. 
     op.execute(
         text(
             f"""
             UPDATE {schema_name}.meta_network
-            SET network_key = {schema_name}.gen_network_key_from_name(network_name)
+            SET network_display_name = network_name
             """
         )
     )
 
     op.create_unique_constraint(
-        "uq_meta_network_network_key",
+        "uq_meta_network_network_display_name",
         "meta_network",
-        ["network_key"],
+        ["network_display_name"],
         schema=schema_name,
     )
 
-    # Create a trigger function to auto-populate network_key on INSERT. Must be a trigger as
-    # Deault values can't call functions that access other columns.
+    # Create a trigger function to auto-populate network_display_name on INSERT. Must be a trigger as
+    # Default values can't access other columns.
     op.execute(
         text(
             f"""
-            CREATE OR REPLACE FUNCTION {schema_name}.set_network_key_default()
+            CREATE OR REPLACE FUNCTION {schema_name}.set_network_display_name_default()
             RETURNS trigger
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                IF NEW.network_key IS NULL THEN
-                    NEW.network_key := {schema_name}.gen_network_key_from_name(NEW.network_name);
+                IF NEW.network_display_name IS NULL THEN
+                    NEW.network_display_name := NEW.network_name;
                 END IF;
                 RETURN NEW;
             END;
@@ -123,10 +108,41 @@ def upgrade():
     op.execute(
         text(
             f"""
-            CREATE TRIGGER set_network_key_default_trigger
+            CREATE TRIGGER set_network_display_name_default_trigger
             BEFORE INSERT ON {schema_name}.meta_network
             FOR EACH ROW
-            EXECUTE FUNCTION {schema_name}.set_network_key_default()
+            EXECUTE FUNCTION {schema_name}.set_network_display_name_default()
+            """
+        )
+    )
+
+    # Create a trigger function to prevent modification of network_name column
+    op.execute(
+        text(
+            f"""
+            CREATE OR REPLACE FUNCTION {schema_name}.prevent_network_name_modification()
+            RETURNS trigger
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                IF TG_OP = 'UPDATE' AND OLD.network_name IS DISTINCT FROM NEW.network_name THEN
+                    RAISE EXCEPTION 'Modification of network_name column is not allowed';
+                END IF;
+                RETURN NEW;
+            END;
+            $$
+            """
+        )
+    )
+
+    # Create trigger to prevent network_name modification on UPDATE
+    op.execute(
+        text(
+            f"""
+            CREATE TRIGGER prevent_network_name_modification_trigger
+            BEFORE UPDATE ON {schema_name}.meta_network
+            FOR EACH ROW
+            EXECUTE FUNCTION {schema_name}.prevent_network_name_modification()
             """
         )
     )
@@ -142,11 +158,11 @@ def upgrade():
             INSERT INTO {schema_name}.meta_network_hx 
                 (network_id, network_name, description, virtual, 
                  publish, col_hex, mod_time, mod_user, 
-                 network_key, deleted, meta_network_hx_id)
+                 network_display_name, deleted, meta_network_hx_id)
             SELECT 
                 network_id, network_name, description, virtual,
                 publish, col_hex, mod_time, mod_user,
-                {schema_name}.gen_network_key_from_name(network_name),
+                network_name,
                 deleted, meta_network_hx_id
             FROM {schema_name}.meta_network_hx_old
             ORDER BY meta_network_hx_id
@@ -218,17 +234,20 @@ def upgrade():
 
 
 def downgrade():
-    # Drop the trigger and trigger function
+    # Drop the triggers and trigger functions
     op.execute(
         text(
-            f"DROP TRIGGER IF EXISTS set_network_key_default_trigger ON {schema_name}.meta_network"
+            f"""
+            DROP TRIGGER IF EXISTS prevent_network_name_modification_trigger ON {schema_name}.meta_network;
+            DROP TRIGGER IF EXISTS set_network_display_name_default_trigger ON {schema_name}.meta_network;
+            DROP FUNCTION IF EXISTS {schema_name}.prevent_network_name_modification();
+            """
         )
     )
-    op.execute(text(f"DROP FUNCTION IF EXISTS {schema_name}.set_network_key_default()"))
 
     # Drop the constraint and column from primary table
     op.drop_constraint(
-        "uq_meta_network_network_key",
+        "uq_meta_network_network_display_name",
         "meta_network",
         type_="unique",
         schema=schema_name,
@@ -236,12 +255,7 @@ def downgrade():
 
     # When dropping we don't have the same issues with column order so we can safely just drop the
     # column to return to the pre-migration state
-    op.drop_column("meta_network", "network_key", schema=schema_name)
+    op.drop_column("meta_network", "network_display_name", schema=schema_name)
 
     # Drop the column from history table
-    op.drop_column("meta_network_hx", "network_key", schema=schema_name)
-
-    # Drop the key generation function
-    op.execute(
-        text(f"DROP FUNCTION IF EXISTS {schema_name}.gen_network_key_from_name(text)")
-    )
+    op.drop_column("meta_network_hx", "network_display_name", schema=schema_name)

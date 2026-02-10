@@ -65,15 +65,15 @@ def get_tables_at_revision(revision: Optional[str] = None) -> TableVersionManage
         TableVersionManager that provides access to versioned table classes.
 
     Examples:
-        # Get tables at old revision (before network_key)
+        # Get tables at old revision (before network_display_name)
         tables = get_tables_at_revision("a59d64cf16ca")
         Network = tables.Network
-        assert not hasattr(Network, 'key')
+        assert not hasattr(Network, 'display_name')
 
         # Get current tables
         tables = get_tables_at_revision()
         Network = tables.Network
-        assert hasattr(Network, 'key')
+        assert hasattr(Network, 'display_name')
     """
     return TableVersionManager(revision)
 

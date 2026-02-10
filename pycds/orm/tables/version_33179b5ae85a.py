@@ -1,7 +1,7 @@
 """
 ORM table definitions at migration version 33179b5ae85a.
 
-This version includes the network_key column added to Network and NetworkHistory tables.
+This version includes the network_display_name column added to Network and NetworkHistory tables.
 All other tables are imported from base.py since they haven't changed at this revision.
 """
 
@@ -50,7 +50,7 @@ class Network(Base):
     __tablename__ = "meta_network"
 
     # Columns - order must match physical column order in database after migrations
-    # The network_key column was added at the END via ALTER TABLE ADD COLUMN
+    # The network_display_name column was added at the END via ALTER TABLE ADD COLUMN
     id = Column("network_id", Integer, primary_key=True)
     name = Column("network_name", String)
     long_name = Column("description", String)
@@ -62,7 +62,7 @@ class Network(Base):
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
-    key = Column("network_key", String, unique=True)  # Added at end by ALTER TABLE
+    display_name = Column("network_display_name", String, unique=True)  # Added at end by ALTER TABLE
 
     # Relationships
     stations = relationship(
@@ -89,10 +89,6 @@ class Network(Base):
     def __str__(self):
         return f"<CRMP Network {self.name}>"
 
-    @staticmethod
-    def gen_key_from_name(name):
-        """Normalize network name for use as network key."""
-        return name.strip().lower().replace(" ", "_").replace("-", "_")
 
 
 class NetworkHistory(Base):
@@ -101,7 +97,7 @@ class NetworkHistory(Base):
     __tablename__ = hx_table_name("meta_network", schema=None)
 
     # Columns - order must match physical column order in database after migrations
-    # The network_key column was added at the END via ALTER TABLE ADD COLUMN
+    # The network_display_name column was added at the END via ALTER TABLE ADD COLUMN
     network_id = Column(Integer, nullable=False, index=True)
     name = Column("network_name", String)
     long_name = Column("description", String)
@@ -113,7 +109,7 @@ class NetworkHistory(Base):
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
-    key = Column("network_key", String)  # Added at end by ALTER TABLE
+    display_name = Column("network_display_name", String)  # Added at end by ALTER TABLE
     deleted = Column(Boolean, default=False)
     meta_network_hx_id = Column(Integer, primary_key=True)
 

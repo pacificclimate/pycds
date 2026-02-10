@@ -1,6 +1,6 @@
 """Smoke tests:
-- Upgrade adds network_key column to meta_network table and meta_network_hx table
-- Downgrade drops network_key column from meta_network table and meta_network_hx table
+- Upgrade adds network_display_name column to meta_network table and meta_network_hx table
+- Downgrade drops network_display_name column from meta_network table and meta_network_hx table
 """
 
 # -*- coding: utf-8 -*-
@@ -11,7 +11,7 @@ from sqlalchemy import inspect, null
 
 logger = logging.getLogger("tests")
 
-column_name = "network_key"
+column_name = "network_display_name"
 table_name = "meta_network"
 history_table_name = "meta_network_hx"
 

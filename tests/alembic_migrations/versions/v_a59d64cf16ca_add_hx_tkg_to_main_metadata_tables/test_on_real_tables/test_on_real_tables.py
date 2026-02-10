@@ -13,7 +13,7 @@ tests to verify they are actually being called and recording history records.
 """
 
 # IMPORTANT: Set table version BEFORE any pycds imports
-# This test needs the table schema at revision a59d64cf16ca (before network_key was added)
+# This test needs the table schema at revision a59d64cf16ca (before network_display_name was added)
 from pycds.orm.versioning import set_global_table_version
 
 set_global_table_version("a59d64cf16ca")

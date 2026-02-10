@@ -105,34 +105,34 @@ def test_history_data_preservation_and_sequence(
             f"after={history_count_after}"
         )
 
-        # Verify network_key was generated for history records
+        # Verify network_display_name was generated for history records
         result = conn.execute(
             text(
                 f"""
                 SELECT COUNT(*) FROM {schema_name}.meta_network_hx
-                WHERE network_id = {network_id} AND network_key IS NOT NULL
+                WHERE network_id = {network_id} AND network_display_name IS NOT NULL
                 """
             )
         )
         history_with_key_count = result.scalar()
         assert (
             history_with_key_count == history_count_after
-        ), "Not all history records have network_key populated"
+        ), "Not all history records have network_display_name populated"
 
-        # Verify the network_key matches expected format
+        # Verify the network_display_name matches expected format
         result = conn.execute(
             text(
                 f"""
-                SELECT network_key FROM {schema_name}.meta_network_hx
+                SELECT network_display_name FROM {schema_name}.meta_network_hx
                 WHERE network_id = {network_id}
                 LIMIT 1
                 """
             )
         )
-        network_key = result.scalar()
+        network_display_name = result.scalar()
         assert (
-            network_key == "test_network"
-        ), f"Generated network_key '{network_key}' doesn't match expected 'test_network'"
+            network_display_name == "Test Network"
+        ), f"Generated network_display_name '{network_display_name}' doesn't match expected 'Test Network'"
 
         # Verify the sequence is set correctly by inserting a new network
         # This should trigger the history tracking and use the next sequence value
@@ -188,33 +188,33 @@ def test_history_data_preservation_and_sequence(
                 hx_id > max_hx_id_before
             ), f"New history ID {hx_id} is not greater than old max {max_hx_id_before}"
 
-        # Verify network_key was auto-generated for the new network
+        # Verify network_display_name was auto-generated for the new network
         result = conn.execute(
             text(
                 f"""
-                SELECT network_key FROM {schema_name}.meta_network
+                SELECT network_display_name FROM {schema_name}.meta_network
                 WHERE network_id = {new_network_id}
                 """
             )
         )
-        new_network_key = result.scalar()
+        new_network_display_name = result.scalar()
         assert (
-            new_network_key == "new_test_network"
-        ), f"Generated network_key '{new_network_key}' doesn't match expected 'new_test_network'"
+            new_network_display_name == "New Test Network"
+        ), f"Generated network_display_name '{new_network_display_name}' doesn't match expected 'New Test Network'"
 
-        # Verify network_key in history matches
+        # Verify network_display_name in history matches
         result = conn.execute(
             text(
                 f"""
-                SELECT DISTINCT network_key FROM {schema_name}.meta_network_hx
+                SELECT DISTINCT network_display_name FROM {schema_name}.meta_network_hx
                 WHERE network_id = {new_network_id}
                 """
             )
         )
-        new_hx_network_key = result.scalar()
+        new_hx_network_display_name = result.scalar()
         assert (
-            new_hx_network_key == "new_test_network"
-        ), f"History network_key '{new_hx_network_key}' doesn't match expected 'new_test_network'"
+            new_hx_network_display_name == "New Test Network"
+        ), f"History network_display_name '{new_hx_network_display_name}' doesn't match expected 'New Test Network'"
 
 
 @pytest.mark.update20

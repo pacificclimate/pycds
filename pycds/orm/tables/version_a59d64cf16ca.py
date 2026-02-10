@@ -1,7 +1,7 @@
 """
 ORM table definitions at migration version a59d64cf16ca.
 
-This version is before network_key was added to Network and NetworkHistory tables.
+This version is before network_display_name was added to Network and NetworkHistory tables.
 All other tables are imported from base.py since they haven't changed at this revision.
 """
 
@@ -45,7 +45,7 @@ from .base import (
 
 
 class Network(Base):
-    """Network table ORM at revision a59d64cf16ca (before network_key)"""
+    """Network table ORM at revision a59d64cf16ca (before network_display_name)"""
 
     __tablename__ = "meta_network"
 
