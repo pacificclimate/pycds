@@ -21,6 +21,7 @@ if _requested_version is None:
 else:
     # Specific version requested - import from that version module
     import importlib
+
     try:
         _version_module = importlib.import_module(
             f"pycds.orm.tables.version_{_requested_version}"

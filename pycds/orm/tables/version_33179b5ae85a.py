@@ -62,7 +62,9 @@ class Network(Base):
     mod_user = Column(
         String(64), nullable=False, server_default=literal_column("current_user")
     )
-    display_name = Column("network_display_name", String, unique=True)  # Added at end by ALTER TABLE
+    display_name = Column(
+        "network_display_name", String, unique=True
+    )  # Added at end by ALTER TABLE
 
     # Relationships
     stations = relationship(
@@ -88,7 +90,6 @@ class Network(Base):
 
     def __str__(self):
         return f"<CRMP Network {self.name}>"
-
 
 
 class NetworkHistory(Base):

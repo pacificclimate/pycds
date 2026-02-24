@@ -67,7 +67,7 @@ def upgrade():
         schema=schema_name,
     )
 
-    # Copy existing network names into the new display name column. 
+    # Copy existing network names into the new display name column.
     op.execute(
         text(
             f"""
