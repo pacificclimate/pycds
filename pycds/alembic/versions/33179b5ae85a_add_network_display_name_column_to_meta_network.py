@@ -240,6 +240,7 @@ def downgrade():
             f"""
             DROP TRIGGER IF EXISTS prevent_network_name_modification_trigger ON {schema_name}.meta_network;
             DROP TRIGGER IF EXISTS set_network_display_name_default_trigger ON {schema_name}.meta_network;
+            DROP FUNCTION IF EXISTS {schema_name}.set_network_display_name_default();
             DROP FUNCTION IF EXISTS {schema_name}.prevent_network_name_modification();
             """
         )
