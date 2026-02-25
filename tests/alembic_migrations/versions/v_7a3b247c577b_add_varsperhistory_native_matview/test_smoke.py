@@ -8,6 +8,7 @@ import logging
 import pytest
 from alembic import command
 
+from pycds import database as pycds_database
 import pycds.database
 from .. import check_matviews
 
@@ -21,8 +22,10 @@ matview_defns = {"vars_per_history_mv": {"indexes": {"var_hist_idx"}}}
 @pytest.mark.update20
 @pytest.mark.parametrize("supports_matviews", [True, False])
 def test_mock(mocker, supports_matviews):
-    mocker.patch("pycds.database.db_supports_matviews", return_value=supports_matviews)
-    assert pycds.database.db_supports_matviews() is supports_matviews
+    mock_func = mocker.patch(
+        "pycds.database.db_supports_matviews", return_value=supports_matviews
+    )
+    assert pycds.database.db_supports_matviews(None) is supports_matviews
 
 
 @pytest.mark.update20

@@ -48,86 +48,33 @@ metadata = Base.metadata
 
 # string templating functions for check functions applied against multiple columns
 def no_newline_ck_name(column):
-    return f"ck_{column}_no_newlines"
+    return f"{column}_nolinebreak"
 
 
 def no_newline_ck_check(column):
     return f"{column} !~ '[\r\n]'"
 
 
-class Network(Base):
-    """This class maps to the table which represents various `networks` of
-    data for the Climate Related Monitoring Program. There is one
-    network row for each data provider, typically a BC Ministry, crown
-    corporation or private company.
+class Contact(Base):
+    """This class maps to the table which represents contact people and
+    representatives for the networks of the Climate Related Monitoring
+    Program.
     """
 
-    __tablename__ = "meta_network"
+    __tablename__ = "meta_contact"
+    id = Column("contact_id", Integer, primary_key=True)
+    name = Column("name", String)
+    title = Column("title", String)
+    organization = Column("organization", String)
+    email = Column("email", String)
+    phone = Column("phone", String)
 
-    # Columns
-    id = Column("network_id", Integer, primary_key=True)
-    name = Column("network_name", String)
-    long_name = Column("description", String)
-    virtual = Column(String(255))
-    publish = Column(Boolean)
-    color = Column("col_hex", String)
-    contact_id = Column(Integer, ForeignKey("meta_contact.contact_id"))
-    mod_time = Column(DateTime, nullable=False, server_default=func.now())
-    mod_user = Column(
-        String(64), nullable=False, server_default=literal_column("current_user")
-    )
-
-    # Relationships
-    stations = relationship(
-        "Station",
-        order_by="Station.id",
-        back_populates="network",
+    networks = relationship(
+        "Network",
+        order_by="Network.id",
+        back_populates="contact",
         cascade_backrefs=False,
     )
-    meta_station = synonym("stations")
-    variables = relationship(
-        "Variable", back_populates="network", cascade_backrefs=False
-    )
-    meta_vars = synonym("variables")
-    contact = relationship("Contact", back_populates="networks", cascade_backrefs=False)
-    meta_contact = synonym("contact")  # Retain backwards compatibility
-    native_flags = relationship(
-        "NativeFlag",
-        order_by="NativeFlag.id",
-        back_populates="network",
-        cascade_backrefs=False,
-    )
-    meta_native_flag = synonym("native_flags")  # Retain backwards compatibility
-
-    def __str__(self):
-        return f"<CRMP Network {self.name}>"
-
-
-class NetworkHistory(Base):
-    """This class maps to the history table for table Network."""
-
-    __tablename__ = hx_table_name(Network.__tablename__, schema=None)
-
-    # Columns
-    network_id = Column(Integer, nullable=False, index=True)
-    name = Column("network_name", String)
-    long_name = Column("description", String)
-    virtual = Column(String(255))
-    publish = Column(Boolean)
-    color = Column("col_hex", String)
-    contact_id = Column(Integer)
-    mod_time = Column(DateTime, nullable=False, server_default=func.now())
-    mod_user = Column(
-        String(64), nullable=False, server_default=literal_column("current_user")
-    )
-    deleted = Column(Boolean, default=False)
-    meta_network_hx_id = Column(Integer, primary_key=True)
-
-    def __str__(self):
-        return f"<CRMP NetworkHistory {self.name}>"
-
-
-class Contact(Base):
     """This class maps to the table which represents contact people and
     representatives for the networks of the Climate Related Monitoring
     Program.
