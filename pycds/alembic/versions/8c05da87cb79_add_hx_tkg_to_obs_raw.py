@@ -12,14 +12,14 @@ from sqlalchemy import text
 
 from pycds import get_schema_name
 from pycds.alembic.change_history_utils import (
-    add_history_cols_to_primary,
+    add_history_cols_to_main,
     create_history_table,
     populate_history_table,
     drop_history_triggers,
     drop_history_table,
-    drop_history_cols_from_primary,
+    drop_history_cols_from_main,
     create_history_table_triggers,
-    create_primary_table_triggers,
+    create_main_table_triggers,
     create_history_table_indexes,
     hx_table_name,
     main_table_name,
@@ -52,7 +52,7 @@ def upgrade():
     ####
 
     # Add missing history col
-    add_history_cols_to_primary(
+    add_history_cols_to_main(
         table_name,
         columns=(
             'mod_user character varying(64) COLLATE pg_catalog."default" '
@@ -63,7 +63,7 @@ def upgrade():
     op.execute(
         text(f"DROP TRIGGER IF EXISTS update_mod_time ON {main_table_name(table_name)}")
     )
-    create_primary_table_triggers(table_name)
+    create_main_table_triggers(table_name)
 
     # History table
     ####
@@ -85,7 +85,7 @@ def upgrade():
 def downgrade():
     drop_history_triggers(table_name)
     drop_history_table(table_name)
-    drop_history_cols_from_primary(table_name, columns=("mod_user",))
+    drop_history_cols_from_main(table_name, columns=("mod_user",))
     # Restore original mod_time trigger
     op.execute(
         text(

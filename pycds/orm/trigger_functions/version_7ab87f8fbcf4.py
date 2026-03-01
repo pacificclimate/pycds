@@ -2,7 +2,7 @@
 Define trigger functions for change history tracking.
 
 These trigger functions maintain the contents of the history table that tracks each
-primary table. Triggers calling these functions are established on the primary and
+main table. Triggers calling these functions are established on the main and
 history table.
 
 To understand the trigger functions, it is necessary to understand the overall setup of
@@ -11,30 +11,30 @@ the history tracking tables.
 Table setup
 ===========
 
-For each meta/data table (called the primary table) that has history tracking, the
+For each meta/data table (called the main table) that has history tracking, the
 following things are true:
 
-* The primary table is a slightly modified version of the existing table. Its name is
+* The main table is a slightly modified version of the existing table. Its name is
   the same, its existing columns are in the same order and position, and it continues
-  to provide the main user-facing interface to the meta/data. It also contains a couple
-  of supplementary columns that expose history information.
+  to provide the main user-facing interface to the meta/data (hence the term "main").
+  It also contains two supplementary columns that expose history information.
 
-* The history table contains all the columns of the primary table, plus several history
+* The history table contains all the columns of the main table, plus several history
   -specific columns. It is append-only, and contains records of every past and present
   state of the meta/data.
     * Each row of the history table represents a single state (in time) of a single
       metadata item.
-    * The primary table and history table both store the contents of the most recent
-      items. That is, the history table duplicates contents of the primary table.
+    * The main table and history table both store the contents of the most recent
+      items. That is, the history table duplicates contents of the main table.
 
-* Triggers attached to the primary intercept each INSERT, UPDATE and DELETE operation
+* Triggers attached to the main intercept each INSERT, UPDATE and DELETE operation
   and append appropriate record(s) to the history table.
 
 Trigger functions
 =================
 
-As noted above, triggers are defined on each primary table to convert insert, update, and
-delete operations on the primary to inserts (only) on the history table.
+As noted above, triggers are defined on each main table to convert insert, update, and
+delete operations on the main to inserts (only) on the history table.
 
 We define generic trigger functions that work for all the different meta/data tables,
 rather defining a separate trigger function for each table. Parametrization of trigger
@@ -45,26 +45,26 @@ It's important to keep in mind that there are two id's in play in the history ta
 * The *history* id, which is a unique identifier for the history record. It is provided
   by a corresponding sequence.
 
-* The *primary* or *metadata* id, which identifies a single item in the collection,
-  but which can have many different history records for it, each with a different
-  timestamp.
-  The combination of history id and timestamp is unique. (That pair could be used as
-  the primary key, but implementation is simpler if we tolerate a slight
-  lack of normalization and use an independent primary key column.)
+* The *item* id, which identifies a single item in the collection (and is the primary
+  key in the main table). A given item (with a given item id) can have many different
+  history records for it, each with a different timestamp, corresponding to successive
+  updates to that item.
 
-Naming conventions for tables, history id columns, and sequences enable us to write
+* NOTE: The combination of item id and timestamp is unique. (That pair could be used as
+  the history table primary key, but implementation is much simpler if we tolerate a
+  slight lack of normalization and use an independent primary key column.)
+
+Naming conventions for tables and history-related columns enable us to write
 simpler, more self-configuring trigger functions. These conventions are:
 
-* The primary table, history table, history id column, and history id sequence
+* The main table, history table, history id column, and history id sequence
   must be named as follows:
 
-    * Primary table: ``<collection_name>`` (the original table name, e.g., ``meta_network``)
+    * Main table: ``<collection_name>`` (the original table name, e.g., ``meta_network``)
     * History table: ``<collection_name>_hx``
     * History id column: ``<collection_name>_hx_id``
-    * History id sequence: ``<history_table_name>_<history_id_name>_seq``
-      (i.e., the default name for automatically created primary key sequences)
 
-* The primary table is extended with the following columns (mainly for the convenience
+* The main table is extended with the following columns (mainly for the convenience
   of the user):
 
   * ``mod_time``: most recent modification time of this record
@@ -72,20 +72,20 @@ simpler, more self-configuring trigger functions. These conventions are:
 
 * The history table columns must be defined as follows, in this order:
 
-    * Primary table columns (including ``mod_time`` and ``mod_user``).
+    * main table columns (including ``mod_time`` and ``mod_user``).
 
     * History maintenance columns
 
         * ``deleted``: flag indicating if this record was deleted
         * history id
-        * For each foreign key in the primary table to another primary (history-tracked)
+        * For each foreign key in the main table to another main (history-tracked)
           table:
-            * A foreign key to the corresponding history table
+            * A foreign key to the corresponding history table using the history id
 
 Other notes:
 
 * One of the trigger functions sets ``mod_time`` and ``mod_user`` in operations on the
-  primary table so that they cannot be set inaccurately by a user.
+  main table so that they cannot be set inaccurately by a user.
 * To do some of the manipulations we require on the ``NEW``/``OLD`` records, we must
   access their contents by attribute name. By far the easiest way to do this in
   ``pgplsql`` is to use the ``hstore`` extension. Its syntax and usage are slightly
@@ -94,6 +94,26 @@ Other notes:
   The performance of these triggers / functions may be able to be improved by converting
   them to statement-level. This will be somewhat more complicated, particularly for the
   code that fills in the history table foreign keys.
+
+NOTE: Terminology has changed a little over time: We used to use the term "primary table"
+instead of "main table". "Primary" is a little overloaded, so we adopted "main".
+Comments have been updated, but database code has not, because that actually calls for
+a migration, which we may or may not want to do. Below is a list of suggested renamings
+for identifiers in code.
+
+Existing                        | New
+--------------------------------|----------------------------------------
+hxtk_primary_control_hx_cols    | hxtk_main_control_hx_cols
+hxtk_primary_ops_to_hx          | hxtk_main_ops_to_hx
+new_metadata_hx_id              | new_hx_id
+fk_metadata_collection_name     | fk_collection_name
+fk_metadata_id_name             | fk_item_id_name -- Name of primary key in foreign table
+fk_metadata_history_id_name     | fk_history_id_name
+fk_metadata_history_table_name  | fk_history_table_name
+fk_metadata_id                  | fk_item_id
+fk_metadata_history_id          | fk_history_id
+
+And of course "main" for "primary" in comments.
 """
 
 from pycds.alembic.extensions.replaceable_objects import ReplaceableFunction
