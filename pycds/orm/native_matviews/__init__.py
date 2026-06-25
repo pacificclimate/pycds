@@ -31,6 +31,7 @@ from .version_081f17262852 import DailyMaxTemperature
 from .version_081f17262852 import DailyMinTemperature
 from .version_081f17262852 import MonthlyAverageOfDailyMaxTemperature
 from .version_081f17262852 import MonthlyAverageOfDailyMinTemperature
+from .version_f6d5a4c2e901 import DiscardedObsRaw
 
 # only used for tests
 from .version_081f17262852 import daily_temperature_extremum
