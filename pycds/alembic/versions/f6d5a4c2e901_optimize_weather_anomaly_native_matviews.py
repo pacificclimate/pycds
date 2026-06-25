@@ -48,9 +48,15 @@ depends_on = None
 
 schema_name = get_schema_name()
 
-# Creation order expresses the new dependency graph. Drop in reverse order.
-updated_matviews = (
-    DiscardedObsRaw,
+previous_matviews = (
+    PreviousDailyMaxTemperature,
+    PreviousDailyMinTemperature,
+    PreviousMonthlyTotalPrecipitation,
+    PreviousMonthlyAverageOfDailyMaxTemperature,
+    PreviousMonthlyAverageOfDailyMinTemperature,
+)
+
+existing_matviews = (
     DailyMaxTemperature,
     DailyMinTemperature,
     MonthlyTotalPrecipitation,
@@ -58,12 +64,13 @@ updated_matviews = (
     MonthlyAverageOfDailyMinTemperature,
 )
 
-previous_matviews = (
-    PreviousDailyMaxTemperature,
-    PreviousDailyMinTemperature,
-    PreviousMonthlyTotalPrecipitation,
-    PreviousMonthlyAverageOfDailyMaxTemperature,
-    PreviousMonthlyAverageOfDailyMinTemperature,
+new_matviews = (
+    DiscardedObsRaw,
+    DailyMaxTemperature,
+    DailyMinTemperature,
+    MonthlyTotalPrecipitation,
+    MonthlyAverageOfDailyMaxTemperature,
+    MonthlyAverageOfDailyMinTemperature,
 )
 
 index_name = "obs_raw_history_obs_time_idx"
@@ -105,24 +112,6 @@ def _drop_history_obs_time_index():
             table_name=index_table_name,
             schema=schema_name,
         )
-
-
-existing_matviews = (
-    DailyMaxTemperature,
-    DailyMinTemperature,
-    MonthlyTotalPrecipitation,
-    MonthlyAverageOfDailyMaxTemperature,
-    MonthlyAverageOfDailyMinTemperature,
-)
-
-new_matviews = (
-    DiscardedObsRaw,
-    DailyMaxTemperature,
-    DailyMinTemperature,
-    MonthlyTotalPrecipitation,
-    MonthlyAverageOfDailyMaxTemperature,
-    MonthlyAverageOfDailyMinTemperature,
-)
 
 
 def upgrade():
