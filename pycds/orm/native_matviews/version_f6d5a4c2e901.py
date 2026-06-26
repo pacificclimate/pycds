@@ -11,7 +11,6 @@ dependent views.
 
 from sqlalchemy import (
     func,
-    and_,
     or_,
     not_,
     case,
@@ -325,24 +324,34 @@ Index(
     "monthly_total_precipitation_mv_idx",
     MonthlyTotalPrecipitation.history_id,
     MonthlyTotalPrecipitation.vars_id,
+    MonthlyTotalPrecipitation.obs_month,
+    unique=True,
 )
 Index(
     "daily_max_temperature_mv_idx",
     DailyMaxTemperature.history_id,
     DailyMaxTemperature.vars_id,
+    DailyMaxTemperature.obs_day,
+    unique=True,
 )
 Index(
     "daily_min_temperature_mv_idx",
     DailyMinTemperature.history_id,
     DailyMinTemperature.vars_id,
+    DailyMinTemperature.obs_day,
+    unique=True,
 )
 Index(
     "monthly_average_of_daily_max_temperature_mv_idx",
     MonthlyAverageOfDailyMaxTemperature.history_id,
     MonthlyAverageOfDailyMaxTemperature.vars_id,
+    MonthlyAverageOfDailyMaxTemperature.obs_month,
+    unique=True,
 )
 Index(
     "monthly_average_of_daily_min_temperature_mv_idx",
     MonthlyAverageOfDailyMinTemperature.history_id,
     MonthlyAverageOfDailyMinTemperature.vars_id,
+    MonthlyAverageOfDailyMinTemperature.obs_month,
+    unique=True,
 )
