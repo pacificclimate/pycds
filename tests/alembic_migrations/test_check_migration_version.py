@@ -8,7 +8,7 @@ from pycds.database import check_migration_version
 
 @pytest.mark.update20
 def test_get_current_head():
-    assert get_current_head() == "33179b5ae85a"
+    assert get_current_head() == "f6d5a4c2e901"
 
 
 @pytest.mark.update20

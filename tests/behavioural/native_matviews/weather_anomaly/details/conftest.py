@@ -1,6 +1,7 @@
 from pytest import fixture
 
 from pycds.orm.native_matviews import (
+    DiscardedObsRaw,
     MonthlyTotalPrecipitation,
     DailyMaxTemperature,
     DailyMinTemperature,
@@ -17,7 +18,7 @@ def autouse_new_db_left(new_db_left):
 
 @fixture
 def daily_views():
-    return [DailyMaxTemperature, DailyMinTemperature]
+    return [DiscardedObsRaw, DailyMaxTemperature, DailyMinTemperature]
 
 
 @fixture
