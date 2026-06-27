@@ -1,5 +1,11 @@
 # News / Release Notes
 
+## 5.0.1
+
+*Release Date: 2026-Jun-26
+
+[Optimizes queries for expensive materialized views](https://github.com/pacificclimate/pycds/pull/253)
+
 ## 5.0.0
 
 *Release Date: 2025-Jun-18*
