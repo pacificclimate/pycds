@@ -11,14 +11,14 @@ from sqlalchemy import text
 
 from pycds import get_schema_name
 from pycds.alembic.change_history_utils import (
-    add_history_cols_to_primary,
+    add_history_cols_to_main,
     create_history_table,
     populate_history_table,
     drop_history_triggers,
     drop_history_table,
-    drop_history_cols_from_primary,
+    drop_history_cols_from_main,
     create_history_table_triggers,
-    create_primary_table_triggers,
+    create_main_table_triggers,
     create_history_table_indexes,
     hx_table_name,
 )
@@ -50,8 +50,8 @@ def upgrade():
 
     for table_name, primary_key_name, foreign_tables, extra_indexes in table_info:
         # Primary table
-        add_history_cols_to_primary(table_name)
-        create_primary_table_triggers(table_name)
+        add_history_cols_to_main(table_name)
+        create_main_table_triggers(table_name)
 
         # History table
         create_history_table(table_name, foreign_tables)
@@ -68,4 +68,4 @@ def downgrade():
     for table_name, _, _, _ in reversed(table_info):
         drop_history_triggers(table_name)
         drop_history_table(table_name)
-        drop_history_cols_from_primary(table_name)
+        drop_history_cols_from_main(table_name)
