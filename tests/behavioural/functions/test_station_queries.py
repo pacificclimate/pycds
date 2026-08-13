@@ -3,6 +3,7 @@ from importlib.resources import files
 
 import pytest
 from sqlalchemy import select, text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Session
 
 from pycds import VarsPerHistory, get_schema_name, schema_func
@@ -95,13 +96,14 @@ def test_query_one_station_filters_station_variables_and_climatology(
 
     observation_rows = observation_result.mappings().all()
     assert [row["obs_time"] for row in observation_rows] == [
+        datetime(2006, 2, 9, 12),
         datetime(2006, 2, 10, 15),
         datetime(2006, 2, 10, 18),
         datetime(2006, 2, 11, 6),
         datetime(2006, 2, 12, 12),
     ]
     assert [row["temperature"] for row in observation_rows] == pytest.approx(
-        [9.7, 4.8, 4.6, 9.2]
+        [8.0, 10.5, 4.8, 4.6, 9.2]
     )
 
     climo_result = do_query_one_station(
@@ -166,3 +168,51 @@ def test_query_one_station_returns_empty_obs_time_table_when_no_variables(
 
     assert list(orm_result.keys()) == ["obs_time"]
     assert orm_result.all() == []
+
+
+def test_query_one_station_uses_equality_for_one_history(
+    sesh_with_query_one_station_data,
+):
+    """A single history uses the covering index's leading equality column."""
+    sesh = sesh_with_query_one_station_data
+    sesh.execute(VarsPerHistory.refresh())
+
+    statement = query_one_station(sesh, 2314)
+    sql = str(
+        statement.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
+    )
+
+    assert "obs_raw.history_id = 2717" in sql
+    assert "JOIN meta_history" not in sql
+
+
+def test_query_one_station_includes_all_histories_and_resolves_overlaps(
+    sesh_with_query_one_station_data,
+):
+    """Multiple histories are combined without omitting overlapping rows."""
+    sesh = sesh_with_query_one_station_data
+    sesh.execute(VarsPerHistory.refresh())
+
+    statement = query_one_station(sesh, TARGET_STATION_ID)
+    sql = str(
+        statement.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
+    )
+
+    assert "obs_raw.history_id IN (2716, 2719)" in sql
+    rows = sesh.execute(statement).mappings().all()
+    assert [row["obs_time"] for row in rows] == [
+        datetime(2006, 2, 9, 12),
+        datetime(2006, 2, 10, 15),
+        datetime(2006, 2, 10, 18),
+        datetime(2006, 2, 11, 6),
+        datetime(2006, 2, 12, 12),
+    ]
+    assert [row["temperature"] for row in rows] == pytest.approx(
+        [8.0, 10.5, 4.8, 4.6, 9.2]
+    )

@@ -36,6 +36,17 @@ def _station_variables(
     ]
 
 
+def _station_history_ids(session: Session, station_id: int) -> list[int]:
+    """Return every history belonging to a station in stable order."""
+    return list(
+        session.scalars(
+            select(History.id)
+            .where(History.station_id == station_id)
+            .order_by(History.id)
+        )
+    )
+
+
 def query_one_station(
     session: Session,
     station_id: int,
@@ -54,8 +65,10 @@ def query_one_station(
         climo=climo,
     )
 
+    history_ids = _station_history_ids(session, station_id)
+
     # Unlike the legacy function, an empty variable list is a valid request.
-    if not variables:
+    if not variables or not history_ids:
         return select(Obs.time.label("obs_time")).where(false())
 
     variable_ids = [vars_id for vars_id, _ in variables]
@@ -70,15 +83,20 @@ def query_one_station(
         for vars_id, variable_name in variables
     ]
 
+    history_filter = (
+        Obs.history_id == history_ids[0]
+        if len(history_ids) == 1
+        else Obs.history_id.in_(history_ids)
+    )
+
     return (
         select(
             Obs.time.label("obs_time"),
             *variable_columns,
         )
         .select_from(Obs)
-        .join(History, History.id == Obs.history_id)
         .where(
-            History.station_id == station_id,
+            history_filter,
             Obs.vars_id.in_(variable_ids),
         )
         .group_by(Obs.time)
