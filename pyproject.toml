@@ -63,6 +63,7 @@ repository = "https://github.com/pacificclimate/pycds"
 [tool.pytest.ini_options]
 filterwarnings =  "ignore:datetime.datetime"
 markers = [
+    "production_performance: opt-in timing tests against a live production database",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "thisone: no idea what this is",
     "update20: marks tests that have been updated to 2.0 compatible"

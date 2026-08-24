@@ -53,7 +53,8 @@ INSERT INTO meta_history (
 ) VALUES
     (2716, 2313, 'ZZ GYPSY 2', -124.0147, 49.2283, 156, NULL, NULL, NULL, 'BC', NULL, NULL, NULL, NULL, '1-hourly'),
     (2717, 2314, 'QUERY ONE STATION PEER', -124.0147, 49.2283, 156, NULL, NULL, NULL, 'BC', NULL, NULL, NULL, NULL, '1-hourly'),
-    (2718, 2315, 'QUERY ONE STATION EMPTY', -124.0147, 49.2283, 156, NULL, NULL, NULL, 'BC', NULL, NULL, NULL, NULL, '1-hourly');
+    (2718, 2315, 'QUERY ONE STATION EMPTY', -124.0147, 49.2283, 156, NULL, NULL, NULL, 'BC', NULL, NULL, NULL, NULL, '1-hourly'),
+    (2719, 2313, 'ZZ GYPSY 2 PREVIOUS LOCATION', -124.1, 49.3, 150, NULL, NULL, NULL, 'BC', NULL, NULL, NULL, NULL, '1-hourly');
 
 INSERT INTO meta_vars (
     vars_id,
@@ -94,3 +95,16 @@ INSERT INTO obs_raw (
 
     -- Target-station climatological value for the climo=True branch.
     (194852604, '2006-02-10 15:00:00', '2011-08-29 12:13:18.197183', 7.0, 498, 2716);
+
+INSERT INTO obs_raw (
+    obs_raw_id,
+    obs_time,
+    mod_time,
+    datum,
+    vars_id,
+    history_id
+) VALUES
+    -- A second target history, including one overlapping timestamp. The
+    -- pivot query retains the legacy maximum-datum rule for that overlap.
+    (194852605, '2006-02-09 12:00:00', '2011-08-29 12:13:18.197183', 8.0, 497, 2719),
+    (194852606, '2006-02-10 15:00:00', '2011-08-29 12:13:18.197183', 10.5, 497, 2719);
