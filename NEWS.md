@@ -1,5 +1,21 @@
 # News / Release Notes
 
+## 5.1.0
+
+*Release Date: 2026-Aug-25*
+
+This release adds ORM-level station observation queries and improves their
+performance on large production datasets.
+
+- Add `query_one_station` and `do_query_one_station` ORM APIs for building and
+  executing pivoted station observation queries.
+- Select variables actually observed by a station, return a valid empty query
+  for stations without observations, and support stations with multiple
+  histories while preserving the legacy overlap behavior.
+- Optimize the common single-history query with a direct history filter.
+- Add the `c7f1a4d92e6b` database migration, which creates a covering
+  `obs_raw` index for station observation queries.
+
 ## 5.0.1
 
 *Release Date: 2026-Jun-26
