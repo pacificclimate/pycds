@@ -54,6 +54,9 @@ def no_newline_ck_name(column):
 def no_newline_ck_check(column):
     return f"{column} !~ '[\r\n]'"
 
+def default_datetime():
+    return datetime.datetime.now(datetime.timezone.utc)
+
 
 class Contact(Base):
     """This class maps to the table which represents contact people and
@@ -302,7 +305,7 @@ class Obs(Base):
     __tablename__ = "obs_raw"
     id = Column("obs_raw_id", BigInteger, primary_key=True)
     time = Column("obs_time", DateTime)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(DateTime, nullable=False, default=default_datetime)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
@@ -352,7 +355,7 @@ class ObsHistory(Base):
 
     obs_raw_id = Column(BigInteger)
     time = Column("obs_time", DateTime)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(DateTime, nullable=False, default=default_datetime)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
@@ -532,7 +535,7 @@ class DerivedValue(Base):
     __tablename__ = "obs_derived_values"
     id = Column("obs_derived_value_id", Integer, primary_key=True)
     time = Column("value_time", DateTime)
-    mod_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    mod_time = Column(DateTime, nullable=False, default=default_datetime)
     datum = Column(Float)
     vars_id = Column(Integer, ForeignKey("meta_vars.vars_id"))
     history_id = Column(Integer, ForeignKey("meta_history.history_id"))
